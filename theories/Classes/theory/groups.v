@@ -251,7 +251,7 @@ Section compose_mor.
     unfold Compose.
     rewrite (preserves_sg_op x y).
     apply preserves_sg_op.
-  Qed.
+  Defined.
 
   Instance compose_monoid_morphism : IsMonoidPreserving f -> IsMonoidPreserving g ->
     IsMonoidPreserving (g ∘ f).
@@ -261,7 +261,7 @@ Section compose_mor.
     - red;unfold Compose.
       etransitivity;[|apply preserves_mon_unit].
       apply ap,preserves_mon_unit.
-  Qed.
+  Defined.
 
   Instance invert_sg_morphism
     : forall `{!IsEquiv f}, IsSemiGroupPreserving f ->
@@ -272,7 +272,7 @@ Section compose_mor.
     rewrite (preserves_sg_op (f:=f)).
     rewrite !eisretr.
     reflexivity.
-  Qed.
+  Defined.
 
   Instance invert_monoid_morphism :
     forall `{!IsEquiv f}, IsMonoidPreserving f -> IsMonoidPreserving (f^-1).
@@ -282,7 +282,7 @@ Section compose_mor.
     - apply (Paths.equiv_inj f).
       rewrite eisretr.
       rewrite (preserves_mon_unit (f:=f)). reflexivity.
-  Qed.
+  Defined.
 
 End compose_mor.
 
