@@ -33,8 +33,6 @@ Definition path_magmamap_hset `{Funext} {X Y : Magma} {f g : MagmaMap X Y}
   : f == g -> f = g.
 Proof.
   intro p.
-  destruct f, g.
-  cbn in *.
   apply (equiv_ap' issig_MagmaMap^-1 _ _)^-1.
   apply path_sigma_hprop.
   by apply path_forall.
