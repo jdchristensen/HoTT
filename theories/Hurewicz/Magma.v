@@ -109,19 +109,9 @@ Global Instance isequiv_magma_loops_functor {X Y : pType} (f : X ->* Y)
 Proof.
   intro e.
   set (g := Build_pEquiv _ _ f e).
-  change f with (pointed_equiv_fun _ _ g).
-  clearbody g; clear f e.
-  serapply isequiv_adjointify.
-  { apply magma_loops_functor.
-    exact g^-1*. }
-  1,2: cbv zeta beta.
-  1: change (loops_functor g o* loops_functor g^-1* == pmap_idmap).
-  2: change (loops_functor g^-1* o* loops_functor g == pmap_idmap).
-  1,2: apply pointed_htpy.
-  1,2: refine ((loops_functor_compose _ _)^* @* _ @* loops_functor_idmap _).
-  1,2: apply loops_2functor.
-  1: apply peisretr.
-  apply peissect.
+  unfold magma_loops_functor.
+  unfold magmamap_map.
+  exact (pointed_isequiv _ _ (pequiv_loops_functor g)).
 Defined.
 
 Global Instance isequiv_iterated_magma_loops_functor {X Y : pType} {n : nat}
