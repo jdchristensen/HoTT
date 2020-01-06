@@ -128,18 +128,20 @@ Coercion group_to_magma : Group >-> Magma.
 
 Definition equiv_grp_homo_magma_map `{F : Funext} (G H : Group)
   : GroupHomomorphism G H <~> MagmaMap G H.
+(* The proof is more complicated than expected because a GroupHomomorphism
+   is required to preserve the identity, even though this is automatic. *)
 Proof.
   serapply equiv_adjointify.
   + intro f.
     serapply (Build_MagmaMap G H f).
   + intro f.
     serapply (Build_GroupHomomorphism f).
-    apply (magmamap_op_preserving G H).
+    apply (magmamap_op_preserving G H f).
   + cbn; reflexivity.
   + intro f.
-    destruct f.
+    destruct f as [f p].
     unfold Build_GroupHomomorphism.
-    cbn; apply ap.
+    cbn.  apply ap.
     serapply path_ishprop.
 Defined.
 
