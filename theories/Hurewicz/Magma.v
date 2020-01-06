@@ -237,36 +237,21 @@ Lemma theorem_2_1 (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y}
 Proof.
 Admitted.
 
+(* This should be in Loops.v. *)
 Global Instance ishset_iterated_magma_loops `{Univalence} (n : nat)
   {X : pType} `{IsTrunc n.+1 X}
   : IsHSet (iterated_magma_loops n X).
 Proof.
   unfold iterated_magma_loops.
-  change (IsHSet (iterated_loops n.+1 X)).
-  apply (equiv_istrunc_istrunc_loops _ _)^-1.
-  intro x.
-  simple notypeclasses refine (@trunc_contr (-2) _ _).
-  simple notypeclasses refine (@contr_equiv' (iterated_loops n.+2 X)
-    (loops {| pointed_type := iterated_loops n.+1 X;
-      ispointed_type := x |}) _ _).
-  { revert x.
-    change (iterated_loops n.+2 X)
-      with (loops (loops (iterated_loops n X))).
-    change (iterated_loops n.+1 X)
-      with (loops (iterated_loops n X)).
-    generalize (iterated_loops n X).
-    intros A p.
-    symmetry.
-    transitivity (Build_pType (p @ p^ = p @ p^) idpath).
-    { srefine (Build_pEquiv' _ _).
-      1: exact (equiv_ap (equiv_concat_r _ _) _ _).
-      reflexivity. }
-    serapply Build_pEquiv'.
-    { apply equiv_concat_lr.
-      1: symmetry; apply concat_pV.
-      apply concat_pV. }
-    cbn; by rewrite concat_p1, concat_Vp. }
-  serapply (equiv_istrunc_contr_iterated_loops n.+1 _ _ (point X)).
+  unfold magma_type.
+  revert X H0.
+  induction n.
+  - intros X H0.
+    apply istrunc_loops.
+    exact H0.
+  - intros X H0.
+    apply (trunc_equiv _ (unfold_iterated_loops' _ _)^-1).
+    (* The induction hypothesis and H0 get used automatically by Coq. *)
 Defined.
 
 Definition pfiber_loops_functor {A B : pType} (f : A ->* B)
