@@ -4,6 +4,9 @@ bin_SCRIPTS = hoqtop hoqc hoqdep hoq-config
 if make_hoqide
   bin_SCRIPTS += hoqide
 endif
+if make_hoqidetop
+  bin_SCRIPTS += hoqidetop
+endif
 if make_hoqtopbyte
   bin_SCRIPTS += hoqtop.byte
 endif
@@ -298,12 +301,12 @@ proviola-xml/proviola.css proviola-xml/proviola.xsl : proviola-xml/% : proviola/
 proviola-xml/%.xml: html/%.html
 	@$(mkdir_p) proviola-xml
 	$(VECHO) CAMERA $<
-	$(Q) $(CAMERA) --coqtop "$(srcdir)/hoqtop" $< $@
+	$(Q) $(TIMER) $(CAMERA) --coqtop "$(srcdir)/hoqtop" $< $@
 
 proviola-html/%.html: proviola-xml/%.xml proviola-xml/proviola.xsl
 	@$(mkdir_p) proviola-html
 	$(VECHO) XSLTPROC $<
-	$(Q) xsltproc $< > $@
+	$(Q) $(TIMER) xsltproc $< > $@
 
 proviola: $(ALL_PROVIOLA_HTMLFILES) proviola-html/proviola.css proviola-html/toc.html proviola-html/coqdoc.css proviola-html/index.html
 

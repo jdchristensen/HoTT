@@ -3,6 +3,7 @@ Require Import Algebra.Group.
 Require Import EquivalenceVarieties.
 Require Import Truncations.
 Require Import PathAny.
+Require Import UnivalenceImpliesFunext.
 Require Import Tactics.
 Import TrM.
 
@@ -37,18 +38,11 @@ Existing Instance magmamap_op_preserving.
 
 Definition issig_magmamap X Y : _ <~> MagmaMap X Y := ltac:(issig).
 
-(** TODO make more global anyway *)
-Existing Instance compose_sg_morphism.
-
 Definition magmamap_compose {X Y Z : Magma}
   (f : MagmaMap Y Z) (g : MagmaMap X Y) : MagmaMap X Z.
 Proof.
-  (* Typeclass resolution finds [compose_sg_morphism], which uses rewrite. *)
-  apply (Build_MagmaMap _ _ (f o g)).
-  red. intros x0 x1.
-  simple refine ((ap f _) @ _).
-  2: apply magmamap_op_preserving.
-  apply magmamap_op_preserving.
+  (* Typeclass resolution finds [compose_sg_morphism]. *)
+  serapply (Build_MagmaMap _ _ (f o g)).
 Defined.
 
 Definition magmamap_compose_assoc `{Funext} {W X Y Z : Magma}
@@ -57,7 +51,7 @@ Definition magmamap_compose_assoc `{Funext} {W X Y Z : Magma}
 Proof.
   record_equality.
   - reflexivity.
-  - apply path_forall2; intros w0 w1.
+  - funext w0 w1.
     refine (concat_p_pp _ _ _ @ _).
     apply whiskerR.
     refine (_ @ _).
@@ -106,7 +100,6 @@ Defined.
 Definition magma_idmap (X : Magma) : MagmaEquiv X X.
 Proof.
   refine (build_magmaequiv idmap _ _).
-  unfold IsSemiGroupPreserving.  reflexivity.
 Defined.
 
 Definition magmamap_compose_f1 `{Funext} {X Y : Magma} (f : MagmaMap X Y)
@@ -114,7 +107,7 @@ Definition magmamap_compose_f1 `{Funext} {X Y : Magma} (f : MagmaMap X Y)
 Proof.
   record_equality.
   - reflexivity.
-  - apply path_forall2; intros x0 x1.
+  - funext x0 x1.
     apply concat_1p.
 Defined.
 
@@ -123,7 +116,7 @@ Definition magmamap_compose_1f `{Funext} {X Y : Magma} (f : MagmaMap X Y)
 Proof.
   record_equality.
   - reflexivity.
-  - apply path_forall2; intros x0 x1.
+  - funext x0 x1.
     refine (_ @ _).
     1:apply concat_p1.
     apply ap_idmap.
@@ -132,29 +125,13 @@ Defined.
 Definition magmaequiv_compose {X Y Z : Magma} (g : MagmaEquiv Y Z) (f : MagmaEquiv X Y)
   : MagmaEquiv X Z.
 Proof.
-  (* Typeclass resolution finds [compose_sg_morphism], which uses rewrite. *)
-  simple notypeclasses refine (build_magmaequiv (g oE f) _ _).
-  - apply equiv_isequiv.
-  - apply magmamap_compose.
+  serapply (build_magmaequiv (g oE f)).
+  serapply compose_sg_morphism.
 Defined.
 
 Definition magmaequiv_inverse {X Y : Magma} (f : MagmaEquiv X Y) : MagmaEquiv Y X.
 Proof.
-  (* Typeclass resolution uses [invert_sg_morphism], which uses rewrite. *)
-  simple notypeclasses refine (build_magmaequiv (magmaequiv_to_equiv f)^-1 _ _).
-  - apply equiv_isequiv.
-  - apply isequiv_inverse.
-  - red. intros y0 y1.
-    (* Using [equiv_inj] here instead of [(ap (magmaequiv_to_equiv f))^-1]
-       allows us to avoid unfolding it later until the right moment. *)
-    refine (Paths.equiv_inj (magmaequiv_to_equiv f) _).
-    refine (_ @ _ @ _ @ _)^.
-    + exact (preserves_sg_op _ _).
-    (* We could use [apply ap2; apply eisretr] here, but later it is convenient
-       to have things in terms of ap. *)
-    + refine (ap (fun y => sg_op y _) _); apply eisretr.
-    + refine (ap (sg_op y0) _); apply eisretr.
-    + symmetry; apply eisretr.
+  serapply (build_magmaequiv (magmaequiv_to_equiv f)^-1).
 Defined.
 
 (* The left inverse law.  Much trickier than I expected.  Would be easier with univalence. *)
@@ -167,7 +144,7 @@ Proof.
   record_equality.
   + apply path_forall; intro; apply eisretr.
   + unfold preserves_sg_op.
-    apply path_forall2; intros y0 y1.
+    funext y0 y1.
     rewrite transport_forall_constant.
     rewrite transport_forall_constant.
     transport_path_forall_hammer.
@@ -175,6 +152,7 @@ Proof.
        unfolded into (ap f)^-1 which would get reduced to a complicated
        expression by simpl/cbn.  We unfold it to (ap f)^-1 now, where it
        cancels against the adjacent (ap f): *)
+    unfold compose_sg_morphism, invert_sg_morphism.
     unfold equiv_inj.
     rewrite (eisretr (ap f)).
     rewrite @transport_paths_l.
@@ -213,37 +191,6 @@ Proof.
   - apply mecompose_eV.
 Defined.
 
-(* This should be in Overture.v, and path_forall2 should be defined in terms of this. *)
-Definition equiv_path_forall2 `{Funext} {A B : Type} {P : A -> B -> Type} (f g : forall x y, P x y)
-  : (forall (a : A) (b : B), f a b = g a b) <~> f = g
-  := (equiv_path_forall f g) oE (equiv_functor_forall_id (fun a => equiv_path_forall (f a) (g a))).
-
-(* Alternatively, one can prove that the existing path_forall2 is an equivalence: *)
-Global Instance isequiv_path_forall2 `{Funext} {A B : Type} {P : A -> B -> Type} (f g : forall x y, P x y)
-  : IsEquiv (path_forall2 f g).
-Proof.
-  unfold path_forall2.
-  simple refine (isequiv_compose' _ _ (path_forall f g) _).
-  apply (isequiv_functor_forall (f:=equiv_idmap) (g:=fun a => path_forall (f a) (g a))).
-Defined.
-
-(* With the second approach, need: *)
-Definition equiv_path_forall2' `{Funext} {A B : Type} {P : A -> B -> Type} (f g : forall x y, P x y)
-  := Build_Equiv _ _ (path_forall2 f g) _.
-
-(* This is a drop-in replacement for contr_basedequiv in Universe.v.
-   Coq is unable to compute the center of contraction with the proof
-   given there, so we reprove it a different way.  I think this proof
-   should replace that proof. *)
-Global Instance contr_basedequiv_fix `{Univalence} {X : Type}
-: Contr {Y : Type & X <~> Y}.
-Proof.
-  exists (X; equiv_idmap).
-  intros [Y f]; revert Y f.
-  apply equiv_induction.
-  reflexivity.
-Defined.
-
 Definition issig_magmaequiv' (X Y : Magma) :
   {f : X <~> Y & IsSemiGroupPreserving f} <~> MagmaEquiv X Y.
 Proof.
@@ -259,11 +206,11 @@ Definition equiv_magmaequiv_path `{Univalence} (X Y : Magma)
   : MagmaEquiv X Y <~> (X = Y).
 Proof.
   refine (_ oE (issig_magmaequiv' X Y)^-1).
-  eqp_issig_contr issig_magma; cbn; intros [X m].
+  revert X Y; apply (equiv_path_issig_contr issig_magma); cbn; intros [X m].
   - exists equiv_idmap.  intros x0 x1.  reflexivity.
   - contr_sigsig X (equiv_idmap X).
     exact (@contr_equiv' _ _
-           (equiv_functor_sigma_id (fun f => equiv_path_forall2 _ _))^-1
+           (equiv_functor_sigma_id (fun f => equiv_path_forall11 _ _))^-1
            (contr_basedpaths _)).
 Defined.
 

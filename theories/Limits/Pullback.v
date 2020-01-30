@@ -1,6 +1,6 @@
 (* -*- mode: coq; mode: visual-line -*- *)
 Require Import HoTT.Basics HoTT.Types.
-Require Import Fibrations.
+Require Import Fibrations Cubical.PathSquare.
 
 Local Open Scope path_scope.
 
@@ -57,6 +57,28 @@ Definition IsPullback {A B C D}
            {f : A -> B} {g : C -> D} {h : A -> C} {k : B -> D}
            (p : k o f == g o h)
   := IsEquiv (pullback_corec p).
+
+Definition equiv_ispullback {A B C D}
+           {f : A -> B} {g : C -> D} {h : A -> C} {k : B -> D}
+           (p : k o f == g o h) (ip : IsPullback p)
+  : A <~> Pullback k g
+  := Build_Equiv _ _ (pullback_corec p) ip.
+
+(** The pullback of the projections [{d:D & P d} -> D <- {d:D & Q d}] is equivalent to [{d:D & P d * Q d}]. *)
+Definition ispullback_sigprod {D : Type} (P Q : D -> Type)
+  : IsPullback (fun z:{d:D & P d * Q d} => 1%path : (z.1;fst z.2).1 = (z.1;snd z.2).1).
+Proof.
+  serapply isequiv_adjointify.
+  - intros [[d1 p] [[d2 q] e]]; cbn in e.
+    exists d1. exact (p, e^ # q).
+  - intros [[d1 p] [[d2 q] e]]; unfold pullback_corec; cbn in *.
+    destruct e; reflexivity.
+  - intros [d [p q]]; reflexivity.
+Defined.
+
+Definition equiv_sigprod_pullback {D : Type} (P Q : D -> Type)
+  : {d:D & P d * Q d} <~> Pullback (@pr1 D P) (@pr1 D Q)
+  := Build_Equiv _ _ _ (ispullback_sigprod P Q).
 
 (** The pullback of a map along another one *)
 Definition pullback_along {A B C} (f : B -> A) (g : C -> A)
@@ -159,3 +181,56 @@ Section Functor_Pullback.
   Defined.
 
 End Functor_Pullback.
+
+Section EquivPullback.
+  Context {A B C f g A' B' C' f' g'}
+          (eA : A <~> A') (eB : B <~> B') (eC : C <~> C')
+          (p : f' o eB == eA o f) (q :  g' o eC == eA o g).
+
+  Lemma equiv_pullback
+    : Pullback f g <~> Pullback f' g'.
+  Proof.
+    unfold Pullback.
+    apply (equiv_functor_sigma' eB); intro b.
+    apply (equiv_functor_sigma' eC); intro c.
+    refine (equiv_concat_l (p _) _ oE _).
+    refine (equiv_concat_r (q _)^ _ oE _).
+    refine (equiv_ap' eA _ _).
+  Defined.
+
+End EquivPullback.
+
+
+(** Pullbacks commute with sigmas *)
+Section PullbackSigma.
+
+  Context
+    {X Y Z : Type}
+    {A : X -> Type} {B : Y -> Type} {C : Z -> Type}
+    (f : Y -> X) (g : Z -> X)
+    (r : forall x, B x -> A (f x))
+    (s : forall x, C x -> A (g x)).
+
+  Definition equiv_sigma_pullback
+    : {p : Pullback f g & Pullback (transport A p.2.2 o r p.1) (s p.2.1)}
+      <~> Pullback (functor_sigma f r) (functor_sigma g s).
+  Proof.
+    refine (_ oE (equiv_sigma_assoc _ _)^-1).
+    refine (equiv_sigma_assoc _ _ oE _).
+    apply (equiv_functor_sigma' equiv_idmap); intro y.
+    refine (_ oE (equiv_sigma_assoc _ _)^-1).
+    refine (equiv_functor_sigma' equiv_idmap _ oE _).
+    1: intro; apply equiv_sigma_assoc.
+    refine (equiv_sigma_symm _ oE _).
+    refine (equiv_functor_sigma' equiv_idmap _); intro z.
+    refine (_ oE _).
+    { refine (equiv_functor_sigma' equiv_idmap _); intro b.
+      refine (equiv_functor_sigma' equiv_idmap _); intro c.
+      apply equiv_path_sigma. }
+    refine (equiv_functor_sigma' equiv_idmap _ oE _).
+    1: intro b; cbn; apply equiv_sigma_symm.
+    cbn; apply equiv_sigma_symm.
+  Defined.
+
+End PullbackSigma.
+

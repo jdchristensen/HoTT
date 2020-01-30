@@ -3,7 +3,7 @@
 (** * Factorizations and factorization systems. *)
 
 Require Import HoTT.Basics HoTT.Types.
-Require Import HProp UnivalenceImpliesFunext Extensions PathAny.
+Require Import HProp FunextVarieties UnivalenceImpliesFunext Extensions PathAny.
 Require Import HoTT.Tactics.
 Local Open Scope path_scope.
 
@@ -66,7 +66,7 @@ Section Factorization.
     : PathFactorization fact fact' <~> fact = fact'.
   Proof.
     refine (_ oE (issig_PathFactorization fact fact')^-1).
-    eqp_issig_contr issig_Factorization.
+    revert fact fact'; apply (equiv_path_issig_contr issig_Factorization).
     { intros [I [f1 [f2 [ff [oc1 oc2]]]]].
       exists (equiv_idmap I); cbn.
       exists (fun x:A => 1%path); cbn.

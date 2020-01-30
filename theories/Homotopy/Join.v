@@ -1,10 +1,16 @@
 (* -*- mode: coq; mode: visual-line -*- *)
-
-Require Import HoTT.Basics HoTT.Types.
-Require Import HProp HSet NullHomotopy Extensions.
-Require Import Colimits.Pushout HoTT.Truncations.
-Local Open Scope path_scope.
+Require Import Basics.
+Require Import Types.
+Require Import Cubical.
+Require Import HProp.
+Require Import HSet.
+Require Import NullHomotopy.
+Require Import Extensions.
+Require Import Colimits.Pushout.
+Require Import Truncations.
 Import TrM.
+
+Local Open Scope path_scope.
 
 (** * Joins *)
 
@@ -14,7 +20,49 @@ Section Join.
   Definition Join (A : Type@{i}) (B : Type@{j})
     := Pushout@{k i j k} (@fst A B) (@snd A B).
 
-  Definition jglue {A B} a b := @pglue (A*B) A B fst snd (a,b).
+  Definition joinl {A B} : A -> Join A B
+    := fun a => @pushl (A*B) A B fst snd a.
+
+  Definition joinr {A B} : B -> Join A B
+    := fun b => @pushr (A*B) A B fst snd b.
+
+  Definition jglue {A B} a b : joinl a = joinr b
+    := @pglue (A*B) A B fst snd (a , b).
+
+  Definition Join_ind {A B : Type} (P : Join A B -> Type)
+    (P_A : forall a, P (joinl a)) (P_B : forall b, P (joinr b))
+    (P_g : forall a b, DPath P (jglue a b) (P_A a) (P_B b))
+    : forall (x : Join A B), P x.
+  Proof.
+    serapply (Pushout_ind P P_A P_B).
+    intros [a b].
+    apply dp_path_transport^-1.
+    exact (P_g a b).
+  Defined.
+
+  Definition Join_ind_beta_jglue {A B : Type} (P : Join A B -> Type)
+    (P_A : forall a, P (joinl a)) (P_B : forall b, P (joinr b))
+    (P_g : forall a b, DPath P (jglue a b) (P_A a) (P_B b)) a b
+    : dp_apD (Join_ind P P_A P_B P_g) (jglue a b) = P_g a b.
+  Proof.
+    apply dp_apD_path_transport.
+    serapply Pushout_ind_beta_pglue.
+  Defined.
+
+  Definition Join_rec {A B P : Type} (P_A : A -> P) (P_B : B -> P)
+    (P_g : forall a b, P_A a = P_B b) : Join A B -> P.
+  Proof.
+    serapply (Pushout_rec P P_A P_B).
+    intros [a b].
+    apply P_g.
+  Defined.
+
+  Definition Join_rec_beta_jglue {A B P : Type} (P_A : A -> P)
+    (P_B : B -> P) (P_g : forall a b, P_A a = P_B b) a b
+    : ap (Join_rec P_A P_B P_g) (jglue a b) = P_g a b.
+  Proof.
+    serapply Pushout_rec_beta_pglue.
+  Defined.
 
   (** Joining with a contractible type produces a contractible type *)
   Global Instance contr_join A B `{Contr A} : Contr (Join A B).
@@ -38,6 +86,80 @@ Section Join.
     refine (equiv_pushout (equiv_prod_symm A B) 1 1 _ _);
       intros [a b]; reflexivity.
   Defined.
+
+  Definition join_natsq_v {A B : Type} {a a' : A} {b b' : B}
+    (p : a = a') (q : b = b')
+    : PathSquare (ap joinl p) (ap joinr q) (jglue a b) (jglue a' b').
+  Proof.
+    destruct p, q.
+    apply sq_refl_v.
+  Defined.
+
+  Definition join_natsq_h {A B : Type} {a a' : A} {b b' : B}
+    (p : a = a') (q : b = b')
+    : PathSquare (jglue a b) (jglue a' b') (ap joinl p) (ap joinr q).
+  Proof.
+    destruct p, q.
+    apply sq_refl_h.
+  Defined.
+
+  Definition functor_join {A B C D} (f : A -> C) (g : B -> D)
+    : Join A B -> Join C D.
+  Proof.
+    serapply Join_rec.
+    1: intro a; apply joinl, f, a.
+    1: intro b; apply joinr, g, b.
+    intros a b.
+    apply jglue.
+  Defined.
+
+  Definition functor_join_compose {A B C D E F}
+    (f : A -> C) (g : B -> D) (h : C -> E) (i : D -> F)
+    : functor_join (h o f) (i o g) == functor_join h i o functor_join f g.
+  Proof.
+    serapply Join_ind.
+    1,2: reflexivity.
+    intros a b.
+    simpl.
+    apply sq_dp^-1.
+    apply sq_1G.
+    symmetry.
+    rewrite ap_compose.
+    rewrite 3 Join_rec_beta_jglue.
+    reflexivity.
+  Defined.
+
+  Definition functor_join_idmap {A}
+    : functor_join idmap idmap == (idmap : Join A A -> Join A A).
+  Proof.
+    serapply Join_ind.
+    1,2: reflexivity.
+    intros a b.
+    cbn; apply dp_paths_FlFr.
+    rewrite Join_rec_beta_jglue.
+    rewrite ap_idmap, concat_p1.
+    apply concat_Vp.
+  Defined.
+
+  Global Instance isequiv_functor_join {A B C D}
+    (f : A -> C) `{!IsEquiv f} (g : B -> D) `{!IsEquiv g}
+    : IsEquiv (functor_join f g).
+  Proof.
+    serapply isequiv_adjointify.
+    1: apply (functor_join f^-1 g^-1).
+    1,2: serapply Join_ind.
+    1,2: intro; simpl; apply ap, eisretr.
+    2,3: intro; simpl; apply ap, eissect.
+    1,2: intros c d.
+    1,2: apply sq_dp^-1.
+     1 : rewrite (ap_compose _ (functor_join f g)).
+     2 : rewrite (ap_compose (functor_join f g)).
+    1,2: rewrite 2 Join_rec_beta_jglue, ap_idmap.
+    1,2: apply join_natsq_v.
+  Defined.
+
+  Definition equiv_functor_join {A B C D} (f : A <~> C) (g : B <~> D)
+    : Join A B <~> Join C D := Build_Equiv _ _ (functor_join f g) _.
 
   (** The join of hprops is an hprop *)
   Global Instance ishprop_join `{Funext} A B `{IsHProp A} `{IsHProp B} : IsHProp (Join A B).
@@ -96,3 +218,44 @@ Section Join.
   Defined.
 
 End Join.
+
+(** Diamond lemmas for Join *)
+Section Diamond.
+
+  Context {A B : Type}.
+
+  Definition Diamond (a a' : A) (b b' : B)
+    := PathSquare (jglue a b) (jglue a' b')^ (jglue a b') (jglue a' b)^.
+
+  Definition diamond_h {a a' : A} (b b' : B) (p : a = a')
+    : Diamond a a' b b'.
+  Proof.
+    destruct p.
+    apply sq_path.
+    exact (concat_pV _ @ (concat_pV _)^).
+  Defined.
+
+  Definition diamond_v (a a' : A) {b b' : B} (p : b = b')
+    : Diamond a a' b b'.
+  Proof.
+    destruct p.
+    by apply sq_path.
+  Defined.
+
+  Lemma diamond_symm (a : A) (b : B)
+    : diamond_v a a 1 = diamond_h b b 1.
+  Proof.
+    unfold diamond_v, diamond_h.
+    symmetry; apply ap, concat_pV.
+  Defined.
+
+End Diamond.
+
+Definition diamond_twist {A : Type} {a a' : A} (p : a = a')
+  : DPath (fun x => Diamond a' x a x) p
+    (diamond_v a' a 1) (diamond_h a a' 1).
+Proof.
+  destruct p.
+  apply diamond_symm.
+Defined.
+

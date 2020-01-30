@@ -43,6 +43,22 @@ theories/Basics/Trunc.v
 theories/Basics/Decidable.v
 
 #
+#   Wildcat
+#
+theories/WildCat.v
+theories/WildCat/Core.v
+theories/WildCat/UnitCat.v
+theories/WildCat/EmptyCat.v
+theories/WildCat/Prod.v
+theories/WildCat/Equiv.v
+theories/WildCat/Sum.v
+theories/WildCat/Opposite.v
+theories/WildCat/Type.v
+theories/WildCat/Induced.v
+theories/WildCat/FunctorCat.v
+theories/WildCat/Yoneda.v
+
+#
 #   Types
 #
 
@@ -68,10 +84,10 @@ theories/Types/Universe.v
 theories/Cubical.v
 
 theories/Cubical/DPath.v
-theories/Cubical/Square.v
-theories/Cubical/DSquare.v
-theories/Cubical/Cube.v
-theories/Cubical/DCube.v
+theories/Cubical/PathSquare.v
+theories/Cubical/DPathSquare.v
+theories/Cubical/PathCube.v
+theories/Cubical/DPathCube.v
 
 #
 #   Spaces
@@ -249,8 +265,13 @@ theories/Homotopy/Wedge.v
 theories/Homotopy/Join.v
 
 theories/Homotopy/WhiteheadsPrinciple.v
+theories/Homotopy/HSpace.v
+theories/Homotopy/HSpaceS1.v
 theories/Homotopy/BlakersMassey.v
 theories/Homotopy/Freudenthal.v
+theories/Homotopy/ClassifyingSpace.v
+theories/Homotopy/EMSpace.v
+theories/Homotopy/CayleyDickson.v
 
 #
 #   Pointed
@@ -266,6 +287,7 @@ theories/Pointed/pEquiv.v
 theories/Pointed/pTrunc.v
 theories/Pointed/pHomotopy.v
 theories/Pointed/pSusp.v
+theories/Pointed/pType.v
 
 #
 #   Spectra

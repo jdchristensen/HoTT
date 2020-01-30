@@ -1,13 +1,7 @@
-Require Import Basics.
-Require Import Types.
-Require Import HSet.
-Require Import Fibrations.
-Require Import Factorization.
-Require Import HoTT.Truncations.
-Require Import Pointed.Core.
-Require Import Pointed.pMap.
-Require Import Pointed.pEquiv.
-Require Import Pointed.pHomotopy.
+Require Import HoTT.Basics HoTT.Types.
+Require Import HSet Fibrations Factorization HoTT.Truncations HProp.
+Require Import UnivalenceImpliesFunext.
+Require Import Pointed.Core Pointed.pMap Pointed.pEquiv Pointed.pHomotopy.
 
 Import TrM.
 
@@ -346,7 +340,7 @@ Local Notation "( X , x )" := (Build_pType X x).
 Definition loops_type `{Univalence} (A : Type)
   : loops (Type,A) <~>* (A <~> A, equiv_idmap).
 Proof.
-  apply issig_pequiv.
+  apply issig_pequiv'.
   exists (equiv_equiv_path A A).
   reflexivity.
 Defined.
@@ -357,7 +351,7 @@ Lemma local_global_looping `{Univalence} (A : Type) (n : nat)
 Proof.
   induction n.
   { refine (_ o*E pequiv_loops_functor (loops_type A)).
-    apply issig_pequiv.
+    apply issig_pequiv'.
     exists (equiv_inverse (equiv_path_arrow 1%equiv 1%equiv)
             oE equiv_inverse (equiv_path_equiv 1%equiv 1%equiv)).
     reflexivity. }

@@ -3,6 +3,7 @@ Require Import HoTT.Basics HoTT.Types.
 Require Import Fibrations FunextVarieties UnivalenceImpliesFunext EquivalenceVarieties Constant.
 Require Import HoTT.Truncations.
 Require Import PathAny.
+Import TrM.
 
 Local Open Scope nat_scope.
 Local Open Scope path_scope.
@@ -108,7 +109,7 @@ Definition equiv_path_retractof `{ua : Univalence} {X : Type}
            (R' R : RetractOf X)
   : PathRetractOf X R' R <~> R' = R.
 Proof.
-  eqp_issig_contr (issig_retractof X).
+  revert R' R; apply (equiv_path_issig_contr (issig_retractof X)).
   { intros [A [r [s H]]]; cbn.
     exists equiv_idmap.
     exists (fun x => 1%path).

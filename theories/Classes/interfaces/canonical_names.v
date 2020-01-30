@@ -191,10 +191,10 @@ Class Abs A `{Le A} `{Zero A} `{Negate A}
 Definition abs `{Abs A} := fun x : A => (abs_sig x).1.
 
 (* Common properties: *)
-Class Inverse `(A -> B) : Type := inverse: B -> A.
+(* Class Inverse `(A -> B) : Type := inverse: B -> A.
 Arguments inverse {A B} _ {Inverse} _.
 Typeclasses Transparent Inverse.
-Notation "f ⁻¹" := (inverse f) (at level 30) : mc_scope.
+Notation "f ⁻¹" := (inverse f) (at level 30) : mc_scope. *)
 
 Class Idempotent `(f: A -> A -> A) (x : A) : Type := idempotency: f x x = x.
 Arguments idempotency {A} _ _ {Idempotent}.
@@ -289,6 +289,20 @@ Global Instance trunc_equiv_rel `{Funext} {A : Type}
 Proof.
   exact (trunc_equiv (SigEquivRel R) (issig_equiv_rel R)).
 Qed.
+
+Class Conjugate A := conj : A -> A.
+
+Class DistrOpp {A} `(SgOp A) `(Conjugate A)
+  := distropp : forall x y : A, conj (sg_op x y) = sg_op (conj y) (conj x).
+
+Class SwapOp {A} `(Negate A) `(Conjugate A)
+  := swapop : forall x, conj (-x) = - (conj x).
+
+Class FactorNegLeft {A} `(Negate A) `(SgOp A)
+  := factorneg_l : forall x y, sg_op (-x) y = - (sg_op x y).
+
+Class FactorNegRight {A} `(Negate A) `(SgOp A)
+  := factorneg_r : forall x y, sg_op x (-y) = - (sg_op x y).
 
 Class LeftHeteroDistribute {A B C}
   (f : A -> B -> C) (g_r : B -> B -> B) (g : C -> C -> C) : Type

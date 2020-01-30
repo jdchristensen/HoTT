@@ -27,6 +27,9 @@ Global Set Default Goal Selector "!".
 (** Currently Coq doesn't print equivalences correctly (8.6). This fixes that. See https://github.com/HoTT/HoTT/issues/1000 *)
 Global Set Printing Primitive Projection Parameters.
 
+(** This tells Coq that when we [Require] a module without [Import]ing it, typeclass instances defined in that module should also not be imported.  In other words, the only effect of [Require] without [Import] is to make qualified names available. *)
+Global Set Loose Hint Behavior "Strict".
+
 (** Apply using the same opacity information as typeclass proof search. *)
 Ltac class_apply c := autoapply c with typeclass_instances.
 
@@ -164,7 +167,7 @@ Notation pr2 := projT2.
 Notation "x .1" := (pr1 x) : fibration_scope.
 Notation "x .2" := (pr2 x) : fibration_scope.
 
-Definition uncurry {A B C} (f: A -> B -> C) (p: A * B): C := f (fst p) (snd p).
+Definition uncurry {A B C} (f : A -> B -> C) (p : A * B) : C := f (fst p) (snd p).
 
 (** Composition of functions. *)
 
@@ -670,13 +673,6 @@ Definition path_forall `{Funext} {A : Type} {P : A -> Type} (f g : forall x : A,
   (@apD10 A P f g)^-1.
 
 Global Arguments path_forall {_ A%type_scope P} (f g)%function_scope _.
-
-Definition path_forall2 `{Funext} {A B : Type} {P : A -> B -> Type} (f g : forall x y, P x y) :
-  (forall x y, f x y = g x y) -> f = g
-  :=
-  (fun E => path_forall f g (fun x => path_forall (f x) (g x) (E x))).
-
-Global Arguments path_forall2 {_} {A B}%type_scope {P} (f g)%function_scope _.
 
 (** *** Tactics *)
 

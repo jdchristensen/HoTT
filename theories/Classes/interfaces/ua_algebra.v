@@ -2,18 +2,13 @@
 
 Require Export
   Coq.Unicode.Utf8
-  HoTT.Basics.Overture
-  HoTT.Basics.Trunc
+  HoTT.Basics
   HoTT.Classes.implementations.ne_list
   HoTT.Classes.implementations.family_prod.
 
 Require Import
-  HoTT.Basics.Equivalences
-  HoTT.Types.Sigma
-  HoTT.Types.Arrow
-  HoTT.Types.Forall
-  HoTT.Types.Universe
-  HoTT.HSet
+  HoTT.Types
+  HoTT.HSet HoTT.HProp
   HoTT.Classes.implementations.list.
 
 Import ne_list.notations.
@@ -223,7 +218,7 @@ Lemma path_path_algebra {σ : Signature} {A B : Algebra σ} (p q : A = B)
   (r : ap (issig_algebra σ)^-1 p = ap (issig_algebra σ)^-1 q)
   : p = q.
 Proof.
-  set (e := (Paths.equiv_ap (issig_algebra σ)^-1 A B)).
+  set (e := (equiv_ap (issig_algebra σ)^-1 A B)).
   by apply (@equiv_inv _ _ (ap e) (Equivalences.isequiv_ap _ _)).
 Defined.
 
