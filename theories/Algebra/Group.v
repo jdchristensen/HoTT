@@ -150,6 +150,25 @@ Proof.
   apply h.
 Defined.
 
+(** Here is an alternative issig for GroupHomomorphism since unit preservation is redundant data. *)
+Definition issig_GroupHomomorphism' (G H : Group)
+  : {f: G -> H & IsSemiGroupPreserving f} <~> GroupHomomorphism G H.
+Proof.
+  srapply equiv_adjointify.
+  { intros [f ?].
+    apply (Build_GroupHomomorphism f). }
+  { intros [f [? ?]].
+    exists f.
+    exact _. }
+  { intros [f [p h]].
+    unfold Build_GroupHomomorphism.
+    apply ap, ap.
+    nrapply path_ishprop.
+    apply istrunc_paths.
+    exact _. }
+  by intros [].
+Defined.
+
 Definition grp_homo_compose {G H K : Group}
   : GroupHomomorphism H K -> GroupHomomorphism G H -> GroupHomomorphism G K.
 Proof.
