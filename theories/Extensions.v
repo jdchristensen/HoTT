@@ -17,7 +17,7 @@ Section Extensions.
 
   (* TODO: consider naming for [ExtensionAlong] and subsequent lemmas.  As a name for the type itself, [Extension] or [ExtensionAlong] seems great; but resultant lemma names such as [path_extension] (following existing naming conventions) are rather misleading. *)
 
-  (** This elimination rule (and others) can be seen as saying that, given a fibration over the codomain and a section of it over the domain, there is some *extension* of this to a section over the whole domain.  It can also be considered as an equivalent form of an [hfiber] of precomposition-with-[f] that replaces paths by pointwise paths, thereby avoiding [Funext]. *)
+  (** This elimination rule (and others) can be seen as saying that, given a fibration over the codomain and a section of it over the domain, there is some *extension* of this to a section over the whole codomain.  It can also be considered as an equivalent form of an [hfiber] of precomposition-with-[f] that replaces paths by pointwise paths, thereby avoiding [Funext]. *)
 
   Definition ExtensionAlong {A B : Type} (f : A -> B)
              (P : B -> Type) (d : forall x:A, P (f x))
@@ -54,23 +54,20 @@ Section Extensions.
                     (fun x => pr2 ext x @ (pr2 ext' x)^))
     <~> ext = ext'.
   Proof.
-    revert ext ext'.
-    refine (equiv_path_from_contr
-              (fun (ext ext' : ExtensionAlong f P d) => (ExtensionAlong
-                                  f (fun y => pr1 ext y = pr1 ext' y)
-                                  (fun x => pr2 ext x @ (pr2 ext' x)^))) _ _).
-    { intros [g gd]; unfold ExtensionAlong; cbn.
+    revert ext'.
+    serapply equiv_path_from_contr.
+    { unfold ExtensionAlong; cbn.
       exists (fun y => 1%path).
       intros x; symmetry; apply concat_pV. }
-    intros [g gd]; unfold ExtensionAlong; cbn.
+    destruct ext as [g gd]; unfold ExtensionAlong; cbn.
     refine (contr_sigma_sigma
               (forall y:B, P y) (fun s => forall x:A, s (f x) = d x)
               (fun a => g == a)
               (fun a b c => forall x:A, c (f x) = gd x @ (b x)^)
               g (fun y:B => idpath (g y))).
     refine (contr_equiv' {p:g o f == d & gd == p} _). cbn.
-    refine (equiv_functor_sigma' (equiv_idmap _) _); intros p.
-    refine (equiv_functor_forall' (equiv_idmap _) _); intros x; cbn.
+    refine (equiv_functor_sigma_id _); intros p.
+    refine (equiv_functor_forall_id _); intros x; cbn.
     refine (_ oE equiv_path_inverse _ _).
     symmetry; apply equiv_moveR_1M.
   Defined.
@@ -385,6 +382,12 @@ Section Extensions.
              (g : forall b, C b -> D b) `{forall b, IsEquiv (g b)}
   : ooExtendableAlong f C -> ooExtendableAlong f D
     := fun ppp n => extendable_postcompose n C D f g (ppp n).
+
+  Definition ooextendable_postcompose'
+             {A B : Type} (C D : B -> Type) (f : A -> B)
+             (g : forall b, C b <~> D b)
+  : ooExtendableAlong f C -> ooExtendableAlong f D
+    := fun ppp n => extendable_postcompose' n C D f g (ppp n).
 
   Definition ooextendable_compose
              {A B C : Type} (P : C -> Type) (f : A -> B) (g : B -> C)

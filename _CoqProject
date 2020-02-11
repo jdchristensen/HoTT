@@ -21,7 +21,7 @@ COQC = hoqc
 #   # Spectra
 #   # Algebra
 #   # Tactics
-#   # PropResizing 
+#   # PropResizing
 #   # Categories
 #   # Classes
 #
@@ -52,11 +52,17 @@ theories/WildCat/EmptyCat.v
 theories/WildCat/Prod.v
 theories/WildCat/Equiv.v
 theories/WildCat/Sum.v
+theories/WildCat/Forall.v
+theories/WildCat/Sigma.v
 theories/WildCat/Opposite.v
+theories/WildCat/Paths.v
 theories/WildCat/Type.v
 theories/WildCat/Induced.v
+theories/WildCat/EquivGpd.v
 theories/WildCat/FunctorCat.v
 theories/WildCat/Yoneda.v
+theories/WildCat/TwoOneCat.v
+theories/WildCat/NatTrans.v
 
 #
 #   Types
@@ -246,7 +252,7 @@ theories/HoTT.v
 theories/Tests.v
 
 #
-#   Contrib  
+#   Contrib
 #
 
 contrib/HoTTBook.v
@@ -294,7 +300,7 @@ theories/Pointed/pType.v
 #
 
 theories/Spectra/Spectrum.v
-theories/Spectra/Coinductive.v  
+theories/Spectra/Coinductive.v
 
 #
 #   Algebra
@@ -317,10 +323,11 @@ theories/Algebra/QuotientGroup.v
 #
 
 theories/Tactics.v
-theories/Tactics/RewriteModuloAssociativity.v
+theories/Tactics/BinderApply.v
 theories/Tactics/EquivalenceInduction.v
 theories/Tactics/EvalIn.v
-theories/Tactics/BinderApply.v
+theories/Tactics/Nameless.v
+theories/Tactics/RewriteModuloAssociativity.v
 
 #
 #   PropResizing
@@ -641,5 +648,3 @@ theories/Classes/theory/ua_third_isomorphism.v
 theories/Classes/categories/ua_category.v
 
 theories/Classes/tests/ring_tac.v
-
-

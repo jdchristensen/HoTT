@@ -412,12 +412,6 @@ Defined.
 
 Global Arguments ap11 {A B}%type_scope {f g}%function_scope h%path_scope {x y} p%path_scope.
 
-Definition ap2 {A B C} (f : A -> B -> C) {x1 x2 y1 y2}:
-  x1 = x2 -> y1 = y2 -> f x1 y1 = f x2 y2.
-Proof.
-intros H1 H2;destruct H1,H2;reflexivity.
-Defined.
-
 (** See above for the meaning of [simpl nomatch]. *)
 Arguments ap {A B} f {x y} p : simpl nomatch.
 
@@ -976,6 +970,14 @@ Ltac ntc_constructor :=
   | [ |- ?G ] => let build := get_constructor_head G in
                  ntc_rapply build
   end.
+
+(** [case_path] is a HoTT replacement for [case_eq]; [case_path x] is like [destruct x], but it remembers the original value of [x] in an equation to be introduced. *)
+Ltac case_path x :=
+  let x' := fresh "x" in
+  set (x' := x);
+    generalize (idpath : x' = x);
+    clearbody x';
+    destruct x'.
 
 (** [revert_opaque x] is like [revert x], except that it fails if [x] is not an opaque variable (i.e. if it has a [:=] definition rather than just a type). *)
 Ltac revert_opaque x :=
