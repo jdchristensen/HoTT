@@ -12,12 +12,12 @@ Import TrM.
    reduce to goals involving the components.  Assumes only two components
    in the record, for now. *)
 Ltac record_equality :=
-  simple refine ((equiv_ap' _^-1 _ _)^-1 _); [ | issig | ];
-  simple refine (path_sigma _ _ _ _ _); simpl.
+  srefine ((equiv_ap' _^-1 _ _)^-1 _); [ | issig | ];
+  srapply path_sigma; simpl.
 
 (* Use this one if the fibers are known to be HProps. *)
 Ltac record_equality_hprop :=
-  simple refine ((equiv_ap' _^-1 _ _)^-1 _); [ | issig | ];
+  srefine ((equiv_ap' _^-1 _ _)^-1 _); [ | issig | ];
   apply path_sigma_hprop; simpl.
 
 Record Magma := {
@@ -42,7 +42,7 @@ Definition magmamap_compose {X Y Z : Magma}
   (f : MagmaMap Y Z) (g : MagmaMap X Y) : MagmaMap X Z.
 Proof.
   (* Typeclass resolution finds [compose_sg_morphism]. *)
-  serapply (Build_MagmaMap _ _ (f o g)).
+  srapply (Build_MagmaMap _ _ (f o g)).
 Defined.
 
 Definition magmamap_compose_assoc `{Funext} {W X Y Z : Magma}
@@ -99,7 +99,7 @@ Defined.
 
 Definition magma_idmap (X : Magma) : MagmaEquiv X X.
 Proof.
-  refine (build_magmaequiv idmap _ _).
+  srapply (build_magmaequiv idmap).
 Defined.
 
 Definition magmamap_compose_f1 `{Funext} {X Y : Magma} (f : MagmaMap X Y)
@@ -125,13 +125,13 @@ Defined.
 Definition magmaequiv_compose {X Y Z : Magma} (g : MagmaEquiv Y Z) (f : MagmaEquiv X Y)
   : MagmaEquiv X Z.
 Proof.
-  serapply (build_magmaequiv (g oE f)).
-  serapply compose_sg_morphism.
+  srapply (build_magmaequiv (g oE f)).
+  srapply compose_sg_morphism.
 Defined.
 
 Definition magmaequiv_inverse {X Y : Magma} (f : MagmaEquiv X Y) : MagmaEquiv Y X.
 Proof.
-  serapply (build_magmaequiv (magmaequiv_to_equiv f)^-1).
+  srapply (build_magmaequiv (magmaequiv_to_equiv f)^-1).
 Defined.
 
 (* The left inverse law.  Much trickier than I expected.  Would be easier with univalence. *)
@@ -194,7 +194,7 @@ Defined.
 Definition issig_magmaequiv' (X Y : Magma) :
   {f : X <~> Y & IsSemiGroupPreserving f} <~> MagmaEquiv X Y.
 Proof.
-  serapply equiv_adjointify.
+  srapply equiv_adjointify.
   - intros [[f e] r]; exact (build_magmaequiv f e r).
   - intros [[f r] e]; exact ((Build_Equiv _ _ f e); r).
   - simpl. reflexivity.
@@ -218,7 +218,7 @@ Defined.
 Definition equiv_magmamap `{Funext} {X Y : Magma} (Z : Magma)
   (e : MagmaEquiv X Y) : MagmaMap Y Z <~> MagmaMap X Z.
 Proof.
-  serapply equiv_adjointify.
+  srapply equiv_adjointify.
   + exact (fun f => magmamap_compose f e).
   + exact (fun g => magmamap_compose g (magmaequiv_inverse e)).
   + unfold Sect; intro f.
@@ -246,7 +246,7 @@ Definition magma_loops_functor {X Y : pType}
   : (X ->* Y) -> MagmaMap (magma_loops X) (magma_loops Y).
 Proof.
   intro f.
-  simple notypeclasses refine (Build_MagmaMap _ _ _ _).
+  snrapply Build_MagmaMap.
   + exact (loops_functor f).
   + exact (loops_functor_pp f).
 Defined.
@@ -262,7 +262,7 @@ Definition iterated_magma_loops_functor {X Y : pType} (n : nat)
   : (X ->* Y) -> MagmaMap (iterated_magma_loops n X) (iterated_magma_loops n Y).
 Proof.
   intro f.
-  simple notypeclasses refine (Build_MagmaMap _ _ _ _).
+  snrapply Build_MagmaMap.
   + exact (iterated_loops_functor n.+1 f).
   + exact (iterated_loops_functor_pp f n).
 Defined.
@@ -302,18 +302,18 @@ Definition equiv_grp_homo_magma_map `{F : Funext} (G H : Group)
 (* The proof is more complicated than expected because a GroupHomomorphism
    is required to preserve the identity, even though this is automatic. *)
 Proof.
-  serapply equiv_adjointify.
+  srapply equiv_adjointify.
   + intro f.
-    serapply (Build_MagmaMap G H f).
+    srapply (Build_MagmaMap G H f).
   + intro f.
-    serapply (Build_GroupHomomorphism f).
+    srapply (Build_GroupHomomorphism f).
     apply (magmamap_op_preserving G H f).
   + cbn; reflexivity.
   + intro f.
     destruct f as [f p].
     unfold Build_GroupHomomorphism.
     cbn.  apply ap.
-    serapply path_ishprop.
+    srapply path_ishprop.
 Defined.
 
 (** n-connected cover *)
@@ -326,7 +326,7 @@ Global Instance isconnected_cover (n : trunc_index) (X : pType)
 (* The projection map from the n-connected cover to the type. *)
 Definition cover_proj (n : trunc_index) {X : pType} : cover n X ->* X.
 Proof.
-  serapply Build_pMap.
+  srapply Build_pMap.
   + apply pr1.
   + reflexivity.
 Defined.
@@ -334,7 +334,7 @@ Defined.
 Global Instance mapinO_cover_proj (n : trunc_index) {X : pType}
   : IsTruncMap n (@cover_proj n X).
 Proof.
-  serapply mapinO_pr1.
+  srapply mapinO_pr1.
 Defined.
 
 (* Lemma 2.3 *)
@@ -351,7 +351,7 @@ Definition lemma_2_3 (n : nat) (X : pType) (Z : pType) `{IsConnected n Z}
 (* Truncated magma *)
 Definition mTr (n : trunc_index) (X : Magma) : Magma.
 Proof.
-  serapply (Build_Magma (Tr n X)).
+  srapply (Build_Magma (Tr n X)).
   intros x y.
   strip_truncations.
   exact (tr (sg_op x y)).
@@ -369,16 +369,16 @@ Global Instance isequiv_magmamap_precompose_hset `{Funext} {A B C : Magma}
   : IsEquiv f -> IsEquiv (fun g : MagmaMap B C => magmamap_compose g f).
 Proof.
   intro e.
-  serapply isequiv_adjointify.
+  srapply isequiv_adjointify.
   { intro g.
     refine (magmamap_compose g _).
-    serapply (Build_MagmaMap _ _ f^-1). }
+    srapply (Build_MagmaMap _ _ f^-1). }
   { intro g.
-    serapply path_magmamap_hset.
+    srapply path_magmamap_hset.
     intro; apply (ap g).
     apply eissect. }
   intro g.
-  serapply path_magmamap_hset.
+  srapply path_magmamap_hset.
   intro; apply (ap g).
   apply eisretr.
 Defined.
@@ -388,16 +388,16 @@ Global Instance isequiv_magmamap_postcompose_hset `{Funext} {A B C : Magma}
   : IsEquiv f -> IsEquiv (fun g : MagmaMap A B => magmamap_compose f g).
 Proof.
   intro e.
-  serapply isequiv_adjointify.
+  srapply isequiv_adjointify.
   { intro g.
     refine (magmamap_compose _ g).
-    serapply (Build_MagmaMap _ _ f^-1). }
+    srapply (Build_MagmaMap _ _ f^-1). }
   { intro g.
-    serapply path_magmamap_hset.
+    srapply path_magmamap_hset.
     intro x.
     apply eisretr. }
   intro g.
-  serapply path_magmamap_hset.
+  srapply path_magmamap_hset.
   intro; cbn; apply eissect.
 Defined.
 
@@ -428,12 +428,12 @@ Defined.
 Definition pfiber_loops_functor {A B : pType} (f : A ->* B)
   : loops (pfiber f) <~>* pfiber (loops_functor f).
 Proof.
-  serapply Build_pEquiv'.
+  srapply Build_pEquiv'.
   { symmetry.
     etransitivity.
-    2: serapply equiv_path_sigma.
+    2: srapply equiv_path_sigma.
     simpl; unfold hfiber.
-    serapply equiv_functor_sigma_id.
+    srapply equiv_functor_sigma_id.
     intro p; cbn.
     rewrite transport_paths_Fl.
     refine (_ oE equiv_moveL_Mp _ _ _).
@@ -459,7 +459,7 @@ Global Instance prop_2_5 `{Univalence} (n : nat)
   : IsEquiv (@iterated_magma_loops_functor X Y n).
 Proof.
   (** We prove this is an equivalence by constructing a commutative square of equivalenes *)
-  serapply isequiv_commsq.
+  srapply isequiv_commsq.
   (** Bottom left corner *)
   1: exact (pTr n.+1 X ->* Y).
   (** Bottom right corner *)
@@ -472,7 +472,7 @@ Proof.
     apply equiv_ptr_rec. }
   (** Right vertical map *)
   { intro g.
-    serapply (magmamap_compose g).
+    srapply (magmamap_compose g).
     apply iterated_magma_loops_functor.
     apply ptr. }
   (** The square commutes by functoriality of iterated_magma_loops *)
@@ -490,7 +490,7 @@ Proof.
     (* TODO: but tr is not an equivalence? *)
     admit. }
   (** To prove this final map is an equivalence we use another commutative square. *)
-  serapply isequiv_commsq.
+  srapply isequiv_commsq.
   (** The bottom left type *)
   1: exact (pTr n.+1 X ->* cover n Y).
   (** The bottom right type *)
@@ -504,7 +504,7 @@ Proof.
     exact _. }
   (** The right map *)
   { intro g.
-    serapply (fun x => magmamap_compose x g).
+    srapply (fun x => magmamap_compose x g).
     apply iterated_magma_loops_functor.
     apply cover_proj. }
   (** The square commutes by functoriality of iterated_magma_loops *)
@@ -519,14 +519,14 @@ Proof.
     1,2: exact _.
     (** Argument by using UP of connected types and loop-space sphere stuff *)
     admit. }
-  serapply theorem_2_1.
+  srapply theorem_2_1.
 Admitted.
 
 Definition magma_loops_pmap (Y Z : pType) : Magma.
 Proof.
-  serapply (Build_Magma (Y ->* Build_pType (magma_loops Z) idpath)).
+  srapply (Build_Magma (Y ->* Build_pType (magma_loops Z) idpath)).
   intros f g.
-  serapply Build_pMap.
+  srapply Build_pMap.
   { intro y.
     exact (sg_op (f y) (g y)). }
   simpl; by rewrite 2 point_eq.
@@ -551,17 +551,17 @@ Defined.
 Definition foo `{Funext} {Y Z : pType}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
 Proof.
-  simple notypeclasses refine (Build_MagmaMap _ _ _ _).
+  snrapply Build_MagmaMap.
   + change (loops (Y ->** Z) -> magma_loops_pmap Y Z).
     change (loops (Y ->** Z) -> (Y ->* loops Z)).
     intro p.
-    serapply Build_pMap.
+    srapply Build_pMap.
     { intro y.
       exact (ap (fun f : Y ->* Z => pointed_fun f y) p). }
-    serapply (ap_const' p _ point_eq).
+    srapply (ap_const' p _ point_eq).
   + intros p q.
-    serapply path_pmap.
-    serapply Build_pHomotopy.
+    srapply path_pmap.
+    srapply Build_pHomotopy.
     { intro x; cbn.
       exact (ap_pp _ p q). }
 Admitted.
