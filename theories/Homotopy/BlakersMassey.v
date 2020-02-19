@@ -40,11 +40,7 @@ Defined.
 
 (** ** Setup *)
 
-Module GenBlakersMassey (Os : ReflectiveSubuniverses).
-  Import Os.
-  Module Import Os_Theory := ReflectiveSubuniverses_Theory Os.
-
-  Section GBM.
+Section GBM.
     Context {X Y : Type} (Q : X -> Y -> Type).
 
     (** Here's the hypothesis of ABFJ generalized Blakers-Massey.  It works for any reflective subuniverse, not only modalities! *)
@@ -143,7 +139,7 @@ Module GenBlakersMassey (Os : ReflectiveSubuniverses).
       (** *** Codes for glue *)
 
       Section CodeGlue.
-        Context {y1 : Y} (q11 : Q x1 y1).
+        Context `{Funext} {y1 : Y} (q11 : Q x1 y1).
 
         (** We prove that codes respect glue as a chain of equivalences between types built from pushouts and double-pushouts.  The first step is to add the data of our hypothesized-to-be-connected type inside [codeleft2]. *)
 
@@ -558,7 +554,7 @@ Now we claim that the left-hand map of this span is also an equivalence.  Rather
       (** Then we notice that if we tried rewriting with [code_beta_glue] here, the unmanageable-looking result is actually fully general over the path [glue q01], so we can prove by path induction that it equals the nicer expression we'd like to see.  This is the purpose of the lemma [transport_singleton]. *)
       rewrite (transport_singleton
                  code (glue q01) _
-                 (fun r => @codeglue x0 x0 r y1 q01)
+                 (fun r => @codeglue x0 x0 r _ y1 q01) (* Funext _ in the middle. *)
                  (code_beta_glue x0 y1 q01 (glue q01))).
       unfold codeglue.
       (** Now we evaluate [codeglue] step by step using our lemmas. *)
@@ -600,13 +596,9 @@ Now we claim that the left-hand map of this span is also an equivalence.  Rather
 
     (** This version is sufficient for the classical Blakers-Massey theorem, as we'll see below, since its leg-wise connectivity hypothesis implies the above surjectivity assumption.  ABFJ have a different method for eliminating the surjectivity assumption using a lemma about pushouts of monos also being pullbacks, though it seems to only work for coderight. *)
 
-  End GBM.
-End GenBlakersMassey.
+End GBM.
 
 (** ** The classical Blakers-Massey Theorem *)
-
-Import TrM.
-Module Import BlakersMassey := GenBlakersMassey Truncation_RSUs.
 
 Global Instance blakers_massey `{Univalence} (m n : trunc_index)
            {X Y : Type} (Q : X -> Y -> Type)
@@ -618,5 +610,4 @@ Proof.
   intros r.
   srefine (contr_code_inhab Q (m +2+ n) _ x
                             (merely_isconnected n _) (spushr Q y) r).
-  intros x1 x3 y2 y4 q12 q32 q34; apply isconnected_join; exact _.
 Defined.

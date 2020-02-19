@@ -3,8 +3,6 @@ Require Import HSet Fibrations Factorization HoTT.Truncations HProp.
 Require Import UnivalenceImpliesFunext.
 Require Import Pointed.Core Pointed.pMap Pointed.pEquiv Pointed.pHomotopy.
 
-Import TrM.
-
 Local Open Scope pointed_scope.
 Local Open Scope path_scope.
 
@@ -171,6 +169,18 @@ Proof.
   - exact _.
 Defined.
 
+Definition isconnected_iterated_loops_functor `{Univalence}
+  (k : nat) (A B : pType) (f : A ->* B)
+  : forall n : trunc_index, IsConnMap (trunc_index_inc' n k) f
+                       -> IsConnMap n (iterated_loops_functor k f).
+Proof.
+  induction k; intros n C.
+  - exact C.
+  - apply isconnected_loops_functor.
+    apply IHk.
+    exact C.
+Defined.
+
 (** It follows that loop spaces "commute with images". *)
 Definition equiv_loops_image `{Univalence} n {A B : pType} (f : A ->* B)
   : loops (Build_pType (image n.+1 f) (factor1 (image n.+1 f) (point A)))
@@ -322,7 +332,7 @@ Defined.
 
 (* Loops neutralise sigmas when truncated *)
 Lemma loops_psigma_trunc (n : nat) : forall (Aa : pType)
-  (Pp : pFam Aa) (istrunc_Pp : IsTrunc_pFam (nat_to_trunc_index_2 n) Pp),
+  (Pp : pFam Aa) (istrunc_Pp : IsTrunc_pFam (trunc_index_inc minus_two n) Pp),
   iterated_loops n (psigma Pp)
   <~>* iterated_loops n Aa.
 Proof.

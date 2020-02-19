@@ -547,45 +547,14 @@ Notation "n .+4" := (n.+1.+3)%nat   : nat_scope.
 Notation "n .+5" := (n.+1.+4)%trunc : trunc_scope.
 Notation "n .+5" := (n.+1.+4)%nat   : nat_scope.
 Local Open Scope trunc_scope.
-Fixpoint nat_to_trunc_index (n : nat) : trunc_index
-  := match n with
-       | 0%nat => minus_two.+2
-       | S n' => (nat_to_trunc_index n').+1
-     end.
 
-Coercion nat_to_trunc_index : nat >-> trunc_index.
+(** Further notation for truncation levels is introducted in Trunc.v. *)
 
-Definition int_to_trunc_index (v : Decimal.int) : option trunc_index
-  := match v with
-     | Decimal.Pos d => Some (nat_to_trunc_index (Nat.of_uint d))
-     | Decimal.Neg d => match Nat.of_uint d with
-                        | 2%nat => Some minus_two
-                        | 1%nat => Some (minus_two.+1)
-                        | 0%nat => Some (minus_two.+2)
-                        | _ => None
-                        end
-     end.
-
-Fixpoint trunc_index_to_little_uint n acc :=
-  match n with
-  | minus_two => acc
-  | minus_two.+1 => acc
-  | minus_two.+2 => acc
-  | trunc_S n => trunc_index_to_little_uint n (Decimal.Little.succ acc)
-  end.
-
-Definition trunc_index_to_int n :=
-  match n with
-  | minus_two => Decimal.Neg (Nat.to_uint 2)
-  | minus_two.+1 => Decimal.Neg (Nat.to_uint 1)
-  | n => Decimal.Pos (Decimal.rev (trunc_index_to_little_uint n Decimal.zero))
-  end.
-
-Numeral Notation trunc_index int_to_trunc_index trunc_index_to_int : trunc_scope (warning after 5000).
+(** n-truncatedness is defined by recursion on [n].  We could simply define [IsTrunc] as a fixpoint and an [Existing Class], but we want to also declare [IsTrunc] to be [simpl nomatch], so that when we say [simpl] or [cbn], [IsTrunc n.+1 A] doesn't get unfolded to [forall x y:A, IsTrunc n (x = y)].  But we also want to be able to use this equality, e.g. by proving [IsTrunc n.+1 A] starting with [intros x y], and if [IsTrunc] is a fixpoint declared as [simpl nomatch] then that doesn't work, because [intros] uses [hnf] to expose a [forall] and [hnf] respects [simpl nomatch] on fixpoints.  But we can make it work if we define the fixpoint separately as [IsTrunc_internal] and then take the class [IsTrunc] to be a definitional wrapper around it, since [hnf] is willing to unfold non-fixpoints even if they are defined as [simpl never].  This behavior of [hnf] is arguably questionable (see https://github.com/coq/coq/issues/11619), but it is useful for us here. *)
 
 Fixpoint IsTrunc_internal (n : trunc_index) (A : Type) : Type :=
   match n with
-    | -2 => Contr_internal A
+    | minus_two => Contr_internal A
     | n'.+1 => forall (x y : A), IsTrunc_internal n' (x = y)
   end.
 
@@ -594,7 +563,7 @@ Arguments IsTrunc_internal n A : simpl nomatch.
 Class IsTrunc (n : trunc_index) (A : Type) : Type :=
   Trunc_is_trunc : IsTrunc_internal n A.
 
-(** We use the priciple that we should always be doing typeclass resolution on truncation of non-equality types.  We try to change the hypotheses and goals so that they never mention something like [IsTrunc n (_ = _)] and instead say [IsTrunc (S n) _].  If you're evil enough that some of your paths [a = b] are n-truncated, but others are not, then you'll have to either reason manually or add some (local) hints with higher priority than the hint below, or generalize your equality type so that it's not a path anymore. *)
+(** We use the principle that we should always be doing typeclass resolution on truncation of non-equality types.  We try to change the hypotheses and goals so that they never mention something like [IsTrunc n (_ = _)] and instead say [IsTrunc (S n) _].  If you're evil enough that some of your paths [a = b] are n-truncated, but others are not, then you'll have to either reason manually or add some (local) hints with higher priority than the hint below, or generalize your equality type so that it's not a path anymore. *)
 
 Typeclasses Opaque IsTrunc. (* don't auto-unfold [IsTrunc] in typeclass search *)
 
@@ -625,9 +594,9 @@ progress match goal with
              => change (forall (a : A) (b : B a) (c : C a b) (d : D a b c), IsTrunc n.+1 (T a b c d)) in H; cbv beta in H
          end : core.
 
-Notation Contr := (IsTrunc (-2)).
-Notation IsHProp := (IsTrunc (-1)).
-Notation IsHSet := (IsTrunc 0).
+Notation Contr := (IsTrunc minus_two).
+Notation IsHProp := (IsTrunc minus_two.+1).
+Notation IsHSet := (IsTrunc minus_two.+2).
 
 Hint Extern 0 => progress change Contr_internal with Contr in * : typeclass_instances.
 
