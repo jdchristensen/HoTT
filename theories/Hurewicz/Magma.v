@@ -5,7 +5,6 @@ Require Import Truncations.
 Require Import PathAny.
 Require Import UnivalenceImpliesFunext.
 Require Import Tactics.
-Import TrM.
 
 (* We use these two idioms several times.  When proving two records are
    equal, we convert to elements of sigma types and use path_sigma to
@@ -363,7 +362,7 @@ Defined.
 Global Instance mapinO_cover_proj (n : trunc_index) {X : pType}
   : IsTruncMap n (@cover_proj (n.+1) X).
 Proof.
-  srapply mapinO_pr1.
+  srapply (mapinO_pr1 n).
 Defined.
 
 (* Lemma 2.3 *)
