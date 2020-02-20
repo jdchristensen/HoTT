@@ -417,7 +417,8 @@ Lemma theorem_2_1 (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y}
 Proof.
 Admitted.
 
-(* Several of the next things should be in Loops.v or pTrunc.v. *)
+(* Several of the next things should be in Loops.v or pTrunc.v.
+   This one could be generalized to two truncation levels. *)
 Global Instance ishset_iterated_magma_loops `{Univalence} (n : nat)
   {X : pType} `{IsTrunc n.+1 X}
   : IsHSet (iterated_magma_loops n X).
@@ -449,7 +450,7 @@ Proof.
     refine (equiv_moveR_Vp _ _ _ oE _).
     rewrite concat_p1.
     apply equiv_path_inverse. }
-  by pointed_reduce.
+  by pointed_reduce.  (* Can this be sped up? *)
 Defined.
 
 Definition pfiber_iterated_loops_functor {A B : pType} (n : nat) (f : A ->* B)
@@ -462,13 +463,93 @@ Proof.
   apply IHn.
 Defined.
 
+(* When we have an appropriate dependent elimination along a map [f], composing with [f] gives an equivalence between magmamap structures.  The assumption can be weakened to only having [f] an O-equivalence, but the main library will need a similar to equiv_o_conn_map to show this. *)
+Definition equiv_semigrouppreserving `{Funext}
+           (O : ReflectiveSubuniverse)
+           {A B C : Magma} `{In O C}
+           (f : MagmaMap A B) `{IsConnMap O _ _ f} (g : B -> C)
+  : IsSemiGroupPreserving g <~> IsSemiGroupPreserving (g o f).
+Proof.
+  unfold IsSemiGroupPreserving.
+  refine (_ oE _).
+  2: rapply (equiv_o_conn_map O f).
+  refine (_ oE _).
+  2: { rapply equiv_functor_forall_id; intro a.
+       rapply (equiv_o_conn_map O f). }
+  rapply equiv_functor_forall_id; intro a1.
+  rapply equiv_functor_forall_id; intro a2.
+  apply equiv_concat_l.
+  apply (ap g).
+  apply (magmamap_op_preserving _ _ f).
+Defined.
+
+Section Prop_2_5.
+(* Gather some things needed for the proof of Prop_2_5, almost all about the map [loops_ptr]. *)
+
+(* Warning: magma_loops indexing is one off from loops, so this is the (n+1)-fold loop functor. *)
+Local Definition loops_ptr (n : nat) (X : pType)
+  := (iterated_magma_loops_functor n (@ptr n.+1 X)).
+
+Local Definition precompose_loops_ptr (n : nat) (X : pType) (Y : pType)
+  : ((iterated_loops n.+1 (pTr n.+1 X)) -> (iterated_loops n.+1 Y))
+    -> ((iterated_loops n.+1 X) -> (iterated_loops n.+1 Y))
+  := fun g => g o (loops_ptr n X).
+
+Local Instance zero_conn_loops_ptr `{Univalence} (n : nat)
+           (X : pType) `{IsConnected n X}
+  : IsConnMap 0%nat (loops_ptr n X).
+Proof.
+  apply isconnected_iterated_loops_functor.
+  rewrite <- trunc_index_inc_agree.
+  (* [trunc_index_inc 0 n.+1] is definitionally [n.+1]. *)
+  exact _.
+Defined.
+
+Local Definition tr0_inverts_loops_ptr `{Univalence} (n : nat)
+           (X : pType) `{IsConnected n X}
+  : O_inverts 0%trunc (loops_ptr n X).
+Proof.
+  apply O_inverts_conn_map.
+  rapply zero_conn_loops_ptr.
+Defined.
+
+Local Definition isequiv_precompose_loops_ptr `{Univalence} (n : nat)
+           (X : pType) `{IsConnected n X}
+           (Y : pType) `{IsTrunc n.+1 Y}
+  : IsEquiv (precompose_loops_ptr n X Y).
+Proof.
+  snrapply (isequiv_precompose_O_inverts 0%trunc _).
+  - exact _.  (* Funext *)
+  - rapply tr0_inverts_loops_ptr.
+  - apply inO_tr_istrunc.
+    rapply ishset_iterated_magma_loops.
+    (* [exact _] works, but is slow. *)
+Defined.
+
+(* Now want the same thing, but for types of magma maps. *)
+Local Definition equiv_precompose_magma_loops_ptr `{Univalence} (n : nat)
+           (X : pType) `{IsConnected n X}
+           (Y : pType) `{IsTrunc n.+1 Y}
+  : (MagmaMap (iterated_magma_loops n (pTr n.+1 X)) (iterated_magma_loops n Y))
+    <~> (MagmaMap (iterated_magma_loops n X) (iterated_magma_loops n Y)).
+Proof.
+  refine ((issig_magmamap _ _) oE _ oE (issig_magmamap _ _)^-1).
+  snrapply equiv_functor_sigma'.
+  - nrapply Build_Equiv.  rapply isequiv_precompose_loops_ptr.
+  - intro g; cbn.
+    nrapply (equiv_semigrouppreserving 0%trunc (loops_ptr n X) g).
+    + exact _.  (* Funext *)
+    + rapply ishset_iterated_magma_loops. (* Found by typeclass inference, but slow. *)
+    + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
+Defined.
+
 Global Instance prop_2_5 `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
   (Y : pType) `{IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
 Proof.
   (** We prove this is an equivalence by constructing a commutative square of equivalences *)
-  srapply isequiv_commsq.
+  snrapply isequiv_commsq.
   (** Bottom left corner *)
   1: exact (pTr n.+1 X ->* Y).
   (** Bottom right corner *)
@@ -477,30 +558,20 @@ Proof.
   (** Bottom horizontal map *)
   1: exact (iterated_magma_loops_functor n).
   (** Left vertical map is [fun f => f o* ptr], but we hint that it's an equivalence: *)
-  { apply equiv_fun.
-    apply equiv_ptr_rec. }
+  1: apply equiv_ptr_rec.
   (** Right vertical map *)
-  { intro g.
-    srapply (magmamap_compose g).
-    apply iterated_magma_loops_functor.
-    apply ptr. }
+  1: rapply equiv_precompose_magma_loops_ptr.
   (** The square commutes by functoriality of iterated_magma_loops *)
   { symmetry.
     intro f.
     (* Make typeclass resolution faster in next line. *)
     pose (HS := ishset_iterated_magma_loops n (X:=Y)).
     apply path_magmamap_hset.
-    apply iterated_magma_loops_functor_compose. }
+    rapply iterated_magma_loops_functor_compose. }
   (** Immediately we have some equivalences. *)
-  2: exact _.
-  2: {
-    Search IsEquiv.
-  apply isequiv_magmamap_precompose.
-    apply isequiv_iterated_magma_loops_functor.
-    (* TODO: but tr is not an equivalence? *)
-    admit. }
+  2,3: exact _.
   (** To prove this final map is an equivalence we use another commutative square. *)
-  srapply isequiv_commsq.
+  snrapply isequiv_commsq.
   (** The bottom left type *)
   1: exact (pTr n.+1 X ->* cover n Y).
   (** The bottom right type *)
@@ -521,6 +592,8 @@ Proof.
   { cbn.
     symmetry.
     intro f.
+    (* Make typeclass resolution faster in next line. *)
+    pose (HS := ishset_iterated_magma_loops n (X:=Y)).
     apply path_magmamap_hset.
     apply iterated_magma_loops_functor_compose. }
   (** The left map is an equivalence *)
@@ -528,8 +601,10 @@ Proof.
   2: { apply isequiv_magmamap_postcompose.
     (** Argument by using UP of connected types and loop-space sphere stuff *)
     admit. }
-  srapply theorem_2_1.
+  snrapply theorem_2_1; exact _.  (* Faster this way than with [srapply]. *)
 Admitted.
+
+End Prop_2_5.
 
 Definition magma_loops_pmap (Y Z : pType) : Magma.
 Proof.
