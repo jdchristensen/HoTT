@@ -9,13 +9,11 @@ Require Import Modality.
 Local Open Scope pointed_scope.
 Local Open Scope path_scope.
 
-Module Covers (Os : Modalities).
-Import Os.
-Module Import Os_Theory := Modalities_Theory Os.
+Module Covers.
 
   Section Cover.
 
-    Context (O : ReflectiveSubuniverse).
+    Context (O : Modality).
 
     Global Instance ispointed_O (X : pType)
       : IsPointed (O_reflector O X) := (to O X (point X)).
@@ -45,17 +43,17 @@ Module Import Os_Theory := Modalities_Theory Os.
       (X : pType) (Z : pType) `{IsConnected O Z}
       : IsEquiv (fun f : Z ->* _ => @cover_proj X o* f).
     Proof.
-      serapply isequiv_adjointify.
+      srapply isequiv_adjointify.
       { intro f.
-        serapply Build_pMap.
+        srapply Build_pMap.
         { 
           intro z.
         
           exists (f z).
-          serapply (conn_map_elim O (pto X)).
+          srapply (conn_map_elim O (pto X)).
           intro x.
           unfold IsConnected in H.
-          apply path_contr.
+          (*apply path_contr.*)
     Admitted.
 
     Definition equiv_cover_corec (X : pType) (Z : pType)

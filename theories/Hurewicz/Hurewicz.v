@@ -2,7 +2,6 @@
 
 Require Import Basics Types Pointed.
 Require Import Truncations.
-Import TrM.
 
 Local Open Scope pointed_scope.
 Local Open Scope nat_scope.
@@ -14,7 +13,7 @@ Proof.
   set (F := Build_pEquiv _ _ f e).
   change f with (pointed_equiv_fun _ _ F).
   clearbody F; clear f e.
-  serapply isequiv_adjointify.
+  srapply isequiv_adjointify.
   1: apply loops_functor, (pequiv_inverse F).
   1,2: unfold Sect.
   1: change (loops_functor F o* (loops_functor F^-1*) == pmap_idmap).
@@ -38,7 +37,9 @@ Proof.
   intros X Y HX HY TX TY.
   simpl.
   
-  serapply isequiv_commsq'.
+  srapply isequiv_commsq'.
+Admitted.
+(*
   { symmetry.
     intro f.
     serapply path_pmap.
@@ -48,3 +49,4 @@ Proof.
   serapply IHn.
   serapply isequiv_adjointify.
   + simpl.
+ *)
