@@ -622,7 +622,7 @@ Definition pmap_const {X Y : pType} : X ->* Y
 Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
   := pmap_const.
 
-Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 15).
+Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99).
 
 Definition ap_const' {A B : Type} {x y : A} (p : x = y) (f : A -> B) {b : B}
   (q : forall a, f a = b) : ap f p = q x @ (q y)^.
