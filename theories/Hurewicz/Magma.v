@@ -4,7 +4,7 @@ Require Import EquivalenceVarieties.
 Require Import Truncations.
 Require Import PathAny.
 Require Import UnivalenceImpliesFunext.
-Require Import Tactics.
+Require Import HoTT.Tactics.
 
 (* We use these two idioms several times.  When proving two records are
    equal, we convert to elements of sigma types and use path_sigma to
