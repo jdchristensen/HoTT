@@ -17,6 +17,7 @@ COQC = hoqc
 #   # Other
 #   # Contrib
 #   # Homotopy
+#   # Hurewicz
 #   # Pointed
 #   # Spectra
 #   # Algebra
@@ -280,6 +281,14 @@ theories/Homotopy/Freudenthal.v
 theories/Homotopy/ClassifyingSpace.v
 theories/Homotopy/EMSpace.v
 theories/Homotopy/CayleyDickson.v
+
+#
+#   Hurewicz
+#
+
+theories/Hurewicz/Cover.v
+theories/Hurewicz/Magma.v
+theories/Hurewicz/Hurewicz.v
 
 #
 #   Pointed
