@@ -616,12 +616,15 @@ End Prop_2_5.
 
 Definition magma_loops_pmap (Y Z : pType) : Magma.
 Proof.
-  srapply (Build_Magma (Y ->* Build_pType (magma_loops Z) idpath)).
+  snrefine (Build_Magma (Y ->* Build_pType (magma_loops Z) idpath) _).
   intros f g.
   srapply Build_pMap.
   { intro y.
     exact (sg_op (f y) (g y)). }
-  simpl; by rewrite 2 point_eq.
+  simpl.
+  refine (ap011 _ _ _ @ _).
+  1,2: apply point_eq.
+  reflexivity.
 Defined.
 
 Definition pmap_const {X Y : pType} : X ->* Y
@@ -640,7 +643,20 @@ Proof.
   apply concat_pV.
 Defined.
 
-Definition foo `{Funext} {Y Z : pType}
+(** Not sure if we can simplify this lemma. It is just a generalization of path algebra in lemma_2_6 so we can prove it by path induction. Unfortunately, generalizing this causes complication... *)
+Definition ap011_ap_const' {A B : Type} {x x' x'' : A}
+  (p : x = x') (q : x' = x'') (g : A -> B) {r : B} (h : forall a : A, g a = r)
+  : (((ap_const' (p @ q) g h @ ap (concat (h x)) (concat_1p (h x'')^)^) @
+    ap (concat (h x)) (ap (fun x0 : r = r => x0 @ (h x'')^) (concat_Vp (h x'))^)) @
+    ap (concat (h x)) (concat_pp_p (h x')^ (h x') (h x'')^)) @
+    concat_p_pp (h x) (h x')^ (h x' @ (h x'')^) =
+    ap_pp g p q @ ap011 concat (ap_const' p g h) (ap_const' q g h).
+Proof.
+  destruct p, q; cbn.
+  by destruct (h x).
+Defined.
+
+Definition lemma_2_6 `{Funext} {Y Z : pType}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
 Proof.
   snrapply Build_MagmaMap.
@@ -656,7 +672,14 @@ Proof.
     srapply Build_pHomotopy.
     { intro x; cbn.
       exact (ap_pp _ p q). }
-Admitted.
-
-
-
+    simpl.
+    apply moveR_Mp.
+    refine (concat_p1 _ @ _).
+    apply moveL_Vp.
+    symmetry.
+    unfold sg_op.
+    refine (_ @ ap011_ap_const' p q (fun f : Y ->* Z => f (point Y)) point_eq).
+    simpl.
+    (** rewrite concat_p1 *)
+    hott_simpl.
+Defined.
