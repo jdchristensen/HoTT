@@ -543,6 +543,13 @@ Proof.
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
 
+(** loops^n of the cover projection is an equivalence of magmas loops^n X and loops^n X<n> for an n-truncated type X *)
+Global Instance isequiv_iterated_magma_loops_functor_trunc `{Univalence}
+  {n : nat} {X : pType} `{!IsConnected n X} {Y : pType} `{!IsTrunc n.+1 Y}
+  : IsEquiv (@iterated_magma_loops_functor (cover n Y) Y n (cover_proj n)).
+Proof.
+Admitted.
+
 Global Instance prop_2_5 `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
   (Y : pType) `{IsTrunc n.+1 Y}
@@ -598,11 +605,12 @@ Proof.
     apply iterated_magma_loops_functor_compose. }
   (** The left map is an equivalence *)
   2: exact _.
-  2: { apply isequiv_magmamap_postcompose.
-    (** Argument by using UP of connected types and loop-space sphere stuff *)
-    admit. }
-  snrapply theorem_2_1; exact _.  (* Faster this way than with [srapply]. *)
-Admitted.
+  (** The bottom map is an equivalence *)
+  1: snrapply theorem_2_1; exact _. (* Faster this way than with [srapply]. *)
+  (** The right map is an equivalence *)
+  apply isequiv_magmamap_postcompose.
+  apply isequiv_iterated_magma_loops_functor_trunc.
+Defined.
 
 End Prop_2_5.
 
