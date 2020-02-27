@@ -658,8 +658,7 @@ Definition lemma_2_6 `{Funext} {Y Z : pType}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
 Proof.
   snrapply Build_MagmaMap.
-  + change (loops (Y ->** Z) -> magma_loops_pmap Y Z).
-    change (loops (Y ->** Z) -> (Y ->* loops Z)).
+  + change (loops (Y ->** Z) -> (Y ->* loops Z)).
     intro p.
     srapply Build_pMap.
     { intro y.
@@ -667,12 +666,10 @@ Proof.
     srapply (ap_const' p _ point_eq).
   + intros p q.
     srapply path_pmap.
-    srapply Build_pHomotopy.
-    { intro x; cbn.
+    srapply Build_pHomotopy; cbn.
+    { intro y.
       exact (ap_pp _ p q). }
     simpl.
-    apply moveR_Mp.
-    apply moveL_Vp.
     symmetry.
     unfold sg_op.
     refine (_ @ ap011_ap_const' p q (fun f : Y ->* Z => f (point Y)) point_eq).
