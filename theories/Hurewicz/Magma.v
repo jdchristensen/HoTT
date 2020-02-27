@@ -543,9 +543,9 @@ Proof.
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
 
-(** loops^n of the cover projection is an equivalence of magmas loops^n X and loops^n X<n> for an n-truncated type X *)
+(** loops^n of the cover projection is an equivalence of magmas loops^{n+1} Y -> loops^{n+1} Y<n> for an (n+1)-truncated type Y. *)
 Global Instance isequiv_iterated_magma_loops_functor_trunc `{Univalence}
-  {n : nat} {X : pType} `{!IsConnected n X} {Y : pType} `{!IsTrunc n.+1 Y}
+  {n : nat} {Y : pType} `{!IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor (cover n Y) Y n (cover_proj n)).
 Proof.
 Admitted.
@@ -622,9 +622,7 @@ Proof.
   { intro y.
     exact (sg_op (f y) (g y)). }
   simpl.
-  refine (ap011 _ _ _ @ _).
-  1,2: apply point_eq.
-  reflexivity.
+  refine (ap011 _ (point_eq _) (point_eq _)).
 Defined.
 
 Definition pmap_const {X Y : pType} : X ->* Y
@@ -674,12 +672,12 @@ Proof.
       exact (ap_pp _ p q). }
     simpl.
     apply moveR_Mp.
-    refine (concat_p1 _ @ _).
     apply moveL_Vp.
     symmetry.
     unfold sg_op.
     refine (_ @ ap011_ap_const' p q (fun f : Y ->* Z => f (point Y)) point_eq).
     simpl.
-    (** rewrite concat_p1 *)
-    hott_simpl.
+    symmetry.
+    do 3 refine (concat_p1 _ @ _).
+    apply concat_p1.
 Defined.
