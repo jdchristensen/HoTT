@@ -414,12 +414,10 @@ Local Open Scope mc_add_scope.
 (** The interal hom for abelian groups *)
 Definition AbHom (A B : AbGroup) `{Funext} : AbGroup.
 Proof.
-  snrapply Build_AbGroup.
-  + exact (GroupHomomorphism A B).
+  snrapply (Build_AbGroup (GroupHomomorphism A B)).
   + intros f g.
     snrapply Build_GroupHomomorphism.
-    - intro x.
-      exact (f x + g x).
+    - intro x; exact (f x + g x).
     - intros x y.
       rewrite 2 grp_homo_op.
       rewrite 2 simple_associativity.
@@ -434,38 +432,19 @@ Proof.
       apply left_identity.
   + intro f.
     snrapply Build_GroupHomomorphism.
-    - intro x.
-      exact (- f x).
+    - intro x; exact (- f x).
     - intros x y.
       rewrite grp_homo_op.
-      rewrite negate_sg_op_distr.
-      reflexivity.
+      apply negate_sg_op_distr.
   + repeat split.
     1: exact _.
-    - intros f g h.
-      apply equiv_path_grouphomomorphism.
-      intro x; cbn.
-      apply associativity.
-    - intros f.
-      apply equiv_path_grouphomomorphism.
-      intro x; cbn.
-      apply left_identity.
-    - intros g.
-      apply equiv_path_grouphomomorphism.
-      intro x; cbn.
-      apply right_identity.
-    - intros f.
-      apply equiv_path_grouphomomorphism.
-      intro x; cbn.
-      apply left_inverse.
-    - intros f.
-      apply equiv_path_grouphomomorphism.
-      intro x; cbn.
-      apply right_inverse.
-    - intros f g.
-      apply equiv_path_grouphomomorphism.
-      intro x; cbn.
-      apply commutativity.
+    all: hnf; intros; apply equiv_path_grouphomomorphism; intro; cbn.
+    - apply associativity.
+    - apply left_identity.
+    - apply right_identity.
+    - apply left_inverse.
+    - apply right_inverse.
+    - apply commutativity.
 Defined.
 
 (** Here is a notation for the internal hom *)
@@ -483,15 +462,17 @@ Proof.
       by apply f, t.
     - intros x y.
       simpl.
-      rewrite 2 grp_homo_op.
-      reflexivity.
+      rewrite grp_homo_op.
+      apply (grp_homo_op f).
   + intros x y.
     apply equiv_path_grouphomomorphism.
     intro z.
     simpl.
-    rewrite 2 grp_homo_op.
-    reflexivity.
+    rewrite grp_homo_op.
+    apply (grp_homo_op f).
 Defined. (* Why does this take so long? *)
+(* Keeping the two rewrites above is faster than replacing them with
+   refine (ap ... (grp_homo_op _ _ _) @ _). *)
 
 Definition IsAbTensorProduct `{Funext} {A B : AbGroup}
   (T : AbGroup) (t : A ->Ab B ->Ab T)
