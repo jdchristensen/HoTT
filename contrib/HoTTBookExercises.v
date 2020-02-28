@@ -24,7 +24,7 @@
 *)
 
 Require Import HoTT Coq.Init.Peano.
-Require Import UnivalenceImpliesFunext.
+Require Import HoTT.Metatheory.Core HoTT.Metatheory.FunextVarieties HoTT.Metatheory.UnivalenceImpliesFunext.
 
 Local Open Scope path_scope.
 
@@ -1125,7 +1125,7 @@ Proof.
     refine ((equiv_concat_l (transport_paths_lr q p)^ p)^-1 oE _).
     refine ((equiv_concat_l (concat_p_pp _ _ _) _)^-1 oE _).
     apply equiv_moveR_Vp. }
-  assert (HK := trunc_equiv _ e^-1).
+  assert (HK := @trunc_equiv _ _ e^-1 (-1)).
   assert (u : forall (X:Type) (p:X=X), p @ 1 = 1 @ p).
   { intros X p; rewrite concat_p1, concat_1p; reflexivity. }
   pose (alpha := (fun X p => (idpath X ; u X p)) : K).

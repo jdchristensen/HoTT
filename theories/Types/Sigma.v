@@ -490,6 +490,7 @@ Proof.
     apply transport_pV.
 Defined.
 
+
 (** ** Associativity *)
 
 Definition equiv_sigma_assoc `(P : A -> Type) (Q : {a : A & P a} -> Type)

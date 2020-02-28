@@ -172,17 +172,33 @@ Definition moveR_equiv_M `{IsEquiv A B f} (x : A) (y : B) (p : x = f^-1 y)
   : (f x = y)
   := ap f p @ eisretr f y.
 
+Definition moveR_equiv_M' `(f : A <~> B) (x : A) (y : B) (p : x = f^-1 y)
+  : (f x = y)
+  := moveR_equiv_M x y p.
+
 Definition moveL_equiv_M `{IsEquiv A B f} (x : A) (y : B) (p : f^-1 y = x)
   : (y = f x)
   := (eisretr f y)^ @ ap f p.
+
+Definition moveL_equiv_M' `(f : A <~> B) (x : A) (y : B) (p : f^-1 y = x)
+  : (y = f x)
+  := moveL_equiv_M x y p.
 
 Definition moveR_equiv_V `{IsEquiv A B f} (x : B) (y : A) (p : x = f y)
   : (f^-1 x = y)
   := ap (f^-1) p @ eissect f y.
 
+Definition moveR_equiv_V' `(f : A <~> B) (x : B) (y : A) (p : x = f y)
+  : (f^-1 x = y)
+  := moveR_equiv_V x y p.
+
 Definition moveL_equiv_V `{IsEquiv A B f} (x : B) (y : A) (p : f y = x)
   : (y = f^-1 x)
   := (eissect f y)^ @ ap (f^-1) p.
+
+Definition moveL_equiv_V' `(f : A <~> B) (x : B) (y : A) (p : f y = x)
+  : (y = f^-1 x)
+  := moveL_equiv_V x y p.
 
 (** Equivalence preserves contractibility (which of course is trivial under univalence). *)
 Lemma contr_equiv A {B} (f : A -> B) `{IsEquiv A B f} `{Contr A}
@@ -192,7 +208,7 @@ Proof.
   intro y.
   apply moveR_equiv_M.
   apply contr.
-Qed.
+Defined.
 
 Definition contr_equiv' A {B} `(f : A <~> B) `{Contr A}
   : Contr B
@@ -382,6 +398,23 @@ Notation "e ^-1" := (@equiv_inverse _ _ e) : equiv_scope.
 
 Global Instance symmetric_equiv : Symmetric Equiv | 0 := @equiv_inverse.
 
+(** Inversion respects composition *)
+Definition equiv_inverse_compose {A B C} (f : A <~> B) (g : B <~> C)
+  : (g oE f)^-1 == f^-1 oE g^-1.
+Proof.
+  intros x; reflexivity.
+Defined.
+
+(** Inversion respects homotopies *)
+Definition equiv_inverse_homotopy {A B} (f g : A <~> B) (p : f == g)
+  : g^-1 == f^-1.
+Proof.
+  intros x; refine (_ @ _ @ _).
+  1:symmetry; apply (eissect f).
+  1:apply ap, p.
+  apply ap, eisretr.
+Defined.
+
 (** If [g \o f] and [f] are equivalences, so is [g].  This is not an Instance because it would require Coq to guess [f]. *)
 Definition cancelR_isequiv {A B C} (f : A -> B) {g : B -> C}
   `{IsEquiv A B f} `{IsEquiv A C (g o f)}
@@ -426,6 +459,33 @@ Proof.
   refine (@cancelL_isequiv _ _ _ k f _ _).
   refine (isequiv_homotopic _ p).
 Defined.
+
+(** Based homotopy spaces *)
+
+Global Instance contr_basedhomotopy `{Funext}
+       {A:Type} {B : A -> Type} (f : forall x, B x)
+: Contr {g : forall x, B x & f == g }.
+Proof.
+  refine (contr_equiv' { g : forall x, B x & f = g } _).
+  srapply equiv_adjointify; intros [g h].
+  - exact (g; apD10 h).
+  - exact (g; path_forall _ _ h).
+  - apply ap, eisretr.
+  - apply ap, eissect.
+Defined.
+
+Global Instance contr_basedhomotopy' `{Funext}
+       {A:Type} {B : A -> Type} (f : forall x, B x)
+: Contr {g : forall x, B x & g == f }.
+Proof.
+  refine (contr_equiv' { g : forall x, B x & g = f } _).
+  srapply equiv_adjointify; intros [g h].
+  - exact (g; apD10 h).
+  - exact (g; path_forall _ _ h).
+  - apply ap, eisretr.
+  - apply ap, eissect.
+Defined.
+
 
 (** The function [equiv_ind] says that given an equivalence [f : A <~> B], and a hypothesis from [B], one may always assume that the hypothesis is in the image of [e].
 
