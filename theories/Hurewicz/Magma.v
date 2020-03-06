@@ -9,6 +9,19 @@ Require Import HIT.Spheres.
 
 Require Import HoTT.Tactics.
 
+
+Local Open Scope pointed_scope.
+
+Definition pmap_const {X Y : pType} : X ->* Y
+  := Build_pMap X Y (fun _ => point _) idpath.
+
+Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
+  := pmap_const.
+
+Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99) : pointed_scope.
+
+
+
 (* We use these two idioms several times.  When proving two records are
    equal, we convert to elements of sigma types and use path_sigma to
    reduce to goals involving the components.  Assumes only two components
@@ -259,8 +272,6 @@ Definition magma_loops (X : pType) : Magma
 (** This is for n.+1 since at n=0 no magma to be found. *)
 Definition iterated_magma_loops (n : nat) (X : pType) : Magma
   := Build_Magma (iterated_loops (S n) X) concat.
-
-Local Open Scope pointed_scope.
 
 Definition magma_loops_functor {X Y : pType}
   : (X ->* Y) -> MagmaMap (magma_loops X) (magma_loops Y).
@@ -602,14 +613,6 @@ Proof.
 Defined.
 
 
-Definition pmap_const {X Y : pType} : X ->* Y
-  := Build_pMap X Y (fun _ => point _) idpath.
-
-Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
-  := pmap_const.
-
-Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99).
-
 Definition pequiv_pmap_s0 `{Funext} (A : pType)
   : (psphere 0 ->** A) <~>* A.
 Proof.
@@ -788,6 +791,8 @@ Proof.
   destruct p, q; cbn.
   by destruct (h x).
 Defined.
+
+Local Open Scope pointed_scope.
 
 Definition lemma_2_6 `{Funext} {Y Z : pType}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
