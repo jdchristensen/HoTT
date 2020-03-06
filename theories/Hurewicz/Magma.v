@@ -3,7 +3,10 @@ Require Import Algebra.Group.
 Require Import EquivalenceVarieties.
 Require Import Truncations.
 Require Import PathAny.
-Require Import UnivalenceImpliesFunext.
+Require Import Metatheory.UnivalenceImpliesFunext.
+Require Import Homotopy.Suspension.
+Require Import HIT.Spheres.
+
 Require Import HoTT.Tactics.
 
 (* We use these two idioms several times.  When proving two records are
@@ -360,7 +363,7 @@ Proof.
 Defined.
 
 Global Instance mapinO_cover_proj (n : trunc_index) {X : pType}
-  : IsTruncMap n (@cover_proj (n.+1) X).
+  : IsTruncMap n (@cover_proj n X).
 Proof.
   srapply (mapinO_pr1 n).
 Defined.
@@ -543,16 +546,156 @@ Proof.
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
 
+Global Instance istrunc_iterated_loops
+  (n : trunc_index) (k : nat) (A : pType) {H : IsTrunc (trunc_index_inc' n k) A}
+  : IsTrunc n (iterated_loops k A).
+Proof.
+  revert n A H.
+  induction k.
+  1: exact _.
+  intros n A H.
+  rapply istrunc_loops.
+Defined.
+
+Global Instance istrunc_iterated_loops_functor (n : trunc_index) (k : nat)
+  (A B : pType) (f : A ->* B) {H : IsTruncMap (trunc_index_inc' n k) f}
+  : IsTruncMap n (iterated_loops_functor k f).
+Proof.
+  revert n A B f H.
+  induction k.
+  1: exact _.
+  intros n A B f H.
+  rapply istrunc_loops_functor.
+Defined.
+
+Global Instance istrunc_cover (n k : trunc_index)
+  (X : pType) `{!IsTrunc n X} {p : trunc_index_leq k n}
+  : IsTrunc n (cover k X).
+Proof.
+  rapply istruncmap_fiber.
+  apply istruncmap_mapinO_tr.
+  rapply mapinO_between_inO.
+  apply inO_tr_istrunc.
+  apply (trunc_leq p).
+Defined.
+
+Definition trunc_index_inc'_leq (n k : nat)
+  : trunc_index_leq n (trunc_index_inc' n k).
+Proof.
+  revert n.
+  induction k.
+  { intro n.
+    reflexivity. }
+  intro n.
+  etransitivity.
+  2: apply (IHk n.+1%nat).
+  apply trunc_index_leq_succ.
+Defined.
+
+Definition trunc_index_inc'_0_n (n : nat)
+  : trunc_index_inc' 0 n = n.
+Proof.
+  induction n.
+  1: reflexivity.
+  cbn; rewrite trunc_index_inc_agree.
+  apply trunc_index_inc'_succ.
+Defined.
+
+
+Definition pmap_const {X Y : pType} : X ->* Y
+  := Build_pMap X Y (fun _ => point _) idpath.
+
+Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
+  := pmap_const.
+
+Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99).
+
+Definition pequiv_pmap_s0 `{Funext} (A : pType)
+  : (psphere 0 ->** A) <~>* A.
+Proof.
+  snrapply Build_pEquiv'.
+  { snrapply equiv_adjointify.
+    + intro f; apply f.
+      exact South.
+    + intro a.
+      snrapply Build_pMap.
+      { snrapply Susp_rec.
+        1: exact (point _).
+        1: exact a.
+        contradiction. }
+      reflexivity.
+    + cbn; reflexivity.
+    + intro f.
+      rapply path_pmap.
+      snrapply Build_pHomotopy.
+      { simpl.
+        snrapply Susp_ind; simpl.
+        1: symmetry; apply (point_eq f).
+        1: reflexivity.
+        contradiction. }
+      apply concat_Vp. }
+  reflexivity.
+Defined.
+
+(**TODO: rename *)
+Definition equiv_psphere_iterated_loops `{Funext} (B : pType) (n : nat)
+  : (psphere n ->* B) <~> iterated_loops n B.
+Proof.
+  revert B.
+  induction n; intro B.
+  1: exact (pointed_equiv_equiv (pequiv_pmap_s0 _)).
+  change ((psusp (psphere n) ->* B) <~> iterated_loops n.+1 B).
+  etransitivity.
+  1: apply loop_susp_adjoint.
+  etransitivity.
+  1: apply IHn.
+  symmetry.
+  rapply unfold_iterated_loops'.
+Defined.
+
+
+(** We want to show that the (n+1)th loop space of the n-cover projection is an equivalence. *)
+Global Instance isequiv_iterated_loops_cover_proj
+  `{Univalence} {n : nat} {Y : pType} `{!IsTrunc n Y}
+  : IsEquiv (iterated_loops_functor n.+1 (@cover_proj n Y)).
+Proof.
+  (** We begin by constructing a commutative square whose other 3 sides are equivalences. *)
+  snrapply isequiv_commsq.
+  (** The bottom right corner shall be pointed maps from the (n+1)-sphere into the n-cover of Y *)
+  1: exact (psphere n.+1 ->* cover n Y).
+  (** The bottom left corner shall be pointed maps from the (n+1)-sphere into Y *)
+  1: exact (psphere n.+1 ->* Y).
+  (** The bottom is the universal property of the n-cover *)
+  1: rapply lemma_2_3.
+  (** The left and right map is the n-fold loop-susp adjunction *)
+  1,2: apply equiv_psphere_iterated_loops.
+  (** These are all obviously equivalences *)
+  2-4: exact _.
+  (** So we must finally show that the square commutes *)
+  hnf.
+  intro f.
+  cbv zeta.
+  unfold equiv_fun.
+  assert (IsHProp (iterated_loops n.+1 Y)).
+  { rapply (istrunc_iterated_loops _ n.+1 Y).
+    cbn.
+    rewrite trunc_index_inc'_0_n.
+    assumption. }
+  apply path_ishprop.
+Defined.
+
 (** loops^n of the cover projection is an equivalence of magmas loops^{n+1} Y -> loops^{n+1} Y<n> for an (n+1)-truncated type Y. *)
 Global Instance isequiv_iterated_magma_loops_functor_trunc `{Univalence}
-  {n : nat} {Y : pType} `{!IsTrunc n.+1 Y}
+  {n : nat} {Y : pType}
+  `{!IsTrunc n Y}
   : IsEquiv (@iterated_magma_loops_functor (cover n Y) Y n (cover_proj n)).
 Proof.
-Admitted.
+  apply isequiv_iterated_loops_cover_proj.
+Defined.
 
 Global Instance prop_2_5 `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
-  (Y : pType) `{IsTrunc n.+1 Y}
+  (Y : pType) `{IsTrunc n Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
 Proof.
   (** We prove this is an equivalence by constructing a commutative square of equivalences *)
@@ -624,14 +767,6 @@ Proof.
   simpl.
   refine (ap011 _ (point_eq _) (point_eq _)).
 Defined.
-
-Definition pmap_const {X Y : pType} : X ->* Y
-  := Build_pMap X Y (fun _ => point _) idpath.
-
-Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
-  := pmap_const.
-
-Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99).
 
 Definition ap_const' {A B : Type} {x y : A} (p : x = y) (f : A -> B) {b : B}
   (q : forall a, f a = b) : ap f p = q x @ (q y)^.

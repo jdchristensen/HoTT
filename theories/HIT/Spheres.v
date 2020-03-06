@@ -255,6 +255,14 @@ Proof.
   apply isconnected_susp.
 Defined.
 
+Global Instance isconnected_psn (n : nat) : IsConnected n (psphere n.+1).
+Proof.
+  induction n.
+  { srapply contr_inhabited_hprop.
+    apply tr, North. }
+  apply isconnected_susp.
+Defined.
+
 (** ** Truncatedness via spheres  *)
 
 (** We show here that a type is n-truncated if and only if every map from the (n+1)-sphere into it is null-homotopic.  (One direction of this is of course the assertion that the (n+1)-sphere is n-connected.) *)
