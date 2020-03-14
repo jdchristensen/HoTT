@@ -853,27 +853,39 @@ Defined.
 
 Require Import Algebra.AbelianGroup.
 Require Import Homotopy.HomotopyGroup.
+Require Import Spaces.Nat.
 
+Local Open Scope nat_scope.
+
+(** We assume funext since many constructions need it. **)
 Section AssumeFunext.
 Context `{Funext}.
 
-Global Instance ispointed_abhom {A B : AbGroup} : IsPointed (AbHom A B).
+Global Instance ispointed_abhom {A : Group} {B : AbGroup} : IsPointed (AbHom A B).
 Proof.
   unfold IsPointed.
   exact mon_unit.
 Defined.
 
-Definition AbPi (n : nat) : AbGroup.
+Definition pmap_magma_loops_functor {A B : pType} 
+  : (A ->** B) ->* Build_pType (MagmaMap (magma_loops A) (magma_loops B))
+      (Build_MagmaMap _ (magma_loops B) (fun _ => 1%path) (fun _ _ => 1%path)).
 Proof.
-  
-
+  snrapply Build_pMap.
+  1: exact magma_loops_functor.
+Admitted.
 
 (** Definition 2.7 *)
 Definition def_2_7 (X Y Z : pType) (n m : nat)
-  : (X ->** Y ->** Z) ->* Build_pType (Build_AbGroup (Pi n.+1 X) ->Ab Build_AbGroup (Pi m.+1 Y) ->Ab Build_AbGroup (Pi (n+m.+2) Z)).
+  : (X ->** Y ->** Z) ->* Build_pType
+      (Pi n.+1 X ->Ab Pi m.+1 Y ->Ab Build_AbGroup (Pi ((n+m).+2) Z) _ _ _ _) _.
+Proof.
+  (** To construct this map we compose some maps which are known to be natural in their arguments. *)
+  refine (_ o* pmap_magma_loops_functor).
+  
+Admitted.
 
 
 
-
-
+End AssumeFunext.
 

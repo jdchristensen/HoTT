@@ -403,7 +403,7 @@ Local Close Scope mc_mult_scope.
 Local Open Scope mc_add_scope.
 
 (** The interal hom for abelian groups *)
-Definition AbHom (A B : AbGroup) `{Funext} : AbGroup.
+Definition AbHom (A : Group) (B : AbGroup) `{Funext} : AbGroup.
 Proof.
   snrapply (Build_AbGroup (GroupHomomorphism A B)).
   + intros f g.
@@ -442,7 +442,7 @@ Defined.
 Notation "X '->Ab' Y" := (AbHom X Y) (at level 15, right associativity).
 
 Definition curried_ab_precompose `{Funext}
-  {A B C D : AbGroup} (t : A ->Ab B ->Ab C)
+  {A : Group} {B C D : AbGroup} (t : A ->Ab B ->Ab C)
   : (C ->Ab D) -> (A ->Ab B ->Ab D).
 Proof.
   intro f.
