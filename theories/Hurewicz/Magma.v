@@ -1,6 +1,5 @@
 Require Import Basics Types Pointed.
 Require Import Algebra.Group.
-Require Import EquivalenceVarieties.
 Require Import Truncations.
 Require Import PathAny.
 Require Import Metatheory.UnivalenceImpliesFunext.
@@ -9,17 +8,7 @@ Require Import HIT.Spheres.
 
 Require Import HoTT.Tactics.
 
-
 Local Open Scope pointed_scope.
-
-Definition pmap_const {X Y : pType} : X ->* Y
-  := Build_pMap X Y (fun _ => point _) idpath.
-
-Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
-  := pmap_const.
-
-Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99) : pointed_scope.
-
 
 
 (* We use these two idioms several times.  When proving two records are
@@ -374,7 +363,7 @@ Proof.
 Defined.
 
 Global Instance mapinO_cover_proj (n : trunc_index) {X : pType}
-  : IsTruncMap n (@cover_proj n X).
+  : IsTruncMap n (@cover_proj n.+1 X).
 Proof.
   srapply (mapinO_pr1 n).
 Defined.
@@ -384,6 +373,8 @@ Global Instance isequiv_postcompose_cover_proj
   (n : trunc_index) (X : pType) (Z : pType) `{IsConnected n Z}
   : IsEquiv (fun f : Z ->* _ => @cover_proj n X o* f).
 Proof.
+  
+
 Admitted.
 
 Definition lemma_2_3 (n : nat) (X : pType) (Z : pType) `{IsConnected n Z}
@@ -656,41 +647,84 @@ Proof.
   rapply unfold_iterated_loops'.
 Defined.
 
-
-(** We want to show that the (n+1)th loop space of the n-cover projection is an equivalence. *)
-Global Instance isequiv_iterated_loops_cover_proj
-  `{Univalence} {n : nat} {Y : pType} `{!IsTrunc n Y}
-  : IsEquiv (iterated_loops_functor n.+1 (@cover_proj n Y)).
+Definition pequiv_pmap_s0_nat `{Funext} (A B : pType) (f : A ->* B)
+  : f o (pequiv_pmap_s0 A) == (pequiv_pmap_s0 B) o (fun g => f o* g).
 Proof.
-  (** We begin by constructing a commutative square whose other 3 sides are equivalences. *)
-  snrapply isequiv_commsq.
-  (** The bottom right corner shall be pointed maps from the (n+1)-sphere into the n-cover of Y *)
-  1: exact (psphere n.+1 ->* cover n Y).
-  (** The bottom left corner shall be pointed maps from the (n+1)-sphere into Y *)
-  1: exact (psphere n.+1 ->* Y).
-  (** The bottom is the universal property of the n-cover *)
-  1: rapply lemma_2_3.
-  (** The left and right map is the n-fold loop-susp adjunction *)
-  1,2: apply equiv_psphere_iterated_loops.
-  (** These are all obviously equivalences *)
-  2-4: exact _.
-  (** So we must finally show that the square commutes *)
-  hnf.
-  intro f.
-  cbv zeta.
-  unfold equiv_fun.
-  assert (IsHProp (iterated_loops n.+1 Y)).
-  { rapply (istrunc_iterated_loops _ n.+1 Y).
-    cbn.
-    rewrite trunc_index_inc'_0_n.
-    assumption. }
-  apply path_ishprop.
+  intro x; reflexivity.
 Defined.
 
-(** loops^n of the cover projection is an equivalence of magmas loops^{n+1} Y -> loops^{n+1} Y<n> for an (n+1)-truncated type Y. *)
+Definition ishighequiv {X Y : pType} (n : trunc_index) (f : X ->* Y)
+  := forall (A : pType), IsConnected n A -> IsEquiv (fun g : A ->* X => f o* g).
+
+Definition ishighequiv_loops `{Funext} {X Y : pType} (n : trunc_index)
+           (f : X ->* Y) (HE : ishighequiv n.+1 f)
+  : ishighequiv n (loops_functor f).
+Proof.
+  intros A C.
+  nrapply cancelR_isequiv.
+  1: srapply equiv_isequiv; apply loop_susp_adjoint.
+  nrapply isequiv_homotopic.
+  2:{ intro g.
+    apply path_pmap.
+    apply loop_susp_adjoint_nat_r. }
+  srapply isequiv_compose.
+  rapply HE.
+Defined.
+
+Definition ishighequiv_iterated_loops `{Funext} {X Y : pType} (n : nat)
+  (k : trunc_index) (f : X ->* Y) (HE : ishighequiv (trunc_index_inc' k n) f)
+  : ishighequiv k (iterated_loops_functor n f).
+Proof.
+  revert k f HE.
+  induction n; intros k f HE.
+  - exact HE.
+  - simpl in *.
+    apply ishighequiv_loops.
+    rapply IHn.
+    exact HE.
+Defined.
+
+Definition isequiv_highequiv_minus_one `{Funext} {X Y : pType}
+  (f : X ->* Y) (HE : ishighequiv minus_two.+1 f)
+  : IsEquiv f.
+Proof.
+  nrapply isequiv_commsq.
+  - symmetry. apply pequiv_pmap_s0_nat.
+  - apply HE.  exact _.
+  - exact _.
+  - exact _.
+Defined.
+
+Definition trunc_index_inc'_zero (n : nat)
+  : trunc_index_inc' 0 n = n.
+Proof.
+  induction n.
+  - reflexivity.
+  - refine (trunc_index_inc'_succ _ _ @ (ap _ IHn)).
+Defined.
+
+Definition isequiv_iterated_loops_highequiv `{Funext} {X Y : pType} (n : nat)
+  (f : X ->* Y) (HE : ishighequiv n f)
+  : IsEquiv (iterated_loops_functor n.+1 f).
+Proof.
+  nrapply isequiv_highequiv_minus_one; [exact _|].
+  apply ishighequiv_iterated_loops.
+  cbn; rewrite trunc_index_inc'_zero.
+  apply HE.
+Defined.
+
+Global Instance isequiv_iterated_loops_cover_proj `{Univalence}
+  {n : nat} {Y : pType}
+  : IsEquiv (iterated_loops_functor n.+1 (@cover_proj n Y)).
+Proof.
+  rapply isequiv_iterated_loops_highequiv.
+  intros A C.
+  rapply isequiv_postcompose_cover_proj.
+Defined.
+
+(** loops^n of the cover projection is an equivalence of magmas loops^{n+1} Y -> loops^{n+1} Y<n>. *)
 Global Instance isequiv_iterated_magma_loops_functor_trunc `{Univalence}
   {n : nat} {Y : pType}
-  `{!IsTrunc n Y}
   : IsEquiv (@iterated_magma_loops_functor (cover n Y) Y n (cover_proj n)).
 Proof.
   apply isequiv_iterated_loops_cover_proj.
@@ -698,7 +732,7 @@ Defined.
 
 Global Instance prop_2_5 `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
-  (Y : pType) `{IsTrunc n Y}
+  (Y : pType) `{IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
 Proof.
   (** We prove this is an equivalence by constructing a commutative square of equivalences *)
@@ -792,8 +826,6 @@ Proof.
   by destruct (h x).
 Defined.
 
-Local Open Scope pointed_scope.
-
 Definition lemma_2_6 `{Funext} {Y Z : pType}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
 Proof.
@@ -818,3 +850,30 @@ Proof.
     do 3 refine (concat_p1 _ @ _).
     apply concat_p1.
 Defined.
+
+Require Import Algebra.AbelianGroup.
+Require Import Homotopy.HomotopyGroup.
+
+Section AssumeFunext.
+Context `{Funext}.
+
+Global Instance ispointed_abhom {A B : AbGroup} : IsPointed (AbHom A B).
+Proof.
+  unfold IsPointed.
+  exact mon_unit.
+Defined.
+
+Definition AbPi (n : nat) : AbGroup.
+Proof.
+  
+
+
+(** Definition 2.7 *)
+Definition def_2_7 (X Y Z : pType) (n m : nat)
+  : (X ->** Y ->** Z) ->* Build_pType (Build_AbGroup (Pi n.+1 X) ->Ab Build_AbGroup (Pi m.+1 Y) ->Ab Build_AbGroup (Pi (n+m.+2) Z)).
+
+
+
+
+
+
