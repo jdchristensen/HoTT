@@ -11,11 +11,12 @@ Require Export HoTT.Pointed.
 Require Export HoTT.Truncations.
 Require Export HoTT.Fibrations.
 
-Require Export HoTT.Conjugation.
 Require Export HoTT.HProp.
 Require Export HoTT.HSet.
-Require Export HoTT.EquivGroupoids.
-Require Export HoTT.EquivalenceVarieties.
+
+Require Export HoTT.Equiv.BiInv.
+Require Export HoTT.Equiv.PathSplit.
+Require Export HoTT.Equiv.Relational.
 
 Require Export HoTT.Extensions.
 Require Export HoTT.Misc.
