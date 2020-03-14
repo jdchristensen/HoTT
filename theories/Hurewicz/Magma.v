@@ -1,9 +1,7 @@
 Require Import Basics Types Pointed.
 Require Import Algebra.Group.
-Require Import EquivalenceVarieties.
 Require Import Truncations.
 Require Import PathAny.
-Require Import UnivalenceImpliesFunext.
 Require Import HoTT.Tactics.
 
 (* We use these two idioms several times.  When proving two records are
