@@ -299,6 +299,7 @@ theories/Homotopy/CayleyDickson.v
 #
 
 theories/Hurewicz/Cover.v
+theories/Hurewicz/ConnCover.v
 theories/Hurewicz/Magma.v
 theories/Hurewicz/Hurewicz.v
 # Temporary?

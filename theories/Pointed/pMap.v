@@ -70,3 +70,13 @@ Qed.
 (** Not infrequently we have a map between two unpointed types and want to consider it as a pointed map that trivially respects some given point in the domain. *)
 Definition pmap_from_point {A B : Type} (f : A -> B) (a : A)
   := Build_pMap (Build_pType A a) (Build_pType B (f a)) f 1%path.
+
+(** ** The type of pointed maps is itself pointed *)
+
+Definition constpmap {X Y : pType} : X ->* Y := Build_pMap _ _ (const (point Y)) idpath.
+
+Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y) := constpmap.
+
+Definition ppMap (X Y : pType) : pType := Build_pType (X ->* Y) constpmap.
+
+Infix "->**" := ppMap : pointed_scope.

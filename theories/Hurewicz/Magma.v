@@ -3,6 +3,9 @@ Require Import Algebra.Group.
 Require Import Truncations.
 Require Import PathAny.
 Require Import HoTT.Tactics.
+Require Import Hurewicz.ConnCover.
+
+Local Open Scope pointed_scope.
 
 (* We use these two idioms several times.  When proving two records are
    equal, we convert to elements of sigma types and use path_sigma to
@@ -255,8 +258,6 @@ Definition magma_loops (X : pType) : Magma
 Definition iterated_magma_loops (n : nat) (X : pType) : Magma
   := Build_Magma (iterated_loops (S n) X) concat.
 
-Local Open Scope pointed_scope.
-
 Definition magma_loops_functor {X Y : pType}
   : (X ->* Y) -> MagmaMap (magma_loops X) (magma_loops Y).
 Proof.
@@ -342,38 +343,6 @@ Proof.
     srapply path_ishprop.
 Defined.
 
-(** n-connected cover *)
-Definition cover (n : trunc_index) (X : pType) : pType
-  := @pfiber X (pTr n X) ptr.
-
-Global Instance isconnected_cover (n : trunc_index) (X : pType)
-  : IsConnected n (cover n X) := _.
-
-(* The projection map from the n-connected cover to the type. *)
-Definition cover_proj (n : trunc_index) {X : pType} : cover n X ->* X.
-Proof.
-  srapply Build_pMap.
-  + apply pr1.
-  + reflexivity.
-Defined.
-
-Global Instance mapinO_cover_proj (n : trunc_index) {X : pType}
-  : IsTruncMap n (@cover_proj (n.+1) X).
-Proof.
-  srapply (mapinO_pr1 n).
-Defined.
-
-(* Lemma 2.3 *)
-Global Instance isequiv_postcompose_cover_proj
-  (n : trunc_index) (X : pType) (Z : pType) `{IsConnected n Z}
-  : IsEquiv (fun f : Z ->* _ => @cover_proj n X o* f).
-Proof.
-Admitted.
-
-Definition lemma_2_3 (n : nat) (X : pType) (Z : pType) `{IsConnected n Z}
-  : (Z ->* cover n X) <~> (Z ->* X)
-  := Build_Equiv _ _ _ (isequiv_postcompose_cover_proj n X Z).
-
 (* Truncated magma *)
 Definition mTr (n : trunc_index) (X : Magma) : Magma.
 Proof.
@@ -409,8 +378,8 @@ Proof.
 Defined.
 
 (** BVR 5.1 *)
-Lemma theorem_2_1 (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y}
-  `{IsTrunc n.+1 X} `{IsTrunc n.+1 Y}
+Theorem isequiv_iterated_magma_loops_conn_trunc
+  (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y} `{IsTrunc n.+1 X} `{IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
 Proof.
 Admitted.
@@ -443,10 +412,14 @@ Proof.
     simpl; unfold hfiber.
     srapply equiv_functor_sigma_id.
     intro p; cbn.
-    rewrite transport_paths_Fl.
+    refine (_ oE _).
+    { rapply equiv_concat_l.
+      apply transport_paths_Fl. }
     refine (_ oE equiv_moveL_Mp _ _ _).
     refine (equiv_moveR_Vp _ _ _ oE _).
-    rewrite concat_p1.
+    refine (_ oE _).
+    2: { rapply equiv_concat_r.
+         apply concat_p1. }
     apply equiv_path_inverse. }
   by pointed_reduce.  (* Can this be sped up? *)
 Defined.
@@ -481,8 +454,7 @@ Proof.
   apply (magmamap_op_preserving _ _ f).
 Defined.
 
-Section Prop_2_5.
-(* Gather some things needed for the proof of Prop_2_5, almost all about the map [loops_ptr]. *)
+(* Now we work towards [isequiv_iterated_magma_loops_functor_conn_trunc'], which generalizes the BVR result [isequiv_iterated_magma_loops_functor_conn_trunc].  We need some results about the map [loops_ptr]. *)
 
 (* Warning: magma_loops indexing is one off from loops, so this is the (n+1)-fold loop functor. *)
 Local Definition loops_ptr (n : nat) (X : pType)
@@ -541,14 +513,7 @@ Proof.
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
 
-(** loops^n of the cover projection is an equivalence of magmas loops^{n+1} Y -> loops^{n+1} Y<n> for an (n+1)-truncated type Y. *)
-Global Instance isequiv_iterated_magma_loops_functor_trunc `{Univalence}
-  {n : nat} {Y : pType} `{!IsTrunc n.+1 Y}
-  : IsEquiv (@iterated_magma_loops_functor (cover n Y) Y n (cover_proj n)).
-Proof.
-Admitted.
-
-Global Instance prop_2_5 `{Univalence} (n : nat)
+Global Instance isequiv_iterated_magma_loops_functor_conn_trunc' `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
   (Y : pType) `{IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
@@ -586,11 +551,11 @@ Proof.
   1: exact (iterated_magma_loops_functor n).
   (** The left map *)
   { apply equiv_fun.
-    apply lemma_2_3.
+    apply equiv_postcompose_cover_proj.
     exact _. }
   (** The right map *)
   { intro g.
-    srapply (fun x => magmamap_compose x g).
+    srapply (magmamap_compose _ g).
     apply iterated_magma_loops_functor.
     apply cover_proj. }
   (** The square commutes by functoriality of iterated_magma_loops *)
@@ -604,13 +569,11 @@ Proof.
   (** The left map is an equivalence *)
   2: exact _.
   (** The bottom map is an equivalence *)
-  1: snrapply theorem_2_1; exact _. (* Faster this way than with [srapply]. *)
+  1: snrapply isequiv_iterated_magma_loops_conn_trunc; exact _. (* Faster this way than with [srapply]. *)
   (** The right map is an equivalence *)
   apply isequiv_magmamap_postcompose.
-  apply isequiv_iterated_magma_loops_functor_trunc.
+  apply isequiv_iterated_loops_cover_proj.
 Defined.
-
-End Prop_2_5.
 
 Definition magma_loops_pmap (Y Z : pType) : Magma.
 Proof.
@@ -623,14 +586,6 @@ Proof.
   refine (ap011 _ (point_eq _) (point_eq _)).
 Defined.
 
-Definition pmap_const {X Y : pType} : X ->* Y
-  := Build_pMap X Y (fun _ => point _) idpath.
-
-Definition ispointed_pmap {X Y : pType} : IsPointed (X ->* Y)
-  := pmap_const.
-
-Notation "X ->** Y" := (Build_pType (X ->* Y) ispointed_pmap) (at level 99).
-
 Definition ap_const' {A B : Type} {x y : A} (p : x = y) (f : A -> B) {b : B}
   (q : forall a, f a = b) : ap f p = q x @ (q y)^.
 Proof.
@@ -639,7 +594,7 @@ Proof.
   apply concat_pV.
 Defined.
 
-(** Not sure if we can simplify this lemma. It is just a generalization of path algebra in lemma_2_6 so we can prove it by path induction. Unfortunately, generalizing this causes complication... *)
+(** Not sure if we can simplify this lemma. It is just a generalization of path algebra in [magma_loops_to_magma_loops_pmap] so we can prove it by path induction. Unfortunately, generalizing this causes complication... *)
 Definition ap011_ap_const' {A B : Type} {x x' x'' : A}
   (p : x = x') (q : x' = x'') (g : A -> B) {r : B} (h : forall a : A, g a = r)
   : (((ap_const' (p @ q) g h @ ap (concat (h x)) (concat_1p (h x'')^)^) @
@@ -652,7 +607,7 @@ Proof.
   by destruct (h x).
 Defined.
 
-Definition lemma_2_6 `{Funext} {Y Z : pType}
+Definition magma_loops_to_magma_loops_pmap `{Funext} {Y Z : pType}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
 Proof.
   snrapply Build_MagmaMap.
