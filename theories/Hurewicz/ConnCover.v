@@ -65,6 +65,7 @@ Proof.
         - symmetry; apply (point_eq f).
         - reflexivity.
         - contradiction. }
+      simpl.
       apply concat_Vp. }
   reflexivity.
 Defined.
