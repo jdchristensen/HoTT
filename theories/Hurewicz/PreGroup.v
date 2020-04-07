@@ -1,4 +1,7 @@
+(* A variant of magmas, where the maps only have to *merely* preserve the operation.  Temporarily calling them PreGroups, but haven't changed the name in most places to keep the diff small. And maybe they should just be called magmas? The idea is that in the case where X and Y are groups, these pregroup maps still coincide with group homomorphisms. But in the general situation, it's much easier to prove things about them. For example, the proof the Omega^n is functorial is easy in this setting. *)
+
 Require Import Basics Types Pointed.
+Require Import WildCat.
 Require Import Algebra.Group.
 Require Import Truncations.
 Require Import PathAny.
@@ -29,9 +32,52 @@ Existing Instance magma_op.
 
 Definition issig_magma : _ <~> Magma := ltac:(issig).
 
+Class IsPreGroupPreserving {A B : Type} {Aop : SgOp A} {Bop : SgOp B} (f : A -> B) :=
+  merely_preserves_sg_op : merely (IsSemiGroupPreserving f).
+
+Global Instance ishprop_ispregrouppreserving {A B : Type} {Aop : SgOp A} {Bop : SgOp B} (f : A -> B)
+  : IsHProp (IsPreGroupPreserving f) := istrunc_truncation _ _.
+
+Section PreGroupMap.
+
+  Context {A B C : Type} {Aop : SgOp A} {Bop : SgOp B} {Cop : SgOp C}
+    (f : A -> B) (g : B -> C).
+
+  (** These results follow from the analogous results for IsSemiGroupPreserving, which are found by typeclass search. *)
+  Global Instance id_pg_morphism : IsPreGroupPreserving (@id A).
+  Proof.
+    rapply tr.
+  Defined.
+
+  (** Making these global instances causes typeclass loops.  Instead they are declared below as [Hint Extern]s that apply only when the goal has the specified form. *)
+  Local Instance compose_pg_morphism : IsPreGroupPreserving f -> IsPreGroupPreserving g ->
+    IsPreGroupPreserving (g ∘ f).
+  Proof.
+    cbn.
+    intros fp gp.
+    strip_truncations; rapply tr.
+  Defined.
+
+  Local Instance invert_pg_morphism
+    : forall `{!IsEquiv f}, IsPreGroupPreserving f ->
+      IsPreGroupPreserving (f^-1).
+  Proof.
+    intros E fp; cbn in *.
+    strip_truncations; rapply tr.
+  Defined.
+
+End PreGroupMap.
+
+Hint Extern 4 (IsPreGroupPreserving (_ ∘ _)) =>
+  class_apply @compose_pg_morphism : typeclass_instances.
+Hint Extern 4 (IsPreGroupPreserving (_ o _)) =>
+  class_apply @compose_pg_morphism : typeclass_instances.
+Hint Extern 4 (IsPreGroupPreserving (_^-1)) =>
+  class_apply @invert_pg_morphism : typeclass_instances.
+
 Record MagmaMap (X Y : Magma) := {
   magmamap_map : X -> Y;
-  magmamap_op_preserving : IsSemiGroupPreserving magmamap_map;
+  magmamap_op_preserving : IsPreGroupPreserving magmamap_map;
 }.
 
 Arguments magmamap_map {_ _}.
@@ -45,35 +91,31 @@ Global Existing Instance magmamap_op_preserving.
 
 Definition issig_magmamap X Y : _ <~> MagmaMap X Y := ltac:(issig).
 
-Definition path_magmamap_hset `{Funext} {X Y : Magma} {f g : MagmaMap X Y}
-  `{IsHSet Y}
-  : f == g -> f = g.
+Definition path_magmamap {X Y : Magma} {f g : MagmaMap X Y}
+  : (magmamap_map f = magmamap_map g) <~> (f = g).
 Proof.
-  intro p.
-  record_equality_hprop.
-  by apply path_forall.
+  refine (_^-1 oE _).
+  - apply (equiv_ap' (issig_magmamap _ _)^-1).
+  - simpl.
+    exact (equiv_path_sigma_hprop (magmamap_map f; magmamap_op_preserving f) (magmamap_map g; magmamap_op_preserving g)).
 Defined.
+
+Global Instance isgraph_magma : IsGraph Magma
+  := Build_IsGraph Magma MagmaMap.
 
 Definition magmamap_compose {X Y Z : Magma}
   (f : MagmaMap Y Z) (g : MagmaMap X Y) : MagmaMap X Z.
 Proof.
-  (* Typeclass resolution finds [compose_sg_morphism]. *)
+  (* Typeclass resolution finds [compose_pg_morphism]. *)
   srapply (Build_MagmaMap _ _ (f o g)).
 Defined.
 
-Definition magmamap_compose_assoc `{Funext} {W X Y Z : Magma}
+Definition magmamap_compose_assoc {W X Y Z : Magma}
   (f : MagmaMap Y Z) (g : MagmaMap X Y) (h : MagmaMap W X)
   : magmamap_compose (magmamap_compose f g) h = magmamap_compose f (magmamap_compose g h).
 Proof.
-  record_equality.
-  - reflexivity.
-  - funext w0 w1.
-    refine (concat_p_pp _ _ _ @ _).
-    apply whiskerR.
-    refine (_ @ _).
-    2: symmetry; apply ap_pp.
-    apply whiskerR.
-    apply ap_compose.
+  record_equality_hprop.
+  reflexivity.
 Defined.
 
 Record MagmaEquiv (X Y : Magma) := {
@@ -92,9 +134,10 @@ Definition magmaequiv_to_equiv {X Y : Magma} : MagmaEquiv X Y -> Equiv X Y
 Coercion magmaequiv_to_equiv : MagmaEquiv >-> Equiv.
 
 Definition build_magmaequiv {X Y : Magma} (f : X -> Y) (e : IsEquiv f)
-           (r : IsSemiGroupPreserving f) : MagmaEquiv X Y
+           (r : IsPreGroupPreserving f) : MagmaEquiv X Y
   := (Build_MagmaEquiv X Y (Build_MagmaMap X Y f r) e).
 
+(** This needs [Funext] to know that [IsEquiv] is a proposition. *)
 Definition path_magmaequiv `{Funext} {X Y : Magma} (f g : MagmaEquiv X Y)
   : (magmamap f = magmamap g) <~> (f = g).
 Proof.
@@ -105,7 +148,7 @@ Proof.
 Defined.
 
 Definition issig_magmaequiv' (X Y : Magma) :
-  {f : X <~> Y & IsSemiGroupPreserving f} <~> MagmaEquiv X Y.
+  {f : X <~> Y & IsPreGroupPreserving f} <~> MagmaEquiv X Y.
 Proof.
   srapply equiv_adjointify.
   - intros [[f e] r]; exact (build_magmaequiv f e r).
@@ -114,49 +157,59 @@ Proof.
   - simpl. reflexivity.
 Defined.
 
+(** Another variant, not currently used. *)
+Definition path_magmaequiv' {X Y : Magma} (f g : MagmaEquiv X Y)
+  : (magmaequiv_to_equiv f = magmaequiv_to_equiv g) <~> (f = g).
+Proof.
+  refine (_^-1 oE _).
+  - apply (equiv_ap' (issig_magmaequiv' _ _)^-1).
+  - simpl.
+    exact (equiv_path_sigma_hprop
+             (magmaequiv_to_equiv f; magmamap_op_preserving f)
+             (magmaequiv_to_equiv g; magmamap_op_preserving g)).
+Defined.
+
 (* This verifies that we have the right notion of equivalence of magmas. *)
+(* It is very unlikely to be true with our new definitions. *)
 Definition equiv_magmaequiv_path `{Univalence} (X Y : Magma)
   : MagmaEquiv X Y <~> (X = Y).
 Proof.
   refine (_ oE (issig_magmaequiv' X Y)^-1).
   revert X Y; apply (equiv_path_issig_contr issig_magma); cbn; intros [X m].
-  - exists equiv_idmap.  intros x0 x1.  reflexivity.
+  - exists equiv_idmap.  rapply tr.
   - contr_sigsig X (equiv_idmap X).
-    exact (@contr_equiv' _ _
+    Fail exact (@contr_equiv' _ _
            (equiv_functor_sigma_id (fun f => equiv_path_forall11 _ _))^-1
            (contr_basedpaths _)).
-Defined.
+Abort.
 
 Definition magma_idmap (X : Magma) : MagmaEquiv X X.
 Proof.
   srapply (build_magmaequiv idmap).
 Defined.
 
-Definition magmamap_compose_f1 `{Funext} {X Y : Magma} (f : MagmaMap X Y)
+Definition magmamap_compose_f1 {X Y : Magma} (f : MagmaMap X Y)
   : magmamap_compose f (magma_idmap X) = f.
 Proof.
-  record_equality.
-  - reflexivity.
-  - funext x0 x1.
-    apply concat_1p.
+  apply path_magmamap.
+  reflexivity.
 Defined.
 
-Definition magmamap_compose_1f `{Funext} {X Y : Magma} (f : MagmaMap X Y)
+Definition magmamap_compose_1f {X Y : Magma} (f : MagmaMap X Y)
   : magmamap_compose (magma_idmap Y) f = f.
 Proof.
-  record_equality.
-  - reflexivity.
-  - funext x0 x1.
-    refine (_ @ _).
-    1:apply concat_p1.
-    apply ap_idmap.
+  apply path_magmamap.
+  reflexivity.
 Defined.
+
+Global Instance is01cat_magma : Is01Cat Magma
+  := Build_Is01Cat _ _ magma_idmap (@magmamap_compose).
 
 Definition magmaequiv_compose {X Y Z : Magma} (g : MagmaEquiv Y Z) (f : MagmaEquiv X Y)
   : MagmaEquiv X Z.
 Proof.
   srapply (build_magmaequiv (g oE f)).
-  srapply compose_sg_morphism.
+  rapply compose_pg_morphism.
 Defined.
 
 Definition magmaequiv_inverse {X Y : Magma} (f : MagmaEquiv X Y) : MagmaEquiv Y X.
@@ -164,64 +217,24 @@ Proof.
   srapply (build_magmaequiv (magmaequiv_to_equiv f)^-1).
 Defined.
 
-(* The left inverse law.  Much trickier than I expected.  Would be easier with univalence. *)
+(** The left inverse law. *)
 Definition mecompose_eV `{Funext} {X Y : Magma} (f : MagmaEquiv X Y)
   : magmaequiv_compose f (magmaequiv_inverse f) = magma_idmap _.
 Proof.
-  destruct f as [[f r] e].
-  record_equality_hprop.
-  change (magmamap_map (Build_MagmaMap X Y f r)) with f in *.
-  record_equality.
-  + apply path_forall; intro; apply eisretr.
-  + unfold preserves_sg_op.
-    funext y0 y1.
-    rewrite transport_forall_constant.
-    rewrite transport_forall_constant.
-    transport_path_forall_hammer.
-    (* The key to making this proof simple was to avoid equiv_inj getting
-       unfolded into (ap f)^-1 which would get reduced to a complicated
-       expression by simpl/cbn.  We unfold it to (ap f)^-1 now, where it
-       cancels against the adjacent (ap f): *)
-    unfold compose_sg_morphism, invert_sg_morphism.
-    unfold equiv_inj.
-    rewrite (eisretr (ap f)).
-    rewrite @transport_paths_l.
-    do 2 rewrite @transport_paths_Fr.
-    rewrite inv_pV.
-    do 2 rewrite inv_pp.
-    do 6 rewrite concat_pp_p.
-    do 3 rewrite concat_V_pp.
-    apply concat_Vp.
+  apply path_magmaequiv, path_magmamap.
+  cbn.
+  apply path_forall; intro; apply eisretr.
 Defined.
 
-(* Every magma equivalence f has a right inverse f^-1.  So f^-1 has
-   both left and right inverses.  It follows that
-   (f^-1)^-1 = (f f^-1) (f^-1)^-1 = f (f^-1 (f^-1)^-1) = f. *)
-Definition magmaequiv_inverse_inverse `{Funext} {X Y : Magma} (f : MagmaEquiv X Y)
-  : magmaequiv_inverse (magmaequiv_inverse f) = f.
-Proof.
-  apply path_magmaequiv.
-  pose (fi := (magmaequiv_inverse f)).
-  pose (fii := (magmaequiv_inverse fi)).
-  refine (_^ @ _^ @ _ @ _ @ _).
-  - exact (magmamap_compose_1f fii).
-  - exact (ap (fun k => magmamap_compose (magmamap k) fii) (mecompose_eV f)).
-  - apply magmamap_compose_assoc.
-  - exact (ap (fun k => magmamap_compose f (magmamap k)) (mecompose_eV fi )).
-  - apply magmamap_compose_f1.
-Defined.
-
-(* The right inverse law.  Proving this directly requires different
-   path algebra than mecompose_eV, so we prove it indirectly. *)
+(** The right inverse law. *)
 Definition mecompose_Ve `{Funext} {X Y : Magma} (f : MagmaEquiv X Y)
   : magmaequiv_compose (magmaequiv_inverse f) f = magma_idmap _.
 Proof.
-  refine (_ @ _).
-  - exact (ap _ (magmaequiv_inverse_inverse f)^).
-  - apply mecompose_eV.
+  apply path_magmaequiv, path_magmamap.
+  cbn.
+  apply path_forall; intro; apply eissect.
 Defined.
 
-(* This also follows directly from Magma Univalence. *)
 Definition equiv_magmamap `{Funext} {X Y : Magma} (Z : Magma)
   (e : MagmaEquiv X Y) : MagmaMap Y Z <~> MagmaMap X Z.
 Proof.
@@ -271,19 +284,16 @@ Proof.
   intro f.
   snrapply Build_MagmaMap.
   + exact (loops_functor f).
-  + exact (loops_functor_pp f).
+  + exact (tr (loops_functor_pp f)).
 Defined.
 
-(* It would be nice to replace [==] with [=] here, so that we know the
-   magmamap structures agree as well.  That leads to a complicated
-   goal, but I would guess that with some pencil-and-paper work first,
-   it could be wrangled into something doable. We need this stronger
-   statement to prove naturality. We actually just need it for the iterated
-   version that is proved independently. *)
-Definition magma_loops_functor_compose {X Y Z : pType} (f : Y ->* Z) (g : X ->* Y)
+(* We don't use this, just the iterated version that is proved without this. *)
+Definition magma_loops_functor_compose `{Funext} {X Y Z : pType} (f : Y ->* Z) (g : X ->* Y)
   : magma_loops_functor (f o* g)
-    == magmamap_compose (magma_loops_functor f) (magma_loops_functor g).
+    = magmamap_compose (magma_loops_functor f) (magma_loops_functor g).
 Proof.
+  apply path_magmamap.
+  apply path_forall.
   apply loops_functor_compose.
 Defined.
 
@@ -293,14 +303,16 @@ Proof.
   intro f.
   snrapply Build_MagmaMap.
   + exact (iterated_loops_functor n.+1 f).
-  + exact (iterated_loops_functor_pp f n).
+  + exact (tr (iterated_loops_functor_pp f n)).
 Defined.
 
-Definition iterated_magma_loops_functor_compose {X Y Z : pType} (n : nat)
+Definition iterated_magma_loops_functor_compose `{Funext} {X Y Z : pType} (n : nat)
   (f : Y ->* Z) (g : X ->* Y) : iterated_magma_loops_functor n (f o* g)
-  == magmamap_compose (iterated_magma_loops_functor n f)
+  = magmamap_compose (iterated_magma_loops_functor n f)
       (iterated_magma_loops_functor n g).
 Proof.
+  apply path_magmamap.
+  apply path_forall.
   apply iterated_loops_functor_compose.
 Defined.
 
@@ -339,15 +351,17 @@ Proof.
   srapply equiv_adjointify.
   + intro f.
     srapply (Build_MagmaMap G H f).
-  + intro f.
+    rapply tr.
+  + intros [f r].
     srapply (Build_GroupHomomorphism f).
-    apply (magmamap_op_preserving f).
-  + cbn; reflexivity.
+    strip_truncations.
+    exact r.
   + intro f.
-    destruct f as [f p].
-    unfold Build_GroupHomomorphism.
-    cbn.  apply ap.
-    srapply path_ishprop.
+    record_equality_hprop.
+    reflexivity.
+  + intros [f r].
+    record_equality_hprop.
+    reflexivity.
 Defined.
 
 (* Truncated magma *)
@@ -363,7 +377,7 @@ Definition mtr (n : trunc_index) (X : Magma) : MagmaMap X (mTr n X).
 Proof.
   snrapply Build_MagmaMap.
   - exact tr.
-  - intros x y. reflexivity.
+  - apply tr. intros x y. reflexivity.
 Defined.
 
 Global Instance isequiv_magmamap_precompose `{Funext} {A B C : Magma}
@@ -385,6 +399,7 @@ Proof.
 Defined.
 
 (** BVR 5.1 *)
+(* TODO: should state this using groups, not magmas, and use [equiv_grp_homo_magma_map] to recover this form. *)
 Theorem isequiv_iterated_magma_loops_conn_trunc
   (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y} `{IsTrunc n.+1 X} `{IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
@@ -442,12 +457,19 @@ Proof.
 Defined.
 
 (* When we have an appropriate dependent elimination along a map [f], composing with [f] gives an equivalence between magmamap structures.  The assumption can be weakened to only having [f] an O-equivalence, but the main library will need a result similar to [equiv_o_conn_map] to show this. *)
-Definition equiv_semigrouppreserving `{Funext}
+Definition equiv_pregrouppreserving `{Funext}
            (O : ReflectiveSubuniverse)
            {A B C : Magma} `{In O C}
            (f : MagmaMap A B) `{IsConnMap O _ _ f} (g : B -> C)
-  : IsSemiGroupPreserving g <~> IsSemiGroupPreserving (g o f).
+  : IsPreGroupPreserving g <~> IsPreGroupPreserving (g o f).
 Proof.
+  destruct f as [f r].
+  (* Four lines inserted to convert proof from IsSemiGroupPreserving to IsPreGroupPreserving. There's probably a shorter direct proof. *)
+  cbn in H1.
+  unfold IsPreGroupPreserving in *.
+  strip_truncations.
+  apply equiv_O_functor.
+  (* The original proof continues. *)
   unfold IsSemiGroupPreserving.
   refine (_ oE _).
   2: rapply (equiv_o_conn_map O f).
@@ -458,7 +480,7 @@ Proof.
   rapply equiv_functor_forall_id; intro a2.
   apply equiv_concat_l.
   apply (ap g).
-  apply (magmamap_op_preserving f).
+  apply r.
 Defined.
 
 (* Now we work towards [isequiv_iterated_magma_loops_functor_conn_trunc'], which generalizes the BVR result [isequiv_iterated_magma_loops_functor_conn_trunc].  We need some results about the map [loops_ptr]. *)
@@ -514,7 +536,7 @@ Proof.
   snrapply equiv_functor_sigma'.
   - nrapply Build_Equiv.  rapply isequiv_precompose_loops_ptr.
   - intro g; cbn.
-    nrapply (equiv_semigrouppreserving 0%trunc (loops_ptr n X) g).
+    nrapply (equiv_pregrouppreserving 0%trunc (loops_ptr n X) g).
     + exact _.  (* Funext *)
     + rapply ishset_iterated_magma_loops. (* Found by typeclass inference, but slow. *)
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
@@ -541,9 +563,6 @@ Proof.
   (** The square commutes by functoriality of iterated_magma_loops *)
   { symmetry.
     intro f.
-    (* Make typeclass resolution faster in next line. *)
-    pose (HS := ishset_iterated_magma_loops n (X:=Y)).
-    apply path_magmamap_hset.
     rapply iterated_magma_loops_functor_compose. }
   (** Immediately we have some equivalences. *)
   2,3: exact _.
@@ -569,9 +588,6 @@ Proof.
   { cbn.
     symmetry.
     intro f.
-    (* Make typeclass resolution faster in next line. *)
-    pose (HS := ishset_iterated_magma_loops n (X:=Y)).
-    apply path_magmamap_hset.
     apply iterated_magma_loops_functor_compose. }
   (** The left map is an equivalence *)
   2: exact _.
@@ -624,7 +640,8 @@ Proof.
     { intro y.
       exact (ap (fun f : Y ->* Z => pointed_fun f y) p). }
     srapply (ap_const' p _ point_eq).
-  + intros p q.
+  + apply tr.
+    intros p q.
     srapply path_pmap.
     srapply Build_pHomotopy; cbn.
     { intro y.
