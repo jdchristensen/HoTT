@@ -1,4 +1,10 @@
+(* Attempts to show that Omega^n is a functor.
+   Based on 83235b105687 version from Apr 6, 2020.
+   Search for ffffff below. *)
+
 Require Import Basics Types Pointed.
+Require Import WildCat.
+Require Import Cubical.
 Require Import Algebra.Group.
 Require Import Truncations.
 Require Import PathAny.
@@ -53,6 +59,9 @@ Proof.
   record_equality_hprop.
   by apply path_forall.
 Defined.
+
+Global Instance isgraph_magma : IsGraph Magma
+  := Build_IsGraph Magma MagmaMap.
 
 Definition magmamap_compose {X Y Z : Magma}
   (f : MagmaMap Y Z) (g : MagmaMap X Y) : MagmaMap X Z.
@@ -150,6 +159,120 @@ Proof.
     refine (_ @ _).
     1:apply concat_p1.
     apply ap_idmap.
+Defined.
+
+Global Instance is01cat_magma : Is01Cat Magma
+  := Build_Is01Cat _ _ magma_idmap (@magmamap_compose).
+
+(** Now we define homotopies between magma maps. *)
+(* ffffff: this should allow us to avoid using funext in various places. *)
+Record MagmaHomotopy {X Y : Magma} (f g : MagmaMap X Y) := {
+  magma_htpy : f == g;
+  magma_op_preserving_htpy
+    : forall x y,
+      PathSquare
+        (magmamap_op_preserving f x y)
+        (magmamap_op_preserving g x y)
+        (magma_htpy (sg_op x y))
+        (ap011 sg_op (magma_htpy x) (magma_htpy y));
+}.
+
+Arguments magma_htpy {_ _ _ _}.
+Arguments magma_op_preserving_htpy {_ _ _ _}.
+
+Coercion magma_htpy : MagmaHomotopy >-> pointwise_paths.
+
+Lemma ap011_simp {A B C} (f : A -> B -> C) {x x' y y'} (p : x = x') (q : y = y')
+  : ap011 f p q = ap (fun x0 => f x0 y) p @ (ap (f x') q).
+Proof.
+  by destruct p, q.
+Defined.
+
+(* ffffff: this should allow us to avoid using funext in various places. *)
+Definition path_magmahomotopy `{Funext} {X Y : Magma} (f g : MagmaMap X Y)
+  : (MagmaHomotopy f g) -> (f = g).
+Proof.
+  intros [K r].
+  record_equality.
+  - apply path_forall, K.
+  - unfold IsSemiGroupPreserving.
+    apply path_forall.
+    refine (pointwise_paths_concat _ _).
+    + srapply transport_forall_constant.
+    + simpl.
+      intro x.
+      apply path_forall.
+      refine (pointwise_paths_concat _ _).
+      * srapply transport_forall_constant.
+      * simpl.
+        intro y.
+        transport_path_forall_hammer.
+        rewrite @transport_paths_l.
+        rewrite @transport_paths_Fr.
+        rewrite @transport_paths_Fr.
+        rewrite 2 concat_pp_p.
+        rewrite <- ap011_simp.
+        apply moveR_Vp.
+        exact (equiv_sq_path^-1 (r x y)).
+Defined.
+
+(** Identity magma 2-cell *)
+Definition magmahomotopy_id {X Y : Magma} (f : MagmaMap X Y)
+  : MagmaHomotopy f f.
+Proof.
+  unshelve rapply Build_MagmaHomotopy.
+  1: reflexivity.
+  intros x y.
+  apply sq_G1.
+  reflexivity.
+Defined.
+
+(** 2-cells of magmas turn the 1-cells (magma maps) into graphs *)
+Global Instance isgraph_magmamap (X Y : Magma) : IsGraph (MagmaMap X Y)
+  := Build_IsGraph (MagmaMap X Y) (@MagmaHomotopy X Y).
+
+(** TODO: move *)
+Definition ap011_pp (A B C : Type) (f : A -> B -> C) (x x' x'' : A) (y y' y'' : B)
+  (p : x = x') (q : y = y') (p' : x' = x'') (q' : y' = y'')
+  : ap011 f (p @ p') (q @ q') = ap011 f p q @ ap011 f p' q'.
+Proof.
+  by destruct p, p', q, q'.
+Defined.
+
+(** TODO: move *)
+Definition ap011_V (A B C : Type) (f : A -> B -> C) (x x' : A) (y y' : B)
+  (p : x = x') (q : y = y')
+  : ap011 f p^ q^ = (ap011 f p q)^.
+Proof.
+  by destruct p, q.
+Defined.
+
+(** We can compose 2-cells of magmas *)
+Definition magmahomotopy_compose {X Y : Magma} (f g h : MagmaMap X Y)
+  : MagmaHomotopy g h -> MagmaHomotopy f g -> MagmaHomotopy f h.
+Proof.
+  intros [p ph] [q qh].
+  unshelve rapply Build_MagmaHomotopy.
+  + by transitivity g.
+  + intros x y.
+    unfold pointwise_paths_concat.
+    refine (sq_cccG _^ _).
+    1: apply ap011_pp.
+    exact (sq_concat_h (qh x y) (ph x y)).
+Defined.
+
+(** We can invert 2-cells of magmas *)
+Definition magmahomotopy_inverse {X Y : Magma} (f g : MagmaMap X Y)
+  : MagmaHomotopy f g -> MagmaHomotopy g f.
+Proof.
+  intros [p h].
+  srapply Build_MagmaHomotopy.
+  1: by symmetry.
+  hnf; intros x y.
+  refine (sq_cccG _^ _).
+  1: apply ap011_V.
+  apply sq_flip_h.
+  apply h.
 Defined.
 
 Definition magmaequiv_compose {X Y Z : Magma} (g : MagmaEquiv Y Z) (f : MagmaEquiv X Y)
@@ -265,13 +388,56 @@ Definition magma_loops (X : pType) : Magma
 Definition iterated_magma_loops (n : nat) (X : pType) : Magma
   := Build_Magma (iterated_loops (S n) X) concat.
 
+Lemma loops_functor_pp_helper {X Y : Type} {x0 x1 x2 : X}
+  (p : x0 = x1) (q : x1 = x2) (f : X -> Y)
+  : 1 @ (ap f (p @ q) @ 1) = (1 @ (ap f p @ 1)) @ (1 @ (ap f q @ 1)).
+Proof.
+  by induction p, q.
+Defined.
+
+(* A version that skips the last two rewrites. *)
+Ltac pointed_reduce' :=
+  unfold pointed_fun, pointed_htpy; cbn;
+  repeat match goal with
+           | [ X : pType |- _ ] => destruct X as [X ?]
+           | [ phi : pMap ?X ?Y |- _ ] => destruct phi as [phi ?]
+           | [ alpha : pHomotopy ?f ?g |- _ ] => destruct alpha as [alpha ?]
+           | [ equiv : pEquiv ?X ?Y |- _ ] => destruct equiv as [equiv ?]
+         end;
+  cbn in *; unfold point in *;
+  path_induction; cbn.
+
+(* This is in Loops.v, but uses pointed_reduce, which uses rewrite. *)
+Lemma loops_functor_pp' {X Y : pType} (f : pMap X Y) (x y : loops X)
+  : loops_functor f (x @ y) = loops_functor f x @ loops_functor f y.
+Proof.
+  pointed_reduce'.
+  apply loops_functor_pp_helper.
+Defined.
+
+Definition loops_functor_compose' {A B C : pType} (g : B ->* C) (f : A ->* B)
+  : (loops_functor (pmap_compose g f))
+  ==* (pmap_compose (loops_functor g) (loops_functor f)).
+Proof.
+  srapply Build_pHomotopy.
+  { intros p.
+    pointed_reduce'.
+    apply whiskerL, whiskerR.
+    refine (ap_compose _ _ _ @ _).
+    apply ap.
+    symmetry.
+    refine (concat_1p _ @ concat_p1 _). }
+  simpl.
+  by pointed_reduce'.
+Defined.
+
 Definition magma_loops_functor {X Y : pType}
   : (X ->* Y) -> MagmaMap (magma_loops X) (magma_loops Y).
 Proof.
   intro f.
   snrapply Build_MagmaMap.
   + exact (loops_functor f).
-  + exact (loops_functor_pp f).
+  + exact (loops_functor_pp' f).
 Defined.
 
 (* It would be nice to replace [==] with [=] here, so that we know the
@@ -284,8 +450,47 @@ Definition magma_loops_functor_compose {X Y Z : pType} (f : Y ->* Z) (g : X ->* 
   : magma_loops_functor (f o* g)
     == magmamap_compose (magma_loops_functor f) (magma_loops_functor g).
 Proof.
-  apply loops_functor_compose.
+  apply loops_functor_compose'.
 Defined.
+
+(* ffffff: here is the attempt to prove functoriality.  The problem is that
+we need to transport along a path_forall, and coq can't figure out that right
+arguments.  It probably wouldn't be too hard to figure it out by hand.
+But it's probably better to instead prove here that the two sides are
+homotopic as magma maps, and then separately prove that that implies that
+they are equal (under Funext). *)
+Definition magma_loops_functor_compose' `{Funext} {X Y Z : pType} (f : Y ->* Z) (g : X ->* Y)
+  : magma_loops_functor (f o* g)
+    = magmamap_compose (magma_loops_functor f) (magma_loops_functor g).
+Proof.
+  apply path_magmahomotopy.
+  srapply Build_MagmaHomotopy.
+  - apply loops_functor_compose'.
+  - cbn zeta beta.
+    intros p q.
+    apply sq_path.
+    unfold loops_functor_compose'.
+    pointed_reduce.
+    unfold compose_sg_morphism.
+    simpl.
+    unfold loops_functor_pp_helper.
+    simpl.
+    (* The goal is pretty complicated here.*)
+Restart.
+  (* Old proof attempt, before introducing [MagmaHomotopy]. *)
+  record_equality.
+  - apply path_forall.
+    apply loops_functor_compose'.
+  - cbn zeta.  cbn beta.
+    simpl.
+    unfold loops_functor_pp'.
+    pointed_reduce'.
+    unfold compose_sg_morphism.
+    unfold loops_functor_pp_helper.
+    Fail transport_path_forall_hammer.
+    (* Stuck here, but the techniques used in proving [path_magmahomotopy] might help.
+       Still, we'd probably end up with a goal at least as hard as the one above. *)
+Abort.
 
 Definition iterated_magma_loops_functor {X Y : pType} (n : nat)
   : (X ->* Y) -> MagmaMap (iterated_magma_loops n X) (iterated_magma_loops n Y).
