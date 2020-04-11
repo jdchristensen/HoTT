@@ -457,6 +457,7 @@ Proof.
 Defined.
 
 (* When we have an appropriate dependent elimination along a map [f], composing with [f] gives an equivalence between magmamap structures.  The assumption can be weakened to only having [f] an O-equivalence, but the main library will need a result similar to [equiv_o_conn_map] to show this. *)
+(* If we weakened our definition of [IsPreGroupPreserving] to [forall a b, merely (f (a * b) = f a * f b], then no assumption on [C] would be needed, and we just need that [f] is (-1)-connected (or even just a (-1)-equivalence). *)
 Definition equiv_pregrouppreserving `{Funext}
            (O : ReflectiveSubuniverse)
            {A B C : Magma} `{In O C}
@@ -470,12 +471,13 @@ Proof.
   strip_truncations.
   apply equiv_O_functor.
   (* The original proof continues. *)
-  unfold IsSemiGroupPreserving.
+  unfold IsSemiGroupPreserving; cbn.
   refine (_ oE _).
   2: rapply (equiv_o_conn_map O f).
   refine (_ oE _).
   2: { rapply equiv_functor_forall_id; intro a.
        rapply (equiv_o_conn_map O f). }
+  cbn.
   rapply equiv_functor_forall_id; intro a1.
   rapply equiv_functor_forall_id; intro a2.
   apply equiv_concat_l.
@@ -520,8 +522,7 @@ Proof.
   snrapply (isequiv_precompose_O_inverts 0%trunc _).
   - exact _.  (* Funext *)
   - rapply tr0_inverts_loops_ptr.
-  - apply inO_tr_istrunc.
-    rapply ishset_iterated_magma_loops.
+  - rapply ishset_iterated_magma_loops.
     (* [exact _] works, but is slow. *)
 Defined.
 
@@ -598,6 +599,8 @@ Proof.
   apply isequiv_iterated_loops_cover_proj.
 Defined.
 
+(** The type of pointed maps [Y ->* Omega Z] is a magma under pointwise operations. *)
+(** TODO: Remove this if it is unneeded. *)
 Definition magma_loops_pmap (Y Z : pType) : Magma.
 Proof.
   snrefine (Build_Magma (Y ->* Build_pType (magma_loops Z) idpath) _).
@@ -609,49 +612,121 @@ Proof.
   refine (ap011 _ (point_eq _) (point_eq _)).
 Defined.
 
-Definition ap_const' {A B : Type} {x y : A} (p : x = y) (f : A -> B) {b : B}
-  (q : forall a, f a = b) : ap f p = q x @ (q y)^.
+(** To express naturality, it's probably better to consider a category of pointed magmas. Not sure yet. *)
+Record pMagma := {
+  pmagma_magma : Magma;
+  pmagma_pointed : pmagma_magma;
+  pmagma_idem : sg_op pmagma_pointed pmagma_pointed = pmagma_pointed
+}.
+
+Coercion pmagma_magma : pMagma >-> Magma.
+
+Definition ptype_pmagma (Z : pMagma) : pType
+  := Build_pType Z (pmagma_pointed Z).
+
+Coercion ptype_pmagma : pMagma >-> pType.
+
+Definition pmagma_loops (Z : pType) : pMagma
+  := Build_pMagma (magma_loops Z) idpath idpath.
+
+(** The type of pointed maps [Y ->* Z] is a magma under pointwise operations when [Z] is a pointed magma. *)
+Definition magma_pmagma_pmap (Y : pType) (Z : pMagma): Magma.
 Proof.
-  destruct p.
+  snrefine (Build_Magma (Y ->* Z) _).
+  intros f g.
+  srapply (Build_pMap _ _ (fun y => sg_op (f y) (g y))).
+  simpl.
+  refine (ap011 _ (point_eq _) (point_eq _) @ pmagma_idem _).
+Defined.
+
+(** A slight variation of pointed homotopy, with the pointedness condition rewritten. This has the advantage that in the case where [f] and [g] are [constpmap], so that [point_eq f] and [point_eq g] are [idpath], the condition on [K] just says that it's a pointed map to the loop space. This lets us define the map we want, [magma_loops_in], in a more general situation, and then apply path induction to show that it respects composition. *)
+Definition pHomotopy' {Y Z : pType} (f g : Y ->* Z) : Type
+  := { K : f == g & K (point Y) = (point_eq f) @ (point_eq g)^ }.
+
+Definition phomotopy'_compose {Y Z : pType} {f g h : Y ->* Z} (p : pHomotopy' f g) (q : pHomotopy' g h)
+  : pHomotopy' f h.
+Proof.
+  exists (fun y => p.1 y @ q.1 y).
+  refine (ap011 concat p.2 q.2 @ _).
+  refine (concat_pp_p _ _ _ @ _).
+  apply whiskerL.
+  apply concat_V_pp.
+Defined.
+
+(* [pHomotopy' <~> a different sigma type <~> pHomotopy <~> (f = g)]. *)
+Definition equiv_path_pmap' `{Funext} {Y Z : pType} (f g : Y ->* Z)
+  : (pHomotopy' f g) <~> (f = g).
+Proof.
+  refine (_ oE _ oE _).
+  - srapply equiv_path_pmap.
+  - issig.
+  - apply equiv_functor_sigma_id.
+    intro K.
+    symmetry.
+    apply equiv_moveL_pV.
+Defined.
+
+(** The inverse map is a pointed version of ap10. We define it separately since it doesn't require [Funext]. *)
+Definition pap10 {Y Z : pType} {f g : Y ->* Z}
+  : (f = g) -> pHomotopy' f g.
+Proof.
+  intro p; destruct p.
+  exists (fun y => idpath).
+  exact (moveL_pV (point_eq f) 1 (point_eq f) (concat_1p (point_eq f))).
+  (* This also works: [exact (concat_pV _)^.]  But the more complicated definition simplifies the next result. *)
+Defined.
+
+Definition pap10_inverts_path_pmap' `{Funext} {Y Z : pType} (f g : Y ->* Z)
+  : pap10 == (equiv_path_pmap' f g)^-1%equiv.
+Proof.
+  intro p; destruct p.  reflexivity.
+Defined.
+
+Definition isequiv_pap10  `{Funext} {Y Z : pType} (f g : Y ->* Z)
+  : IsEquiv (@pap10 _ _ f g).
+Proof.
+  srapply (isequiv_homotopic' (equiv_path_pmap' f g)^-1%equiv).
   symmetry.
-  apply concat_pV.
+  srapply pap10_inverts_path_pmap'.
 Defined.
 
-(** Not sure if we can simplify this lemma. It is just a generalization of path algebra in [magma_loops_to_magma_loops_pmap] so we can prove it by path induction. Unfortunately, generalizing this causes complication... *)
-Definition ap011_ap_const' {A B : Type} {x x' x'' : A}
-  (p : x = x') (q : x' = x'') (g : A -> B) {r : B} (h : forall a : A, g a = r)
-  : (((ap_const' (p @ q) g h @ ap (concat (h x)) (concat_1p (h x'')^)^) @
-    ap (concat (h x)) (ap (fun x0 : r = r => x0 @ (h x'')^) (concat_Vp (h x'))^)) @
-    ap (concat (h x)) (concat_pp_p (h x')^ (h x') (h x'')^)) @
-    concat_p_pp (h x) (h x')^ (h x' @ (h x'')^) =
-    ap_pp g p q @ ap011 concat (ap_const' p g h) (ap_const' q g h).
+(* TODO: I'll push this to the HoTT library. *)
+Ltac pointed_reduce_pmap f
+  := match type of f with _ ->* ?Y =>
+       let ptd := fresh "ptd" in
+       destruct Y as [Y ?], f as [f ptd]; cbn in f, ptd; destruct ptd; cbn end.
+
+(** We'll show that the inverse is a "magmoid" map, i.e. it respects the natural composition. *)
+Definition pap10_compose {Y Z : pType} {f g h : Y ->* Z} (p : f = g) (q : g = h)
+  : pap10 (p @ q) = phomotopy'_compose (pap10 p) (pap10 q).
 Proof.
-  destruct p, q; cbn.
-  by destruct (h x).
+  destruct p, q.
+  unfold phomotopy'_compose.
+  srapply path_sigma.
+  - simpl. reflexivity.
+  - simpl.
+    pointed_reduce_pmap f.
+    reflexivity.
 Defined.
 
-Definition magma_loops_to_magma_loops_pmap `{Funext} {Y Z : pType}
-  : MagmaMap (magma_loops (Y ->** Z)) (magma_loops_pmap Y Z).
+Definition magma_loops_in {Y Z : pType}
+  : MagmaMap (magma_loops (Y ->** Z)) (magma_pmagma_pmap Y (pmagma_loops Z)).
 Proof.
   snrapply Build_MagmaMap.
-  + change (loops (Y ->** Z) -> (Y ->* loops Z)).
-    intro p.
-    srapply Build_pMap.
-    { intro y.
-      exact (ap (fun f : Y ->* Z => pointed_fun f y) p). }
-    srapply (ap_const' p _ point_eq).
-  + apply tr.
+  - nrefine (_ o pap10).
+    simpl.
+    exact (issig_pmap Y (loops Z)).
+  - apply tr.
     intros p q.
-    srapply path_pmap.
-    srapply Build_pHomotopy; cbn.
-    { intro y.
-      exact (ap_pp _ p q). }
-    simpl.
-    symmetry.
-    unfold sg_op.
-    refine (_ @ ap011_ap_const' p q (fun f : Y ->* Z => f (point Y)) point_eq).
-    simpl.
-    symmetry.
-    do 3 refine (concat_p1 _ @ _).
-    apply concat_p1.
+    refine (ap (issig_pmap Y (loops Z)) (pap10_compose p q)).
+    (* Luckily [issig_pmap] definitionally respects the compositions. *)
+Defined.
+
+(* This equivalence is one of the lemmas in the CS Hurewicz paper. *)
+Definition equiv_magma_loops_in `{Funext} {Y Z : pType}
+  : MagmaEquiv (magma_loops (Y ->** Z)) (magma_pmagma_pmap Y (pmagma_loops Z)).
+Proof.
+  snrapply Build_MagmaEquiv.
+  - rapply magma_loops_in.
+  - nrapply isequiv_compose; [apply isequiv_pap10 | exact _].
 Defined.
