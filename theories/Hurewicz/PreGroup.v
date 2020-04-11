@@ -690,12 +690,6 @@ Proof.
   srapply pap10_inverts_path_pmap'.
 Defined.
 
-(* TODO: I'll push this to the HoTT library. *)
-Ltac pointed_reduce_pmap f
-  := match type of f with _ ->* ?Y =>
-       let ptd := fresh "ptd" in
-       destruct Y as [Y ?], f as [f ptd]; cbn in f, ptd; destruct ptd; cbn end.
-
 (** We'll show that the inverse is a "magmoid" map, i.e. it respects the natural composition. *)
 Definition pap10_compose {Y Z : pType} {f g h : Y ->* Z} (p : f = g) (q : g = h)
   : pap10 (p @ q) = phomotopy'_compose (pap10 p) (pap10 q).

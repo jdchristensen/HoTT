@@ -41,29 +41,29 @@ Defined.
 Definition pmap_compose_assoc {A B C D : pType} (h : C ->* D)
   (g : B ->* C) (f : A ->* B) : (h o* g) o* f ==* h o* (g o* f).
 Proof.
-  pointed_reduce.
+  pointed_reduce'.
   simple refine (Build_pHomotopy _ _); cbn.
   - intros ?; reflexivity.
   - reflexivity.
-Qed.
+Defined.
 
 Definition pmap_precompose_idmap {A B : pType} (f : A ->* B)
 : f o* pmap_idmap ==* f.
 Proof.
-  pointed_reduce.
+  pointed_reduce_pmap f.
   simple refine (Build_pHomotopy _ _); cbn.
   - intros ?; reflexivity.
   - reflexivity.
-Qed.
+Defined.
 
 Definition pmap_postcompose_idmap {A B : pType} (f : A ->* B)
 : pmap_idmap o* f ==* f.
 Proof.
-  pointed_reduce.
+  pointed_reduce_pmap f.
   simple refine (Build_pHomotopy _ _); cbn.
   - intros ?; reflexivity.
   - reflexivity.
-Qed.
+Defined.
 
 (** ** Trivially pointed maps *)
 
