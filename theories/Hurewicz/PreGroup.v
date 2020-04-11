@@ -443,7 +443,10 @@ Proof.
     2: { rapply equiv_concat_r.
          apply concat_p1. }
     apply equiv_path_inverse. }
-  by pointed_reduce.  (* Can this be sped up? *)
+  (* Manually applying [pointed_reduce_pmap], since the last [cbn] is slow. *)
+  destruct B as [B b0], f as [f ptd].
+  cbn in f, ptd; destruct ptd.
+  reflexivity.
 Defined.
 
 Definition pfiber_iterated_loops_functor {A B : pType} (n : nat) (f : A ->* B)
