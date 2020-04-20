@@ -58,7 +58,7 @@ Proof.
       reflexivity.
     + cbn; reflexivity.
     + intro f.
-      rapply path_pmap.
+      rapply path_pforall.
       snrapply Build_pHomotopy.
       { simpl.
         snrapply Susp_ind; simpl.
@@ -66,7 +66,8 @@ Proof.
         - reflexivity.
         - contradiction. }
       simpl.
-      apply concat_Vp. }
+      cbn.
+      symmetry; apply concat_1p. }
   reflexivity.
 Defined.
 
@@ -97,7 +98,7 @@ Proof.
   intros A C.
   nrapply isequiv_commsq.
   - intro g.
-    apply path_pmap.
+    apply path_pforall.
     srapply loop_susp_adjoint_nat_r.
     exact g.
   - rapply HE.  (* Typeclass resolution knows that the suspension of A is n+1 connected. *)

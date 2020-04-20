@@ -294,7 +294,8 @@ Definition magma_loops_functor_compose `{Funext} {X Y Z : pType} (f : Y ->* Z) (
 Proof.
   apply path_magmamap.
   apply path_forall.
-  apply loops_functor_compose.
+  refine (pointed_htpy (loops_functor_compose _ _)).
+  (* Coq couldn't find the coercion from [==*] to [==] automatically. *)
 Defined.
 
 Definition iterated_magma_loops_functor {X Y : pType} (n : nat)
@@ -313,7 +314,8 @@ Definition iterated_magma_loops_functor_compose `{Funext} {X Y Z : pType} (n : n
 Proof.
   apply path_magmamap.
   apply path_forall.
-  apply iterated_loops_functor_compose.
+  refine (pointed_htpy (iterated_loops_functor_compose _ _ _ _ _ _)).
+  (* Coq couldn't find the coercion from [==*] to [==] automatically. *)
 Defined.
 
 Global Instance isequiv_magma_loops_functor {X Y : pType} (f : X ->* Y)
@@ -642,81 +644,45 @@ Proof.
   refine (ap011 _ (point_eq _) (point_eq _) @ pmagma_idem _).
 Defined.
 
-(** A slight variation of pointed homotopy, with the pointedness condition rewritten. This has the advantage that in the case where [f] and [g] are [constpmap], so that [point_eq f] and [point_eq g] are [idpath], the condition on [K] just says that it's a pointed map to the loop space. This lets us define the map we want, [magma_loops_in], in a more general situation, and then apply path induction to show that it respects composition. *)
-Definition pHomotopy' {Y Z : pType} (f g : Y ->* Z) : Type
-  := { K : f == g & K (point Y) = (point_eq f) @ (point_eq g)^ }.
-
-Definition phomotopy'_compose {Y Z : pType} {f g h : Y ->* Z} (p : pHomotopy' f g) (q : pHomotopy' g h)
-  : pHomotopy' f h.
+(** [phomotopy_path] sends concatenation to composition of pointed homotopies.*)
+(** TODO: move to pHomotopy.v, with a better name. *)
+Definition phomotopy_path_pp' {A : pType} {P : pFam A}
+  {f g h : pForall A P} (p : f = g) (q : g = h)
+  : phomotopy_path (p @ q) = phomotopy_path p @* phomotopy_path q.
 Proof.
-  exists (fun y => p.1 y @ q.1 y).
-  refine (ap011 concat p.2 q.2 @ _).
-  refine (concat_pp_p _ _ _ @ _).
-  apply whiskerL.
-  apply concat_V_pp.
+  pointed_reduce.  reflexivity.
 Defined.
 
-(* [pHomotopy' <~> a different sigma type <~> pHomotopy <~> (f = g)]. *)
-Definition equiv_path_pmap' `{Funext} {Y Z : pType} (f g : Y ->* Z)
-  : (pHomotopy' f g) <~> (f = g).
+(** TODO: move to pHomotopy.v. *)
+Global Instance isequiv_phomotopy_path `{Funext} {A : pType} {P : pFam A} {f g : pForall A P}
+  : IsEquiv (@phomotopy_path A P f g).
 Proof.
-  refine (_ oE _ oE _).
-  - srapply equiv_path_pmap.
-  - issig.
-  - apply equiv_functor_sigma_id.
-    intro K.
-    symmetry.
-    apply equiv_moveL_pV.
+  rapply (transport IsEquiv).
+  - symmetry; rapply path_equiv_path_pforall_phomotopy_path.
+  - exact _.
 Defined.
 
-(** The inverse map is a pointed version of ap10. We define it separately since it doesn't require [Funext]. *)
-Definition pap10 {Y Z : pType} {f g : Y ->* Z}
-  : (f = g) -> pHomotopy' f g.
+(** This is just to illustrate that the general operation we defined on the type of pointed maps to a pointed magma [W] agrees definitionally with composition of pointed homotopies in the case that [W] is [loops Z] for some [Z]. We first see that the types agree by defining the identity map between them. *)
+Local Definition types_map {Y Z : pType}
+  : magma_type (magma_pmagma_pmap Y (pmagma_loops Z)) -> (@pconst Y Z ==* @pconst Y Z)
+  := idmap.
+
+(** We need to insert this identity map or do other things in order for Coq to correctly parse the claim that [sg_op p q = p @* q]. *)
+Local Definition ops_agree {Y Z : pType} (p q : magma_pmagma_pmap Y (pmagma_loops Z))
+  : types_map (sg_op p q) = (types_map p) @* (types_map q).
 Proof.
-  intro p; destruct p.
-  exists (fun y => idpath).
-  exact (moveL_pV (point_eq f) 1 (point_eq f) (concat_1p (point_eq f))).
-  (* This also works: [exact (concat_pV _)^.]  But the more complicated definition simplifies the next result. *)
+  unfold "@*"; cbn; unfold point_eq.
+  reflexivity.
+  (* This works because of two things.  First, note that given {p p' : x = y} {q q' : y = z} (h : p = p') (h' : q = q'), the terms [h @@ h'] and [ap011 concat h h'] are definitionally equal. The main library defines composition using [@@], but we define it using [ap011], since we need to handle any [sg_op], not just [concat].  Second, the parentheses in the definition of [@*] ([phomotopy_transitive]) were arranged so that in this case we get [foo @ (1 @ 1)] which reduces to [foo @ 1], matching what [sg_op] produces. *)
 Defined.
 
-Definition pap10_inverts_path_pmap' `{Funext} {Y Z : pType} (f g : Y ->* Z)
-  : pap10 == (equiv_path_pmap' f g)^-1%equiv.
-Proof.
-  intro p; destruct p.  reflexivity.
-Defined.
-
-Definition isequiv_pap10  `{Funext} {Y Z : pType} (f g : Y ->* Z)
-  : IsEquiv (@pap10 _ _ f g).
-Proof.
-  srapply (isequiv_homotopic' (equiv_path_pmap' f g)^-1%equiv).
-  symmetry.
-  srapply pap10_inverts_path_pmap'.
-Defined.
-
-(** We'll show that the inverse is a "magmoid" map, i.e. it respects the natural composition. *)
-Definition pap10_compose {Y Z : pType} {f g h : Y ->* Z} (p : f = g) (q : g = h)
-  : pap10 (p @ q) = phomotopy'_compose (pap10 p) (pap10 q).
-Proof.
-  destruct p, q.
-  unfold phomotopy'_compose.
-  srapply path_sigma.
-  - simpl. reflexivity.
-  - simpl.
-    pointed_reduce_pmap f.
-    reflexivity.
-Defined.
-
-Definition magma_loops_in {Y Z : pType}
+Definition magma_loops_in {Y Z : pType} `{Funext}
   : MagmaMap (magma_loops (Y ->** Z)) (magma_pmagma_pmap Y (pmagma_loops Z)).
 Proof.
   snrapply Build_MagmaMap.
-  - nrefine (_ o pap10).
-    simpl.
-    exact (issig_pmap Y (loops Z)).
+  - rapply phomotopy_path.
   - apply tr.
-    intros p q.
-    refine (ap (issig_pmap Y (loops Z)) (pap10_compose p q)).
-    (* Luckily [issig_pmap] definitionally respects the compositions. *)
+    rapply phomotopy_path_pp'.
 Defined.
 
 (* This equivalence is one of the lemmas in the CS Hurewicz paper. *)
@@ -725,5 +691,5 @@ Definition equiv_magma_loops_in `{Funext} {Y Z : pType}
 Proof.
   snrapply Build_MagmaEquiv.
   - rapply magma_loops_in.
-  - nrapply isequiv_compose; [apply isequiv_pap10 | exact _].
+  - exact _.
 Defined.

@@ -284,7 +284,8 @@ Definition magma_loops_functor_compose {X Y Z : pType} (f : Y ->* Z) (g : X ->* 
   : magma_loops_functor (f o* g)
     == magmamap_compose (magma_loops_functor f) (magma_loops_functor g).
 Proof.
-  apply loops_functor_compose.
+  refine (pointed_htpy (loops_functor_compose _ _)).
+  (* Coq couldn't find the coercion from [==*] to [==] automatically. *)
 Defined.
 
 Definition iterated_magma_loops_functor {X Y : pType} (n : nat)
@@ -301,7 +302,8 @@ Definition iterated_magma_loops_functor_compose {X Y Z : pType} (n : nat)
   == magmamap_compose (iterated_magma_loops_functor n f)
       (iterated_magma_loops_functor n g).
 Proof.
-  apply iterated_loops_functor_compose.
+  refine (pointed_htpy (iterated_loops_functor_compose _ _ _ _ _ _)).
+  (* Coq couldn't find the coercion from [==*] to [==] automatically. *)
 Defined.
 
 Global Instance isequiv_magma_loops_functor {X Y : pType} (f : X ->* Y)
@@ -625,16 +627,19 @@ Proof.
       exact (ap (fun f : Y ->* Z => pointed_fun f y) p). }
     srapply (ap_const' p _ point_eq).
   + intros p q.
-    srapply path_pmap.
+    srapply path_pforall.
     srapply Build_pHomotopy; cbn.
     { intro y.
       exact (ap_pp _ p q). }
     simpl.
     symmetry.
     unfold sg_op.
+Abort.
+(* The path algebra has changed here.  We can fix it later if needed.
     refine (_ @ ap011_ap_const' p q (fun f : Y ->* Z => f (point Y)) point_eq).
     simpl.
     symmetry.
     do 3 refine (concat_p1 _ @ _).
     apply concat_p1.
 Defined.
+ *)

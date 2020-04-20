@@ -91,6 +91,7 @@ Proof.
   destruct f as [f f0].
   destruct g as [g g0].
   unfold pointed_type, point, ispointed_type in *.
+  cbn in f, g, f0, g0.
   induction f0.
   induction g0.
   unfold pointed_type, point, ispointed_type.
