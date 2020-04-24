@@ -819,12 +819,21 @@ Proof.
       symmetry.  refine (concat_p1 _ @ concat_1p _).
     + unfold types_map.
       destruct p as [p p0]; cbn in *.
-      (* It's tricky making Coq realize that path induction works here: *)
-      change (point Y) with (ispointed_type Y) in *.
-      generalize p0.
-      generalize (p (f (ispointed_type Y))).
-      apply paths_ind_r.
-      reflexivity.
+      (* Generalizing over [p (f (point Y))] and [p0] allows one to do path induction over [p0], and the resulting goal is solved by reflexivity.  However, it's tricky making Coq realize that path induction works here, and some versions of Coq, such as 8.12+alpha, fail to generalize [p (f (point Y))] correctly, even with some help. *)
+      exact (paths_ind_r (ispointed_loops Z (point Z))
+             (fun (pf : point Z = point Z) (p0' : pf = ispointed_loops Z (point Z))
+              => (concat_p1 (1 @ pf) @ concat_1p pf)^ =
+                 (1 @ p0') @
+                 ((((@idpath _ idpath @@
+                     paths_rect (point Z = ispointed_type Z) (pf @ 1)
+                       (fun (dpoint_eq0 : point Z = ispointed_type Z)
+                          (_ : pf @ 1 = dpoint_eq0) =>
+                        pf = (1 @ dpoint_eq0) @ 1)
+                       ((concat_p1 (1 @ (pf @ 1)) @
+                         concat_1p (pf @ 1)) @
+                         concat_p1 pf)^ 1
+                        ((concat_p1 pf @ p0') @ 1)) @ 1) @@ @idpath _ idpath) @ 1)^)
+                 1%path (p (f (ispointed_type Y))) p0).
   - (* Not sure why Coq can't guess the type of the next underscore.  We give it a hint. *)
     refine (phomotopy_hcompose (p:=(postcompose_pconst f)^* @* pmap_prewhisker f (types_map p))
                                _ (phomotopy_path_pconst (Z:=Z) f)^*).
@@ -845,6 +854,7 @@ Proof.
   snrapply concat_p_pp.
 Defined.
 
+(** The naturality of magma_loops_in in the first variable follows by pasting four regions together in a large diagram. *)
 Definition magma_loops_in_nat_l `{Funext} {Y Y' Z : pType} (f : Y ->* Y') (p : magma_loops (Y' ->** Z))
   : magma_loops_in (loops_functor (pprecompose Z f) p)
     = (pprecompose (loops Z) f) (magma_loops_in p).
