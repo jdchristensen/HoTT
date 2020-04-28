@@ -778,15 +778,6 @@ Proof.
   reflexivity.
 Defined.
 
-Local Definition helper2 (P : Type) (f g : P) (p dp : f = g) (H1 : p = dp @ 1^)
-  : 1%path = (inverse2 (1 @ H1) @ inv_pV dp 1) @ (inverse2 H1 @ inv_pV dp 1)^.
-Proof.
-  revert p H1.
-  rapply paths_ind_r.
-  induction dp.
-  reflexivity.
-Defined.
-
 Definition phomotopy_inv2 `{Funext} {A : pType} {P : pFam A} {f g : pForall A P}
            {p q : f ==* g} (r : p ==* q)
   : p^* ==* q^*.
@@ -796,9 +787,13 @@ Proof.
   - intro a; cbn.
     apply (ap _ (r a)).
   - cbn.
-    induction (r point).
-    cbn.
-    apply helper2.
+    (* [induction (r point)] works here to simplify things. *)
+    unfold inverse2.
+    symmetry.
+    refine (((ap_pp _ _ _) @@ 1) @@ (inv_pp _ _) @ _).
+    refine (concat_pp_p _ _ _ @ _).
+    refine (1 @@ concat_p_Vp _ _ @ _).
+    apply concat_pp_V.
 Defined.
 
 Local Definition bottom_composite `{Funext}  {Y Y' Z : pType} (f : Y ->* Y') (p : Y' ->* loops Z)
@@ -819,21 +814,10 @@ Proof.
       symmetry.  refine (concat_p1 _ @ concat_1p _).
     + unfold types_map.
       destruct p as [p p0]; cbn in *.
-      (* Generalizing over [p (f (point Y))] and [p0] allows one to do path induction over [p0], and the resulting goal is solved by reflexivity.  However, it's tricky making Coq realize that path induction works here, and some versions of Coq, such as 8.12+alpha, fail to generalize [p (f (point Y))] correctly, even with some help. *)
-      exact (paths_ind_r (ispointed_loops Z (point Z))
-             (fun (pf : point Z = point Z) (p0' : pf = ispointed_loops Z (point Z))
-              => (concat_p1 (1 @ pf) @ concat_1p pf)^ =
-                 (1 @ p0') @
-                 ((((@idpath _ idpath @@
-                     paths_rect (point Z = ispointed_type Z) (pf @ 1)
-                       (fun (dpoint_eq0 : point Z = ispointed_type Z)
-                          (_ : pf @ 1 = dpoint_eq0) =>
-                        pf = (1 @ dpoint_eq0) @ 1)
-                       ((concat_p1 (1 @ (pf @ 1)) @
-                         concat_1p (pf @ 1)) @
-                         concat_p1 pf)^ 1
-                        ((concat_p1 pf @ p0') @ 1)) @ 1) @@ @idpath _ idpath) @ 1)^)
-                 1%path (p (f (ispointed_type Y))) p0).
+      revert p0.
+      generalize (p (f (point Y))).
+      rapply paths_ind_r.
+      reflexivity.
   - (* Not sure why Coq can't guess the type of the next underscore.  We give it a hint. *)
     refine (phomotopy_hcompose (p:=(postcompose_pconst f)^* @* pmap_prewhisker f (types_map p))
                                _ (phomotopy_path_pconst (Z:=Z) f)^*).
