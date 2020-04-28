@@ -856,3 +856,46 @@ Proof.
   symmetry.
   apply bottom_composite.
 Defined.
+
+(* TODO: Generalize to dependent functions? *)
+(* The extra [idpath]s are just to match what we need later, saving some work then. *)
+Definition phomotopy_path_nat_r {Y Z Z' : pType} (h h' : Y ->* Z) (f : Z ->* Z') (p : h = h')
+  : phomotopy_path (1 @ (ap (fun g => f o* g) p @ 1))
+    = (pmap_postwhisker f) (phomotopy_path p).
+Proof.
+  pointed_reduce; reflexivity.
+Defined.
+
+(** The naturality of magma_loops_in in the second variable. *)
+Definition magma_loops_in_nat_r `{Funext} {Y Z Z' : pType} (f : Z ->* Z') (p : magma_loops (Y ->** Z))
+  : magma_loops_in (loops_functor (ppostcompose Y f) p)
+    = (loops_functor f) o* (magma_loops_in p).
+  (* Or: ... = ppostcompose Y (loops_functor f) (magma_loops_in p). *)
+Proof.
+  (* Manually applying [pointed_reduce_pmap] to avoid cbn. *)
+  (* Also, want to save reference to the pointed function. *)
+  pose (fp := f).
+  destruct Z' as [Z' z0'], f as [f ptd].
+  cbn in f, ptd; destruct ptd.
+  unfold loops_functor, Build_pMap, pointed_fun.
+  cbn.
+  refine (phomotopy_path_nat_r _ _ fp p @ _).
+  apply path_pforall.
+  snrapply Build_pHomotopy.
+  - intro y.
+    cbn.
+    exact (concat_1p _ @ concat_p1 _)^.
+  - cbn.
+    (* The next line is needed to make the [destruct] work. *)
+    change (phomotopy_path p) with (phomotopy_path p).
+    destruct (phomotopy_path p) as [php php0]; cbn in *.
+    revert php0.
+    generalize (php (point Y)) as phpY.
+    rapply paths_ind_r.
+    reflexivity.
+Defined.
+
+(* TODO:
+   Better definitions of loop_functor and/or postwhisker and/or o* to make this easier?
+   Move stuff not involving magmas elsewhere.
+*)
