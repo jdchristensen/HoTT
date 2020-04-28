@@ -474,10 +474,8 @@ Definition point_pforall {A : pType} (B : A -> pType) : pForall A (pointed_fam B
 Definition ppForall (A : pType) (B : A -> pType) : pType
   := Build_pType (pForall A (pointed_fam B)) (point_pforall B).
 
-Definition ppMap (A B : pType) : pType
-  := ppForall A (fun _ => B).
+Notation "A ->** B" := (ppForall A (fun _ => B)) : pointed_scope.
 
-Infix "->**" := ppMap : pointed_scope.
 Notation "'ppforall'  x .. y , P"
   := (ppForall _ (fun x => .. (ppForall _ (fun y => P)) ..))
      (at level 200, x binder, y binder, right associativity)
