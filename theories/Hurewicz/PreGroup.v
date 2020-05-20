@@ -1,6 +1,7 @@
 (* A variant of magmas, where the maps only have to *merely* preserve the operation.  Temporarily calling them PreGroups, but haven't changed the name in most places to keep the diff small. And maybe they should just be called magmas? The idea is that in the case where X and Y are groups, these pregroup maps still coincide with group homomorphisms. But in the general situation, it's much easier to prove things about them. For example, the proof the Omega^n is functorial is easy in this setting. *)
 
 Require Import Basics Types Pointed.
+Require Import Hurewicz.Ptd.  (* Temporary. *)
 Require Import WildCat.
 Require Import Algebra.Group.
 Require Import Truncations.
@@ -644,24 +645,6 @@ Proof.
   refine (ap011 _ (point_eq _) (point_eq _) @ pmagma_idem _).
 Defined.
 
-(** [phomotopy_path] sends concatenation to composition of pointed homotopies.*)
-(** TODO: move to pHomotopy.v. *)
-Definition phomotopy_path_pp_aspath {A : pType} {P : pFam A}
-  {f g h : pForall A P} (p : f = g) (q : g = h)
-  : phomotopy_path (p @ q) = phomotopy_path p @* phomotopy_path q.
-Proof.
-  pointed_reduce.  reflexivity.
-Defined.
-
-(** TODO: move to pHomotopy.v. *)
-Global Instance isequiv_phomotopy_path `{Funext} {A : pType} {P : pFam A} {f g : pForall A P}
-  : IsEquiv (@phomotopy_path A P f g).
-Proof.
-  rapply (transport IsEquiv).
-  - symmetry; rapply path_equiv_path_pforall_phomotopy_path.
-  - exact _.
-Defined.
-
 (** This is just to illustrate that the general operation we defined on the type of pointed maps to a pointed magma [W] agrees definitionally with composition of pointed homotopies in the case that [W] is [loops Z] for some [Z]. We first see that the types agree by defining the identity map between them. *)
 Local Definition types_map {Y Z : pType}
   : magma_type (magma_pmagma_pmap Y (pmagma_loops Z)) -> (@pconst Y Z ==* @pconst Y Z)
@@ -694,107 +677,7 @@ Proof.
   - exact _.
 Defined.
 
-(** To state naturality, we need the pointed composition maps. *)
-
-(* Precomposing with the constant map gives the constant map. *)
-Lemma precompose_pconst_as_path {A B C : pType} (f : B ->* C)
-  : f o* @pconst A B = pconst.
-Proof.
-  pointed_reduce_pmap f; reflexivity.
-(* Or:
-  record_equality.
-  - apply (ap (fun c => (fun _ => c)) (point_eq f)).
-  - cbn.
-    rewrite transport_paths_Fl.
-    cbn.
-    rewrite <- (ap_compose (fun c => (fun _ => c))).
-    rewrite ap_idmap.
-    rewrite concat_1p.
-    apply concat_Vp.
-*)
-Defined.
-
-Definition ppostcompose (A : pType) {B C : pType} (f : B ->* C) :
-  (A ->** B) ->* (A ->** C).
-Proof.
-  simple refine (Build_pMap _ _ _ _).
-  - exact (fun g => f o* g).
-  - apply precompose_pconst_as_path.
-Defined.
-
-(* Postcomposing with the constant map gives the constant map. *)
-Lemma postcompose_pconst_as_path {A B C : pType} (f : A ->* B)
-  : pconst o* f = @pconst A C.
-Proof.
-  record_equality.
-  - reflexivity.
-  - cbn.
-    exact (concat_p1 _ @ ap_const _ _).
-(* OR:  pointed_reduce_pmap f; reflexivity. *)
-Defined.
-
-Definition pprecompose {A B : pType} (C : pType) (f : A ->* B) :
-  (B ->** C) ->* (A ->** C).
-Proof.
-  simple refine (Build_pMap _ _ _ _).
-  - exact (fun g => g o* f).
-  - apply postcompose_pconst_as_path.
-Defined.
-
-(* TODO: Generalize to dependent functions? *)
-Definition phomotopy_path_nat_l {Y Y' Z : pType} (h h' : Y' ->* Z) (f : Y ->* Y') (p : h = h')
-  : phomotopy_path (ap (pprecompose Z f) p)
-    = (pmap_prewhisker f) (phomotopy_path p).
-Proof.
-  pointed_reduce; reflexivity.
-Defined.
-
-(* Could just inline this where needed. *)
-Definition phomotopy_postwhisker `{Funext} {A : pType} {P : pFam A} {f g h : pForall A P}
-           (p q : f ==* g) (r : g ==* h) (s : p ==* q)
-  : p @* r ==* q @* r.
-Proof.
-  apply (phomotopy_hcompose s).
-  reflexivity.
-Defined.
-
-Definition functor2_phomotopy_path `{Funext} {A : pType} {P : pFam A}
-  {f f' g g' : pForall A P} (p : f = g) (q : f = f') (r : g = g')
-  : phomotopy_path (q^ @ p @ r) ==*
-                   phomotopy_path (q^) @* phomotopy_path p @* phomotopy_path r.
-Proof.
-  refine (_ @* _).
-  1: apply phomotopy_path_pp.
-  rapply phomotopy_postwhisker.
-  apply phomotopy_path_pp.
-Defined.
-
-Local Definition phomotopy_path_pconst {Y Y' Z : pType} (f : Y ->* Y')
-  : phomotopy_path (postcompose_pconst_as_path f) ==* postcompose_pconst (C:=Z) f.
-Proof.
-  (* Manually applying [pointed_reduce_pmap], since the last [cbn] is slow. *)
-  destruct Y' as [Y' y0'], f as [f ptd].
-  cbn in f, ptd; destruct ptd.
-  reflexivity.
-Defined.
-
-Definition phomotopy_inv2 `{Funext} {A : pType} {P : pFam A} {f g : pForall A P}
-           {p q : f ==* g} (r : p ==* q)
-  : p^* ==* q^*.
-Proof.
-  pointed_reduce.
-  snrapply Build_pHomotopy.
-  - intro a; cbn.
-    apply (ap _ (r a)).
-  - cbn.
-    (* [induction (r point)] works here to simplify things. *)
-    unfold inverse2.
-    symmetry.
-    refine (((ap_pp _ _ _) @@ 1) @@ (inv_pp _ _) @ _).
-    refine (concat_pp_p _ _ _ @ _).
-    refine (1 @@ concat_p_Vp _ _ @ _).
-    apply concat_pp_V.
-Defined.
+(** Now we work towards the proof that [magma_loops_in] is natural in both variables. *)
 
 Local Definition bottom_composite `{Funext}  {Y Y' Z : pType} (f : Y ->* Y') (p : Y' ->* loops Z)
   : pprecompose (loops Z) f p ==*
@@ -838,6 +721,18 @@ Proof.
   snrapply concat_p_pp.
 Defined.
 
+(* Name?  This is just used in the next result. *)
+Local Definition functor2_phomotopy_path `{Funext} {A : pType} {P : pFam A}
+  {f f' g g' : pForall A P} (p : f = g) (q : f = f') (r : g = g')
+  : phomotopy_path (q^ @ p @ r) ==*
+                   phomotopy_path (q^) @* phomotopy_path p @* phomotopy_path r.
+Proof.
+  refine (_ @* _).
+  1: apply phomotopy_path_pp.
+  rapply phomotopy_postwhisker.
+  apply phomotopy_path_pp.
+Defined.
+
 (** The naturality of magma_loops_in in the first variable follows by pasting four regions together in a large diagram. *)
 Definition magma_loops_in_nat_l `{Funext} {Y Y' Z : pType} (f : Y ->* Y') (p : magma_loops (Y' ->** Z))
   : magma_loops_in (loops_functor (pprecompose Z f) p)
@@ -857,9 +752,8 @@ Proof.
   apply bottom_composite.
 Defined.
 
-(* TODO: Generalize to dependent functions? *)
-(* The extra [idpath]s are just to match what we need later, saving some work then. *)
-Definition phomotopy_path_nat_r {Y Z Z' : pType} (h h' : Y ->* Z) (f : Z ->* Z') (p : h = h')
+(** This is a variant of [phomotopy_path_nat_r], with extra [idpath]s so that it matches what we need in the next result. *)
+Local Definition phomotopy_path_nat_r' {Y Z Z' : pType} (h h' : Y ->* Z) (f : Z ->* Z') (p : h = h')
   : phomotopy_path (1 @ (ap (fun g => f o* g) p @ 1))
     = (pmap_postwhisker f) (phomotopy_path p).
 Proof.
@@ -872,14 +766,9 @@ Definition magma_loops_in_nat_r `{Funext} {Y Z Z' : pType} (f : Z ->* Z') (p : m
     = (loops_functor f) o* (magma_loops_in p).
   (* Or: ... = ppostcompose Y (loops_functor f) (magma_loops_in p). *)
 Proof.
-  (* Manually applying [pointed_reduce_pmap] to avoid cbn. *)
-  (* Also, want to save reference to the pointed function. *)
   pose (fp := f).
-  destruct Z' as [Z' z0'], f as [f ptd].
-  cbn in f, ptd; destruct ptd.
-  unfold loops_functor, Build_pMap, pointed_fun.
-  cbn.
-  refine (phomotopy_path_nat_r _ _ fp p @ _).
+  pointed_reduce_pmap f.
+  refine (phomotopy_path_nat_r' _ _ fp p @ _).
   apply path_pforall.
   snrapply Build_pHomotopy.
   - intro y.
@@ -895,7 +784,6 @@ Proof.
     reflexivity.
 Defined.
 
-(* TODO:
-   Better definitions of loop_functor and/or postwhisker and/or o* to make this easier?
-   Move stuff not involving magmas elsewhere.
-*)
+(* TODO: Better definitions of loop_functor and/or postwhisker and/or o* to make the above easier? *)
+
+

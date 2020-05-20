@@ -303,10 +303,10 @@ theories/Homotopy/CayleyDickson.v
 theories/Hurewicz/Cover.v
 theories/Hurewicz/ConnCover.v
 theories/Hurewicz/Magma.v
+theories/Hurewicz/Ptd.v      # Temporary
 theories/Hurewicz/PreGroup.v
 theories/Hurewicz/Hurewicz.v
-# Temporary?
-theories/Hurewicz/Smash2.v
+theories/Hurewicz/Smash2.v   # Temporary?
 
 #
 #   Pointed
