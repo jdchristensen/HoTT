@@ -111,6 +111,9 @@ Proof.
   srapply (Build_MagmaMap _ _ (f o g)).
 Defined.
 
+Global Instance transitive_magmamap : Transitive MagmaMap
+  := fun _ _ _ f g => magmamap_compose g f.
+
 Definition magmamap_compose_assoc {W X Y Z : Magma}
   (f : MagmaMap Y Z) (g : MagmaMap X Y) (h : MagmaMap W X)
   : magmamap_compose (magmamap_compose f g) h = magmamap_compose f (magmamap_compose g h).
@@ -348,7 +351,7 @@ Definition group_to_magma : Group -> Magma
 
 Coercion group_to_magma : Group >-> Magma.
 
-Definition equiv_grp_homo_magma_map `{F : Funext} (G H : Group)
+Definition equiv_grp_homo_magmamap `{F : Funext} (G H : Group)
   : GroupHomomorphism G H <~> MagmaMap G H.
 Proof.
   srapply equiv_adjointify.
@@ -402,7 +405,7 @@ Proof.
 Defined.
 
 (** BVR 5.1 *)
-(* TODO: should state this using groups, not magmas, and use [equiv_grp_homo_magma_map] to recover this form. *)
+(* TODO: should state this using groups, not magmas, and use [equiv_grp_homo_magmamap] to recover this form. *)
 Theorem isequiv_iterated_magma_loops_conn_trunc
   (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y} `{IsTrunc n.+1 X} `{IsTrunc n.+1 Y}
   : IsEquiv (@iterated_magma_loops_functor X Y n).
@@ -632,26 +635,107 @@ Definition ptype_pmagma (Z : pMagma) : pType
 
 Coercion ptype_pmagma : pMagma >-> pType.
 
+(** The type of maps between pointed magmas.  If we were using "strong" magma maps that included a proof that [f (x * y) = f x * f y], then there would be a pentagon giving two proofs that [f (x0  * x0) = y0] that we would require to be equal.  But since we are using weak magma maps, no such condition is needed. *)
+Record pMagmaMap (X Y : pMagma) := {
+  pmagmamap : MagmaMap X Y;
+  pmagmamap_ispointed : pmagmamap (pmagma_pointed X) = pmagma_pointed Y
+}.
+
+Arguments pmagmamap {X Y} _.
+Arguments pmagmamap_ispointed {X Y} _.
+
+Coercion pmagmamap : pMagmaMap >-> MagmaMap.
+
+Definition pmap_pmagmamap {X Y : pMagma} : pMagmaMap X Y -> (X ->* Y)
+  := fun f => Build_pMap X Y f (pmagmamap_ispointed f).
+
+Coercion pmap_pmagmamap : pMagmaMap >-> pForall.
+
+Record pMagmaEquiv (X Y : pMagma) := {
+  pmagmamap_map : pMagmaMap X Y;
+  pmagmamap_isequiv : IsEquiv pmagmamap_map;
+}.
+
+Arguments pmagmamap_map {X Y} _.
+Arguments pmagmamap_isequiv {X Y} _.
+
+Coercion pmagmamap_map : pMagmaEquiv >-> pMagmaMap.
+
+Definition pmagmaequiv_to_pequiv {X Y : pMagma} : pMagmaEquiv X Y -> pEquiv X Y
+  := fun f => Build_pEquiv X Y f (pmagmamap_isequiv f).
+
+Coercion pmagmaequiv_to_pequiv : pMagmaEquiv >-> pEquiv.
+
+Definition pmagmamap_compose {X Y Z : pMagma}
+  (f : pMagmaMap Y Z) (g : pMagmaMap X Y) : pMagmaMap X Z.
+Proof.
+  srapply (Build_pMagmaMap _ _ (magmamap_compose f g)).
+  cbn.
+  refine (ap f _ @ _); apply pmagmamap_ispointed.
+Defined.
+
+Global Instance transitive_pmagmamap : Transitive pMagmaMap
+  := fun _ _ _ f g => pmagmamap_compose g f.
+
+Definition pmagmaequiv_compose {X Y Z : pMagma}
+  (f : pMagmaEquiv Y Z) (g : pMagmaEquiv X Y) : pMagmaEquiv X Z.
+Proof.
+  srapply (Build_pMagmaEquiv _ _ (pmagmamap_compose f g)).
+  exact (isequiv_compose' g (pmagmamap_isequiv g) f (pmagmamap_isequiv f)).
+Defined.
+
+Global Instance transitive_pmagmaequiv : Transitive pMagmaEquiv
+  := fun _ _ _ f g => pmagmaequiv_compose g f.
+
 Definition pmagma_loops (Z : pType) : pMagma
   := Build_pMagma (magma_loops Z) idpath idpath.
 
-(** The type of pointed maps [Y ->* Z] is a magma under pointwise operations when [Z] is a pointed magma. *)
-Definition magma_pmagma_pmap (Y : pType) (Z : pMagma): Magma.
+Definition pmagma_loops_functor {Y Z : pType} (f : Y ->* Z) : pMagmaMap (pmagma_loops Y) (pmagma_loops Z).
 Proof.
-  snrefine (Build_Magma (Y ->* Z) _).
-  intros f g.
-  srapply (Build_pMap _ _ (fun y => sg_op (f y) (g y))).
-  simpl.
-  refine (ap011 _ (point_eq _) (point_eq _) @ pmagma_idem _).
+  snrapply Build_pMagmaMap.
+  - exact (magma_loops_functor f).
+  - cbn.
+    refine (1 @@ concat_1p _ @ _).
+    apply concat_Vp.
+Defined.
+
+Definition equiv_pmagma_loops_functor {Y Z : pType} (f : Y <~>* Z) : pMagmaEquiv (pmagma_loops Y) (pmagma_loops Z).
+Proof.
+  snrapply Build_pMagmaEquiv.
+  - exact (pmagma_loops_functor f).
+  - rapply isequiv_magma_loops_functor.
+Defined.
+
+(** The type of pointed maps [Y ->* Z] is a pointed magma under pointwise operations when [Z] is a pointed magma. *)
+Definition pmagma_pmap (Y : pType) (Z : pMagma): pMagma.
+Proof.
+  snrapply Build_pMagma.
+  - snrefine (Build_Magma (Y ->* Z) _).
+    intros f g.
+    srapply (Build_pMap _ _ (fun y => sg_op (f y) (g y))).
+    simpl.
+    refine (ap011 _ (point_eq _) (point_eq _) @ pmagma_idem _).
+  - apply pconst.
+  - cbn.
+    record_equality.
+    * apply (ap (fun z => (fun _ => z)) (pmagma_idem Z)).
+    * refine (_ @ _).
+      + rapply (@transport_paths_Fl _ _ (fun H0 : Y -> Z => H0 (point Y)) _ _ (point Z)).
+      + refine (ap (fun q => q^ @ _) _ @ _).
+        1: symmetry; rapply (ap_compose (fun (z : Z) (_ : Y) => z)).
+        cbn.
+        refine (ap (fun q => q^ @ _) (ap_idmap _) @ _).
+        refine (1 @@ concat_1p _ @ _).
+        apply concat_Vp.
 Defined.
 
 (** This is just to illustrate that the general operation we defined on the type of pointed maps to a pointed magma [W] agrees definitionally with composition of pointed homotopies in the case that [W] is [loops Z] for some [Z]. We first see that the types agree by defining the identity map between them. *)
 Local Definition types_map {Y Z : pType}
-  : magma_type (magma_pmagma_pmap Y (pmagma_loops Z)) -> (@pconst Y Z ==* @pconst Y Z)
+  : magma_type (pmagma_pmap Y (pmagma_loops Z)) -> (@pconst Y Z ==* @pconst Y Z)
   := idmap.
 
 (** We need to insert this identity map or do other things in order for Coq to correctly parse the claim that [sg_op p q = p @* q]. *)
-Local Definition ops_agree {Y Z : pType} (p q : magma_pmagma_pmap Y (pmagma_loops Z))
+Local Definition ops_agree {Y Z : pType} (p q : pmagma_pmap Y (pmagma_loops Z))
   : types_map (sg_op p q) = (types_map p) @* (types_map q).
 Proof.
   unfold "@*"; cbn; unfold point_eq.
@@ -659,22 +743,24 @@ Proof.
   (* This works because of two things.  First, note that given {p p' : x = y} {q q' : y = z} (h : p = p') (h' : q = q'), the terms [h @@ h'] and [ap011 concat h h'] are definitionally equal. The main library defines composition using [@@], but we define it using [ap011], since we need to handle any [sg_op], not just [concat].  Second, the parentheses in the definition of [@*] ([phomotopy_transitive]) were arranged so that in this case we get [foo @ (1 @ 1)] which reduces to [foo @ 1], matching what [sg_op] produces. *)
 Defined.
 
-Definition magma_loops_in `{Funext} {Y Z : pType}
-  : MagmaMap (magma_loops (Y ->** Z)) (magma_pmagma_pmap Y (pmagma_loops Z)).
+Definition magma_loops_in {Y Z : pType}
+  : pMagmaMap (pmagma_loops (Y ->** Z)) (pmagma_pmap Y (pmagma_loops Z)).
 Proof.
-  snrapply Build_MagmaMap.
-  - rapply phomotopy_path.
-  - apply tr.
-    rapply phomotopy_path_pp_aspath.
+  snrapply Build_pMagmaMap.
+  + snrapply Build_MagmaMap.
+    - rapply phomotopy_path.
+    - apply tr.
+      rapply phomotopy_path_pp_aspath.
+  + cbn.  reflexivity.
 Defined.
 
-(* This equivalence is one of the lemmas in the CS Hurewicz paper. *)
+(** This equivalence is the base case of one of the lemmas in the CS Hurewicz paper. *)
 Definition equiv_magma_loops_in `{Funext} {Y Z : pType}
-  : MagmaEquiv (magma_loops (Y ->** Z)) (magma_pmagma_pmap Y (pmagma_loops Z)).
+  : pMagmaEquiv (pmagma_loops (Y ->** Z)) (pmagma_pmap Y (pmagma_loops Z)).
 Proof.
-  snrapply Build_MagmaEquiv.
+  snrapply Build_pMagmaEquiv.
   - rapply magma_loops_in.
-  - exact _.
+  - rapply isequiv_phomotopy_path.
 Defined.
 
 (** Now we work towards the proof that [magma_loops_in] is natural in both variables. *)
@@ -710,7 +796,7 @@ Proof.
     exact (phomotopy_inv2 (phomotopy_path_pconst f)).
 Defined.
 
-Local Definition top_composite `{Funext} {Y Y' Z : pType} (f : Y ->* Y') (p : loops (Y' ->** Z))
+Local Definition top_composite {Y Y' Z : pType} (f : Y ->* Y') (p : loops (Y' ->** Z))
   : loops_functor (pprecompose Z f) p =
     (postcompose_pconst_as_path f)^ @ (ap (pprecompose Z f) p) @ (postcompose_pconst_as_path f).
 Proof.
@@ -786,4 +872,18 @@ Defined.
 
 (* TODO: Better definitions of loop_functor and/or postwhisker and/or o* to make the above easier? *)
 
+(* TODO: rename iterated_magma_loops to magma_iterated_loops.  Same for pmagma and other functions. *)
 
+Definition iterated_pmagma_loops (n : nat) (Z : pType) : pMagma
+  := pmagma_loops (iterated_loops n Z).
+
+(* This equivalence is one of the lemmas in the CS Hurewicz paper. *)
+Definition equiv_iterated_magma_loops_in `{Funext} {Y Z : pType} (n : nat)
+  : pMagmaEquiv (iterated_pmagma_loops n (Y ->** Z)) (pmagma_pmap Y (iterated_pmagma_loops n Z)).
+Proof.
+  induction n.
+  1: apply equiv_magma_loops_in.
+  transitivity (pmagma_loops (Y ->** iterated_loops n.+1 Z)).
+  - exact (equiv_pmagma_loops_functor IHn).
+  - apply equiv_magma_loops_in.
+Defined.
