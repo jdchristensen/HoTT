@@ -53,15 +53,6 @@ Proof.
   - apply postcompose_pconst_as_path.
 Defined.
 
-(* Could just inline this where needed. *)
-Definition phomotopy_postwhisker `{Funext} {A : pType} {P : pFam A} {f g h : pForall A P}
-           (p q : f ==* g) (r : g ==* h) (s : p ==* q)
-  : p @* r ==* q @* r.
-Proof.
-  apply (phomotopy_hcompose s).
-  reflexivity.
-Defined.
-
 Definition phomotopy_inv2 `{Funext} {A : pType} {P : pFam A} {f g : pForall A P}
            {p q : f ==* g} (r : p ==* q)
   : p^* ==* q^*.
