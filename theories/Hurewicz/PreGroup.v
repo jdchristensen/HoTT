@@ -763,87 +763,27 @@ Proof.
   - rapply isequiv_phomotopy_path.
 Defined.
 
-(** Now we work towards the proof that [magma_loops_in] is natural in both variables. *)
-
-Local Definition bottom_composite `{Funext}  {Y Y' Z : pType} (f : Y ->* Y') (p : Y' ->* loops Z)
-  : pprecompose (loops Z) f p ==*
-    phomotopy_path ((postcompose_pconst_as_path f)^)
-                   @* (pmap_prewhisker f (types_map p))
-                   @* phomotopy_path (postcompose_pconst_as_path f).
-Proof.
-  transitivity ((postcompose_pconst f)^*
-                @* (pmap_prewhisker f (types_map p))
-                @* (postcompose_pconst f)).
-  - (* Manually applying [pointed_reduce_pmap] to have shorter names. *)
-    destruct Y' as [Y' y0'], f as [f ptd].
-    cbn in f, ptd; destruct ptd.
-    snrapply Build_pHomotopy.
-    + cbn.
-      intro y.
-      symmetry.  refine (concat_p1 _ @ concat_1p _).
-    + unfold types_map.
-      destruct p as [p p0]; cbn in *.
-      revert p0.
-      generalize (p (f (point Y))).
-      rapply paths_ind_r.
-      reflexivity.
-  - (* Not sure why Coq can't guess the type of the next underscore.  We give it a hint. *)
-    refine (phomotopy_hcompose (p:=(postcompose_pconst f)^* @* pmap_prewhisker f (types_map p))
-                               _ (phomotopy_path_pconst (Z:=Z) f)^*).
-    rapply phomotopy_postwhisker.
-    symmetry.
-    refine (phomotopy_path_V _ @* _).
-    exact (phomotopy_inv2 (phomotopy_path_pconst f)).
-Defined.
-
-Local Definition top_composite {Y Y' Z : pType} (f : Y ->* Y') (p : loops (Y' ->** Z))
-  : loops_functor (pprecompose Z f) p =
-    (postcompose_pconst_as_path f)^ @ (ap (pprecompose Z f) p) @ (postcompose_pconst_as_path f).
-Proof.
-  (* Manually applying [pointed_reduce_pmap], since the last [cbn] is slow. *)
-  destruct Y' as [Y' y0'], f as [f ptd].
-  cbn in f, ptd; destruct ptd.
-  (* [cbn] is slow here, as is [apply concat_p_pp]. *)
-  snrapply concat_p_pp.
-Defined.
-
-(* Name?  This is just used in the next result. *)
-Local Definition functor2_phomotopy_path `{Funext} {A : pType} {P : pFam A}
-  {f f' g g' : pForall A P} (p : f = g) (q : f = f') (r : g = g')
-  : phomotopy_path (q^ @ p @ r) ==*
-                   phomotopy_path (q^) @* phomotopy_path p @* phomotopy_path r.
-Proof.
-  refine (_ @* _).
-  1: apply phomotopy_path_pp.
-  rapply phomotopy_postwhisker.
-  apply phomotopy_path_pp.
-Defined.
-
-(** The naturality of magma_loops_in in the first variable follows by pasting four regions together in a large diagram. *)
+(** The naturality of magma_loops_in in the first variable follows by showing that the required diagram is equal to the [phomotopy_path_nat_l] square in the case when [f] is strictly pointed. *)
 Definition magma_loops_in_nat_l `{Funext} {Y Y' Z : pType} (f : Y ->* Y') (p : magma_loops (Y' ->** Z))
   : magma_loops_in (loops_functor (pprecompose Z f) p)
     = (pprecompose (loops Z) f) (magma_loops_in p).
 Proof.
-  refine ((ap magma_loops_in (top_composite f p)) @ _).
+  pose (fp := f).
+  pointed_reduce_pmap f.
+  (* The first underscore is [phomotopy_path] (i.e. [magma_loops_in]), but Coq prefers it to be omitted. *)
+  refine ((ap _ (concat_1p _ @ concat_p1 _)) @ _).
+  refine ((phomotopy_path_nat_l _ _ fp p) @ _).
   apply path_pforall.
-  set (ppapf := postcompose_pconst_as_path f).
-  refine (_ @* _).
-  1:{ unfold magma_loops_in, magmamap_map.
-      exact (functor2_phomotopy_path _ ppapf ppapf). }
-  refine (_ @* _).
-  1:{ apply phomotopy_path.
-      nrapply (ap (fun q => (phomotopy_path ppapf^) @* q @* (phomotopy_path ppapf))).
-      apply phomotopy_path_nat_l. }
-  symmetry.
-  apply bottom_composite.
-Defined.
-
-(** This is a variant of [phomotopy_path_nat_r], with extra [idpath]s so that it matches what we need in the next result. *)
-Local Definition phomotopy_path_nat_r' {Y Z Z' : pType} (h h' : Y ->* Z) (f : Z ->* Z') (p : h = h')
-  : phomotopy_path (1 @ (ap (fun g => f o* g) p @ 1))
-    = (pmap_postwhisker f) (phomotopy_path p).
-Proof.
-  pointed_reduce; reflexivity.
+  snrapply Build_pHomotopy.
+  - cbn.
+    reflexivity.
+  - (* The next line is needed to make the [destruct] work. *)
+    change (phomotopy_path p) with (phomotopy_path p).
+    destruct (phomotopy_path p) as [php php0]; cbn in *.
+    revert php0.
+    generalize (php (f (point Y))).
+    rapply paths_ind_r.
+    reflexivity.
 Defined.
 
 (** The naturality of magma_loops_in in the second variable. *)
@@ -854,7 +794,8 @@ Definition magma_loops_in_nat_r `{Funext} {Y Z Z' : pType} (f : Z ->* Z') (p : m
 Proof.
   pose (fp := f).
   pointed_reduce_pmap f.
-  refine (phomotopy_path_nat_r' _ _ fp p @ _).
+  refine ((ap _ (concat_1p _ @ concat_p1 _)) @ _).
+  refine (phomotopy_path_nat_r _ _ fp p @ _).
   apply path_pforall.
   snrapply Build_pHomotopy.
   - intro y.
@@ -887,3 +828,5 @@ Proof.
   - exact (equiv_pmagma_loops_functor IHn).
   - apply equiv_magma_loops_in.
 Defined.
+
+(* TODO: naturality of equiv_iterated_magma_loops_in. *)
