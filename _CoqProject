@@ -307,6 +307,7 @@ theories/Hurewicz/Cover.v
 theories/Hurewicz/ConnCover.v
 theories/Hurewicz/Magma.v
 theories/Hurewicz/Ptd.v      # Temporary
+theories/Hurewicz/PathGpd.v      # Temporary
 theories/Hurewicz/HomotopyGroup2.v # Temporary
 theories/Hurewicz/SmashHomotopy.v
 theories/Hurewicz/PreGroup.v
