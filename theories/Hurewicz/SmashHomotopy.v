@@ -26,7 +26,6 @@ Lemma equiv_iterated_loops_sum (n m : nat) (X : pType)
 Proof.
   induction n.
   1: reflexivity.
-  Local Opaque loops.
   cbn.
   exact (pequiv_loops_functor IHn).
 (* Or:
@@ -49,8 +48,7 @@ Notation "X '->G' Y" := (GroupHomomorphism X Y) (at level 15, right associativit
 
 Local Open Scope mc_add_scope.
 
-(* TODO: generalize the version in AbelianGroup.v.  The only change is in the type of A.
-   Or maybe better to generalize to magmas. *)
+(* TODO: generalize the version in AbelianGroup.v.  The only change is in the type of A. *)
 (** Homomorphisms from a group to an abelian group form an abelian group. *)
 Definition AbHom' (A : Group) (B : AbGroup) `{Funext} : AbGroup.
 Proof.
@@ -86,6 +84,8 @@ Proof.
     - apply right_inverse.
     - apply commutativity.
 Defined.
+
+Local Close Scope mc_add_scope.
 
 Notation "X '->A' Y" := (AbHom' X Y) (at level 15, right associativity).
 
@@ -130,57 +130,6 @@ Proof.
   exact (magmamap_compose (magmamap_to_trunc n B) f).
 Defined.
 
-(** The theory of (merely) abelian magmas. *)
-
-Record AbMagma := {
-  abmagma_magma :> Magma;
-  abmagma_isab : merely (forall x y : abmagma_magma, sg_op x y = sg_op y x)
-}.
-
-Definition AbMagmaHom (A : Magma) (B : AbMagma) `{Funext} : AbMagma.
-Proof.
-  snrapply Build_AbMagma.
-  - snrapply (Build_Magma (MagmaMap A B)).
-    intros f g.
-    snrapply Build_MagmaMap.
-    + intro x; exact (f x + g x).
-    + pose proof (magmamap_op_preserving f) as r.
-      pose proof (magmamap_op_preserving g) as s.
-      strip_truncations.
-      apply tr.
-      intros x y.
-      rewrite r, s.
-      (* Oh, no, magmas aren't associative! *)
-(*
-      rewrite 2 simple_associativity.
-      rewrite <- (simple_associativity (f _) (g _)).
-      rewrite (commutativity (g _) (f _)).
-      rewrite simple_associativity.
-      reflexivity.
-  + snrapply Build_GroupHomomorphism.
-    - intro; exact mon_unit.
-    - intros x y.
-      symmetry.
-      apply left_identity.
-  + intro f.
-    snrapply Build_GroupHomomorphism.
-    - intro x; exact (- f x).
-    - intros x y.
-      rewrite grp_homo_op.
-      apply negate_sg_op_distr.
-  + repeat split.
-    1: exact _.
-    all: hnf; intros; apply equiv_path_grouphomomorphism; intro; cbn.
-    - apply associativity.
-    - apply left_identity.
-    - apply right_identity.
-    - apply left_inverse.
-    - apply right_inverse.
-    - apply commutativity.
-Defined.
- *)
-Abort.
-
 Definition sm `{Funext} (X Y Z : pType) (n m : nat) :
   (X ->* (Y ->** Z)) -> (Pi n.+1 X -> Pi m.+1 Y -> Pi (n.+1 + m.+1)%nat Z).
 (* TODO:
@@ -205,7 +154,6 @@ Proof.
   (* Goal is third line of equation (2.1) in CS. *)
   refine (pointed_fun (iterated_loops_functor m.+1 _)).
   (* Goal is second line of equation (2.1) in CS. *)
-  Local Opaque iterated_loops.
   apply equiv_iterated_magma_loops_in.  (* Need iterated version. *)
   revert lx.
   (* Goal is RHS of first line of equation (2.1) in CS. *)
