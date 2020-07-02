@@ -242,6 +242,7 @@ theories/Extensions.v
 theories/HSet.v
 theories/TruncType.v
 theories/DProp.v
+theories/EquivGroupoids.v
 theories/Functorish.v
 theories/FunextAxiom.v
 theories/UnivalenceAxiom.v
@@ -295,6 +296,8 @@ theories/Homotopy/Freudenthal.v
 theories/Homotopy/ClassifyingSpace.v
 theories/Homotopy/EMSpace.v
 theories/Homotopy/CayleyDickson.v
+
+theories/Homotopy/SuccessorStructure.v
 
 #
 #   Hurewicz
@@ -629,6 +632,8 @@ theories/Classes/orders/naturals.v
 theories/Classes/orders/orders.v
 theories/Classes/orders/nat_int.v
 theories/Classes/orders/integers.v
+theories/Classes/orders/archimedean.v
+theories/Classes/orders/fields.v
 
 theories/Classes/implementations/assume_rationals.v
 theories/Classes/implementations/peano_naturals.v
@@ -648,6 +653,9 @@ theories/Classes/interfaces/naturals.v
 theories/Classes/interfaces/rationals.v
 theories/Classes/interfaces/canonical_names.v
 theories/Classes/interfaces/orders.v
+theories/Classes/interfaces/archimedean.v
+theories/Classes/interfaces/cauchy.v
+theories/Classes/interfaces/round.v
 theories/Classes/interfaces/integers.v
 theories/Classes/interfaces/ua_algebra.v
 theories/Classes/interfaces/ua_setalgebra.v
@@ -678,3 +686,5 @@ theories/Classes/theory/ua_third_isomorphism.v
 theories/Classes/categories/ua_category.v
 
 theories/Classes/tests/ring_tac.v
+
+theories/Analysis/Locator.v
