@@ -651,6 +651,17 @@ Definition pmap_pmagmamap {X Y : pMagma} : pMagmaMap X Y -> (X ->* Y)
 
 Coercion pmap_pmagmamap : pMagmaMap >-> pForall.
 
+Definition issig_pmagmamap (X Y : pMagma) : { f : X ->* Y & IsPreGroupPreserving f } <~> pMagmaMap X Y := ltac:(make_equiv).
+
+Definition path_pmagmamap {X Y : pMagma} {f g : pMagmaMap X Y}
+  : (pmap_pmagmamap f = pmap_pmagmamap g) <~> (f = g).
+Proof.
+  refine (_^-1 oE _).
+  - apply (equiv_ap' (issig_pmagmamap _ _)^-1).
+  - simpl.
+    exact (equiv_path_sigma_hprop (pmap_pmagmamap f; _) (pmap_pmagmamap g; _)).
+Defined.
+
 Record pMagmaEquiv (X Y : pMagma) := {
   pmagmamap_map : pMagmaMap X Y;
   pmagmamap_isequiv : IsEquiv pmagmamap_map;
