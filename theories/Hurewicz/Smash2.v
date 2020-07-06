@@ -133,7 +133,7 @@ Transparent Smash.
 
 (* The last Lemma and Corollary from Section 2.6 still need to be done. *)
 
-(** Lemma 2.31 [van Doorn 4.3.28] *)
+(** Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
 (** We take this as an axiom *)
 (** No naturality conditions, just an equivalence. *)
 Lemma equiv_pmap_curry (X Y Z : pType)
@@ -141,9 +141,9 @@ Lemma equiv_pmap_curry (X Y Z : pType)
 Proof.
 Admitted.
 
-(** Lemma 2.27 *)
+(** Lemma 2.27 [Buchholtz-van Doorn-Rijke, Corollary 4.3] *)
 (** We take this as an axiom. *)
-Global Instance istrunc_ppmap {n m : trunc_index} (X Y : pType)
+Global Instance istrunc_ppmap {m n : trunc_index} (X Y : pType)
   `{!IsConnected m.+1 X} `{!IsTrunc (n +2+ m).+1 Y}
   : IsTrunc n (X ->* Y).
 Proof.
@@ -157,7 +157,7 @@ Proof.
 Defined.
 
 (** Corollary 2.32 *)
-(** Connectivity of smash *)
+(** Connectivity of the smash product.  With different indexing, this says that for [n] and [m] natural numbers, [X] [n-1]-connected and [Y] [m-1]-connected, the smash product of [X] and [Y] is [n+m-1]-connected. *)
 Corollary isconnected_smash {n m : trunc_index} (X Y : pType)
   `{!IsConnected n.+1 X} `{!IsConnected m.+1 Y}
   : IsConnected ((n +2+ m).+1) (Smash X Y).
