@@ -98,8 +98,7 @@ Proof.
   induction f0.
   induction g0.
   unfold pointed_type, point, ispointed_type.
-(* The above lines are also accomplished by [pointed_reduce], but this way of
-   doing it makes the goal look cleaner. *)
+  (* The above lines are also accomplished by [pointed_reduce], but this way of doing it makes the goal look cleaner. *)
   srapply Build_pHomotopy.
   + srapply Smash_ind.
     1, 2, 3: reflexivity.
@@ -131,13 +130,11 @@ Defined.
 
 Transparent Smash.
 
-(* The last Lemma and Corollary from Section 2.6 still need to be done. *)
-
 (** Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
-(** We take this as an axiom *)
-(** No naturality conditions, just an equivalence. *)
+(** We take this as an axiom. *)
+(** For now, no naturality conditions, just an equivalence. *)
 Lemma equiv_pmap_curry (X Y Z : pType)
-  : (X ->* (Y ->** Z)) <~> (Smash X Y ->* Z).
+  : (X ->** (Y ->** Z)) <~>* (Smash X Y ->** Z).
 Proof.
 Admitted.
 
@@ -155,26 +152,22 @@ Global Instance contr_pmap_smash {n m : trunc_index} (X Y Z : pType)
 Proof.
   rapply (contr_equiv' _ (equiv_pmap_curry _ _ _)).
   rapply contr_inhabited_hprop.
-  exact (point (X ->** (Y ->** Z))).
+  exact (point _).
 Defined.
 
-(** Corollary 2.32 *)
-(** Connectivity of the smash product.  With different indexing, this says that for [n] and [m] natural numbers, [X] [n-1]-connected and [Y] [m-1]-connected, the smash product of [X] and [Y] is [n+m-1]-connected. *)
+(** Corollary 2.32: Connectivity of the smash product.  With different indexing, this says that for [n] and [m] natural numbers, [X] [n-1]-connected and [Y] [m-1]-connected, the smash product of [X] and [Y] is [n+m-1]-connected. *)
 Corollary isconnected_smash {n m : trunc_index} (X Y : pType)
   `{!IsConnected n.+1 X} `{!IsConnected m.+1 Y}
   : IsConnected ((n +2+ m).+1) (Smash X Y).
 Proof.
-  (** To show this type is connected, it is enough to show the truncation map is nullhomotopic. *)
-  srapply isconnected_from_elim_to_O.
+  (** To show this type is connected, it is enough to show that the truncation map is nullhomotopic. *)
+  apply isconnected_from_elim_to_O.
   (** The nullhomotopy will be to a constant map at the basepoint. *)
-  exists (ptr (point _)).
-  (** Being homotopic in the unpointed mapping space is definitionally equal to the underlying unpointed maps of the pointed versions being homotopic. *)
-  change (ptr (n:=(n +2+ m).+1) (A:=Smash X Y)
-    == (point (Smash X Y ->** pTr _ (Smash X Y)))).
-  (** Since both sides are pointed maps we obtain this homotopy from a pointed homotopy. *)
-  srapply pointed_htpy.
-  (** pointed homotopies can be obtained from paths in the pointed mapping space. *)
+  exists (point _).
+  (** We need an unpointed homotopy, but it is easier to find a pointed homotopy between the corresponding pointed maps. *)
+  apply (pointed_htpy (f:=ptr) (g:=pconst)).
+  (** Pointed homotopies can be obtained from paths in the pointed mapping space. *)
   apply phomotopy_path.
   (** By [contr_pmap_smash] such a path exists since the type is contractible. *)
-  rapply path_contr.
+  apply path_contr.
 Defined.
