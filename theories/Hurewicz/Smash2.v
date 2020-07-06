@@ -156,8 +156,6 @@ Proof.
   rapply (contr_equiv' _ (equiv_pmap_curry _ _ _)).
 Defined.
 
-(** Contractible mapping spaces are nullhomotopic *)
-
 (** Corollary 2.32 *)
 (** Connectivity of smash *)
 Corollary isconnected_smash {n m : trunc_index} (X Y : pType)
@@ -178,8 +176,3 @@ Proof.
   (** By [contr_pmap_smash] such a path exists since the type is contractible. *)
   rapply path_contr.
 Defined.
-
-
-
-
-
