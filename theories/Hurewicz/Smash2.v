@@ -4,8 +4,10 @@
 Require Import Basics.
 Require Import Pointed.Core.
 Require Import Pointed.pMap.
+Require Import Pointed.pTrunc.
 Require Import Cubical.
 Require Import Homotopy.Smash.
+Require Import Truncations NullHomotopy.
 
 Local Open Scope pointed_scope.
 
@@ -81,11 +83,12 @@ Proof.
   - rapply swap_swap.
 Defined.
 
+(* Avoid unfolding Smash.  Also speeds up the [Defined] at the end. *)
+Opaque Smash.
+
 Lemma pswap_natural {A B X Y : pType} (f : A ->* X) (g : B ->* Y)
   : pswap o* Smash_functor f g ==* Smash_functor g f o* pswap.
 Proof.
-  (* Avoid unfolding Smash.  Also speeds up the [Defined] at the end. *)
-  Opaque Smash.
   destruct X as [X x0].
   destruct Y as [Y y0].
   destruct f as [f f0].
@@ -126,4 +129,57 @@ Proof.
   + reflexivity.
 Defined.
 
+Transparent Smash.
+
 (* The last Lemma and Corollary from Section 2.6 still need to be done. *)
+
+(** Lemma 2.31 [van Doorn 4.3.28] *)
+(** We take this as an axiom *)
+(** No naturality conditions, just an equivalence. *)
+Lemma equiv_pmap_curry (X Y Z : pType)
+  : (X ->* (Y ->** Z)) <~> (Smash X Y ->* Z).
+Proof.
+Admitted.
+
+(** Lemma 2.27 *)
+(** We take this as an axiom. *)
+Global Instance istrunc_ppmap {n m : trunc_index} (X Y : pType)
+  `{!IsConnected m.+1 X} `{!IsTrunc (n +2+ m).+1 Y}
+  : IsTrunc n (X ->* Y).
+Proof.
+Admitted.
+
+Global Instance contr_pmap_smash {n m : trunc_index} (X Y Z : pType)
+  `{!IsConnected n.+1 X} `{!IsConnected m.+1 Y} `{!IsTrunc (n +2+ m).+1 Z}
+  : Contr (Smash X Y ->* Z).
+Proof.
+  rapply (contr_equiv' _ (equiv_pmap_curry _ _ _)).
+Defined.
+
+(** Contractible mapping spaces are nullhomotopic *)
+
+(** Corollary 2.32 *)
+(** Connectivity of smash *)
+Corollary isconnected_smash {n m : trunc_index} (X Y : pType)
+  `{!IsConnected n.+1 X} `{!IsConnected m.+1 Y}
+  : IsConnected ((n +2+ m).+1) (Smash X Y).
+Proof.
+  (** To show this type is connected, it is enough to show the truncation map is nullhomotopic. *)
+  srapply isconnected_from_elim_to_O.
+  (** The nullhomotopy will be to a constant map at the basepoint. *)
+  exists (ptr (point _)).
+  (** Being homotopic in the unpointed mapping space is definitionally equal to the underlying unpointed maps of the pointed versions being homotopic. *)
+  change (ptr (n:=(n +2+ m).+1) (A:=Smash X Y)
+    == (point (Smash X Y ->** pTr _ (Smash X Y)))).
+  (** Since both sides are pointed maps we obtain this homotopy from a pointed homotopy. *)
+  srapply pointed_htpy.
+  (** pointed homotopies can be obtained from paths in the pointed mapping space. *)
+  apply phomotopy_path.
+  (** By [contr_pmap_smash] such a path exists since the type is contractible. *)
+  rapply path_contr.
+Defined.
+
+
+
+
+
