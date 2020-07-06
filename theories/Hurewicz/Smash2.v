@@ -145,7 +145,7 @@ Admitted.
 (** We take this as an axiom. *)
 Global Instance istrunc_ppmap {m n : trunc_index} (X Y : pType)
   `{!IsConnected m.+1 X} `{!IsTrunc (n +2+ m).+1 Y}
-  : IsTrunc n (X ->* Y).
+  : IsTrunc n.+1 (X ->* Y).
 Proof.
 Admitted.
 
@@ -154,6 +154,8 @@ Global Instance contr_pmap_smash {n m : trunc_index} (X Y Z : pType)
   : Contr (Smash X Y ->* Z).
 Proof.
   rapply (contr_equiv' _ (equiv_pmap_curry _ _ _)).
+  rapply contr_inhabited_hprop.
+  exact (point (X ->** (Y ->** Z))).
 Defined.
 
 (** Corollary 2.32 *)
