@@ -5,6 +5,7 @@ Require Import Basics.
 Require Import Pointed.Core.
 Require Import Pointed.pMap.
 Require Import Pointed.pTrunc.
+Require Import Pointed.pEquiv.
 Require Import Cubical.
 Require Import Homotopy.Smash.
 Require Import Truncations NullHomotopy.
@@ -130,12 +131,126 @@ Defined.
 
 Transparent Smash.
 
+(** This is the pointed versions of the [sm] map.  We should be able to use [psm] to define one of the maps in [pequiv_pmap_uncurry] below, but it's not so straightforward. *)
+(** Is [Funext] necessary? *)
+Definition psm `{Funext} (X Y : pType) : X ->* (Y ->** Smash X Y).
+Proof.
+  snrapply Build_pMap.
+  - intro x.
+    snrapply Build_pMap.
+    + intro y.
+      exact (sm x y).
+    + simpl.
+      refine (gluel _ @ (gluel _)^).
+  - simpl.
+    apply path_pforall.
+    snrapply Build_pHomotopy.
+    + intro y.  cbn.
+      refine (gluer _ @ (gluer _)^).
+    + cbn.
+      refine (concat_pV _ @ _).
+      exact (whiskerR (concat_pV _) 1)^.
+Defined.
+
+(** In our application, [XY] is the smash product, [bp] is its basepoint, [al] is [auxl], [ar] is [auxr], [gl] is [gluel (point X)], [gr] is [gluer (point Y)] and [z] is [point Z]. *)
+Local Lemma uncurry_helper {XY Z : Type} {bp al ar} (gl : bp = al) (gr : bp = ar) (z : Z)
+ : (ap_const (gr @ gr^) z)^ =
+   (concat_p1 (ap (fun _ : XY => z) (gl @ gl^)) @ ap_const (gl @ gl^) z)^
+   @ (ap (ap (fun _ => z)) (concat_pV gr @ (concat_pV gl)^)
+         @ (concat_p1 (ap (fun _ => z) (gl @ gl^)))^)^.
+Proof.
+  destruct gl, gr.  reflexivity.
+Defined.
+
 (** Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
-(** We take this as an axiom. *)
+(** We define the maps, but take it as an axiom that they are inverse to each other. *)
 (** For now, no naturality conditions, just an equivalence. *)
-Lemma equiv_pmap_curry (X Y Z : pType)
+Lemma pequiv_pmap_uncurry `{Funext} (X Y Z : pType)
   : (X ->** (Y ->** Z)) <~>* (Smash X Y ->** Z).
 Proof.
+  snrapply pequiv_adjointify.
+  (* We first define the pointed map from left to right. *)
+  - snrapply Build_pMap.
+    + intro f.
+      snrapply Build_pMap.
+      * snrapply (Smash_rec (fun x y => f x y)).
+        -- exact (point Z).
+        -- exact (point Z).
+        -- intro x.
+           apply point_eq.
+        -- intro y.
+           refine (ap (fun g : Y ->* Z => g y) (point_eq f)).
+      * lazy.
+        apply point_eq.
+    + cbn.
+      apply path_pforall.
+      snrapply Build_pHomotopy.
+      * cbn.
+        snrapply Smash_ind; try reflexivity.
+        -- intro x.
+           cbn.
+           apply equiv_dp_paths_Fl.
+           apply moveR_Vp.
+           symmetry.
+           refine (concat_p1 _ @ _).
+           rapply Smash_rec_beta_gluel.
+        -- intro y.
+           cbn.
+           apply equiv_dp_paths_Fl.
+           apply moveR_Vp.
+           symmetry.
+           refine (concat_p1 _ @ _).
+           rapply smash_rec_beta_gluer.
+      * cbn.
+        reflexivity.
+  (* Now we define the pointed map from right to left.  It should be precomposition with [psm], in a multivariable sense, but I'm not sure how to define that easily. *)
+  - snrapply Build_pMap.
+    + intro f.
+      destruct Z as [Z z].
+      destruct f as [f fp].
+      cbn in *.
+      destruct fp.
+      snrapply Build_pMap.
+      * intro x.
+        snrapply Build_pMap.
+        -- intro y; exact (f (sm x y)).
+        -- cbn.
+           exact (ap f (gluel x @ (gluel _)^)).
+      * cbn.
+        apply path_pforall.
+        snrapply Build_pHomotopy.
+        -- intro y.
+           cbn.
+           exact (ap f (gluer y @ (gluer _)^)).
+        -- cbn.
+           refine (_ @ (concat_p1 _)^).
+           refine (ap (ap f) _).
+           exact (concat_pV _ @ (concat_pV _)^).
+    (* Now we show that the second map is pointed. *)
+    + apply path_pforall.
+      snrapply Build_pHomotopy.
+      * intro x. cbn.
+        apply path_pforall.
+        snrapply Build_pHomotopy.
+        -- reflexivity.
+        -- cbn.
+           symmetry.
+           refine (concat_p1 _ @ _).
+           apply ap_const.
+      * cbn beta. (* cbn slow. *)
+        unfold Build_pMap.
+        unfold ppForall, point_pforall, point, ispointed_type, dpoint_eq.
+        refine (_ @ (concat_p1 _)^).
+        refine (ap path_pforall _).
+        apply path_pforall.
+        snrapply Build_pHomotopy.
+        -- intro y.
+           cbn.
+           symmetry; apply ap_const.
+        -- cbn.
+           apply uncurry_helper.
+  (* Next we have to prove that the two composites are the identity, but it's complicated. *)
+  (* Note that [pequiv_adjointify] asks us to prove more than is necessary.  To get a pointed equivalence, we need the first map to be pointed, but then we only need to show that its underlying map is an unpointed equivalence, so the last + section above is not really needed.  Similarly, some of the things not yet done are asking for more than is needed. *)
 Admitted.
 
 (** Lemma 2.27 [Buchholtz-van Doorn-Rijke, Corollary 4.3] *)
@@ -146,17 +261,17 @@ Global Instance istrunc_ppmap {m n : trunc_index} (X Y : pType)
 Proof.
 Admitted.
 
-Global Instance contr_pmap_smash {n m : trunc_index} (X Y Z : pType)
+Global Instance contr_pmap_smash `{Funext} {n m : trunc_index} (X Y Z : pType)
   `{!IsConnected n.+1 X} `{!IsConnected m.+1 Y} `{!IsTrunc (n +2+ m).+1 Z}
   : Contr (Smash X Y ->* Z).
 Proof.
-  rapply (contr_equiv' _ (equiv_pmap_curry _ _ _)).
+  rapply (contr_equiv' _ (pequiv_pmap_uncurry _ _ _)).
   rapply contr_inhabited_hprop.
   exact (point _).
 Defined.
 
 (** Corollary 2.32: Connectivity of the smash product.  With different indexing, this says that for [n] and [m] natural numbers, [X] [n-1]-connected and [Y] [m-1]-connected, the smash product of [X] and [Y] is [n+m-1]-connected. *)
-Corollary isconnected_smash {n m : trunc_index} (X Y : pType)
+Corollary isconnected_smash `{Funext} {n m : trunc_index} (X Y : pType)
   `{!IsConnected n.+1 X} `{!IsConnected m.+1 Y}
   : IsConnected ((n +2+ m).+1) (Smash X Y).
 Proof.
