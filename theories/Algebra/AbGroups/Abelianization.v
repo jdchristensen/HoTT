@@ -441,5 +441,5 @@ Defined. (* Why does this take so long? *)
 
 Definition IsAbTensorProduct `{Funext} {A B : AbGroup}
   (T : AbGroup) (t : A ->Ab B ->Ab T)
-  := forall (C : AbGroup), IsEquiv (curried_ab_precompose t).
+  := forall (C : AbGroup), IsEquiv (curried_ab_precompose (D:=C) t).
 Existing Class IsAbTensorProduct.

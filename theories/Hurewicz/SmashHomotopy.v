@@ -4,8 +4,7 @@ Require Import Basics Types Pointed.
 Require Import Hurewicz.PathGpd.  (* Temporary. *)
 Require Import ReflectiveSubuniverse.
 Require Import Truncations.
-Require Import Algebra.Group.
-Require Import Algebra.AbelianGroup.
+Require Import Algebra.AbGroups.
 Require Import HomotopyGroup.
 Require Import Hurewicz.HomotopyGroup2.
 Require Import Hurewicz.PreGroup.

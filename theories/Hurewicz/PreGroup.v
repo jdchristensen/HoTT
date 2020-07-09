@@ -3,7 +3,7 @@
 Require Import Basics Types Pointed.
 Require Import Hurewicz.Ptd.  (* Temporary. *)
 Require Import WildCat.
-Require Import Algebra.Group.
+Require Import Algebra.Groups.
 Require Import Truncations.
 Require Import PathAny.
 Require Import HoTT.Tactics.

@@ -6,8 +6,7 @@
 Require Import Basics.
 Require Import Types.
 Require Import Pointed.
-Require Import Algebra.Group.
-Require Import Algebra.AbelianGroup.
+Require Import Algebra.AbGroups.
 Require Import Truncations.
 Require Import Spaces.Nat.
 Require Import Modalities.ReflectiveSubuniverse.
