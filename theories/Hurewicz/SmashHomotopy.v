@@ -8,7 +8,7 @@ Require Import Algebra.AbGroups.
 Require Import HomotopyGroup.
 Require Import Hurewicz.HomotopyGroup2.
 Require Import Hurewicz.PreGroup.
-Require Import Tactics.
+Require Import HoTT.Tactics.
 
 Local Open Scope pointed_scope.
 
