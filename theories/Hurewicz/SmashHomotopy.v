@@ -282,30 +282,44 @@ Proof.
   - exact _.
 Defined.
 
-(* I think it'll be better to land nin *pointed* magma maps. *)
+(* I think it'll be better to land in *pointed* magma maps. *)
 
-(** The magma of all pointed magma maps from a pointed magma to an (m+2)-fold loop space. *)
-Definition magma_pmagmamap (m : nat) (Y : pMagma) (Z : pType) : Magma.
+(** The pointed magma of all pointed magma maps from a pointed magma to an (m+2)-fold loop space. *)
+Definition magma_pmagmamap (m : nat) (Y : pMagma) (Z : pType) : pMagma.
 Proof.
   (* The codomain is the (m+2)-fold loop space. *)
-  snrapply (Build_Magma (pMagmaMap Y (pmagma_outer_iterated_loops (m.+1) (pmagma_loops Z)))).
-  intros f g.
-  snrapply (Build_pMagmaMap _ _ (Build_MagmaMap _ _ _ _) _).
-  + intro y; exact (sg_op (f y) (g y)).
-  + pose proof (magmamap_op_preserving f) as r.
-    pose proof (magmamap_op_preserving g) as s.
-    strip_truncations.
-    apply tr.
-    intros y y'.
-    refine (ap011 sg_op _ _ @ _); [apply r | apply s |].
-    cbn.
-    refine (concat_pp_p _ _ _ @ _ @ concat_p_pp _ _ _).
-    refine (ap (fun p => f y @ p) _).
-    refine (concat_p_pp _ _ _ @ _ @ concat_pp_p _ _ _).
-    refine (ap (fun p => p @ g y') _).
-    apply iterated_eckmann_hilton.
-  + cbn.  unfold ispointed_loops.
-    exact (ap011 concat (point_eq f) (point_eq g)).
+  snrapply Build_pMagma.
+  - snrapply (Build_Magma (pMagmaMap Y (pmagma_outer_iterated_loops (m.+1) (pmagma_loops Z)))).
+    intros f g.
+    snrapply (Build_pMagmaMap _ _ (Build_MagmaMap _ _ _ _) _).
+    + intro y; exact (sg_op (f y) (g y)).
+    + pose proof (magmamap_op_preserving f) as r.
+      pose proof (magmamap_op_preserving g) as s.
+      strip_truncations.
+      apply tr.
+      intros y y'.
+      refine (ap011 sg_op _ _ @ _); [apply r | apply s |].
+      cbn.
+      refine (concat_pp_p _ _ _ @ _ @ concat_p_pp _ _ _).
+      refine (ap (fun p => f y @ p) _).
+      refine (concat_p_pp _ _ _ @ _ @ concat_pp_p _ _ _).
+      refine (ap (fun p => p @ g y') _).
+      apply iterated_eckmann_hilton.
+    + cbn.  unfold ispointed_loops.
+      exact (ap011 concat (point_eq f) (point_eq g)).
+  - cbn.
+    snrapply Build_pMagmaMap.
+    1: snrapply Build_MagmaMap.
+    + exact (fun _ => (point _)).
+    + apply tr.
+      intros y1 y2.
+      cbn.
+      reflexivity.
+    + cbn.
+      reflexivity.
+  - simpl.
+    apply path_pmagmamap.
+    reflexivity.
 Defined.
 
 Definition ap_pointwise_product {Y : Type} {Z : pMagma} (f g : Y -> Z) {y1 y2 : Y} (p : y1 = y2)
