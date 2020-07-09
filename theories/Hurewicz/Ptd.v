@@ -53,6 +53,40 @@ Proof.
   - apply postcompose_pconst_as_path.
 Defined.
 
+Definition pcompose `{Funext} {A B C : pType} : (B ->** C) ->* ((A ->** B) ->** (A ->** C)).
+Proof.
+  snrapply Build_pMap.
+  1: apply ppostcompose.
+  apply path_pforall.
+  snrapply Build_pHomotopy.
+  - intro g.
+    cbn.  unfold "o*".  cbn.
+    (* The functions are definitionally equal, so we reduce to comparing the proofs of pointedness. *)
+    refine (ap (fun H => Build_pMap A C (fun _ : A => point C) H) _).
+    refine (concat_p1 _ @ _).
+    rapply ap_const.
+  - cbn.  reflexivity.
+Defined.
+
+Definition nested_pcompose `{Funext} {A A' B : pType} (C : pType)
+  : (B ->** C) ->* ((A ->** (A' ->** B)) ->** (A ->** (A' ->** C)))
+  := pcompose o* pcompose.
+
+Definition peval {A B C : pType} (b : B) : (A ->** (B ->** C)) ->* (A ->** C).
+Proof.
+  snrapply Build_pMap.
+  - intro f.
+    snrapply Build_pMap.
+    + exact (fun a => f a b).
+    + simpl.
+      exact (ap (fun g : B ->* C => g b) (point_eq f)).
+  - reflexivity.
+Defined.
+
+Definition nested_pprecompose `{Funext} {A A' B : pType} (C : pType) (f : (A ->** (A' ->** B)))
+  : (B ->** C) ->* (A ->** (A' ->** C))
+  := peval f (nested_pcompose C).
+
 Definition phomotopy_inv2 `{Funext} {A : pType} {P : pFam A} {f g : pForall A P}
            {p q : f ==* g} (r : p ==* q)
   : p^* ==* q^*.

@@ -6,6 +6,7 @@ Require Import Pointed.Core.
 Require Import Pointed.pMap.
 Require Import Pointed.pTrunc.
 Require Import Pointed.pEquiv.
+Require Import Hurewicz.Ptd.
 Require Import Cubical.
 Require Import Homotopy.Smash.
 Require Import Truncations NullHomotopy.
@@ -203,54 +204,10 @@ Proof.
            rapply smash_rec_beta_gluer.
       * cbn.
         reflexivity.
-  (* Now we define the pointed map from right to left.  It should be precomposition with [psm], in a multivariable sense, but I'm not sure how to define that easily. *)
-  - snrapply Build_pMap.
-    + intro f.
-      destruct Z as [Z z].
-      destruct f as [f fp].
-      cbn in *.
-      destruct fp.
-      snrapply Build_pMap.
-      * intro x.
-        snrapply Build_pMap.
-        -- intro y; exact (f (sm x y)).
-        -- cbn.
-           exact (ap f (gluel x @ (gluel _)^)).
-      * cbn.
-        apply path_pforall.
-        snrapply Build_pHomotopy.
-        -- intro y.
-           cbn.
-           exact (ap f (gluer y @ (gluer _)^)).
-        -- cbn.
-           refine (_ @ (concat_p1 _)^).
-           refine (ap (ap f) _).
-           exact (concat_pV _ @ (concat_pV _)^).
-    (* Now we show that the second map is pointed. *)
-    + apply path_pforall.
-      snrapply Build_pHomotopy.
-      * intro x. cbn.
-        apply path_pforall.
-        snrapply Build_pHomotopy.
-        -- reflexivity.
-        -- cbn.
-           symmetry.
-           refine (concat_p1 _ @ _).
-           apply ap_const.
-      * cbn beta. (* cbn slow. *)
-        unfold Build_pMap.
-        unfold ppForall, point_pforall, point, ispointed_type, dpoint_eq.
-        refine (_ @ (concat_p1 _)^).
-        refine (ap path_pforall _).
-        apply path_pforall.
-        snrapply Build_pHomotopy.
-        -- intro y.
-           cbn.
-           symmetry; apply ap_const.
-        -- cbn.
-           apply uncurry_helper.
-  (* Next we have to prove that the two composites are the identity, but it's complicated. *)
-  (* Note that [pequiv_adjointify] asks us to prove more than is necessary.  To get a pointed equivalence, we need the first map to be pointed, but then we only need to show that its underlying map is an unpointed equivalence, so the last + section above is not really needed.  Similarly, some of the things not yet done are asking for more than is needed. *)
+  (* Now we define the pointed map from right to left as precomposition with [psm], in a multivariable sense. *)
+  - exact (nested_pprecompose Z (psm X Y)).
+  (* Next we have to prove that the two composites are equal to the identity maps, but it's complicated. *)
+  (* Note that [pequiv_adjointify] asks us to prove more than is necessary.  To get a pointed equivalence, we need the first map to be pointed, but then we only need to show that its underlying map is an unpointed equivalence.  Similarly, some of the things not yet done are asking for more than is needed. *)
 Admitted.
 
 (** Lemma 2.27 [Buchholtz-van Doorn-Rijke, Corollary 4.3] *)
