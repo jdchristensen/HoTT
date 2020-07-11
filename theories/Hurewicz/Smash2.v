@@ -1,7 +1,7 @@
 (* These things should probably be moved to Homotopy/Smash.v. *)
 (* Also, there's a typo there:  smash_rec_beta_gluer should be capitalized. *)
 
-Require Import Basics.
+Require Import Basics Types.
 Require Import Pointed.Core.
 Require Import Pointed.pMap.
 Require Import Pointed.pTrunc.
@@ -242,4 +242,96 @@ Proof.
   apply phomotopy_path.
   (** By [contr_pmap_smash] such a path exists since the type is contractible. *)
   apply path_contr.
+Defined.
+
+(** TODO: Make this much more efficient. *)
+Lemma equiv_isequiv_ppmap_compose_isequiv_compose `{Funext} {A B : pType} (f : A ->* B) (Z : Type)
+  : (forall (z : Z), IsEquiv (fun g : B ->* Build_pType Z z => g o* f : A ->* Build_pType Z z))
+  <~> IsEquiv (fun g : B -> Z => g o f : A -> Z).
+Proof.
+  srapply equiv_iff_hprop.
+  { intro K.
+    pose (@isequiv_functor_sigma Z (fun z => B ->* Build_pType Z z) Z (fun z => A ->* Build_pType Z z)
+      idmap _ (fun z => (fun g : B ->* Build_pType Z z => g o* f : A ->* Build_pType Z z)) _) as isT.
+    srefine (@isequiv_commsq _ _ _ _ _ _ _ _ _ isT _ _).
+    1: intros [z g] b; exact (g b).
+    1: intros [z g] a; exact (g a).
+    1: reflexivity.
+    { snrapply isequiv_adjointify.
+      { intro g; eexists.
+        exact (pmap_from_point g (point _)). }
+      1: cbn; reflexivity.
+      { intros [z g].
+        srapply path_sigma.
+        1: exact (point_eq g).
+        pointed_reduce.
+        reflexivity. } }
+    snrapply isequiv_adjointify.
+    { intro g; eexists.
+      exact (pmap_from_point g (point _)). }
+    1: cbn; reflexivity.
+    { intros [z g].
+      srapply path_sigma.
+      1: exact (point_eq g).
+      pointed_reduce.
+      reflexivity. } }
+  intro K.
+  rapply isequiv_from_functor_sigma.
+  srefine (@isequiv_commsq' _ _ _ _ _ _ _ _ _ K _ _).
+  1: intros [z g] b; exact (g b).
+  1: intros [z g] a; exact (g a).
+  1: reflexivity.
+  { snrapply isequiv_adjointify.
+    { intro g; eexists.
+      exact (pmap_from_point g (point _)). }
+    1: cbn; reflexivity.
+    { intros [z g].
+      srapply path_sigma.
+      1: exact (point_eq g).
+      pointed_reduce.
+      reflexivity. } }
+  snrapply isequiv_adjointify.
+  { intro g; eexists.
+    exact (pmap_from_point g (point _)). }
+  1: cbn; reflexivity.
+  { intros [z g].
+    srapply path_sigma.
+    1: exact (point_eq g).
+    pointed_reduce.
+    reflexivity. }
+Defined.
+
+Lemma O_inverts_from_isequiv_pmap_precomp {O : ReflectiveSubuniverse} `{Funext} {A B : pType} (f : A ->* B)
+  : (forall Z : Type, In O Z -> forall z : Z, IsEquiv (fun g : B ->* {| pointed_type := Z; ispointed_type := z |} => g o* f)) -> O_inverts O f.
+Proof.
+  intro K.
+  nrapply O_inverts_from_isequiv_precompose; [exact _|].
+  intros Z inZ.
+  rapply equiv_isequiv_ppmap_compose_isequiv_compose.
+Defined.
+
+(** TODO: give better name *)
+Lemma isequiv_pmap_precomp_smash_ptr_idmap `{Funext} (n m : trunc_index) (X Y T : pType) `{!IsTrunc (m +2+ n).+1 T} `{!IsConnected n.+1 X}
+  : IsEquiv (fun (f : Smash (pTr m.+1 Y) X ->* T) => f o* (Smash_functor ptr pmap_idmap) : Smash Y X ->* T).
+Proof.
+  snrapply isequiv_commsq.
+  8,9: rapply (pointed_isequiv _ _ (pequiv_pmap_uncurry _ _ _)).
+  1: intros g; exact (g o* ptr).
+  { (** Can't check this without finishing pequiv_pmap_uncurry *)
+    admit. }
+  snrapply (isequiv_commsq (@equiv_ptr_rec _ m.+1 Y (X ->** T) _)).
+  3,4: exact idmap.
+  1,4,5,6: exact _.
+  1: rapply (@istrunc_ppmap n m X T).
+  reflexivity.
+Admitted.
+
+(** Lemma 2.42 *)
+Global Instance isequiv_ptr_smash_functor `{Funext} {n m : trunc_index} (X Y : pType)
+  `{!IsConnected n.+1 X}
+  : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (ptr (n:=m.+1) (A:=Y)) (@pmap_idmap X))).
+Proof.
+  srapply O_inverts_from_isequiv_pmap_precomp.
+  intros Z inZ z.
+  srapply (isequiv_pmap_precomp_smash_ptr_idmap n m).
 Defined.
