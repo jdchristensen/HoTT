@@ -163,15 +163,10 @@ Proof.
   destruct gl, gr.  reflexivity.
 Defined.
 
-(** Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
-(** We define the maps, but take it as an axiom that they are inverse to each other. *)
-(** For now, no naturality conditions, just an equivalence. *)
-Lemma pequiv_pmap_uncurry `{Funext} (X Y Z : pType)
-  : (X ->** (Y ->** Z)) <~>* (Smash X Y ->** Z).
+Lemma pmap_uncurry `{Funext} (X Y Z : pType)
+  : (X ->** (Y ->** Z)) ->* (Smash X Y ->** Z).
 Proof.
-  snrapply pequiv_adjointify.
-  (* We first define the pointed map from left to right. *)
-  - snrapply Build_pMap.
+  snrapply Build_pMap.
     + intro f.
       snrapply Build_pMap.
       * snrapply (Smash_rec (fun x y => f x y)).
@@ -204,18 +199,82 @@ Proof.
            rapply smash_rec_beta_gluer.
       * cbn.
         reflexivity.
-  (* Now we define the pointed map from right to left as precomposition with [psm], in a multivariable sense. *)
-  - exact (nested_pprecompose Z (psm X Y)).
-  (* Next we have to prove that the two composites are equal to the identity maps, but it's complicated. *)
-  (* Note that [pequiv_adjointify] asks us to prove more than is necessary.  To get a pointed equivalence, we need the first map to be pointed, but then we only need to show that its underlying map is an unpointed equivalence.  Similarly, some of the things not yet done are asking for more than is needed. *)
+Defined.
+
+(** These facts are taken as axioms for now. *)
+Local Lemma sect1 `{Funext} (X Y Z : pType)
+  : Sect (nested_pprecompose Z (psm X Y)) (pmap_uncurry X Y Z).
 Admitted.
+
+Local Lemma sect2 `{Funext} (X Y Z : pType)
+  : Sect (pmap_uncurry X Y Z) (nested_pprecompose Z (psm X Y)).
+Admitted.
+
+Global Instance isequiv_pmap_uncurry `{Funext} (X Y Z : pType)
+  : IsEquiv (pmap_uncurry X Y Z).
+Proof.
+  snrapply isequiv_adjointify.
+  - exact (nested_pprecompose Z (psm X Y)).
+  - apply sect1.
+  - apply sect2.
+Defined.
+
+(** Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
+(** We define the maps, but take it as axioms that they are inverse to each other. *)
+(** For now, no naturality conditions, just an equivalence. *)
+Definition pequiv_pmap_uncurry `{Funext} (X Y Z : pType)
+  : (X ->** (Y ->** Z)) <~>* (Smash X Y ->** Z)
+  := Build_pEquiv _ _ (pmap_uncurry X Y Z) _.
+
+(** This is one of the three naturality properties of [pmap_uncurry]. *)
+(* We eventually will need a pointed homotopy, but for now we just claim an unpointed one. *)
+Definition pmap_uncurry_nat_X `{Funext} (X X' Y Z : pType) (f : X ->* X')
+  : pmap_uncurry X Y Z o* pprecompose (Y ->** Z) f ==
+    pprecompose Z (Smash_functor f pmap_idmap) o* pmap_uncurry X' Y Z.
+Proof.
+  intro g.
+  unfold pequiv_pmap_uncurry, pointed_equiv_fun.
+  apply path_pforall.
+  snrapply Build_pHomotopy.
+  - snrapply Smash_ind.
+    + intros x y.
+      lazy.  reflexivity.
+    + lazy.  reflexivity.
+    + lazy.  reflexivity.
+    + intro x.  cbn beta.
+      snrapply equiv_dp_paths_FlFr.
+      rewrite concat_p1.
+      apply moveR_Vp.
+      refine (_ @ (concat_p1 _)^).
+      unfold pprecompose, "o*", Build_pMap, pointed_fun.
+      refine (ap_compose _ _ _ @ _).
+      rewrite 2 Smash_rec_beta_gluel.
+      change (ap (sm (f x)) (point_eq pmap_idmap)) with (idpath (sm (f x) (point Y))).
+      rewrite concat_1p.
+      rapply Smash_rec_beta_gluel.
+    + intro y.  cbn beta.
+      snrapply equiv_dp_paths_FlFr.
+      rewrite concat_p1.
+      apply moveR_Vp.
+      refine (_ @ (concat_p1 _)^).
+      unfold pprecompose, "o*", Build_pMap, pointed_fun.
+      refine (ap_compose _ _ _ @ _).
+      rewrite 2 smash_rec_beta_gluer.
+      unfold pmap_idmap, Build_pMap, pointed_fun.
+      pointed_reduce_pmap f.
+      rewrite 2 concat_1p.
+      rapply smash_rec_beta_gluer.
+  - simpl.
+    pointed_reduce_pmap f.
+    rewrite concat_1p.
+    symmetry; apply concat_pV.
+Defined.
 
 (** Lemma 2.27 [Buchholtz-van Doorn-Rijke, Corollary 4.3] *)
 (** We take this as an axiom. *)
 Global Instance istrunc_ppmap {m n : trunc_index} (X Y : pType)
   `{!IsConnected m.+1 X} `{!IsTrunc (n +2+ m).+1 Y}
   : IsTrunc n.+1 (X ->* Y).
-Proof.
 Admitted.
 
 Global Instance contr_pmap_smash `{Funext} {n m : trunc_index} (X Y Z : pType)
@@ -317,21 +376,21 @@ Proof.
   snrapply isequiv_commsq.
   8,9: rapply (pointed_isequiv _ _ (pequiv_pmap_uncurry _ _ _)).
   1: intros g; exact (g o* ptr).
-  { (** Can't check this without finishing pequiv_pmap_uncurry *)
-    admit. }
+  1: rapply pmap_uncurry_nat_X.
   snrapply (isequiv_commsq (@equiv_ptr_rec _ m.+1 Y (X ->** T) _)).
   3,4: exact idmap.
   1,4,5,6: exact _.
   1: rapply (@istrunc_ppmap n m X T).
   reflexivity.
-Admitted.
+Defined.
 
 (** Lemma 2.42 *)
 Global Instance isequiv_ptr_smash_functor `{Funext} {n m : trunc_index} (X Y : pType)
   `{!IsConnected n.+1 X}
   : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (ptr (n:=m.+1) (A:=Y)) (@pmap_idmap X))).
 Proof.
-  srapply O_inverts_from_isequiv_pmap_precomp.
+  snrapply O_inverts_from_isequiv_pmap_precomp.
+  1: exact _. (* Funext. *)
   intros Z inZ z.
   srapply (isequiv_pmap_precomp_smash_ptr_idmap n m).
 Defined.
