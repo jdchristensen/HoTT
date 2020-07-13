@@ -6,10 +6,12 @@ Require Import Pointed.Core.
 Require Import Pointed.pMap.
 Require Import Pointed.pTrunc.
 Require Import Pointed.pEquiv.
+Require Import Pointed.pSusp.
 Require Import Hurewicz.Ptd.
 Require Import Cubical.
 Require Import Homotopy.Smash.
 Require Import Truncations NullHomotopy.
+Require Import WildCat.
 
 Local Open Scope pointed_scope.
 
@@ -77,7 +79,7 @@ Proof.
   - reflexivity.
 Defined.
 
-Theorem isequiv_swap `{Funext} {X Y : pType} : IsEquiv (@swap X Y).
+Global Instance isequiv_swap `{Funext} {X Y : pType} : IsEquiv (@swap X Y).
 Proof.
   srapply isequiv_adjointify.
   - apply swap.
@@ -394,3 +396,78 @@ Proof.
   intros Z inZ z.
   srapply (isequiv_pmap_precomp_smash_ptr_idmap n m).
 Defined.
+
+(** TODO: move to Pointed.pTrunc. *)
+Definition ptr_functor_compose {n : trunc_index} {X Y Z : pType} (f : Y ->* Z) (g : X ->* Y)
+  : ptr_functor n (f o* g) ==* ptr_functor n f o* ptr_functor n g.
+Proof.
+  pointed_reduce.
+  snrapply Build_pHomotopy.
+  1: cbn; apply Trunc_functor_compose.
+  reflexivity.
+Defined.
+
+(** Corollary 2.43 *)
+Global Instance isequiv_ptr_smash_functor' `{Funext} {n m : trunc_index} (X Y : pType)
+  `{!IsConnected n.+1 X}
+  : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (@pmap_idmap X) (@ptr m.+1 Y)))
+  := isequiv_commsq _ _ _ _
+    ((ptr_functor_compose _ _)^*
+    @* (ptr_functor_homotopy (m+2+n).+1 (pswap_natural (@ptr m.+1 Y) (@pmap_idmap X)))
+    @* ptr_functor_compose _ _).
+
+Global Instance is0functor_uncurry_smash : Is0Functor (uncurry Smash).
+Proof.
+  snrapply Build_Is0Functor.
+  intros [A B] [X Y] [f g].
+  exact (Smash_functor f g).
+Defined.
+
+(** These aren't strictly neccessary right now *)
+Definition Smash_2functor {A B X Y : pType} {f : A ->* X} {g : B ->* Y} {h : A ->* X} {i : B ->* Y}
+  : f ==* h -> g ==* i -> Smash_functor f g ==* Smash_functor h i.
+Proof.
+  intros p q.
+Admitted.
+
+Definition Smash_functor_idmap {A B : pType}
+  : Smash_functor (@pmap_idmap A) (@pmap_idmap B) ==* pmap_idmap.
+Proof.
+Admitted.
+
+Definition Smash_functor_compose {A B C D X Y : pType} {f : A ->* C} {g : B ->* D} {h : C ->* X} {i : D ->* Y}
+  : Smash_functor (h o* f) (i o* g) ==* Smash_functor h i o* Smash_functor f g.
+Proof.
+Admitted.
+
+Global Instance is1functor_uncurry_smash : Is1Functor (uncurry Smash).
+Proof.
+  snrapply Build_Is1Functor.
+  { intros [A B] [X Y] [f g] [h i] [p q].
+    by nrapply Smash_2functor. }
+  { intros [A B].
+    by nrapply Smash_functor_idmap. }
+  intros [A B] [C D] [X Y] [f g] [h i].
+  by nrapply Smash_functor_compose.
+Defined.
+
+Global Instance is0functor_functor_prod {A B C D : Type} (f : A -> C) (g : B -> D)
+  `{Is0Functor _ _ f} `{Is0Functor _ _ g}
+  : Is0Functor (functor_prod f g).
+Proof.
+  snrapply Build_Is0Functor.
+  intros [a1 b1] [a2 b2] [h i].
+  simpl; split; by apply fmap.
+Defined.
+
+Global Instance is0functor_psusp : Is0Functor psusp.
+Proof.
+  snrapply Build_Is0Functor.
+  intros X Y; exact psusp_functor.
+Defined.
+
+(** Lemma 2.44 *)
+Lemma natequiv_psusp_smash
+  : NatEquiv (psusp o uncurry Smash) ((uncurry Smash) o functor_prod idmap psusp).
+Proof.
+Admitted.
