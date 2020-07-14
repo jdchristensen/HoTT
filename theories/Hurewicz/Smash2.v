@@ -423,7 +423,7 @@ Proof.
   exact (Smash_functor f g).
 Defined.
 
-(** These aren't strictly neccessary right now *)
+(** These aren't strictly necessary right now, since NatEquiv only requires a 0-functor. *)
 Definition Smash_2functor {A B X Y : pType} {f : A ->* X} {g : B ->* Y} {h : A ->* X} {i : B ->* Y}
   : f ==* h -> g ==* i -> Smash_functor f g ==* Smash_functor h i.
 Proof.
