@@ -389,7 +389,7 @@ Defined.
 (** Lemma 2.42 *)
 Global Instance isequiv_ptr_smash_functor `{Funext} {n m : trunc_index} (X Y : pType)
   `{!IsConnected n.+1 X}
-  : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (ptr (n:=m.+1) (A:=Y)) (@pmap_idmap X))).
+  : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (@ptr m.+1 Y) (@pmap_idmap X))).
 Proof.
   snrapply O_inverts_from_isequiv_pmap_precomp.
   1: exact _. (* Funext. *)
@@ -411,9 +411,9 @@ Defined.
 Global Instance isequiv_ptr_smash_functor' `{Funext} {n m : trunc_index} (X Y : pType)
   `{!IsConnected n.+1 X}
   : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (@pmap_idmap X) (@ptr m.+1 Y)))
-  := isequiv_commsq _ _ _ _
+  := isequiv_commsq' _ _ _ _
     ((ptr_functor_compose _ _)^*
-    @* (ptr_functor_homotopy (m+2+n).+1 (pswap_natural (@ptr m.+1 Y) (@pmap_idmap X)))
+    @* (ptr_functor_homotopy (m+2+n).+1 (pswap_natural (@pmap_idmap X) (@ptr m.+1 Y)))^*
     @* ptr_functor_compose _ _).
 
 Global Instance is0functor_uncurry_smash : Is0Functor (uncurry Smash).
