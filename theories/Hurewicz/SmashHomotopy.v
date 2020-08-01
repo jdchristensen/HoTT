@@ -183,8 +183,8 @@ Proof.
       refine (_ @ (ap011_VV _ _ _ @@ 1)).
       refine (_ @ (1 @@ ap011_pp concat (ap f p) (point_eq f) (ap g p) (point_eq g))).
       refine (_ @ ap011_pp concat _ _ _ _).
-      snrapply horizontal_vertical1.
-    + snrapply magmamap_loops_functor_helper.
+      srapply horizontal_vertical1.
+    + srapply magmamap_loops_functor_helper.
       (* The type of helper was found using:
         unfold Build_pMap, dpoint_eq.
         change (point (ptype_pmagma (pmagma_loops Y))) with (@idpath Y (point Y)).
@@ -193,7 +193,8 @@ Proof.
         destruct g as [g q]; cbn in q.
         unfold point_eq, dpoint_eq.
       *)
-Defined. (* A bit slow. *)
+Defined.
+(* This [Defined] is a bit slow, as are the last two steps above. *)
 
 (* The forgetful map [pmap_pmagmamap] from pointed magma maps to magma maps is a pointed magma map. *)
 Definition pmagmamap_pmap_pmagmamap {Y : pMagma} {Z : pType} (m : nat)
