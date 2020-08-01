@@ -41,6 +41,6 @@ Proof.
   destruct n.
   1: exact (Pi 1 X).
   simpl.
-  nrapply Build_AbGroup.
-  exact (isabgroup_pi n X).
+  srapply (Build_AbGroup (Pi n.+2 X) _ _ _ (isabgroup_pi 0 (iterated_loops n X))).
+  (* [isabgroup_pi n X] also has the right type, but with the above choice, Coq can see quickly that [Pi n.+2 X] and [Pi 2 (iterated_loops n X)] are definitionally equal. *)
 Defined.

@@ -826,6 +826,7 @@ Defined.
 
 (* TODO: rename iterated_magma_loops to magma_iterated_loops.  Same for pmagma and other functions. *)
 
+(* The (n+1)-fold loop space is a pointed magma. *)
 Definition iterated_pmagma_loops (n : nat) (Z : pType) : pMagma
   := pmagma_loops (iterated_loops n Z).
 
