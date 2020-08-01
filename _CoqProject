@@ -46,6 +46,7 @@ theories/Basics/Decidable.v
 #
 #   Wildcat
 #
+
 theories/WildCat.v
 theories/WildCat/Core.v
 theories/WildCat/UnitCat.v
@@ -65,6 +66,7 @@ theories/WildCat/Yoneda.v
 theories/WildCat/TwoOneCat.v
 theories/WildCat/NatTrans.v
 theories/WildCat/PointedCat.v
+theories/WildCat/Square.v
 
 #
 #   Types
@@ -106,6 +108,9 @@ theories/Spaces/Cantor.v
 theories/Spaces/Finite.v
 theories/Spaces/Universe.v
 theories/Spaces/Card.v
+theories/Spaces/Circle.v
+theories/Spaces/TwoSphere.v
+theories/Spaces/Spheres.v
 
 theories/Spaces/Int.v
 theories/Spaces/Int/Core.v
@@ -132,6 +137,7 @@ theories/Spaces/Torus/Torus.v
 theories/Spaces/Torus/TorusEquivCircles.v
 theories/Spaces/Torus/TorusHomotopy.v
 
+
 #
 #   Modalities
 #
@@ -157,13 +163,10 @@ theories/Modalities/CoreflectiveSubuniverse.v
 #   HIT
 #
 
-theories/HIT/Circle.v
 theories/HIT/Coeq.v
 theories/HIT/FreeIntQuotient.v
 theories/HIT/Flattening.v
 theories/HIT/Interval.v
-theories/HIT/Spheres.v
-theories/HIT/TwoSphere.v
 theories/HIT/epi.v
 theories/HIT/unique_choice.v
 theories/HIT/surjective_factor.v
@@ -298,6 +301,7 @@ theories/Homotopy/EMSpace.v
 theories/Homotopy/CayleyDickson.v
 
 theories/Homotopy/SuccessorStructure.v
+theories/Homotopy/ExactSequence.v
 
 #
 #   Hurewicz
@@ -349,6 +353,8 @@ theories/Algebra/Congruence.v
 theories/Algebra/AbGroups.v
 theories/Algebra/AbGroups/AbelianGroup.v
 theories/Algebra/AbGroups/Abelianization.v
+theories/Algebra/AbGroups/AbPullback.v
+theories/Algebra/AbGroups/AbPushout.v
 theories/Algebra/AbGroups/Z.v
 
 theories/Algebra/Groups.v
@@ -357,6 +363,7 @@ theories/Algebra/Groups/Subgroup.v
 theories/Algebra/Groups/QuotientGroup.v
 theories/Algebra/Groups/Image.v
 theories/Algebra/Groups/Kernel.v
+theories/Algebra/Groups/GrpPullback.v
 
 #
 #   Tactics
