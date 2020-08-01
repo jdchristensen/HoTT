@@ -331,6 +331,15 @@ Proof.
   apply equiv_magma_iterated_loops_in.
 Defined.
 
+Definition isequiv_smashing_inner `{Funext} (Y Z : pType) (n m : nat)
+           `{YC : IsConnected m Y} `{ZT : IsTrunc (n +2+ m) Z}
+  : IsEquiv (smashing_inner Y Z n m).
+Proof.
+  nrapply isequiv_compose.
+  2: {
+    simpl.  unfold pmagma_iterated_loops.
+Abort.
+
 (* Now we handle the rest of CS (2.1). *)
 
 Definition magma_trunc (n : nat) (A : Magma) : Magma.
