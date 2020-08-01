@@ -1,7 +1,7 @@
 Require Import Basics Types Pointed.
 Require Import Truncations.
 Require Import Homotopy.Suspension.
-Require Import HIT.Spheres.
+Require Import Spaces.Spheres.
 
 Local Open Scope pointed_scope.
 
