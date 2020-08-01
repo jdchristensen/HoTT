@@ -1,4 +1,4 @@
-(* In this file we construction the smashing map (CS Defn 2.26, equation (2.1)). *)
+(* In this file we construct the smashing map (CS Defn 2.26, equation (2.1)). *)
 
 Require Import Coq.Init.Peano.
 Require Import Spaces.Nat.
@@ -8,7 +8,7 @@ Require Import ReflectiveSubuniverse.
 Require Import Truncations.
 Require Import Algebra.AbGroups.
 Require Import HomotopyGroup.
-Require Import Hurewicz.HomotopyGroup2.
+Require Import Hurewicz.HomotopyGroup2.  (* Temporary. *)
 Require Import Hurewicz.PreGroup.
 Require Import HoTT.Tactics.
 

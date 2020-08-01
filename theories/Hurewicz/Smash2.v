@@ -79,6 +79,7 @@ Proof.
   - reflexivity.
 Defined.
 
+(* This is CS Lemma 2.40. *)
 Global Instance isequiv_swap `{Funext} {X Y : pType} : IsEquiv (@swap X Y).
 Proof.
   srapply isequiv_adjointify.
@@ -90,6 +91,7 @@ Defined.
 (* Avoid unfolding Smash.  Also speeds up the [Defined] at the end. *)
 Opaque Smash.
 
+(* This is CS Lemma 2.41. *)
 Lemma pswap_natural {A B X Y : pType} (f : A ->* X) (g : B ->* Y)
   : pswap o* Smash_functor f g ==* Smash_functor g f o* pswap.
 Proof.
