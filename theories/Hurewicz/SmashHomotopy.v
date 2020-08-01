@@ -1,3 +1,5 @@
+(* In this file we construction the smashing map (CS Defn 2.26, equation (2.1)). *)
+
 Require Import Coq.Init.Peano.
 Require Import Spaces.Nat.
 Require Import Basics Types Pointed.
@@ -11,38 +13,6 @@ Require Import Hurewicz.PreGroup.
 Require Import HoTT.Tactics.
 
 Local Open Scope pointed_scope.
-
-(* TODO: move to Loops.v *)
-Lemma iterated_loops_sum (n m : nat) (X : pType)
-  : iterated_loops (n+m) X = iterated_loops n (iterated_loops m X).
-Proof.
-  induction n.
-  1: reflexivity.
-  cbn.
-  exact (ap loops IHn).
-Defined.
-
-Lemma equiv_iterated_loops_sum (n m : nat) (X : pType)
-  : iterated_loops (n+m) X <~>* iterated_loops n (iterated_loops m X).
-Proof.
-  induction n.
-  1: reflexivity.
-  cbn.
-  exact (pequiv_loops_functor IHn).
-(* Or:
-  apply pequiv_path.
-  apply iterated_loops_sum.
-*)
-Defined.
-
-Lemma equiv_iterated_loops_sum' (n m : nat) (X : pType)
-  : iterated_loops (n+m) X <~>* iterated_loops m (iterated_loops n X).
-Proof.
-  transitivity (iterated_loops (m+n) X).
-  - apply pequiv_path.
-    apply (ap (fun k => iterated_loops k X) (nat_plus_comm n m)).
-  - apply equiv_iterated_loops_sum.
-Defined.
 
 (* TODO: move to Groups?  Use ->Grp? *)
 Notation "X '->G' Y" := (GroupHomomorphism X Y) (at level 15, right associativity).
@@ -90,59 +60,7 @@ Local Close Scope mc_add_scope.
 
 Notation "X '->A' Y" := (AbHom' X Y) (at level 15, right associativity).
 
-Definition magma_trunc (n : nat) (A : Magma) : Magma.
-Proof.
-  srapply (Build_Magma (Trunc n A)).
-  intros a b.
-  strip_truncations.
-  exact (tr (sg_op a b)).
-Defined.
-
-(* Not needed, but seems handy. *)
-Definition magmamap_to_trunc (n : nat) (A : Magma) : MagmaMap A (magma_trunc n A).
-Proof.
-  snrapply Build_MagmaMap.
-  1: exact tr.
-  apply tr.
-  intros a b.
-  reflexivity.
-Defined.  
-
-(* It might be easier to define the map in the other direction and show that it is an equivalence. *)
-Definition magmamap_trunc_rec {A B : Magma} (n : nat) `{IsTrunc n B}
-  : MagmaMap A B -> MagmaMap (magma_trunc n A) B.
-Proof.
-  intro f.
-  snrapply Build_MagmaMap.
-  1: exact (Trunc_rec f).
-  pose proof (magmamap_op_preserving f) as r.
-  strip_truncations.
-  apply tr.
-  (* Manually apply [strip_truncations], to make it faster: *)
-  intro a0. rapply Trunc_ind; intro a1.
-  revert a0; rapply Trunc_ind; intro a0.
-  cbn.
-  apply r.
-Defined.
-
-(* Not needed, but seems handy. *)
-Definition magmamap_trunc_functor {A B : Magma} (n : nat)
-  : MagmaMap A B -> MagmaMap (magma_trunc n A) (magma_trunc n B).
-Proof.
-  intro f.
-  rapply magmamap_trunc_rec.
-  exact (magmamap_compose (magmamap_to_trunc n B) f).
-Defined.
-
-(* [eckmann_hilton] applies to [loops (loops Z)]. Adapt it to the case where there is at least one inner loop and one outer loop. *)
-(* TODO: move to Loops.v? *)
-Definition iterated_eckmann_hilton {A : pType} (m : nat) (p q : iterated_loops m.+1 (loops A))
-  : p @ q = q @ p.
-Proof.
-  induction m; apply eckmann_hilton.
-Defined.
-
-(* Let's focus on the inner part of the smashing map. *)
+(* Let's focus on the inner part of the smashing map, from top to bottom in CS eq. (2.1). *)
 
 (* The pointed magma of pointed magma maps from a pointed magma to a commutative, associate pointed magma. *)
 Definition pmagma_pmagmamap (Y Z : pMagma)
@@ -188,6 +106,14 @@ Proof.
       refine (_ @ ap_compose (fun z => (fun _ : Y => z)) _ _).
       symmetry.
       apply ap_idmap.
+Defined.
+
+(* [eckmann_hilton] applies to [loops (loops Z)]. Adapt it to the case where there is at least one inner loop and one outer loop. *)
+(* TODO: move to Loops.v? *)
+Definition iterated_eckmann_hilton {A : pType} (m : nat) (p q : iterated_loops m.+1 (loops A))
+  : p @ q = q @ p.
+Proof.
+  induction m; apply eckmann_hilton.
 Defined.
 
 (** The pointed magma of all pointed magma maps from a pointed magma to an (m+2)-fold loop space. *)
@@ -293,36 +219,36 @@ Proof.
     exact magmamap_loops_functor.
 Defined.
 
-Definition pi_functor_magmamap {Y Z : pType} (f : MagmaMap (pmagma_loops Y) (pmagma_loops Z))
-  : Pi 1 Y ->G Pi 1 Z.
+(* TODO: move to Loops.v *)
+Lemma iterated_loops_sum (n m : nat) (X : pType)
+  : iterated_loops (n+m) X = iterated_loops n (iterated_loops m X).
 Proof.
-  snrapply Build_GroupHomomorphism.
-  - exact  (Trunc_functor 0 f).
-  - intros a b.
-    pose proof (magmamap_op_preserving f) as r.
-    (* The next two [pose] commands speed up [strip_truncations] a bit. *)
-    pose istrunc_truncation; pose istrunc_paths.
-    strip_truncations.
-    (* For some reason it's tricky to get this to simplify nicely. *)
-    change (@tr 0 _ (f (a @ b)) = tr (f a @ f b)).
-    exact (ap tr (r a b)).
+  induction n.
+  1: reflexivity.
+  cbn.
+  exact (ap loops IHn).
 Defined.
 
-(* This is the case where m = n = 0, but it also handles the general case. *)
-Definition magmamap_pi_functor `{Funext} {Y Z : pType}
-  : MagmaMap (pmagma_pmagmamap_loops 0 (pmagma_loops Y) Z)
-             (Pi 1 Y ->A Pi' 2 Z).
+Lemma equiv_iterated_loops_sum (n m : nat) (X : pType)
+  : iterated_loops (n+m) X <~>* iterated_loops n (iterated_loops m X).
 Proof.
-  snrapply Build_MagmaMap.
-  - exact pi_functor_magmamap.
-  - apply tr.
-    intros f g.
-    apply equiv_path_grouphomomorphism.
-    (* The next two [pose] commands speed up [Trunc_ind] a bit. *)
-    pose istrunc_truncation; pose istrunc_paths.
-    rapply Trunc_ind.
-    intro a.
-    reflexivity.
+  induction n.
+  1: reflexivity.
+  cbn.
+  exact (pequiv_loops_functor IHn).
+(* Or:
+  apply pequiv_path.
+  apply iterated_loops_sum.
+*)
+Defined.
+
+Lemma equiv_iterated_loops_sum' (n m : nat) (X : pType)
+  : iterated_loops (n+m) X <~>* iterated_loops m (iterated_loops n X).
+Proof.
+  transitivity (iterated_loops (m+n) X).
+  - apply pequiv_path.
+    apply (ap (fun k => iterated_loops k X) (nat_plus_comm n m)).
+  - apply equiv_iterated_loops_sum.
 Defined.
 
 Definition pmagma_loops_shuffle (m n : nat) (Z : pType)
@@ -356,6 +282,38 @@ Proof.
   1,2: apply path_ishprop.
 Defined.
 
+Definition pi_functor_magmamap {Y Z : pType} (f : MagmaMap (pmagma_loops Y) (pmagma_loops Z))
+  : Pi 1 Y ->G Pi 1 Z.
+Proof.
+  snrapply Build_GroupHomomorphism.
+  - exact  (Trunc_functor 0 f).
+  - intros a b.
+    pose proof (magmamap_op_preserving f) as r.
+    (* The next two [pose] commands speed up [strip_truncations] a bit. *)
+    pose istrunc_truncation; pose istrunc_paths.
+    strip_truncations.
+    (* For some reason it's tricky to get this to simplify nicely. *)
+    change (@tr 0 _ (f (a @ b)) = tr (f a @ f b)).
+    exact (ap tr (r a b)).
+Defined.
+
+(* This is the case where m = n = 0, but it also handles the general case. *)
+Definition magmamap_pi_functor `{Funext} {Y Z : pType}
+  : MagmaMap (pmagma_pmagmamap_loops 0 (pmagma_loops Y) Z)
+             (Pi 1 Y ->A Pi' 2 Z).
+Proof.
+  snrapply Build_MagmaMap.
+  - exact pi_functor_magmamap.
+  - apply tr.
+    intros f g.
+    apply equiv_path_grouphomomorphism.
+    (* The next two [pose] commands speed up [Trunc_ind] a bit. *)
+    pose istrunc_truncation; pose istrunc_paths.
+    rapply Trunc_ind.
+    intro a.
+    reflexivity.
+Defined.
+
 (* This is the inner magma map in Equation 2.1 of CS, going from the RHS of the first line to the fifth line. *)
 Definition smashing_inner `{Funext} (Y Z : pType) (n m : nat)
   : MagmaMap (iterated_pmagma_loops n (Y ->** Z))
@@ -370,6 +328,52 @@ Proof.
   rapply (magmamap_compose (magmamap_iterated_loops_functor m)).
   (* Target is now the second line of (2.1). *)
   apply equiv_iterated_magma_loops_in.
+Defined.
+
+(* Now we handle the rest of CS (2.1). *)
+
+Definition magma_trunc (n : nat) (A : Magma) : Magma.
+Proof.
+  srapply (Build_Magma (Trunc n A)).
+  intros a b.
+  strip_truncations.
+  exact (tr (sg_op a b)).
+Defined.
+
+(* Not needed, but seems handy. *)
+Definition magmamap_to_trunc (n : nat) (A : Magma) : MagmaMap A (magma_trunc n A).
+Proof.
+  snrapply Build_MagmaMap.
+  1: exact tr.
+  apply tr.
+  intros a b.
+  reflexivity.
+Defined.
+
+(* It might be easier to define the map in the other direction and show that it is an equivalence. *)
+Definition magmamap_trunc_rec {A B : Magma} (n : nat) `{IsTrunc n B}
+  : MagmaMap A B -> MagmaMap (magma_trunc n A) B.
+Proof.
+  intro f.
+  snrapply Build_MagmaMap.
+  1: exact (Trunc_rec f).
+  pose proof (magmamap_op_preserving f) as r.
+  strip_truncations.
+  apply tr.
+  (* Manually apply [strip_truncations], to make it faster: *)
+  intro a0. rapply Trunc_ind; intro a1.
+  revert a0; rapply Trunc_ind; intro a0.
+  cbn.
+  apply r.
+Defined.
+
+(* Not needed, but seems handy. *)
+Definition magmamap_trunc_functor {A B : Magma} (n : nat)
+  : MagmaMap A B -> MagmaMap (magma_trunc n A) (magma_trunc n B).
+Proof.
+  intro f.
+  rapply magmamap_trunc_rec.
+  exact (magmamap_compose (magmamap_to_trunc n B) f).
 Defined.
 
 (* A version with group homomorphisms.  May want to make it pointed later. *)
