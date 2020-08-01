@@ -280,6 +280,7 @@ Definition pmagma_pmagmamap_shuffle `{Funext} (m n : nat) (Y : pMagma) (Z : pTyp
 Proof.
   unfold pmagma_pmagmamap_loops.
   srapply (ap0111D (pmagma_pmagmamap Y) _ _ _ _ _ _ (pmagma_loops_shuffle m n Z)).
+  (* We are left to show that the proofs of mere commutativity and mere associativity agree, which is trivial. *)
   1,2: apply path_ishprop.
 Defined.
 
@@ -341,6 +342,8 @@ Proof.
 Abort.
 
 (* Now we handle the rest of CS (2.1). *)
+
+(* TODO: The next group of results overlaps a lot with the techniques used in PreGroup.v to prove Proposition 2.23.  Can probably merge them together, and get stronger results here, such as that [magmamap_trunc_rec] is an equivalence. *)
 
 Definition magma_trunc (n : nat) (A : Magma) : Magma.
 Proof.

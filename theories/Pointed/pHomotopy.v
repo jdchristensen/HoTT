@@ -23,7 +23,7 @@ Proof.
   induction p. induction q. symmetry. apply phomotopy_compose_p1.
 Defined.
 
-(** ** Composition of pointed homotopies *)
+(** [phomotopy_path] respects equality.  *All* functions do, so why have this?? *)
 Definition phomotopy_path2 {A : pType} {P : pFam A}
   {f g : pForall A P} {p p' : f = g} (q : p = p')
   : phomotopy_path p ==* phomotopy_path p'.

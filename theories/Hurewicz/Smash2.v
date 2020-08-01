@@ -472,4 +472,4 @@ Defined.
 Lemma natequiv_psusp_smash
   : NatEquiv (psusp o uncurry Smash) ((uncurry Smash) o functor_prod idmap psusp).
 Proof.
-Admitted.
+Abort.

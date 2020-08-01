@@ -552,6 +552,7 @@ Proof.
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
 
+(* This is Proposition 2.23 in CS. *)
 Global Instance isequiv_magma_iterated_loops_functor_conn_trunc' `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
   (Y : pType) `{IsTrunc n.+1 Y}
@@ -830,7 +831,7 @@ Defined.
 Definition pmagma_iterated_loops (n : nat) (Z : pType) : pMagma
   := pmagma_loops (iterated_loops n Z).
 
-(* This equivalence is one of the lemmas in the CS Hurewicz paper. *)
+(* This equivalence is Lemma 2.24 in CS. *)
 Definition equiv_magma_iterated_loops_in `{Funext} {Y Z : pType} (n : nat)
   : pMagmaEquiv (pmagma_iterated_loops n (Y ->** Z)) (pmagma_pmap Y (pmagma_iterated_loops n Z)).
 Proof.
