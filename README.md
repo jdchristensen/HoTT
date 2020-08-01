@@ -1,58 +1,62 @@
-![Github Actions CI](https://github.com/HoTT/HoTT/workflows/CI/badge.svg)
+This is a fork of the [HoTT library](https://github.com/HoTT/HoTT) in
+which we are formalizing the results in the paper:
 
-[Homotopy Type Theory](http://homotopytypetheory.org/) is an interpretation of
-Martin-Löf’s intensional type theory into abstract homotopy theory. Propositional equality
-is interpreted as homotopy and type isomorphism as homotopy equivalence. Logical
-constructions in type theory then correspond to homotopy-invariant constructions on
-spaces, while theorems and even proofs in the logical system inherit a homotopical
-meaning. As the natural logic of homotopy, type theory is also related to higher category
-theory as it is used e.g. in the notion of a higher topos.
+- [CS] The Hurewicz Theorem in Homotopy Type Theory,
+  J. Daniel Christensen and Luis Scoccola,
+  [arxiv:2007.05833](https://arxiv.org/abs/2007.05833).
 
-The HoTT library is a development of homotopy-theoretic ideas in the Coq proof assistant.
-It draws many ideas from Vladimir Voevodsky's
-[Foundations](https://github.com/vladimirias/Foundations) library (which has since been
-incorporated into the [UniMath](https://github.com/UniMath/UniMath) library) and also
-cross-pollinates with the [HoTT-Agda](https://github.com/HoTT/HoTT-Agda) library.
-See also: [HoTT in Lean2](https://github.com/leanprover/lean2/tree/master/hott),
-[Spectral Sequences in Lean2](https://github.com/cmu-phil/Spectral), and
-[Cubical Agda](https://agda.readthedocs.io/en/v2.6.0.1/language/cubical.html).
+This README refers to the numbering that matches the numbering in v1 and v2 of that preprint.
 
-More information about this library can be found in:
+The formalization in this Hurewicz branch is due to Dan Christensen and Ali Caglayan.
+It is a work in progress, and still has many rough edges.
+This snapshot is provided so that others can see the current progress.
+Many of the results here will eventually be moved into appropriate files
+in the main repository.
 
-- _The HoTT Library: A formalization of homotopy type theory in Coq_,
-  Andrej Bauer, Jason Gross, Peter LeFanu Lumsdaine, Mike Shulman, Matthieu Sozeau, Bas Spitters, 2016 [arxiv](https://arxiv.org/abs/1610.04591) [CPP17](http://cpp2017.mpi-sws.org/)
+Most work is in the
+[theories/Hurewicz](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz)
+folder.
+Here is a summary of the files in that folder:
 
-Other publications related to the library can be found [here](https://github.com/HoTT/HoTT/wiki/Publications-based-on-the-HoTT-library).
+- [Ptd.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/Ptd.v):
+  This contains some simple facts about pointed maps that will be moved elsewhere.
+- [ConnCover.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/ConnCover.v):
+  This contains the material in [CS, Section 2.3].
+- [PreGroup.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/PreGroup.v):
+  This long file contains the basic theory of magmas,
+  and proves results in the first part of [CS, Section 2.4].
+  Among other things,
+  Proposition 2.23 is `isequiv_magma_iterated_loops_functor_conn_trunc'`, and
+  Lemma 2.24 is `equiv_magma_iterated_loops_in`.
+  (The name `PreGroup` is a temporary name reflecting the fact that we study
+  *weak* magma morphisms.)
+- [PathGpd.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/PathGpd.v):
+  This short file gives a new, slick proof of the Eckmann-Hilton theorem.
+  (The existing proof is fine for our purposes, so this is tangential to the Hurewicz formalization.)
+  It also includes an easy result, `horizontal_vertical1`, that is used later.
+- [HomotopyGroup2.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/HomotopyGroup2.v):
+  This short file defines a variant `Pi' n X` of the nth homotopy group of a type which
+  is a group (abelian group) when n is 1 (at least 2).
+- [Smashing.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/Smashing.v):
+  This long file has proofs of further results in [CS, Section 2.4], leading up to [CS, Definition 2.26],
+  the definition of the smashing map, which is called `smashing` in the formalization.
+- [Smash2.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/Smash2.v):
+  This proves more results from [CS, Section 2], such as
+  Corollary 2.32 (`isconnected_smash`),
+  Lemma 2.40 (`isequiv_swap`),
+  Lemma 2.41 (`pswap_natural`),
+  Lemma 2.42 (`isequiv_ptr_smash_functor`), and
+  Corollary 2.43 (`isequiv_ptr_smash_functor'`).
 
-## INSTALLATION
+Some small changes have been made to other files as well:
 
-Installation details are explained in the file [INSTALL.md](/INSTALL.md).
+- [Abelianization.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Algebra/AbGroups/Abelianization.v)
+- [Pointed/Core.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Pointed/Core.v)
+- [Pointed/pHomotopy.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Pointed/pHomotopy.v)
 
-## USAGE
+Finally, other changes have already been incorporated into the master branch of the HoTT library, and are not listed here.
 
-It is possible to use the HoTT library directly on the command line with the `hoqtop`
-script, but who does that?
-
-It is probably better to use [Proof General](http://proofgeneral.inf.ed.ac.uk) and
-[Emacs](http://www.gnu.org/software/emacs/). When Proof General asks you where to find the
-`coqtop` executable, just point it to the `hoqtop` script. If Emacs runs a `coqtop`
-without asking, you should probably customize set the variable `proof-prog-name-ask` to
-`nil` (in Emacs type `C-h v proof-prog-name-ask RET` to see what this is about).
-
-There is also a script called `hoqide` that runs Coq's built-in GUI `coqide`
-with `hoqtop` as the underlying `coqtop`.
-
-## CONTRIBUTING
-
-Contributions to the HoTT library are very welcome! For style
-guidelines and further information, see the file [STYLE.md](/STYLE.md).
-
-## LICENSING
-
-The library is released under the permissive BSD 2-clause license, see the file
-[LICENSE.txt](/LICENSE.txt) for further information. In brief, this means you can do whatever you like
-with it, as long as you preserve the Copyright messages. And of course, no warranty!
-
-## Wiki
-
-More information can be found in the [Wiki](https://github.com/HoTT/HoTT/wiki).
+In the paper, we define the sum `m + n` of natural numbers by induction on `n`,
+so that `m+1` is the successor of `m`.
+In the HoTT library, the other convention is used, so to translate between
+the paper and the formalization, one must change `m+n` to `n+m` everywhere.

@@ -23,31 +23,7 @@ Proof.
   induction p. induction q. symmetry. apply phomotopy_compose_p1.
 Defined.
 
-(** ** Whiskering of pointed homotopies by pointed functions *)
-
-Definition pmap_postwhisker {A B C : pType} {f g : A ->* B}
-  (h : B ->* C) (p : f ==* g) : h o* f ==* h o* g.
-Proof.
-  snrapply Build_pHomotopy; cbn.
-  1: intros a; apply ap, p.
-  pointed_reduce.
-  symmetry.
-  simpl.
-  refine (concat_p1 _ @ concat_p1 _ @ ap _ _).
-  exact (concat_p1 _).
-Defined.
-
-Definition pmap_prewhisker {A B C : pType} (f : A ->* B)
-  {g h : B ->* C} (p : g ==* h) : g o* f ==* h o* f.
-Proof.
-  snrapply Build_pHomotopy; cbn.
-  1: intros a; apply p.
-  pointed_reduce.
-  symmetry.
-  refine (concat_p1 _ @ concat_1p _ @ concat_p1 _).
-Defined.
-
-(** ** Composition of pointed homotopies *)
+(** [phomotopy_path] respects equality.  *All* functions do, so why have this?? *)
 Definition phomotopy_path2 {A : pType} {P : pFam A}
   {f g : pForall A P} {p p' : f = g} (q : p = p')
   : phomotopy_path p ==* phomotopy_path p'.

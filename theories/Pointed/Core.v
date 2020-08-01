@@ -170,7 +170,7 @@ Ltac pointed_reduce_pmap f
     | pEquiv ?X ?Y => destruct f as [f ?iseq]
     end;
     match type of f with
-    | _ ->* ?Y => destruct Y as [Y ?], f as [f p]; cbn in *; destruct p; cbn
+    | _ ->* ?Y => let p := fresh "p" in destruct Y as [Y ?], f as [f p]; cbn in *; destruct p; cbn
     end.
 
 (** ** Equivalences to sigma-types. *)
@@ -224,9 +224,9 @@ Notation "p ^*" := (phomotopy_symmetric _ _ p) : pointed_scope.
 (** [pHomotopy] is a transitive relation *)
 Global Instance phomotopy_transitive {A B} : Transitive (@pHomotopy A B).
 Proof.
-  intros x y z p q.
+  intros f g h p q.
   snrefine (Build_pHomotopy (fun x => p x @ q x) _).
-  nrefine (dpoint_eq p @@ dpoint_eq q @ concat_pp_p _ _ _ @ _).
+  nrefine (dpoint_eq p @@ dpoint_eq q @ (concat_pp_p _ _ _ @ _)).
   nrapply whiskerL; nrapply concat_V_pp.
 Defined.
 
@@ -474,10 +474,8 @@ Definition point_pforall {A : pType} (B : A -> pType) : pForall A (pointed_fam B
 Definition ppForall (A : pType) (B : A -> pType) : pType
   := Build_pType (pForall A (pointed_fam B)) (point_pforall B).
 
-Definition ppMap (A B : pType) : pType
-  := ppForall A (fun _ => B).
+Notation "A ->** B" := (ppForall A (fun _ => B)) : pointed_scope.
 
-Infix "->**" := ppMap : pointed_scope.
 Notation "'ppforall'  x .. y , P"
   := (ppForall _ (fun x => .. (ppForall _ (fun y => P)) ..))
      (at level 200, x binder, y binder, right associativity)

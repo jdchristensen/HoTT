@@ -371,3 +371,75 @@ Proof.
   - exact _.
   - symmetry; apply homotopic_isabelianization.
 Defined.
+
+(** We close the scope for writing sg_op as * and open the one for + instead. *)
+Local Close Scope mc_mult_scope.
+Local Open Scope mc_add_scope.
+
+(** The interal hom for abelian groups *)
+Definition AbHom (A B : AbGroup) `{Funext} : AbGroup.
+Proof.
+  snrapply (Build_AbGroup (GroupHomomorphism A B)).
+  + intros f g.
+    snrapply Build_GroupHomomorphism.
+    - intro x; exact (f x + g x).
+    - intros x y.
+      rewrite 2 grp_homo_op.
+      rewrite 2 simple_associativity.
+      rewrite <- (simple_associativity (f _) (g _)).
+      rewrite (commutativity (g _) (f _)).
+      rewrite simple_associativity.
+      reflexivity.
+  + snrapply Build_GroupHomomorphism.
+    - intro; exact mon_unit.
+    - intros x y.
+      symmetry.
+      apply left_identity.
+  + intro f.
+    snrapply Build_GroupHomomorphism.
+    - intro x; exact (- f x).
+    - intros x y.
+      rewrite grp_homo_op.
+      apply negate_sg_op_distr.
+  + repeat split.
+    1: exact _.
+    all: hnf; intros; apply equiv_path_grouphomomorphism; intro; cbn.
+    - apply associativity.
+    - apply left_identity.
+    - apply right_identity.
+    - apply left_inverse.
+    - apply right_inverse.
+    - apply commutativity.
+Defined.
+
+(** Here is a notation for the internal hom *)
+Notation "X '->Ab' Y" := (AbHom X Y) (at level 15, right associativity).
+
+Definition curried_ab_precompose `{Funext}
+  {A B C D : AbGroup} (t : A ->Ab B ->Ab C)
+  : (C ->Ab D) -> (A ->Ab B ->Ab D).
+Proof.
+  intro f.
+  snrapply Build_GroupHomomorphism.
+  + intro a.
+    snrapply Build_GroupHomomorphism.
+    - intro b.
+      by apply f, t.
+    - intros x y.
+      simpl.
+      rewrite grp_homo_op.
+      apply (grp_homo_op f).
+  + intros x y.
+    apply equiv_path_grouphomomorphism.
+    intro z.
+    simpl.
+    rewrite grp_homo_op.
+    apply (grp_homo_op f).
+Defined. (* Why does this take so long? *)
+(* Keeping the two rewrites above is faster than replacing them with
+   refine (ap ... (grp_homo_op _ _ _) @ _). *)
+
+Definition IsAbTensorProduct `{Funext} {A B : AbGroup}
+  (T : AbGroup) (t : A ->Ab B ->Ab T)
+  := forall (C : AbGroup), IsEquiv (curried_ab_precompose (D:=C) t).
+Existing Class IsAbTensorProduct.
