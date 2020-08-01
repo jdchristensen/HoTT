@@ -279,7 +279,7 @@ Definition magma_loops (X : pType) : Magma
   := Build_Magma (loops X) concat.
 
 (** This is for n.+1 since at n=0 no magma to be found. *)
-Definition iterated_magma_loops (n : nat) (X : pType) : Magma
+Definition magma_iterated_loops (n : nat) (X : pType) : Magma
   := Build_Magma (iterated_loops (S n) X) concat.
 
 Definition magma_loops_functor {X Y : pType}
@@ -302,8 +302,8 @@ Proof.
   (* Coq couldn't find the coercion from [==*] to [==] automatically. *)
 Defined.
 
-Definition iterated_magma_loops_functor {X Y : pType} (n : nat)
-  : (X ->* Y) -> MagmaMap (iterated_magma_loops n X) (iterated_magma_loops n Y).
+Definition magma_iterated_loops_functor {X Y : pType} (n : nat)
+  : (X ->* Y) -> MagmaMap (magma_iterated_loops n X) (magma_iterated_loops n Y).
 Proof.
   intro f.
   snrapply Build_MagmaMap.
@@ -311,10 +311,10 @@ Proof.
   + exact (tr (iterated_loops_functor_pp f n)).
 Defined.
 
-Definition iterated_magma_loops_functor_compose `{Funext} {X Y Z : pType} (n : nat)
-  (f : Y ->* Z) (g : X ->* Y) : iterated_magma_loops_functor n (f o* g)
-  = magmamap_compose (iterated_magma_loops_functor n f)
-      (iterated_magma_loops_functor n g).
+Definition magma_iterated_loops_functor_compose `{Funext} {X Y Z : pType} (n : nat)
+  (f : Y ->* Z) (g : X ->* Y) : magma_iterated_loops_functor n (f o* g)
+  = magmamap_compose (magma_iterated_loops_functor n f)
+      (magma_iterated_loops_functor n g).
 Proof.
   apply path_magmamap.
   apply path_forall.
@@ -332,18 +332,18 @@ Proof.
   exact (pointed_isequiv _ _ (pequiv_loops_functor g)).
 Defined.
 
-Global Instance isequiv_iterated_magma_loops_functor {X Y : pType} {n : nat}
-  {f : X ->* Y} : IsEquiv f -> IsEquiv (iterated_magma_loops_functor n f).
+Global Instance isequiv_magma_iterated_loops_functor {X Y : pType} {n : nat}
+  {f : X ->* Y} : IsEquiv f -> IsEquiv (magma_iterated_loops_functor n f).
 Proof.
   revert X Y f.
   induction n; exact _.
 Defined.
 
-Definition equiv_iterated_magma_loops_functor {X Y : pType} {n : nat}
-  {f : X ->* Y} : IsEquiv f -> MagmaEquiv (iterated_magma_loops n X) (iterated_magma_loops n Y).
+Definition equiv_magma_iterated_loops_functor {X Y : pType} {n : nat}
+  {f : X ->* Y} : IsEquiv f -> MagmaEquiv (magma_iterated_loops n X) (magma_iterated_loops n Y).
 Proof.
   intro e.
-  srapply (Build_MagmaEquiv _ _ (iterated_magma_loops_functor n f)).
+  srapply (Build_MagmaEquiv _ _ (magma_iterated_loops_functor n f)).
 Defined.
 
 Definition group_to_magma : Group -> Magma
@@ -406,19 +406,19 @@ Defined.
 
 (** BVR 5.1 *)
 (* TODO: should state this using groups, not magmas, and use [equiv_grp_homo_magmamap] to recover this form. *)
-Theorem isequiv_iterated_magma_loops_conn_trunc
+Theorem isequiv_magma_iterated_loops_conn_trunc
   (n : nat) (X Y : pType) `{IsConnected n X} `{IsConnected n Y} `{IsTrunc n.+1 X} `{IsTrunc n.+1 Y}
-  : IsEquiv (@iterated_magma_loops_functor X Y n).
+  : IsEquiv (@magma_iterated_loops_functor X Y n).
 Proof.
 Admitted.
 
 (* Several of the next things should be in Loops.v or pTrunc.v.
    This one could be generalized to two truncation levels. *)
-Global Instance ishset_iterated_magma_loops `{Univalence} (n : nat)
+Global Instance ishset_magma_iterated_loops `{Univalence} (n : nat)
   {X : pType} `{IsTrunc n.+1 X}
-  : IsHSet (iterated_magma_loops n X).
+  : IsHSet (magma_iterated_loops n X).
 Proof.
-  unfold iterated_magma_loops.
+  unfold magma_iterated_loops.
   unfold magma_type.
   revert X H0.
   induction n.
@@ -494,11 +494,11 @@ Proof.
   apply r.
 Defined.
 
-(* Now we work towards [isequiv_iterated_magma_loops_functor_conn_trunc'], which generalizes the BVR result [isequiv_iterated_magma_loops_functor_conn_trunc].  We need some results about the map [loops_ptr]. *)
+(* Now we work towards [isequiv_magma_iterated_loops_functor_conn_trunc'], which generalizes the BVR result [isequiv_magma_iterated_loops_functor_conn_trunc].  We need some results about the map [loops_ptr]. *)
 
 (* Warning: magma_loops indexing is one off from loops, so this is the (n+1)-fold loop functor. *)
 Local Definition loops_ptr (n : nat) (X : pType)
-  := (iterated_magma_loops_functor n (@ptr n.+1 X)).
+  := (magma_iterated_loops_functor n (@ptr n.+1 X)).
 
 Local Definition precompose_loops_ptr (n : nat) (X : pType) (Y : pType)
   : ((iterated_loops n.+1 (pTr n.+1 X)) -> (iterated_loops n.+1 Y))
@@ -531,7 +531,7 @@ Proof.
   snrapply (isequiv_precompose_O_inverts 0%trunc _).
   - exact _.  (* Funext *)
   - rapply tr0_inverts_loops_ptr.
-  - rapply ishset_iterated_magma_loops.
+  - rapply ishset_magma_iterated_loops.
     (* [exact _] works, but is slow. *)
 Defined.
 
@@ -539,8 +539,8 @@ Defined.
 Local Definition equiv_precompose_magma_loops_ptr `{Univalence} (n : nat)
            (X : pType) `{IsConnected n X}
            (Y : pType) `{IsTrunc n.+1 Y}
-  : (MagmaMap (iterated_magma_loops n (pTr n.+1 X)) (iterated_magma_loops n Y))
-    <~> (MagmaMap (iterated_magma_loops n X) (iterated_magma_loops n Y)).
+  : (MagmaMap (magma_iterated_loops n (pTr n.+1 X)) (magma_iterated_loops n Y))
+    <~> (MagmaMap (magma_iterated_loops n X) (magma_iterated_loops n Y)).
 Proof.
   refine ((issig_magmamap _ _) oE _ oE (issig_magmamap _ _)^-1).
   snrapply equiv_functor_sigma'.
@@ -548,32 +548,32 @@ Proof.
   - intro g; cbn.
     nrapply (equiv_pregrouppreserving 0%trunc (loops_ptr n X) g).
     + exact _.  (* Funext *)
-    + rapply ishset_iterated_magma_loops. (* Found by typeclass inference, but slow. *)
+    + rapply ishset_magma_iterated_loops. (* Found by typeclass inference, but slow. *)
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
 
-Global Instance isequiv_iterated_magma_loops_functor_conn_trunc' `{Univalence} (n : nat)
+Global Instance isequiv_magma_iterated_loops_functor_conn_trunc' `{Univalence} (n : nat)
   (X : pType) `{IsConnected n X}
   (Y : pType) `{IsTrunc n.+1 Y}
-  : IsEquiv (@iterated_magma_loops_functor X Y n).
+  : IsEquiv (@magma_iterated_loops_functor X Y n).
 Proof.
   (** We prove this is an equivalence by constructing a commutative square of equivalences *)
   snrapply isequiv_commsq.
   (** Bottom left corner *)
   1: exact (pTr n.+1 X ->* Y).
   (** Bottom right corner *)
-  1: exact (MagmaMap (iterated_magma_loops n (pTr n.+1 X))
-    (iterated_magma_loops n Y)).
+  1: exact (MagmaMap (magma_iterated_loops n (pTr n.+1 X))
+    (magma_iterated_loops n Y)).
   (** Bottom horizontal map *)
-  1: exact (iterated_magma_loops_functor n).
+  1: exact (magma_iterated_loops_functor n).
   (** Left vertical map is [fun f => f o* ptr], but we hint that it's an equivalence: *)
   1: apply equiv_ptr_rec.
   (** Right vertical map *)
   1: rapply equiv_precompose_magma_loops_ptr.
-  (** The square commutes by functoriality of iterated_magma_loops *)
+  (** The square commutes by functoriality of magma_iterated_loops *)
   { symmetry.
     intro f.
-    rapply iterated_magma_loops_functor_compose. }
+    rapply magma_iterated_loops_functor_compose. }
   (** Immediately we have some equivalences. *)
   2,3: exact _.
   (** To prove this final map is an equivalence we use another commutative square. *)
@@ -581,10 +581,10 @@ Proof.
   (** The bottom left type *)
   1: exact (pTr n.+1 X ->* cover n Y).
   (** The bottom right type *)
-  1: exact (MagmaMap (iterated_magma_loops n (pTr n.+1 X))
-    (iterated_magma_loops n (cover n Y))).
+  1: exact (MagmaMap (magma_iterated_loops n (pTr n.+1 X))
+    (magma_iterated_loops n (cover n Y))).
   (** The bottom map *)
-  1: exact (iterated_magma_loops_functor n).
+  1: exact (magma_iterated_loops_functor n).
   (** The left map *)
   { apply equiv_fun.
     apply equiv_postcompose_cover_proj.
@@ -592,17 +592,17 @@ Proof.
   (** The right map *)
   { intro g.
     srapply (magmamap_compose _ g).
-    apply iterated_magma_loops_functor.
+    apply magma_iterated_loops_functor.
     apply cover_proj. }
-  (** The square commutes by functoriality of iterated_magma_loops *)
+  (** The square commutes by functoriality of magma_iterated_loops *)
   { cbn.
     symmetry.
     intro f.
-    apply iterated_magma_loops_functor_compose. }
+    apply magma_iterated_loops_functor_compose. }
   (** The left map is an equivalence *)
   2: exact _.
   (** The bottom map is an equivalence *)
-  1: snrapply isequiv_iterated_magma_loops_conn_trunc; exact _. (* Faster this way than with [srapply]. *)
+  1: snrapply isequiv_magma_iterated_loops_conn_trunc; exact _. (* Faster this way than with [srapply]. *)
   (** The right map is an equivalence *)
   apply isequiv_magmamap_postcompose.
   apply isequiv_iterated_loops_cover_proj.
@@ -824,15 +824,15 @@ Defined.
 
 (* TODO: Better definitions of loop_functor and/or postwhisker and/or o* to make the above easier? *)
 
-(* TODO: rename iterated_magma_loops to magma_iterated_loops.  Same for pmagma and other functions. *)
+(* TODO: rename magma_iterated_loops to magma_iterated_loops.  Same for pmagma and other functions. *)
 
 (* The (n+1)-fold loop space is a pointed magma. *)
-Definition iterated_pmagma_loops (n : nat) (Z : pType) : pMagma
+Definition pmagma_iterated_loops (n : nat) (Z : pType) : pMagma
   := pmagma_loops (iterated_loops n Z).
 
 (* This equivalence is one of the lemmas in the CS Hurewicz paper. *)
-Definition equiv_iterated_magma_loops_in `{Funext} {Y Z : pType} (n : nat)
-  : pMagmaEquiv (iterated_pmagma_loops n (Y ->** Z)) (pmagma_pmap Y (iterated_pmagma_loops n Z)).
+Definition equiv_magma_iterated_loops_in `{Funext} {Y Z : pType} (n : nat)
+  : pMagmaEquiv (pmagma_iterated_loops n (Y ->** Z)) (pmagma_pmap Y (pmagma_iterated_loops n Z)).
 Proof.
   induction n.
   1: apply equiv_magma_loops_in.
@@ -841,4 +841,4 @@ Proof.
   - apply equiv_magma_loops_in.
 Defined.
 
-(* TODO: naturality of equiv_iterated_magma_loops_in. *)
+(* TODO: naturality of equiv_magma_iterated_loops_in. *)

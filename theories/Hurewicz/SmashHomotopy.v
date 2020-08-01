@@ -120,7 +120,7 @@ Defined.
 Definition pmagma_pmagmamap_loops (m : nat) (Y : pMagma) (Z : pType) : pMagma.
 Proof.
   (* The codomain is the (m+2)-fold loop space, with one loop on the inside and one on the outside. *)
-  snrapply (pmagma_pmagmamap Y (iterated_pmagma_loops m (loops Z))).
+  snrapply (pmagma_pmagmamap Y (pmagma_iterated_loops m (loops Z))).
   - apply tr.
     rapply iterated_eckmann_hilton.
   - apply tr.
@@ -199,7 +199,7 @@ Defined.
 (* The forgetful map [pmap_pmagmamap] from pointed magma maps to magma maps is a pointed magma map. *)
 Definition pmagmamap_pmap_pmagmamap {Y : pMagma} {Z : pType} (m : nat)
   : pMagmaMap (pmagma_pmagmamap_loops m Y Z)
-             (pmagma_pmap Y (iterated_pmagma_loops m (loops Z))).
+             (pmagma_pmap Y (pmagma_iterated_loops m (loops Z))).
 Proof.
   snrapply Build_pMagmaMap.
   1: snrapply Build_MagmaMap.
@@ -253,10 +253,10 @@ Proof.
 Defined.
 
 Definition pmagma_loops_shuffle (m n : nat) (Z : pType)
-  : iterated_pmagma_loops 0 (pmagma_loops (iterated_loops (m + n) Z)) =
-    iterated_pmagma_loops m (pmagma_loops (iterated_loops      n  Z)).
+  : pmagma_iterated_loops 0 (pmagma_loops (iterated_loops (m + n) Z)) =
+    pmagma_iterated_loops m (pmagma_loops (iterated_loops      n  Z)).
 Proof.
-  unfold iterated_pmagma_loops.
+  unfold pmagma_iterated_loops.
   refine (ap pmagma_loops _).
   change (iterated_loops (m + n).+1 Z = iterated_loops m (iterated_loops n.+1 Z)).
   refine (_ @ iterated_loops_sum m n.+1 Z).
@@ -317,7 +317,7 @@ Defined.
 
 (* This is the inner magma map in Equation 2.1 of CS, going from the RHS of the first line to the fifth line. *)
 Definition smashing_inner `{Funext} (Y Z : pType) (n m : nat)
-  : MagmaMap (iterated_pmagma_loops n (Y ->** Z))
+  : MagmaMap (pmagma_iterated_loops n (Y ->** Z))
              (Pi m.+1 Y ->A Pi' (m.+2 + n) Z).
 Proof.
   (* Once we have set up the right wild categories, we will be able to express this simply as a [$o] composite of various magma maps, and even of natural transformations. That will require adjustments to the "shuffle" part. *)
@@ -328,7 +328,7 @@ Proof.
   (* Target is now the third line of (2.1). *)
   rapply (magmamap_compose (magmamap_iterated_loops_functor m)).
   (* Target is now the second line of (2.1). *)
-  apply equiv_iterated_magma_loops_in.
+  apply equiv_magma_iterated_loops_in.
 Defined.
 
 (* Now we handle the rest of CS (2.1). *)
@@ -389,7 +389,7 @@ Proof.
   refine (@magmamap_trunc_rec (magma_loops _) _ 0 _ _).
   rapply (magmamap_compose (smashing_inner Y Z n m)).
   (* Goal is first line of (2.1). *)
-  exact (iterated_magma_loops_functor n f).
+  exact (magma_iterated_loops_functor n f).
 Defined.
 
 (* TODO: 2.28: show composite is an equivalence under certain hypotheses. *)
