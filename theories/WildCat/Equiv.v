@@ -114,6 +114,7 @@ Global Instance symmetric_cate {A} `{HasEquivs A}
   : Symmetric (@CatEquiv A _ _ _ _)
   := fun a b f => cate_inv f.
 
+(** TODO: rename to [cate_compose] *)
 (** Equivalences can be composed. *)
 Definition compose_cate {A} `{HasEquivs A} {a b c : A}
   (g : b $<~> c) (f : a $<~> b) : a $<~> c.
