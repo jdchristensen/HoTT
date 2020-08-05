@@ -47,12 +47,27 @@ Defined.
 Definition opyon {A : Type} `{IsGraph A} (a : A) : A -> Type
   := fun b => (a $-> b).
 
-Global Instance is0coh1functor_opyon {A : Type} `{Is01Cat A} (a : A)
+Global Instance is0functor_opyon {A : Type} `{Is01Cat A} (a : A)
   : Is0Functor (opyon a).
 Proof.
   apply Build_Is0Functor.
   unfold opyon; intros b c f g; cbn in *.
   exact (f $o g).
+Defined.
+
+Global Instance is1functor_opyon {A : Type} `{Is1Cat A} `{!HasMorExt A} (a : A)
+  : Is1Functor (opyon a).
+Proof.
+  rapply Build_Is1Functor.
+  + intros x y f g p h.
+    apply path_hom.
+    apply (cat_prewhisker p).
+  + intros x h.
+    apply path_hom.
+    apply cat_idl.
+  + intros x y z f g h.
+    apply path_hom.
+    apply cat_assoc.
 Defined.
 
 Definition opyoneda {A : Type} `{Is01Cat A} (a : A)
@@ -134,10 +149,10 @@ Defined.
 Definition yon {A : Type} `{IsGraph A} (a : A) : A^op -> Type
   := @opyon (A^op) _ a.
 
-Global Instance is0coh1functor_yon {A : Type} `{H : Is01Cat A} (a : A)
+Global Instance is0functor_yon {A : Type} `{H : Is01Cat A} (a : A)
   : Is0Functor (yon a).
 Proof.
-  apply is0coh1functor_opyon.
+  apply is0functor_opyon.
 Defined.
 
 Definition yoneda {A : Type} `{Is01Cat A} (a : A)
