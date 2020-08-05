@@ -140,11 +140,10 @@ Proof.
 Defined.
 
 Definition natequiv_prewhisker {A B C} {H K : B -> C}
-  `{IsGraph A, HasEquivs B, HasEquivs C}
-  (F : A -> B) `{!Is0Functor F, !Is0Functor H, !Is0Functor K}
-  : NatEquiv H K -> NatEquiv (H o F) (K o F).
+  `{IsGraph A, HasEquivs B, HasEquivs C, !Is0Functor H, !Is0Functor K}
+  (alpha : NatEquiv H K) (F : A -> B) `{!Is0Functor F}
+  : NatEquiv (H o F) (K o F).
 Proof.
-  intros alpha.
   snrapply Build_NatEquiv.
   1: exact (alpha o F).
   exact (is1natural_prewhisker _ _).
@@ -152,7 +151,7 @@ Defined.
 
 Definition natequiv_postwhisker {A B C} {F G : A -> B}
   `{IsGraph A, HasEquivs B, HasEquivs C, !Is0Functor F, !Is0Functor G}
-  (alpha : NatEquiv F G) (K : B -> C) `{!Is0Functor K, !Is1Functor K}
+   (K : B -> C) (alpha : NatEquiv F G) `{!Is0Functor K, !Is1Functor K}
   : NatEquiv (K o F) (K o G).
 Proof.
   snrapply Build_NatEquiv.
@@ -173,4 +172,17 @@ Proof.
   1: intro a; symmetry; apply alpha.
   intros X Y f.
   apply vinverse, I.
+Defined.
+
+(** This lemma might seem unnecessery since as functions ((F o G) o K) and (F o (G o K)) are definitionally equal. But the functor instances of both sides are different. This can be a nasty trap since you cannot see this difference clearly. *)
+Definition natequiv_functor_assoc_ff_f {A B C D : Type}
+  `{IsGraph A, HasEquivs B, HasEquivs C, HasEquivs D} (** These are a lot of instances... *)
+  (F : C -> D) (G : B -> C) (K : A -> B) `{!Is0Functor F, !Is0Functor G, !Is0Functor K}
+  : NatEquiv ((F o G) o K) (F o (G o K)).
+Proof.
+  snrapply Build_NatEquiv.
+  1: intro; reflexivity.
+  intros X Y f.
+  refine (cat_prewhisker (id_cate_fun _) _ $@ cat_idl _ $@ _^$).
+  refine (cat_postwhisker _ (id_cate_fun _) $@ cat_idr _).
 Defined.
