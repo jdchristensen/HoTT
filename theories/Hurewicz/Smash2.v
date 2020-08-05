@@ -4,8 +4,10 @@
 Require Import Basics Types.
 Require Import Pointed.
 Require Import Hurewicz.Ptd.
+Require Import Hurewicz.PreGroup.
 Require Import Cubical.
 Require Import Homotopy.Smash.
+Require Import Homotopy.Suspension.
 Require Import Truncations NullHomotopy.
 Require Import WildCat.
 
@@ -570,13 +572,6 @@ Proof.
   reflexivity.
 Defined.
 
-(** TODO: finish and move to Wildcat somewhere *)
-Global Instance is1cat_strong_hasmorext {A : Type} `{HasMorExt A}
-  : Is1Cat_Strong A.
-Proof.
-Admitted.
-
-
 (** The loop-susp adjunction as a natural equivalence. *)
 (** Weird typeclass behaviour, had to give instances manually here *)
 Definition natequiv_loop_susp_adjoint `{Funext}
@@ -615,28 +610,65 @@ Proof.
   apply loop_susp_adjoint_nat_r.
 Defined.
 
+(** Proof that the homotopy in [magma_loops_in_nat_r] is pointed. *)
+Lemma hard_coherence `{Funext} (X : pType) A B (f : A ->* B)
+  : magma_loops_in_nat_r f (point (loops (ppforall _ : X, A)))
+  = dpoint_eq (magma_loops_in o* loops_functor (ppostcompose X f)) @
+    (dpoint_eq (ppostcompose X (loops_functor f) o* magma_loops_in))^.
+Proof.
+Admitted.
+
+(** Lemma 2.24 in a specific form for use in lemma 2.44 *)
+Definition natequiv_lemma_2_24 `{Funext} (X : pType)
+  : NatEquiv (loops o (fun x => X ->** x)) ((fun x => X ->** x) o loops).
+Proof.
+  snrapply Build_NatEquiv.
+  1: intro A; rapply equiv_magma_loops_in.
+  intros A B f; simpl; cbn in f.
+  (** The naturality given by [magma_loops_in_nat_r] isn't quite in the right form *)
+  snrapply Build_pHomotopy.
+  1: rapply magma_loops_in_nat_r.
+  apply hard_coherence.
+Defined.
+
 (** Lemma 2.44 *)
 Lemma natequiv_psusp_smash `{Funext}
   : NatEquiv (psusp o uncurry Smash) ((uncurry Smash) o functor_prod idmap psusp).
 Proof.
-  rapply (natequiv_compose _ (natequiv_postwhisker natequiv_pswap psusp)).
+  rapply (natequiv_compose _ (natequiv_postwhisker psusp natequiv_pswap)).
   (** Lots of definitional equalities to exploit here *)
   change (NatEquiv ((psusp o uncurry Smash) o prod_symm)
     (((uncurry Smash o functor_prod idmap psusp) o prod_symm) o prod_symm)).
   rapply (natequiv_prewhisker _).
   change (NatEquiv (psusp o uncurry Smash) (uncurry Smash o (functor_prod idmap psusp o prod_symm))).
   change (NatEquiv (psusp o uncurry Smash) ((uncurry Smash o prod_symm) o functor_prod psusp idmap)).
-  rapply (natequiv_compose (natequiv_prewhisker (functor_prod psusp idmap) natequiv_pswap)).
+  rapply (natequiv_compose (natequiv_prewhisker natequiv_pswap (functor_prod psusp idmap) )).
   snrapply Build_NatEquiv.
   { intros [X Y].
     refine (opyon_equiv _ _ _).
     hnf; unfold opyon1, opyon, "^op", uncurry; simpl.
     refine (natequiv_compose (natequiv_inverse _ _ (natequiv_loop_susp_adjoint_codomain _)) _).
-    refine (natequiv_compose (natequiv_prewhisker loops (natequiv_pmap_uncurry_Z _ _)) _).
+    refine (natequiv_compose (natequiv_prewhisker (natequiv_pmap_uncurry_Z _ _) loops) _).
     refine (natequiv_compose _ (natequiv_inverse _ _ (natequiv_pmap_uncurry_Z _ _))).
-    refine (natequiv_compose _ (natequiv_pmap_uncurry_Z _ _)).
-    (** The nat equiv from 2.24 left *)
-    admit. }
+    refine (natequiv_compose _ (natequiv_prewhisker (natequiv_loop_susp_adjoint_codomain _) _)).
+    (** Here is something interesting. The instances for the RHS being a functor are compositions of instances, however we have constructed this as (.. o ..) o loops but postwhiskering here would need this to be .. o (.. o loops).
+    In essense, we have kidded ourselves by using definitionally associative "functors" in the LHS and RHS of NatEquiv. The way to resolve this would be to use an associator for functors, something that is not obviously thought of with how we have set NatEquivs up. *)
+    (** Can't seem to merge this into one line *)
+    
+    nrefine (natequiv_compose (natequiv_inverse _ _ _) _);
+    [ refine (natequiv_functor_assoc_ff_f (Hom X) (fun x => Y ->** x) loops) |].
+    
+    
+    (** The other side also needs treatment *)
+    nrefine (natequiv_compose _ _);
+    [ | refine (natequiv_functor_assoc_ff_f (Hom X) loops (fun x => Y ->** x))].
+    change (fun x : pType => X ->* loops (ppforall _ : Y, x))
+      with (Hom X o fun x : pType => loops (ppforall _ : Y, x)).
+    (** Now postwhiskering works *)
+    refine (natequiv_postwhisker (fun x => X $-> _) _).
+    (** The nat equiv from 2.24 *)
+    apply natequiv_lemma_2_24. }
   intros [X Y] [X' Y'] [f g].
+  hnf.
   (** I don't think it will be easy to show these are natural in X and Y. *)
 Admitted.
