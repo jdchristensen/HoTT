@@ -765,7 +765,7 @@ Proof.
   + cbn.  reflexivity.
 Defined.
 
-(** This equivalence is the base case of one of the lemmas in the CS Hurewicz paper. *)
+(** This equivalence is the base case of one of the lemmas in the CS Hurewicz paper. (Lemma 2.24) *)
 Definition equiv_magma_loops_in `{Funext} {Y Z : pType}
   : pMagmaEquiv (pmagma_loops (Y ->** Z)) (pmagma_pmap Y (pmagma_loops Z)).
 Proof.
@@ -842,3 +842,4 @@ Proof.
 Defined.
 
 (* TODO: naturality of equiv_magma_iterated_loops_in. *)
+
