@@ -16,7 +16,8 @@ in the main repository.
 Most work is in the
 [theories/Hurewicz](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz)
 folder.
-Here is a summary of the files in that folder:
+Here is a summary of the files in that folder, listed in an order that is compatible
+with the dependencies.
 
 - [Ptd.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Hurewicz/Ptd.v):
   This contains some simple facts about pointed maps that will be moved elsewhere.
@@ -45,14 +46,17 @@ Here is a summary of the files in that folder:
   Corollary 2.32 (`isconnected_smash`),
   Lemma 2.40 (`isequiv_swap`),
   Lemma 2.41 (`pswap_natural`),
-  Lemma 2.42 (`isequiv_ptr_smash_functor`), and
-  Corollary 2.43 (`isequiv_ptr_smash_functor'`).
+  Lemma 2.42 (`isequiv_ptr_smash_functor`),
+  Corollary 2.43 (`isequiv_ptr_smash_functor'`), and
+  Lemma 2.44 (`pequiv_psusp_smash'`, without the naturality).
 
-Some small changes have been made to other files as well:
+Some changes have been made to other files as well:
 
 - [Abelianization.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Algebra/AbGroups/Abelianization.v)
 - [Pointed/Core.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Pointed/Core.v)
 - [Pointed/pHomotopy.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Pointed/pHomotopy.v)
+- [Pointed/Loops.v](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/Pointed/Loops.v)
+- [WildCat/*](https://github.com/jdchristensen/HoTT/tree/Hurewicz/theories/WildCat) (many files)
 
 Finally, other changes have already been incorporated into the master branch of the HoTT library, and are not listed here.
 
