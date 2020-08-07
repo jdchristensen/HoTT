@@ -799,28 +799,36 @@ Proof.
 Defined.
 
 (** The naturality of magma_loops_in in the second variable. *)
-Definition magma_loops_in_nat_r `{Funext} {Y Z Z' : pType} (f : Z ->* Z') (p : magma_loops (Y ->** Z))
-  : magma_loops_in (loops_functor (ppostcompose Y f) p)
-    = (loops_functor f) o* (magma_loops_in p).
-  (* Or: ... = ppostcompose Y (loops_functor f) (magma_loops_in p). *)
+Definition magma_loops_in_nat_r `{Funext} {Y Z Z' : pType} (f : Z ->* Z')
+  : magma_loops_in o* (loops_functor (ppostcompose Y f))
+    ==* (ppostcompose Y (loops_functor f)) o* magma_loops_in.
 Proof.
   pose (fp := f).
   pointed_reduce_pmap f.
-  refine ((ap _ (concat_1p _ @ concat_p1 _)) @ _).
-  refine (phomotopy_path_nat_r _ _ fp p @ _).
-  apply path_pforall.
   snrapply Build_pHomotopy.
-  - intro y.
-    cbn.
-    exact (concat_1p _ @ concat_p1 _)^.
-  - cbn.
-    (* The next line is needed to make the [destruct] work. *)
-    change (phomotopy_path p) with (phomotopy_path p).
-    destruct (phomotopy_path p) as [php php0]; cbn in *.
-    revert php0.
-    generalize (php (point Y)) as phpY.
-    rapply paths_ind_r.
-    reflexivity.
+  + intro p.
+    refine ((ap _ (concat_1p _ @ concat_p1 _)) @ _).
+    refine (phomotopy_path_nat_r _ _ fp p @ _).
+    apply path_pforall.
+    snrapply Build_pHomotopy.
+    - intro y.
+      cbn.
+      exact (concat_1p _ @ concat_p1 _)^.
+    - cbn.
+      (* The next line is needed to make the [destruct] work. *)
+      change (phomotopy_path p) with (phomotopy_path p).
+      destruct (phomotopy_path p) as [php php0]; cbn in *.
+      revert php0.
+      generalize (php (point Y)) as phpY.
+      rapply paths_ind_r.
+      reflexivity.
+  + Opaque phomotopy_path_nat_r.
+    simpl.
+    refine (concat_1p _ @ _).
+    refine (1 @@ _ @ _).
+    1: rapply path_pforall_1.
+    rapply concat_p1.
+    Transparent phomotopy_path_nat_r.
 Defined.
 
 (* TODO: Better definitions of loop_functor and/or postwhisker and/or o* to make the above easier? *)

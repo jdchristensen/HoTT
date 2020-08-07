@@ -613,25 +613,14 @@ Proof.
   apply loop_susp_adjoint_nat_r.
 Defined.
 
-(** Proof that the homotopy in [magma_loops_in_nat_r] is pointed. *)
-Lemma hard_coherence `{Funext} (X : pType) A B (f : A ->* B)
-  : magma_loops_in_nat_r f (point (loops (ppforall _ : X, A)))
-  = dpoint_eq (magma_loops_in o* loops_functor (ppostcompose X f)) @
-    (dpoint_eq (ppostcompose X (loops_functor f) o* magma_loops_in))^.
-Proof.
-Admitted.
-
 (** Lemma 2.24 in a specific form for use in lemma 2.44 *)
 Definition natequiv_lemma_2_24 `{Funext} (X : pType)
   : NatEquiv (loops o (fun x => X ->** x)) ((fun x => X ->** x) o loops).
 Proof.
   snrapply Build_NatEquiv.
   1: intro A; rapply equiv_magma_loops_in.
-  intros A B f; simpl; cbn in f.
-  (** The naturality given by [magma_loops_in_nat_r] isn't quite in the right form *)
-  snrapply Build_pHomotopy.
-  1: rapply magma_loops_in_nat_r.
-  apply hard_coherence.
+  intros A B f.
+  apply magma_loops_in_nat_r.
 Defined.
 
 (** part of Lemma 2.44 without naturality *)
