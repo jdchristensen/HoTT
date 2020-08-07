@@ -222,9 +222,8 @@ Proof.
   - apply sect2.
 Defined.
 
-(** Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
+(** CS Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
 (** We define the maps, but take it as axioms that they are inverse to each other. *)
-(** For now, no naturality conditions, just an equivalence. *)
 Definition pequiv_pmap_uncurry `{Funext} (X Y Z : pType)
   : (X ->** (Y ->** Z)) <~>* (Smash X Y ->** Z)
   := Build_pEquiv _ _ (pmap_uncurry X Y Z) _.
@@ -273,6 +272,7 @@ Proof.
     symmetry; apply concat_pV.
 Defined.
 
+(** This is another naturality condition, formalized by van Doorn. *)
 Definition pmap_uncurry_nat_Z `{Funext} (X Y Z Z' : pType) (f : Z ->* Z')
   : pmap_uncurry X Y Z' o* ppostcompose _ (ppostcompose _ f) ==*
     ppostcompose (Smash X Y) f o* pmap_uncurry X Y Z.
@@ -613,8 +613,9 @@ Proof.
   apply loop_susp_adjoint_nat_r.
 Defined.
 
-(** Lemma 2.24 in a specific form for use in lemma 2.44 *)
-Definition natequiv_lemma_2_24 `{Funext} (X : pType)
+(** Lemma 2.24 in a specific form for use in lemma 2.44. *)
+(* TODO: Move to PreGroup.v.  (I tried, but Coq couldn't figure out that pType is a wild category.) *)
+Definition natequiv_magma_loops_in `{Funext} (X : pType)
   : NatEquiv (loops o (fun x => X ->** x)) ((fun x => X ->** x) o loops).
 Proof.
   snrapply Build_NatEquiv.
@@ -623,7 +624,7 @@ Proof.
   apply magma_loops_in_nat_r.
 Defined.
 
-(** part of Lemma 2.44 without naturality *)
+(** Variation of CS Lemma 2.44, without the naturality. *)
 Lemma pequiv_psusp_smash `{Funext} (X Y : pType)
   : psusp (Smash X Y) $<~> Smash (psusp X) Y.
 Proof.
@@ -633,26 +634,21 @@ Proof.
   refine (natequiv_compose (natequiv_prewhisker (natequiv_pmap_uncurry_Z _ _) loops) _).
   refine (natequiv_compose _ (natequiv_inverse _ _ (natequiv_pmap_uncurry_Z _ _))).
   refine (natequiv_compose _ (natequiv_prewhisker (natequiv_loop_susp_adjoint_codomain _) _)).
-  (** Here is something interesting. The instances for the RHS being a functor are compositions of instances, however we have constructed this as (.. o ..) o loops but postwhiskering here would need this to be .. o (.. o loops).
-  In essense, we have kidded ourselves by using definitionally associative "functors" in the LHS and RHS of NatEquiv. The way to resolve this would be to use an associator for functors, something that is not obviously thought of with how we have set NatEquivs up. *)
-  (** Can't seem to merge this into one line *)
-  
+  (** Here is something interesting. The instances for the RHS being a functor are compositions of instances, however we have constructed this as (.. o ..) o loops but postwhiskering here would need this to be .. o (.. o loops).  In essense, we have kidded ourselves by using definitionally associative "functors" in the LHS and RHS of NatEquiv. The way to resolve this would be to use an associator for functors, something that is not obviously thought of with how we have set NatEquivs up. *)
   nrefine (natequiv_compose (natequiv_inverse _ _ _) _);
   [ refine (natequiv_functor_assoc_ff_f (Hom X) (fun x => Y ->** x) loops) |].
-  
-  
-  (** The other side also needs treatment *)
+  (** The other side also needs treatment: *)
   nrefine (natequiv_compose _ _);
   [ | refine (natequiv_functor_assoc_ff_f (Hom X) loops (fun x => Y ->** x))].
   change (fun x : pType => X ->* loops (ppforall _ : Y, x))
     with (Hom X o fun x : pType => loops (ppforall _ : Y, x)).
-  (** Now postwhiskering works *)
+  (** Now postwhiskering works: *)
   refine (natequiv_postwhisker (fun x => X $-> _) _).
-  (** The nat equiv from 2.24 *)
-  apply natequiv_lemma_2_24.
+  (** The natural equivalence from 2.24: *)
+  apply natequiv_magma_loops_in.
 Defined.
 
-(** Lemma 2.44 without naturality *)
+(** CS Lemma 2.44, without the naturality. *)
 Lemma pequiv_psusp_smash' `{Funext} (X Y : pType)
   : psusp (Smash X Y) $<~> Smash X (psusp Y).
 Proof.
@@ -661,7 +657,7 @@ Proof.
   exact pequiv_pswap.
 Defined.
 
-(** Lemma 2.44 *)
+(** CS Lemma 2.44, naturality. *)
 Lemma natequiv_psusp_smash `{Funext}
   : NatEquiv (psusp o uncurry Smash) ((uncurry Smash) o functor_prod idmap psusp).
 Proof.

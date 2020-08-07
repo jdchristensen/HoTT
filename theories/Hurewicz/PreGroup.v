@@ -833,8 +833,6 @@ Defined.
 
 (* TODO: Better definitions of loop_functor and/or postwhisker and/or o* to make the above easier? *)
 
-(* TODO: rename magma_iterated_loops to magma_iterated_loops.  Same for pmagma and other functions. *)
-
 (* The (n+1)-fold loop space is a pointed magma. *)
 Definition pmagma_iterated_loops (n : nat) (Z : pType) : pMagma
   := pmagma_loops (iterated_loops n Z).
