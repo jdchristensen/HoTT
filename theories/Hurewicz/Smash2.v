@@ -84,6 +84,9 @@ Proof.
   - rapply swap_swap.
 Defined.
 
+Definition pequiv_pswap `{Funext} {X Y : pType} : Smash X Y <~>* Smash Y X
+  := Build_pEquiv (Smash X Y) (Smash Y X) pswap isequiv_swap.
+
 (* Avoid unfolding Smash.  Also speeds up the [Defined] at the end. *)
 Opaque Smash.
 
@@ -631,6 +634,44 @@ Proof.
   apply hard_coherence.
 Defined.
 
+(** part of Lemma 2.44 without naturality *)
+Lemma pequiv_psusp_smash `{Funext} (X Y : pType)
+  : psusp (Smash X Y) $<~> Smash (psusp X) Y.
+Proof.
+  refine (opyon_equiv _ _ _).
+  hnf; unfold opyon1, opyon, "^op", uncurry; simpl.
+  refine (natequiv_compose (natequiv_inverse _ _ (natequiv_loop_susp_adjoint_codomain _)) _).
+  refine (natequiv_compose (natequiv_prewhisker (natequiv_pmap_uncurry_Z _ _) loops) _).
+  refine (natequiv_compose _ (natequiv_inverse _ _ (natequiv_pmap_uncurry_Z _ _))).
+  refine (natequiv_compose _ (natequiv_prewhisker (natequiv_loop_susp_adjoint_codomain _) _)).
+  (** Here is something interesting. The instances for the RHS being a functor are compositions of instances, however we have constructed this as (.. o ..) o loops but postwhiskering here would need this to be .. o (.. o loops).
+  In essense, we have kidded ourselves by using definitionally associative "functors" in the LHS and RHS of NatEquiv. The way to resolve this would be to use an associator for functors, something that is not obviously thought of with how we have set NatEquivs up. *)
+  (** Can't seem to merge this into one line *)
+  
+  nrefine (natequiv_compose (natequiv_inverse _ _ _) _);
+  [ refine (natequiv_functor_assoc_ff_f (Hom X) (fun x => Y ->** x) loops) |].
+  
+  
+  (** The other side also needs treatment *)
+  nrefine (natequiv_compose _ _);
+  [ | refine (natequiv_functor_assoc_ff_f (Hom X) loops (fun x => Y ->** x))].
+  change (fun x : pType => X ->* loops (ppforall _ : Y, x))
+    with (Hom X o fun x : pType => loops (ppforall _ : Y, x)).
+  (** Now postwhiskering works *)
+  refine (natequiv_postwhisker (fun x => X $-> _) _).
+  (** The nat equiv from 2.24 *)
+  apply natequiv_lemma_2_24.
+Defined.
+
+(** Lemma 2.44 without naturality *)
+Lemma pequiv_psusp_smash' `{Funext} (X Y : pType)
+  : psusp (Smash X Y) $<~> Smash X (psusp Y).
+Proof.
+  refine (_ $oE emap psusp pequiv_pswap).
+  refine (_ $oE pequiv_psusp_smash _ _).
+  exact pequiv_pswap.
+Defined.
+
 (** Lemma 2.44 *)
 Lemma natequiv_psusp_smash `{Funext}
   : NatEquiv (psusp o uncurry Smash) ((uncurry Smash) o functor_prod idmap psusp).
@@ -645,30 +686,11 @@ Proof.
   rapply (natequiv_compose (natequiv_prewhisker natequiv_pswap (functor_prod psusp idmap) )).
   snrapply Build_NatEquiv.
   { intros [X Y].
-    refine (opyon_equiv _ _ _).
-    hnf; unfold opyon1, opyon, "^op", uncurry; simpl.
-    refine (natequiv_compose (natequiv_inverse _ _ (natequiv_loop_susp_adjoint_codomain _)) _).
-    refine (natequiv_compose (natequiv_prewhisker (natequiv_pmap_uncurry_Z _ _) loops) _).
-    refine (natequiv_compose _ (natequiv_inverse _ _ (natequiv_pmap_uncurry_Z _ _))).
-    refine (natequiv_compose _ (natequiv_prewhisker (natequiv_loop_susp_adjoint_codomain _) _)).
-    (** Here is something interesting. The instances for the RHS being a functor are compositions of instances, however we have constructed this as (.. o ..) o loops but postwhiskering here would need this to be .. o (.. o loops).
-    In essense, we have kidded ourselves by using definitionally associative "functors" in the LHS and RHS of NatEquiv. The way to resolve this would be to use an associator for functors, something that is not obviously thought of with how we have set NatEquivs up. *)
-    (** Can't seem to merge this into one line *)
-    
-    nrefine (natequiv_compose (natequiv_inverse _ _ _) _);
-    [ refine (natequiv_functor_assoc_ff_f (Hom X) (fun x => Y ->** x) loops) |].
-    
-    
-    (** The other side also needs treatment *)
-    nrefine (natequiv_compose _ _);
-    [ | refine (natequiv_functor_assoc_ff_f (Hom X) loops (fun x => Y ->** x))].
-    change (fun x : pType => X ->* loops (ppforall _ : Y, x))
-      with (Hom X o fun x : pType => loops (ppforall _ : Y, x)).
-    (** Now postwhiskering works *)
-    refine (natequiv_postwhisker (fun x => X $-> _) _).
-    (** The nat equiv from 2.24 *)
-    apply natequiv_lemma_2_24. }
+    exact (pequiv_psusp_smash X Y). }
   intros [X Y] [X' Y'] [f g].
   hnf.
   (** I don't think it will be easy to show these are natural in X and Y. *)
 Admitted.
+
+
+
