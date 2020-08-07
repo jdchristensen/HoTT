@@ -2,14 +2,12 @@
 (* Also, there's a typo there:  smash_rec_beta_gluer should be capitalized. *)
 
 Require Import Basics Types.
-Require Import Pointed.Core.
-Require Import Pointed.pMap.
-Require Import Pointed.pTrunc.
-Require Import Pointed.pEquiv.
-Require Import Pointed.pSusp.
+Require Import Pointed.
 Require Import Hurewicz.Ptd.
+Require Import Hurewicz.PreGroup.
 Require Import Cubical.
 Require Import Homotopy.Smash.
+Require Import Homotopy.Suspension.
 Require Import Truncations NullHomotopy.
 Require Import WildCat.
 
@@ -19,8 +17,7 @@ Definition Smash_functor {A B X Y : pType} (f : A ->* X) (g : B ->* Y)
   : Smash A B ->* Smash X Y.
 Proof.
   srapply Build_pMap.
-  1: {
-    srefine (Smash_rec _ auxl auxr _ _).
+  { srefine (Smash_rec _ auxl auxr _ _).
     - intros a b.
       exact (sm (f a) (g b)).
     - intro b.  simpl.
@@ -29,8 +26,7 @@ Proof.
     - intro a.  simpl.
       refine (_ @ gluer (g a)).
       apply ap10.
-      refine (ap _ (point_eq f)).
-  }
+      refine (ap _ (point_eq f)). }
   simpl.
   refine (_ @ _).
   1: exact (ap (fun x => sm x (g (point B))) (point_eq f)).
@@ -87,6 +83,9 @@ Proof.
   - rapply swap_swap.
   - rapply swap_swap.
 Defined.
+
+Definition pequiv_pswap `{Funext} {X Y : pType} : Smash X Y <~>* Smash Y X
+  := Build_pEquiv (Smash X Y) (Smash Y X) pswap isequiv_swap.
 
 (* Avoid unfolding Smash.  Also speeds up the [Defined] at the end. *)
 Opaque Smash.
@@ -274,6 +273,58 @@ Proof.
     symmetry; apply concat_pV.
 Defined.
 
+Definition pmap_uncurry_nat_Z `{Funext} (X Y Z Z' : pType) (f : Z ->* Z')
+  : pmap_uncurry X Y Z' o* ppostcompose _ (ppostcompose _ f) ==*
+    ppostcompose (Smash X Y) f o* pmap_uncurry X Y Z.
+Proof.
+  symmetry.
+  snrapply Build_pHomotopy.
+  { intros h.
+    apply path_pforall.
+    snrapply Build_pHomotopy.
+    { simpl.
+      snrapply Smash_ind.
+      1: simpl; reflexivity.
+      1,2: simpl; apply point_eq.
+      { intro a.
+        srapply equiv_dp_paths_FlFr.
+        rewrite (ap_compose _ f).
+        rewrite 2 Smash_rec_beta_gluel.
+        pointed_reduce; hott_simpl.
+        rewrite ap_V.
+        apply concat_Vp. } 
+      intro a.
+      srapply equiv_dp_paths_FlFr.
+      rewrite (ap_compose _ f).
+      rewrite 2 smash_rec_beta_gluer.
+      rewrite concat_p1.
+      apply moveR_Vp.
+      rewrite ap_pp.
+      rewrite <- ap_compose.
+      simpl.
+      rewrite <- (ap_compose (fun g : Y ->* Z => g a) f (point_eq h)).
+      apply whiskerL.
+      pointed_reduce; hott_simpl. }
+    simpl; symmetry; apply concat_pV. }
+  (** Showing this is pointed is a pain *)
+Admitted.
+
+Global Instance is0functor_ppmap (X : pType)
+  : Is0Functor (fun y => X ->** y).
+Proof.
+  snrapply Build_Is0Functor.
+  intros a b f.
+  apply ppostcompose, f.
+Defined.
+
+Definition natequiv_pmap_uncurry_Z `{Funext} (X Y : pType)
+  : NatEquiv (Hom X o (fun Z => Y ->** Z)) (Hom (Smash X Y)).
+Proof.
+  snrapply Build_NatEquiv.
+  1: exact (pequiv_pmap_uncurry X Y).
+  exact (pmap_uncurry_nat_Z X Y).
+Defined.
+
 (** Lemma 2.27 [Buchholtz-van Doorn-Rijke, Corollary 4.3] *)
 (** We take this as an axiom. *)
 Global Instance istrunc_ppmap {m n : trunc_index} (X Y : pType)
@@ -453,6 +504,7 @@ Proof.
   by nrapply Smash_functor_compose.
 Defined.
 
+(** functor_product of functors is a functor between a products of categories *)
 Global Instance is0functor_functor_prod {A B C D : Type} (f : A -> C) (g : B -> D)
   `{Is0Functor _ _ f} `{Is0Functor _ _ g}
   : Is0Functor (functor_prod f g).
@@ -468,8 +520,174 @@ Proof.
   intros X Y; exact psusp_functor.
 Defined.
 
+(** TODO: move this to Types.Prod *)
+Definition prod_symm {A B : Type} : A * B -> B * A :=
+  fun x => match x with (a , b) => (b , a) end.
+
+(** Swapping the order of a product of categories is a functor *)
+Global Instance is0functor_prod_symm {A B : Type} `{IsGraph A} `{IsGraph B}
+  : Is0Functor (@prod_symm A B).
+Proof.
+  snrapply Build_Is0Functor.
+  cbn. intros X Y.
+  apply prod_symm.
+Defined.
+
+(** [pswap] is a natural equivalence. *)
+Lemma natequiv_pswap `{Funext}
+  : NatEquiv (uncurry Smash) (uncurry Smash o prod_symm).
+Proof.
+  snrapply Build_NatEquiv.
+  { intros [X Y].
+    unfold uncurry; simpl.
+    snrapply Build_pEquiv.
+    1: exact pswap.
+    exact _. }
+  intros [A B] [X Y] [f g].
+  exact (pswap_natural f g).
+Defined.
+
+
+(** TODO: move to Pointed.pSusp *)
+Global Instance is1functor_psusp : Is1Functor psusp.
+Proof.
+  snrapply Build_Is1Functor; intros.
+  1: by apply psusp_2functor.
+  1: apply psusp_functor_idmap.
+  apply psusp_functor_compose.
+Defined.
+
+Lemma functor_prod_idmap {A B : Type}
+  : functor_prod (A:=A) (B:=B) idmap idmap = idmap.
+Proof.
+  reflexivity.
+Defined.
+
+Lemma prod_symm_prod_symm {A B : Type}
+  : prod_symm o (@prod_symm A B) = idmap.
+Proof.
+  reflexivity.
+Defined.
+
+Lemma functor_prod_symm {A B A' B' : Type} (f : A -> B) (g : A' -> B')
+  : functor_prod f g o prod_symm = prod_symm o functor_prod g f.
+Proof.
+  reflexivity.
+Defined.
+
+(** The loop-susp adjunction as a natural equivalence. *)
+(** Weird typeclass behaviour, had to give instances manually here *)
+Definition natequiv_loop_susp_adjoint `{Funext}
+  : @NatEquiv (pType^op * pType) Type _ _ _ _ _
+       (fun x : pType^op * pType => uncurry (fun X Y : pType => X ->* Y) (functor_prod psusp idmap x))
+       (fun x : pType^op * pType => uncurry (fun X Y : pType => X ->* Y) (functor_prod idmap loops x))
+       (@is0functor_compose (pType^op * pType) (pType^op * pType) Type _ _ _ _ (is0functor_functor_prod _ _) (** Weird assymmetry... *)
+          _ (@is0functor_hom pType isgraph_ptype _))
+       (@is0functor_compose (pType^op * pType) (pType^op * pType) Type _ _ _ _ _
+          _ (@is0functor_hom pType isgraph_ptype _)).
+Proof.
+  snrapply Build_NatEquiv.
+  { intros [X Y].
+    unfold uncurry; simpl.
+    apply loop_susp_adjoint. }
+  hnf; intros [X Y] [X' Y']; simpl; unfold uncurry; intros [f g] h.
+  apply path_pforall.
+  refine (pmap_prewhisker _ (loops_functor_compose _ _) @* _).
+  refine (pmap_compose_assoc _ _ _ @* _).
+  refine (pmap_postwhisker _ _^* @* _).
+  1: apply loop_susp_unit_natural.
+  refine ((pmap_compose_assoc _ _ _)^* @* _).
+  apply pmap_prewhisker.
+  apply loop_susp_adjoint_nat_r.
+Defined.
+
+(** Loop susp equivalence natural in codomain only *)
+Definition natequiv_loop_susp_adjoint_codomain `{Funext}
+  : forall X, NatEquiv (Hom (psusp X)) (Hom X o loops).
+Proof.
+  intros X.
+  snrapply Build_NatEquiv.
+  1: exact (loop_susp_adjoint X).
+  intros Y Z f h.
+  apply path_pforall.
+  apply loop_susp_adjoint_nat_r.
+Defined.
+
+(** Proof that the homotopy in [magma_loops_in_nat_r] is pointed. *)
+Lemma hard_coherence `{Funext} (X : pType) A B (f : A ->* B)
+  : magma_loops_in_nat_r f (point (loops (ppforall _ : X, A)))
+  = dpoint_eq (magma_loops_in o* loops_functor (ppostcompose X f)) @
+    (dpoint_eq (ppostcompose X (loops_functor f) o* magma_loops_in))^.
+Proof.
+Admitted.
+
+(** Lemma 2.24 in a specific form for use in lemma 2.44 *)
+Definition natequiv_lemma_2_24 `{Funext} (X : pType)
+  : NatEquiv (loops o (fun x => X ->** x)) ((fun x => X ->** x) o loops).
+Proof.
+  snrapply Build_NatEquiv.
+  1: intro A; rapply equiv_magma_loops_in.
+  intros A B f; simpl; cbn in f.
+  (** The naturality given by [magma_loops_in_nat_r] isn't quite in the right form *)
+  snrapply Build_pHomotopy.
+  1: rapply magma_loops_in_nat_r.
+  apply hard_coherence.
+Defined.
+
+(** part of Lemma 2.44 without naturality *)
+Lemma pequiv_psusp_smash `{Funext} (X Y : pType)
+  : psusp (Smash X Y) $<~> Smash (psusp X) Y.
+Proof.
+  refine (opyon_equiv _ _ _).
+  hnf; unfold opyon1, opyon, "^op", uncurry; simpl.
+  refine (natequiv_compose (natequiv_inverse _ _ (natequiv_loop_susp_adjoint_codomain _)) _).
+  refine (natequiv_compose (natequiv_prewhisker (natequiv_pmap_uncurry_Z _ _) loops) _).
+  refine (natequiv_compose _ (natequiv_inverse _ _ (natequiv_pmap_uncurry_Z _ _))).
+  refine (natequiv_compose _ (natequiv_prewhisker (natequiv_loop_susp_adjoint_codomain _) _)).
+  (** Here is something interesting. The instances for the RHS being a functor are compositions of instances, however we have constructed this as (.. o ..) o loops but postwhiskering here would need this to be .. o (.. o loops).
+  In essense, we have kidded ourselves by using definitionally associative "functors" in the LHS and RHS of NatEquiv. The way to resolve this would be to use an associator for functors, something that is not obviously thought of with how we have set NatEquivs up. *)
+  (** Can't seem to merge this into one line *)
+  
+  nrefine (natequiv_compose (natequiv_inverse _ _ _) _);
+  [ refine (natequiv_functor_assoc_ff_f (Hom X) (fun x => Y ->** x) loops) |].
+  
+  
+  (** The other side also needs treatment *)
+  nrefine (natequiv_compose _ _);
+  [ | refine (natequiv_functor_assoc_ff_f (Hom X) loops (fun x => Y ->** x))].
+  change (fun x : pType => X ->* loops (ppforall _ : Y, x))
+    with (Hom X o fun x : pType => loops (ppforall _ : Y, x)).
+  (** Now postwhiskering works *)
+  refine (natequiv_postwhisker (fun x => X $-> _) _).
+  (** The nat equiv from 2.24 *)
+  apply natequiv_lemma_2_24.
+Defined.
+
+(** Lemma 2.44 without naturality *)
+Lemma pequiv_psusp_smash' `{Funext} (X Y : pType)
+  : psusp (Smash X Y) $<~> Smash X (psusp Y).
+Proof.
+  refine (_ $oE emap psusp pequiv_pswap).
+  refine (_ $oE pequiv_psusp_smash _ _).
+  exact pequiv_pswap.
+Defined.
+
 (** Lemma 2.44 *)
-Lemma natequiv_psusp_smash
+Lemma natequiv_psusp_smash `{Funext}
   : NatEquiv (psusp o uncurry Smash) ((uncurry Smash) o functor_prod idmap psusp).
 Proof.
-Abort.
+  rapply (natequiv_compose _ (natequiv_postwhisker psusp natequiv_pswap)).
+  (** Lots of definitional equalities to exploit here *)
+  change (NatEquiv ((psusp o uncurry Smash) o prod_symm)
+    (((uncurry Smash o functor_prod idmap psusp) o prod_symm) o prod_symm)).
+  rapply (natequiv_prewhisker _).
+  change (NatEquiv (psusp o uncurry Smash) (uncurry Smash o (functor_prod idmap psusp o prod_symm))).
+  change (NatEquiv (psusp o uncurry Smash) ((uncurry Smash o prod_symm) o functor_prod psusp idmap)).
+  rapply (natequiv_compose (natequiv_prewhisker natequiv_pswap (functor_prod psusp idmap) )).
+  snrapply Build_NatEquiv.
+  { intros [X Y].
+    exact (pequiv_psusp_smash X Y). }
+  intros [X Y] [X' Y'] [f g].
+  hnf.
+  (** I don't think it will be easy to show these are natural in X and Y. *)
+Admitted.
