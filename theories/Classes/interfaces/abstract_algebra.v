@@ -407,4 +407,16 @@ Proof.
   all: srapply trunc_forall.
 Defined.
 
+Global Instance ishprop_isinjective `{Funext} {A B : Type} `{IsHSet A}
+       {f : A -> B} : IsHProp (IsInjective f).
+Proof.
+  unfold IsHProp, IsInjective. (* Unfolds needed for last "path_ishprop". *)
+  intros X Y.
+  srapply Build_Contr.
+  - funext k.
+    funext l.
+    apply path_ishprop.
+  - apply path_ishprop.
+Defined.
+
 End extras.

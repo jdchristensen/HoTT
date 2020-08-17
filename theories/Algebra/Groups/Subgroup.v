@@ -1,4 +1,4 @@
-Require Import Basics Types HSet.
+Require Import Basics Types HSet WildCat.
 Require Import Algebra.Groups.Group.
 
 Local Open Scope mc_mult_scope.
@@ -25,6 +25,14 @@ Defined.
 Definition issig_issubgroup G H : _ <~> IsSubgroup G H
   := ltac:(issig).
 
+Global Instance issubgroup_ishset `{U : Univalence} {G H : Group}
+  : IsHSet (IsSubgroup G H).
+Proof.
+  srapply (equiv_transport IsHSet {g : G $-> H & IsInjective g} (IsSubgroup G H)).
+  - apply (equiv_path _ _)^-1.
+    issig.
+Defined.
+
 (** A subgroup of a group H is a group G which is a subgroup of H. *) 
 Record Subgroup (H : Group) := {
   subgroup_group : Group;
@@ -34,6 +42,86 @@ Record Subgroup (H : Group) := {
 Coercion subgroup_group : Subgroup >-> Group.
 Global Existing Instance subgroup_issubgroup.
 (* Arguments subgroup_group {_}. *)
+
+Definition issig_subgroup {G : Group} : _ <~> Subgroup G
+  := ltac:(issig).
+
+(* Could be automatically given by [make_equiv] if that tactic can be made to not select G when constructing records. This proof just follows [make_equiv]. *)
+Definition issig_subgroup' {G : Group}
+  : { H : Group & { i : H $-> G & IsInjective i}} <~> Subgroup G.
+Proof.
+  srapply Build_Equiv.
+  - intros [H [i p]].
+    apply issig_subgroup; refine (H; _).
+    apply issig_issubgroup; exact (i; p).
+  - srapply isequiv_adjointify.
+    { intros [H [i p]]; exact (H; (i; p)). }
+    all: intro; reflexivity.
+Defined.
+
+(* Useful shorthand for the inclusion of a subgroup. *)
+Definition subgroup_incl (H G : Group) `{S : !IsSubgroup H G}
+  : H $-> G := @issubgroup_incl H G S.
+
+(** The trivial subgroup. *)
+Global Instance issubgroup_grp_trivial {G : Group}
+  : IsSubgroup grp_trivial G.
+Proof.
+  srapply Build_IsSubgroup.
+  - exact grp_homo_const.
+  - intros x y; induction x, y; reflexivity.
+Defined.
+
+(** Should be named subgrp_trivial or subgroup_trivial? *)
+Definition subgroup_trivial {G : Group} : Subgroup G
+  := Build_Subgroup G grp_trivial _.
+
+(** ** Characterization of paths between subgroups *)
+
+(** Could this lemma be replaced? If not, move to Groups/Group.v and rename. *)
+Lemma transport_lemma `{U : Univalence} {G H K : Group} (f : H $-> G) (p : H = K)
+  : transport (fun x : Group => x $-> G) p f
+    = grp_homo_compose f (grp_iso_inverse (equiv_path_group^-1 p)).
+Proof.
+  induction p.
+  refine (transport_1 _ _ @ _).
+  srapply equiv_path_grouphomomorphism; intro; reflexivity.
+Defined.
+
+Proposition equiv_path_subgroup `{U : Univalence} {G : Group} (H K : Subgroup G)
+  : (exists p : GroupIsomorphism H K,
+        subgroup_incl H G = (subgroup_incl K G) $o p)
+      <~> H = K.
+Proof.
+  pose (phi := (equiv_ap' (@issig_subgroup' G)^-1 H K)).
+  refine (equiv_compose' phi^-1 _). clear phi; simpl.
+  refine (equiv_compose' (equiv_path_sigma _ _ _) _ ); simpl.
+  refine (equiv_functor_sigma' equiv_path_group _).
+  intro f.
+  srapply Build_Equiv.
+  - intro q. refine (transport_sigma _ _ @ _).
+    srapply path_sigma_hprop.
+    + refine (transport_lemma _ _ @ _).
+      srapply equiv_path_grouphomomorphism; intro x.
+      unfold pr1.
+      rewrite (eissect _ f); simpl.
+      unfold subgroup_incl in q.
+      rewrite q; simpl.
+      rewrite (eisretr  _ x).
+      reflexivity.
+  - srapply isequiv_adjointify.
+    { intro a. destruct H as [H [i p]]. destruct K as [K [j q]].
+      simpl.
+      refine (_ @ ap (fun x => grp_homo_compose (pr1 x) f) a).
+      rewrite (transport_sigma _ _).
+      unfold pr1.
+      rewrite (transport_lemma _ _).
+      rewrite (eissect _ f).
+      srapply equiv_path_grouphomomorphism; intro x; simpl.
+      rewrite (eissect f x).
+      reflexivity. }
+    all: intro; apply path_ishprop.
+Defined.
 
 Section Cosets.
 
