@@ -25,7 +25,7 @@ Defined.
 Definition issig_issubgroup G H : _ <~> IsSubgroup G H
   := ltac:(issig).
 
-Global Instance issubgroup_ishset `{U : Univalence} {G H : Group}
+Global Instance ishset_issubgroup `{U : Univalence} {G H : Group}
   : IsHSet (IsSubgroup G H).
 Proof.
   srapply (equiv_transport IsHSet {g : G $-> H & IsInjective g} (IsSubgroup G H)).
@@ -60,11 +60,13 @@ Proof.
 Defined.
 
 (* Useful shorthand for the inclusion of a subgroup. *)
-Definition subgroup_incl (H G : Group) `{S : !IsSubgroup H G}
+Definition subgrp_incl (H G : Group) `{S : !IsSubgroup H G}
   : H $-> G := @issubgroup_incl H G S.
 
-(** The trivial subgroup. *)
-Global Instance issubgroup_grp_trivial {G : Group}
+
+(** ** The trivial subgroup. *)
+
+Definition issubgroup_grp_trivial {G : Group}
   : IsSubgroup grp_trivial G.
 Proof.
   srapply Build_IsSubgroup.
@@ -72,9 +74,9 @@ Proof.
   - intros x y; induction x, y; reflexivity.
 Defined.
 
-(** Should be named subgrp_trivial or subgroup_trivial? *)
-Definition subgroup_trivial {G : Group} : Subgroup G
-  := Build_Subgroup G grp_trivial _.
+Definition subgrp_trivial {G : Group} : Subgroup G
+  := Build_Subgroup G grp_trivial issubgroup_grp_trivial.
+
 
 (** ** Characterization of paths between subgroups *)
 
@@ -90,7 +92,7 @@ Defined.
 
 Proposition equiv_path_subgroup `{U : Univalence} {G : Group} (H K : Subgroup G)
   : (exists p : GroupIsomorphism H K,
-        subgroup_incl H G = (subgroup_incl K G) $o p)
+        subgrp_incl H G = (subgrp_incl K G) $o p)
       <~> H = K.
 Proof.
   pose (phi := (equiv_ap' (@issig_subgroup' G)^-1 H K)).
@@ -103,9 +105,9 @@ Proof.
     srapply path_sigma_hprop.
     + refine (transport_lemma _ _ @ _).
       srapply equiv_path_grouphomomorphism; intro x.
+      rewrite (eissect _ f).
       unfold pr1.
-      rewrite (eissect _ f); simpl.
-      unfold subgroup_incl in q.
+      unfold subgrp_incl in q.
       rewrite q; simpl.
       rewrite (eisretr  _ x).
       reflexivity.
@@ -122,6 +124,22 @@ Proof.
       reflexivity. }
     all: intro; apply path_ishprop.
 Defined.
+
+Local Existing Instance iscontr_grp_hom_trivial.
+Local Existing Instance ishprop_grp_iso_trivial.
+
+Corollary ishprop_path_trivial `{U : Univalence} {G : Group} {H : Subgroup G}
+  : IsHProp (H = subgrp_trivial).
+Proof.
+  rapply (equiv_transport IsHProp _ _).
+  - rapply (equiv_equiv_path _ _)^-1%equiv.
+    exact (equiv_path_subgroup H subgrp_trivial).
+  - intros [f p] [g q].
+    rapply contr_inhabited_hprop.
+    apply equiv_path_sigma_hprop; cbn; clear p; clear q.
+    apply path_ishprop.
+Defined.
+
 
 Section Cosets.
 

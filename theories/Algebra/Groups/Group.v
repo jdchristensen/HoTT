@@ -350,7 +350,8 @@ Proof.
   all: intro; apply negate_involutive.
 Defined.
 
-(** Trivial group *)
+(** ** The trivial group *)
+
 Definition grp_trivial : Group.
 Proof.
   refine (Build_Group Unit (fun _ _ => tt) tt (fun _ => tt) _).
@@ -371,6 +372,27 @@ Proof.
   snrapply Build_GroupHomomorphism.
   1: exact (fun _ => tt).
   intros ??; symmetry; apply left_identity.
+Defined.
+
+(** *** Properties of morphisms to and from the trivial group. *)
+
+Definition iscontr_grp_hom_trivial `{Univalence} {G : Group}
+  : Contr (GroupHomomorphism G grp_trivial).
+Proof.
+  srapply Build_Contr.
+  1: exact grp_homo_const.
+  intro g.
+  apply equiv_path_grouphomomorphism; intro.
+  apply path_ishprop.
+Defined.
+
+Definition ishprop_grp_iso_trivial `{Univalence} {G : Group}
+  : IsHProp (GroupIsomorphism G grp_trivial).
+Proof.
+  intros f g.
+  rapply contr_inhabited_hprop.
+  1: srapply ishset_groupisomorphism.
+  apply equiv_path_groupisomorphism; intro; apply path_ishprop.
 Defined.
 
 (** * Direct product of group *)
