@@ -410,13 +410,25 @@ Defined.
 Global Instance ishprop_isinjective `{Funext} {A B : Type} `{IsHSet A}
        {f : A -> B} : IsHProp (IsInjective f).
 Proof.
-  unfold IsHProp, IsInjective. (* Unfolds needed for last "path_ishprop". *)
-  intros X Y.
-  srapply Build_Contr.
-  - funext k.
-    funext l.
-    apply path_ishprop.
-  - apply path_ishprop.
+  unfold IsInjective.
+  exact _.
+Defined.
+(* jdc: This is trunc_forall.  The typeclass search doesn't find it unless
+you unfold IsInjective.  Not sure whether it is good practice to
+include this redundant typeclass instance, or whether there is a way
+to give Coq a hint to apply trunc_forall when faced with a goal of the form
+IsTrunc n (IsInjective f). ...  Yes, the following works:
+*)
+
+(*Hint Extern 10 (IsTrunc _ (IsInjective _)) => apply @trunc_forall : typeclass_instances.*)
+(*Hint Extern 10 (IsTrunc _ (IsInjective _)) => unfold IsInjective : typeclass_instances.*)
+Hint Extern 10 (IsInjective _) => unfold IsInjective : typeclass_instances.
+(* All three of these options work.  Maybe the last one is more useful in general?
+   Not sure about the "10", or whether there might be negative side effects of this. *)
+
+Definition test `{Funext} {A B : Type} `{IsHSet A}
+       {f : A -> B} : IsHProp (IsInjective f).
+exact _.
 Defined.
 
 End extras.

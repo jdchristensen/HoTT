@@ -1,4 +1,5 @@
 Require Import HoTT.Basics HoTT.Types.
+Require Import HProp.
 Require Import PathAny.
 Require Export Classes.interfaces.abstract_algebra.
 Require Export Classes.theory.groups.
@@ -376,6 +377,8 @@ Defined.
 
 (** *** Properties of morphisms to and from the trivial group. *)
 
+(* jdc: this should be changed to contr_.  It's an exception to the usual rule. *)
+(* Oh, it's already later in the file: contr_grp_homo_trivial_target *)
 Definition iscontr_grp_hom_trivial `{Univalence} {G : Group}
   : Contr (GroupHomomorphism G grp_trivial).
 Proof.
@@ -386,12 +389,13 @@ Proof.
   apply path_ishprop.
 Defined.
 
+(* I guess this should be moved to after contr_grp_homo_trivial_target *)
 Definition ishprop_grp_iso_trivial `{Univalence} {G : Group}
   : IsHProp (GroupIsomorphism G grp_trivial).
 Proof.
+(* jdc: this step doesn't rely on group isos being sets: *)
+  apply equiv_hprop_allpath.
   intros f g.
-  rapply contr_inhabited_hprop.
-  1: srapply ishset_groupisomorphism.
   apply equiv_path_groupisomorphism; intro; apply path_ishprop.
 Defined.
 

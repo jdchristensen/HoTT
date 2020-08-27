@@ -79,26 +79,26 @@ Proof.
   snrapply Build_GroupHomomorphism.
   - exact (fun x:G => (g x; h x)).
   - intros x x'.
-    apply equiv_path_sigma_hprop; cbn.
-    exact (grp_homo_op _ _ _).
+    apply path_sigma_hprop; cbn.
+    apply grp_homo_op.
 Defined.
 
+(* jdc: Above you use == but below you use =.  Maybe better to be consistent? *)
 Theorem equiv_grp_kernel_corec `{Funext} {A B G : Group} {f : A $-> B}
   : (G $-> grp_kernel f) <~> (exists g : G $-> A, f $o g = grp_homo_const).
 Proof.
-  srapply Build_Equiv.
+  srapply equiv_adjointify.
   - intro k; refine (subgrp_incl _ _ $o k; _).
     srapply equiv_path_grouphomomorphism; intro x; cbn.
     exact (k x).2.
-  - srapply isequiv_adjointify.
-    + intros [g p].
-      exact (grp_kernel_corec (equiv_path_grouphomomorphism^-1%equiv p)).
-    + intros [g p].
-      apply equiv_path_sigma_hprop.
-      apply equiv_path_grouphomomorphism; intro; reflexivity.
-    + intro k.
-      apply equiv_path_grouphomomorphism; intro x.
-      apply equiv_path_sigma_hprop; reflexivity.
+  - intros [g p].
+    exact (grp_kernel_corec (equiv_path_grouphomomorphism^-1%equiv p)).
+  - intros [g p].
+    apply path_sigma_hprop; unfold pr1.
+    apply equiv_path_grouphomomorphism; intro; reflexivity.
+  - intro k.
+    apply equiv_path_grouphomomorphism; intro x.
+    apply path_sigma_hprop; reflexivity.
 Defined.
 
 
@@ -106,40 +106,56 @@ Defined.
 
 Local Existing Instance ishprop_path_trivial.
 
+(* jdc: There are tons of similar things in PathGroupoids.v that could be
+adapted to groups.  But maybe that's a job for another time.  You need this
+one and its inverse: *)
+Lemma group_moveL_1M {G : Group} (x y : G)
+  : x * (-y) = mon_unit -> x = y.
+Proof.
+  intro p.
+  apply (group_cancelR (- y)).
+  exact (p @ (right_inverse y)^).
+Defined.
+
 Proposition equiv_kernel_isembedding `{Univalence} {A B : Group} (f : A $-> B)
   : (grp_kernel f = subgrp_trivial) <~> IsEmbedding f.
 Proof.
-  srapply Build_Equiv.
+  srapply equiv_iff_hprop.
   - intros phi b; unfold hfiber.
     apply ishprop_sigma_disjoint.
     intros a a' p q.
-    rewrite <- q in p.
-    pose (P := ap (fun g => g *  -(f a')) p); cbn in P.
+    pose (P := ap (fun g => g *  -(f a')) (p @ q^)); cbn in P.
     rewrite right_inverse in P.
     rewrite <- (grp_homo_inv f) in P.
     rewrite <- (grp_homo_op f) in P.
     apply (group_cancelR (- a')).
     refine (_ @ (right_inverse a')^).
     pose (z := (a * -a'; P) : grp_kernel f).
-    change (a * -a') with (pr1 z).
     pose (m := (mon_unit; grp_homo_unit f) : grp_kernel f).
-    change mon_unit with (pr1 m).
-    apply (ap pr1).
-    apply (equiv_ap' (equiv_path _ _ (ap (@group_type o (subgroup_group A)) phi))).
+(* jdc: Your way is fine, but this is a bit shorter.  You could even embed the definitions
+of z and m here, but since they don't need to be used, maybe this way is better. *)
+    apply (ap pr1 (x:=z) (y:=m)).
+(* jdc: I had trouble following the equiv_ap' line, and an extra step helps. *)
+    pose (phi' := (ap (@group_type o (subgroup_group A)) phi)); cbn in phi'.
+    apply (equiv_ap' (equiv_path _ _ phi')).
     apply path_ishprop.
-  - srapply isequiv_adjointify.
-    { unfold IsEmbedding.
-      intro isemb_f.
-      srapply equiv_path_subgroup.
-      srefine (grp_iso_inverse _; _).
-      * srapply Build_GroupIsomorphism.
-        -- exact grp_homo_const.
-        -- srapply isequiv_adjointify.
-           1: exact grp_homo_const.
-           all: intro x; apply path_ishprop.
-      * apply equiv_path_grouphomomorphism; intro x; cbn.
-        refine (ap pr1 _ @ _).
-        -- apply path_ishprop.
-        -- exact (idpath (pr1 (mon_unit A; grp_homo_unit f))). }
-    all: intro; apply path_ishprop.
+  - unfold IsEmbedding.
+    intro isemb_f.
+    srapply equiv_path_subgroup.
+    srefine (grp_iso_inverse _; _).
+    * snrapply Build_GroupIsomorphism.
+      -- exact grp_homo_const.
+      -- srapply isequiv_adjointify.
+         1: exact grp_homo_const.
+         all: intro x; apply path_ishprop.
+    * apply equiv_path_grouphomomorphism; intro x; cbn.
+(* jdc: It's good to avoid having proofs of the form (foo @ reflexivity) instead of (foo).
+   Here's one way to get Coq to see what you intend. *)
+      refine (ap pr1 (y:=(mon_unit; grp_homo_unit f)) _).
+      apply path_ishprop.
+(* Alteratively:
+      change mon_unit with (pr1 ((mon_unit; grp_homo_unit f) : grp_kernel f)).
+      apply (ap pr1).
+      apply path_ishprop.
+*)
 Defined.
