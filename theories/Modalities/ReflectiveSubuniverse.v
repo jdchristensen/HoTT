@@ -1346,6 +1346,7 @@ Section ModalMaps.
     refine (inO_equiv_inO (B a) (hfiber_fibration a B)).
   Defined.
 
+
   (** A slightly specialized result: if [Empty] is modal, then a map with decidable hprop fibers (such as [inl] or [inr]) is modal. *)
   Global Instance mapinO_hfiber_decidable_hprop {A B : Type} (f : A -> B)
          `{In O Empty}
@@ -1364,6 +1365,16 @@ Section ModalMaps.
   : IsHProp (MapIn O f).
   Proof.
     apply trunc_forall.
+  Defined.
+
+  Lemma equiv_forall_inO_mapinO_pr1 `{Funext} {A : Type} {B : A -> Type}
+    : (forall a, In O (B a)) <~> MapIn O (@pr1 A B).
+  Proof.
+    apply equiv_iff_hprop.
+    - intro f; apply mapinO_pr1.
+    - apply functor_forall_id; intros a inO.
+      srapply inO_equiv_inO'.
+      exact (hfiber_fibration a B)^-1%equiv.
   Defined.
 
   (** Any map between modal types is modal. *)
@@ -1497,6 +1508,17 @@ Section ConnectedMaps.
   : IsHProp (IsConnMap O f).
   Proof.
     apply trunc_forall.
+  Defined.
+
+  (** *** TODO: Avoid univalence, if possible. *)
+  Lemma equiv_forall_isconnmap_pr1 `{Univalence} {A : Type} {B : A -> Type}
+    : (forall a, Contr (O (B a))) <~> IsConnMap O (@pr1 A B).
+  Proof.
+    apply equiv_functor_forall_id; intro a. unfold IsConnected.
+    apply equiv_path.
+    apply (ap (Contr o O)).
+    apply (equiv_equiv_path _ _)^-1%equiv.
+    exact (hfiber_fibration a B).
   Defined.
 
   (** Connected maps are orthogonal to modal maps (i.e. familes of modal types). *)
