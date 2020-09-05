@@ -16,7 +16,7 @@ Proposition iff_isprojective_surjections_split (X : Type)
     (forall (Y : Type), forall (p : Y -> X),
           IsSurjection p -> merely (exists s : X -> Y, p o s == idmap)).
 Proof.
-  econstructor.
+  split.
   - intros isprojX Y p S; unfold IsProjective in isprojX.
     exact (isprojX Y X idmap p S).
   - intro splits. unfold IsProjective.

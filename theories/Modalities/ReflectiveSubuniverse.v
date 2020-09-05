@@ -105,17 +105,16 @@ Section Subuniverse.
   : MapIn O (@pr1 A B).
   Proof.
     intros a.
-    refine (inO_equiv_inO (B a) (hfiber_fibration a B)).
+    exact (inO_equiv_inO (B a) (hfiber_fibration a B)).
   Defined.
 
   Lemma equiv_forall_inO_fiber_pr1 `{Funext} {A : Type} (B : A -> Type)
     : (forall a, In O (B a)) <~> MapIn O (@pr1 A B).
   Proof.
-    unfold MapIn; apply equiv_iff_hprop.
-    - intro f; apply mapinO_pr1.
-    - apply functor_forall_id; intros a inO.
-      srapply inO_equiv_inO'.
-      exact (hfiber_fibration a B)^-1%equiv.
+    unfold MapIn.
+    apply equiv_functor_forall_id; intro a.
+    apply inO_equiv_inO''.
+    exact (hfiber_fibration a B).
   Defined.
 
   (** Being a local map is an hprop *)
@@ -1268,11 +1267,9 @@ Section ConnectedTypes.
     := isconnected_equiv A f.
 
   (** The O-connected types form a subuniverse. *)
-  Theorem subuniverse_connected : Subuniverse.
+  Definition Conn : Subuniverse.
   Proof.
-    econstructor. Unshelve.
-    3: exact (IsConnected O).
-    1: intros F T; exact _.
+    rapply (Build_Subuniverse (IsConnected O)).
     simpl; intros T U isconnT f isequivf.
     exact (isconnected_equiv T f isconnT).
   Defined.
@@ -1479,14 +1476,6 @@ Class IsConnMap (O : ReflectiveSubuniverse@{i})
      : forall b:B, IsConnected@{i} O (hfiber@{i i} f b).
 
 Global Existing Instance isconnected_hfiber_conn_map.
-
-Proposition equiv_forall_isconnmap_pr1 `{Funext} (O : ReflectiveSubuniverse) {A : Type} (B : A -> Type)
-  : (forall a, IsConnected O (B a)) <~> IsConnMap O (@pr1 A B).
-Proof.
-  apply equiv_functor_forall_id; intro a.
-  pose (S := subuniverse_connected O).
-  apply (inO_equiv_inO'' (subuniverse_connected O) (hfiber_fibration a B)).
-Defined.
 
 Section ConnectedMaps.
   Context `{Univalence} `{Funext}.
