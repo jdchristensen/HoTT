@@ -45,7 +45,7 @@ Defined.
 Definition Choice (X : Type) : Type := forall P : X -> Type,
     (forall x, merely (P x)) -> merely (forall x, P x).
 
-Proposition equiv_isprojective_choice `{Univalence} (X : Type)
+Proposition equiv_isprojective_choice `{Funext} (X : Type)
   : IsProjective X <~> Choice X.
 Proof.
   refine (_ oE equiv_isprojective_surjections_split X).
@@ -77,7 +77,6 @@ Proof.
   exact S.
 Defined.
 
-(** *** Ideally I think this section should live in HSet.v, but I can't get the imports to work. *)
 Section AC_oo_neg1.
   (** ** Projectivity and AC_(oo,-1) (defined in HoTT book, Exercise 7.8) *)
   (* TODO: Generalize to n, m. *)

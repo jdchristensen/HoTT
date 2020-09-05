@@ -589,8 +589,7 @@ Proof.
       exact (tr (sum_ind P IH (Unit_ind e))).
 Defined.
 
-(** *TODO Avoid univalence. *)
-Corollary isprojective_fin_n `{Univalence} (n : nat) : IsProjective (Fin n).
+Corollary isprojective_fin_n `{Funext} (n : nat) : IsProjective (Fin n).
 Proof.
   apply (equiv_isprojective_choice (Fin n))^-1.
   rapply finite_choice.

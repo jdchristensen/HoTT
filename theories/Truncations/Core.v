@@ -192,11 +192,10 @@ Proof.
 Defined.
 
 (** A family of types is pointwise merely inhabited if and only if the corresponding fibration is surjective. *)
-(** * TODO Avoid univalence if equiv_forall_isconnmap_pr1 can. *)
-Lemma equiv_merely_issurjection `{Univalence} {X : Type} (P : X -> Type)
+Lemma equiv_merely_issurjection `{Funext} {X : Type} (P : X -> Type)
   : (forall x, merely (P x)) <~> IsSurjection (pr1 : {x : X & P x} -> X).
 Proof.
-  refine (equiv_forall_isconnmap_pr1 _ oE _).
+  refine (equiv_forall_isconnmap_pr1 _ _ oE _).
   apply equiv_functor_forall_id; intro x.
   exact (equiv_contr_hprop _)^-1%equiv.
 Defined.
