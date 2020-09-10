@@ -192,12 +192,30 @@ Proof.
 Defined.
 
 (** A family of types is pointwise merely inhabited if and only if the corresponding fibration is surjective. *)
+Lemma iff_merely_issurjection {X : Type} (P : X -> Type)
+  : (forall x, merely (P x)) <-> IsSurjection (pr1 : {x : X & P x} -> X).
+Proof.
+  apply iff_functor_forall; intro a.
+  split.
+  - intro mPa.
+    rapply contr_inhabited_hprop.
+    revert mPa; apply Trunc_rec; intro Pa. (* strip merely *)
+    exact (tr ((a; Pa); idpath)).
+  - intros [z _].
+    revert z; apply Trunc_rec; intros [[x Px] p]. (* strip merely *)
+    exact (tr (p # Px)).
+Defined.
+
+(** Under Funext the two sides of iff_merely_issurjection are hprops, giving us an equivalence. *)
 Lemma equiv_merely_issurjection `{Funext} {X : Type} (P : X -> Type)
   : (forall x, merely (P x)) <~> IsSurjection (pr1 : {x : X & P x} -> X).
 Proof.
-  refine (equiv_forall_inO_mapinO_pr1 (Conn _) _ oE _).
-  apply equiv_functor_forall_id; intro x.
-  exact (equiv_contr_hprop _)^-1%equiv.
+  apply equiv_iff_hprop_uncurried.
+  apply iff_merely_issurjection.
+  (* Alternative proof:
+     refine (equiv_forall_inO_mapinO_pr1 (Conn _) _ oE _).
+     apply equiv_functor_forall_id; intro x.
+     exact (equiv_contr_hprop _)^-1%equiv. *)
 Defined.
 
 Definition isequiv_surj_emb {A B} (f : A -> B)

@@ -1623,9 +1623,9 @@ End Book_7_1.
 Section Book_7_9.
   (** Solution for the case (oo,-1). *)
 
-  Axiom AC_oo_neg1 : forall X : hSet, Choice X.
+  Context `{Univalence} (AC_oo_neg1 : forall X : hSet, Choice X).
 
-  Definition Book_7_9_oo_neg1 `{Univalence} (A : Type)
+  Definition Book_7_9_oo_neg1 (A : Type)
     : merely (exists X : hSet, exists p : X -> A, IsSurjection p)
     := @HoTT.Projective.projective_cover_AC AC_oo_neg1 _ A.
 
