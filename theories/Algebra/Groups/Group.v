@@ -1,5 +1,5 @@
 Require Import HoTT.Basics HoTT.Types.
-Require Import HProp.
+Require Import HProp HFiber.
 Require Import PathAny.
 Require Export Classes.interfaces.abstract_algebra.
 Require Export Classes.theory.groups.
@@ -420,6 +420,18 @@ Proof.
   srapply isequiv_adjointify.
   1: apply (-).
   all: intro; apply negate_involutive.
+Defined.
+
+(** Given a group element a0:A over b:B, multiplication by a establishes an equivalence between the kernel and the fiber over b. *)
+Lemma equiv_grp_hfiber {A B : Group} (f : GroupHomomorphism A B) (b : B)
+  : forall (a0 : hfiber f b), hfiber f b <~> hfiber f mon_unit.
+Proof.
+  intros [a0 p].
+  refine (equiv_transport (hfiber f) _ _ (right_inverse b) oE _).
+  rapply (equiv_functor_hfiber (h:=right_mult_equiv (-a0)) (k:=right_mult_equiv (- b))).
+  intro a; cbn; symmetry.
+  refine (_ @ ap (fun x => f a * (- x)) p).
+  exact (grp_homo_op f _ _ @ ap (fun x => f a * x) (grp_homo_inv f a0)).
 Defined.
 
 (** ** The trivial group *)

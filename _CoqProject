@@ -365,6 +365,9 @@ theories/Algebra/Groups/FreeGroup.v
 theories/Algebra/Groups/FreeGroup/ListQuotient.v
 theories/Algebra/Groups/FreeGroup/LoopSusp.v
 
+theories/Algebra/Ext.v
+theories/Algebra/Ext/Ext.v
+
 #
 #   Tactics
 #
