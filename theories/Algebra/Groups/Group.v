@@ -26,11 +26,12 @@ Record Group := {
   group_isgroup : IsGroup group_type;
 }.
 
-Arguments group_type {_}.
 Arguments group_sgop {_}.
 Arguments group_unit {_}.
 Arguments group_inverse {_}.
 Arguments group_isgroup {_}.
+(** We never need to unfold the proof that something is a group *)
+Opaque group_isgroup.
 
 (** We coerce groups back to types. *)
 Coercion group_type : Group >-> Sortclass.
@@ -356,6 +357,22 @@ Proof.
   repeat split; try exact _; by intros [].
 Defined.
 
+(** Map out of trivial group *)
+Definition grp_trivial_rec (G : Group) : GroupHomomorphism grp_trivial G.
+Proof.
+  snrapply Build_GroupHomomorphism.
+  1: exact (fun _ => group_unit).
+  intros ??; symmetry; apply left_identity.
+Defined.
+
+(** Map into trivial group *)
+Definition grp_trivial_corec (G : Group) : GroupHomomorphism G grp_trivial.
+Proof.
+  snrapply Build_GroupHomomorphism.
+  1: exact (fun _ => tt).
+  intros ??; symmetry; apply left_identity.
+Defined.
+
 (** * Direct product of group *)
 
 Definition grp_prod : Group -> Group -> Group.
@@ -497,10 +514,7 @@ Defined.
 Global Instance isinitial_grp_trivial : IsInitial grp_trivial.
 Proof.
   intro G.
-  snrefine (_;_).
-  { snrapply Build_GroupHomomorphism.
-    1: exact (fun _ => group_unit).
-    intros ??; symmetry; apply left_identity. }
+  exists (grp_trivial_rec _).
   intros g [].
   apply (grp_homo_unit g).
 Defined.
@@ -509,7 +523,7 @@ Global Instance contr_grp_homo_trivial_source `{Funext} G
   : Contr (GroupHomomorphism grp_trivial G).
 Proof.
   snrapply Build_Contr.
-  1: exact (pr1 (isinitial_grp_trivial _)).
+  1: exact (grp_trivial_rec _).
   intros g.
   rapply equiv_path_grouphomomorphism.
   intros [].
@@ -520,10 +534,7 @@ Defined.
 Global Instance isterminal_grp_trivial : IsTerminal grp_trivial.
 Proof.
   intro G.
-  snrefine (_;_).
-  { snrapply Build_GroupHomomorphism.
-    1: exact (fun _ => tt).
-    intros ??; symmetry; apply left_identity. }
+  exists (grp_trivial_corec _).
   intros g x.
   apply path_contr.
 Defined.
@@ -538,3 +549,24 @@ Proof.
   intros x.
   apply path_contr.
 Defined.
+
+(** ** Free groups *)
+
+Definition FactorsThroughFreeGroup (S : Type) (F_S : Group)
+  (i : S -> F_S) (A : Group) (g : S -> A) : Type
+  := {f : F_S $-> A & f o i == g}.
+
+(** Universal property of a free group on a set (type). *)
+Class IsFreeGroupOn (S : Type) (F_S : Group) (i : S -> F_S)
+  := contr_isfreegroupon : forall (A : Group) (g : S -> A),
+      Contr (FactorsThroughFreeGroup S F_S i A g).
+Global Existing Instance contr_isfreegroupon.
+
+(** A group is free if there exists a generating type on which it is a free group *)
+Class IsFreeGroup (F_S : Group)
+  := isfreegroup : {S : _ & {i : _ & IsFreeGroupOn S F_S i}}.
+
+Global Instance isfreegroup_isfreegroupon (S : Type) (F_S : Group) (i : S -> F_S)
+  {H : IsFreeGroupOn S F_S i}
+  : IsFreeGroup F_S
+  := (S; i; H).

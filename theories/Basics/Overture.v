@@ -4,6 +4,9 @@
 (** Import the file of reserved notations so we maintain consistent level notations throughout the library *)
 Require Export Basics.Notations.
 
+(** Currently, Coq 8.12 complains when we use the numeral notations from the Decimal module. Since we only use a copy of the real standard library we will supress this warning. In the future, our copy of the standard library will be completely removed together with this warning. *)
+Global Set Warnings "-decimal-numeral-notation".
+
 (** ** Type classes *)
 
 (** This command prevents Coq from trying to guess the values of existential variables while doing typeclass resolution.  If you don't know what that means, ignore it. *)
@@ -263,7 +266,7 @@ Proof.
   intros y p.
   destruct p.
   exact u.
-Defined.                                  
+Defined.
 
 (** We declare a scope in which we shall place path notations. This way they can be turned on and off by the user. *)
 
@@ -660,17 +663,15 @@ Global Arguments path_forall {_ A%type_scope P} (f g)%function_scope _.
    The hints in [path_hints] are designed to push concatenation *outwards*, eliminate identities and inverses, and associate to the left as far as  possible. *)
 
 (** TODO: think more carefully about this.  Perhaps associating to the right would be more convenient? *)
-Hint Resolve
-  @idpath @inverse
- : path_hints.
-
-Hint Resolve @idpath : core.
+Hint Resolve idpath inverse : path_hints.
+Hint Resolve idpath : core.
 
 Ltac path_via mid :=
   apply @concat with (y := mid); auto with path_hints.
 
 (** We put [Empty] here, instead of in [Empty.v], because [Ltac done] uses it. *)
 Inductive Empty : Type0 := .
+Register Empty as core.False.type.
 
 Scheme Empty_ind := Induction for Empty Sort Type.
 Scheme Empty_rec := Minimality for Empty Sort Type.
@@ -708,7 +709,9 @@ Definition Unit_rect := Unit_ind.
 Hint Resolve tt : core.
 
 Register Unit as core.IDProp.type.
+Register Unit as core.True.type.
 Register tt as core.IDProp.idProp.
+Register tt as core.True.I.
 
 (** *** Pointed types *)
 

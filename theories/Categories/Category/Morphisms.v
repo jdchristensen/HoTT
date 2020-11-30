@@ -148,7 +148,7 @@ Section iso_contr.
   Qed.
 
   (** *** Equality between isomorphisms is equivalent to by equality between their forward components *)
-  Global Instance isequiv_path_isomorphic
+  Global Instance isequiv_path_isomorphic {i j}
   : IsEquiv (path_isomorphic i j).
   Proof.
     intros.
@@ -374,7 +374,10 @@ Section EpiMono.
   End iso.
 End EpiMono.
 
-Hint Immediate @isepimorphism_identity @ismonomorphism_identity @ismonomorphism_compose @isepimorphism_compose : category morphism.
+Hint Immediate
+  isepimorphism_identity ismonomorphism_identity
+  ismonomorphism_compose isepimorphism_compose
+  : category morphism.
 
 (** ** Lemmas about [idtoiso] *)
 Section iso_lemmas.

@@ -159,9 +159,6 @@ Defined.
 
 Hint Immediate istruncmap_mapinO_tr : typeclass_instances.
 
-(** It's sometimes convenient to use "infinity" to refer to the identity modality in a similar way.  This clashes with some uses in higher topos theory, where "oo-truncated" means instead "hypercomplete", but this has not yet been a big problem. *)
-Notation oo := purely.
-
 (** ** A few special things about the (-1)-truncation. *)
 
 Local Open Scope trunc_scope.
@@ -192,6 +189,21 @@ Definition BuildIsSurjection {A B} (f : A -> B)
 Proof.
   intros H b; refine (contr_inhabited_hprop _ _).
   apply H.
+Defined.
+
+(** A family of types is pointwise merely inhabited if and only if the corresponding fibration is surjective. *)
+Lemma iff_merely_issurjection {X : Type} (P : X -> Type)
+  : (forall x, merely (P x)) <-> IsSurjection (pr1 : {x : X & P x} -> X).
+Proof.
+  refine (iff_compose _ (iff_forall_inO_mapinO_pr1 (Conn _) P)).
+  apply iff_functor_forall; intro a.
+  symmetry; apply (iff_contr_hprop (Tr (-1) (P a))).
+Defined.
+
+Lemma equiv_merely_issurjection `{Funext} {X : Type} (P : X -> Type)
+  : (forall x, merely (P x)) <~> IsSurjection (pr1 : {x : X & P x} -> X).
+Proof. (* Can also be proved from equiv_forall_inO_mapinO_pr1. *)
+  exact (equiv_iff_hprop_uncurried (iff_merely_issurjection P)).
 Defined.
 
 Definition isequiv_surj_emb {A B} (f : A -> B)
