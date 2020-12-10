@@ -32,7 +32,7 @@ Definition leq_card `{Univalence} : Card -> Card -> hProp.
 Proof.
   refine (Trunc_rec (fun a => _)).
   refine (Trunc_rec (fun b => _)).
-  refine (hexists (fun (i : a -> b) => isinj i)).
+  refine (hexists (fun (i : a -> b) => IsInjective i)).
 Defined.
 
 (** ** Properties *)

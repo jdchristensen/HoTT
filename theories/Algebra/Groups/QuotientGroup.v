@@ -138,6 +138,8 @@ Section QuotientGroup.
     intros ??; reflexivity.
   Defined.
 
+  (** ** Corecursion principle for group quotients *)
+
   Definition grp_quotient_rec {A : Group} (f : G $-> A)
     (h : forall n : N, f (issubgroup_incl n) = mon_unit) : QuotientGroup $-> A.
   Proof.
@@ -180,7 +182,7 @@ Proof.
   apply equiv_path_grouphomomorphism; reflexivity.
 Defined.
 
-(** The proof of normality is irrelevent up to equivalence. This is unfortunate that it doesn't hold definitionally. *)
+(** The proof of normality is irrelevant up to equivalence. *)
 Definition grp_iso_quotient_normal (G : Group) (H : Group) `{IsSubgroup H G}
   {k k' : @IsNormalSubgroup H G _}
   : GroupIsomorphism (@QuotientGroup G H _ k) (@QuotientGroup G H _ k').
@@ -194,7 +196,7 @@ Proof.
 Defined.
 
 (** The universal mapping property for groups *)
-Theorem equiv_grp_quotient_ump {F : Funext} {G : Group} (N : Subgroup G) (H : Group) `{IsNormalSubgroup N G}
+Theorem equiv_grp_quotient_rec {F : Funext} {G : Group} (N : Subgroup G) (H : Group) `{IsNormalSubgroup N G}
   : {f : G $-> H & forall (n : N), f (issubgroup_incl n) = mon_unit} <~> (G / N $-> H).
 Proof.
   srapply equiv_adjointify.
