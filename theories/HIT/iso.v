@@ -11,10 +11,10 @@ Section iso.
   Variables X Y : hSet.
   Variable f : X -> Y.
 
-  Lemma atmost1P_isinj (injf : isinj f)
+  Lemma atmost1P_isinj (injf : IsInjective f)
   : forall y : Y, atmost1P (fun x => f x = y).
   Proof.
-    unfold isinj, atmost1P in *.
+    unfold IsInjective, atmost1P in *.
     intros.
     apply injf.
     path_induction.

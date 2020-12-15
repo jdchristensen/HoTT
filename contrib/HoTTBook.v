@@ -1861,7 +1861,7 @@ Definition Book_9_8_2 := @HoTT.Categories.Structure.IdentityPrinciple.structure_
 (** Lemma 10.1.1 *)
 
 (** The third notion in the book is called embedding. No complete equivalence yet, but see:*)
-Definition Book_10_1_1_iii := @HSet.isinj_embedding.
+Definition Book_10_1_1_iii := @Types.Arrow.isinj_embedding.
 
 (* ================================================== thm:inj-mono *)
 (** Lemma 10.1.2 *)

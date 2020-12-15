@@ -255,3 +255,35 @@ Definition equiv_isequiv_ap_isembedding `{Funext} {A B} (f : A -> B)
 Proof.
   exact (equiv_iff_hprop (@isequiv_ap_isembedding _ _ f) (@isembedding_isequiv_ap _ _ f)).
 Defined.
+
+Lemma ap_isinj_embedding_beta {X Y : Type} (f : X -> Y) {I : IsEmbedding f} {x0 x1 : X}
+  : forall (p : f x0 = f x1), ap f (isinj_embedding f I x0 x1 p) = p.
+Proof.
+  equiv_intro (equiv_ap_isembedding f x0 x1) q.
+  induction q. cbn.
+  refine (ap _ _ @ _).
+  - exact (isinj_embedding_beta f).
+  - apply ap_1.
+Defined.
+
+(** If g : Y -> Z is an embedding, then post-composition by g induces an equivalence of fibres for any function f : X -> Y and point y : Y. *)
+Lemma equiv_hfiber_embedding {X Y Z : Type} {f : X -> Y} (g : Y -> Z) (y : Y) {I : IsEmbedding g}
+  : hfiber f y <~> hfiber (g o f) (g y).
+Proof.
+  srapply Build_Equiv.
+  - intros [x p]; exact (x; ap g p).
+  - srapply isequiv_adjointify.
+    + intros [x p]; exists x.
+      rapply isinj_embedding.
+      exact p.
+    + cbn. intros [x p].
+      apply equiv_path_sigma.
+      exists idpath; cbn.
+      apply ap_isinj_embedding_beta.
+    + cbn. intros [x p].
+      rapply equiv_path_sigma; exists 1; cbn.
+      (* jarlg: This point onwards could be a lemma / beta-type rule. *)
+      induction p.
+      refine (ap _ (ap_1 _ g) @ _).
+      apply isinj_embedding_beta.
+Defined.

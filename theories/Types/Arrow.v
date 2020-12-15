@@ -221,3 +221,32 @@ Proof.
     + apply inl; intros x1.
       elim (y1 x1).
 Defined.
+
+(** ** Injectivity *)
+
+Definition IsInjective {X Y} (f : X -> Y)
+  := forall x0 x1 : X, f x0 = f x1 -> x0 = x1.
+
+Lemma isinj_embedding {A B : Type} (m : A -> B) : IsEmbedding m -> IsInjective m.
+Proof.
+  intros ise x y p.
+  pose (ise (m y)).
+  assert (q : (x;p) = (y;idpath) :> hfiber m (m y)) by apply path_ishprop.
+  exact (ap pr1 q).
+Defined.
+
+(** Computation rules for isinj_embedding. *)
+Lemma isinj_embedding_beta {X Y : Type} (f : X -> Y) {I : IsEmbedding f} {x : X}
+  : (isinj_embedding f I x x idpath) = idpath.
+Proof.
+  exact (ap (ap pr1) (contr (idpath : (x;idpath) = (x;idpath)))).
+Defined.
+
+Definition isinj_section {A B : Type} {s : A -> B} {r : B -> A}
+      (H : r o s == idmap) : IsInjective s.
+Proof.
+  intros a a' alpha.
+  exact ((H a)^ @ ap r alpha @ H a').
+Defined.
+
+        
