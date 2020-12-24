@@ -1,6 +1,6 @@
 (* -*- mode: coq; mode: visual-line -*- *)
 Require Import HoTT.Basics HoTT.Types.
-Require Import HFiber PathAny Cubical.PathSquare.
+Require Import HSet HFiber PathAny Cubical.PathSquare.
 Require Import Diagrams.CommutativeSquares.
 
 Local Open Scope path_scope.
@@ -372,17 +372,3 @@ Section Pasting.
   Defined.
 
 End Pasting.
-
-(** The corec-induced map into a pullback of sets is an embedding if one of the inducing maps is one. *)
-Lemma isembedding_pullback_corec_embedding {A B C X : hSet} {f : B -> A} {g : C -> A}
-         {xb : X -> B} {xc : X -> C} {h : f o xb == g o xc} `{IsEmbedding xb}
-  : IsEmbedding (pullback_corec h).
-(* jarlg: I'm sure this is true more generally, but this is what I need. You could argue it should be moved elsewhere since it pertains to h-sets, but it's not too bad here either (and serves as a placeholder for a more general statement). *)
-Proof.
-  intros [b [c p]].
-  apply hprop_allpath.
-  intros [x0 px0] [x1 px1].
-  apply equiv_path_sigma_hprop.
-  apply (equiv_ap_isembedding xb x0 x1)^-1%equiv.
-  exact (ap pr1 px0 @ (ap pr1 px1)^).
-Defined.

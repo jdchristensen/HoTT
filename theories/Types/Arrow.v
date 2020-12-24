@@ -249,4 +249,10 @@ Proof.
   exact ((H a)^ @ ap r alpha @ H a').
 Defined.
 
-        
+Lemma cancelL_isinjective {A B C : Type} {f : A -> B} {g : B -> C} `{I : IsInjective (g o f)}
+  : IsInjective f.
+Proof.
+  intros a0 a1 p.
+  apply I.
+  exact (ap g p).
+Defined.

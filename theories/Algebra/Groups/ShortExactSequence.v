@@ -57,7 +57,7 @@ Proof.
     rapply (transport IsHProp (x:= hfiber f 0)).
     + apply path_universe_uncurried; symmetry.
       apply equiv_grp_hfiber.
-      exact a; clear a.
+      exact a.
     + apply hprop_allpath.
       intros x y.
       assert (u : Tr (-1) (hfiber (cxfib cx) x)) by apply (conn x).
@@ -90,7 +90,9 @@ Proof.
     unfold IsConnMap in conn.
     apply (transport (IsConnected (Tr (-1))) (x := hfiber (cxfib cx) (b; 1))).
     + apply path_universe_uncurried.
-      srefine (equiv_hfiber_embedding pr1 (b; idpath)).
+      rapply equiv_functor_sigma_id.
+      intro x.
+      rapply (equiv_ap_isembedding pr1).
       apply isembedding_pr1_hset.
     + exact (conn (b; idpath)).
   - intro conn_f.
@@ -99,7 +101,9 @@ Proof.
     apply (@transport _ Contr (Tr (-1) (hfiber f b.1)) (Tr (-1) (hfiber (fun x:A => (f x; idpath)) b))).
     + apply (ap (Tr (-1))).
       apply path_universe_uncurried; symmetry.
-      refine (equiv_hfiber_embedding pr1 b).
+      rapply equiv_functor_sigma_id.
+      intro x.
+      nrapply (equiv_ap_isembedding pr1).
       apply isembedding_pr1_hset.
     + apply conn_f.
 Defined.
@@ -180,7 +184,9 @@ Proof.
   - intro x; exact (ses_cx_B S x @ (grp_homo_unit phi)^).
 
   (** The corec-induced map into the pullback is an embedding, since (ses_i S) is one. *)
-  - rapply isembedding_pullback_corec_embedding.
+  - rapply isembedding_isinj_hset.
+    rapply (cancelL_isinjective (g:=grp_pullback_pr1 (ses_p S) phi)); cbn.
+    apply isinj_embedding.
     apply (equiv_grp_isexact_isembedding (K:=ses_carrier S [4])).
     apply (transport (fun f => IsExact (Tr (-1)) f (ses_i S)) (x:=ses_fn S [3])).
 
