@@ -239,6 +239,7 @@ Defined.
 Lemma isinj_embedding_beta {X Y : Type} (f : X -> Y) {I : IsEmbedding f} {x : X}
   : (isinj_embedding f I x x idpath) = idpath.
 Proof.
+  unfold isinj_embedding.
   exact (ap (ap pr1) (contr (idpath : (x;idpath) = (x;idpath)))).
 Defined.
 
