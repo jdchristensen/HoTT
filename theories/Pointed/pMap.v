@@ -222,3 +222,18 @@ Proof.
     refine (1 @@ ap (ap f) (concat_Vp _) @ _).
     apply concat_p1.
 Defined.
+
+Proposition contr_pmap_from_hprop `{Funext} {X Y : pType} `{IsHProp X}
+  : Contr (X ->* Y).
+Proof.
+    exists pconst.
+    intro f.
+    apply path_pforall.
+    srapply Build_pHomotopy.
+    - intro x.
+      exact ((point_eq f)^ @ ap f (path_ishprop _ x)).
+    - cbn.
+      refine (_ @ (concat_1p _)^).
+      assert (p : path_ishprop (point X) (point X) = idpath) by apply path_ishprop.
+      exact (1 @@ ap (ap f) p @ concat_p1 _).
+Defined.
