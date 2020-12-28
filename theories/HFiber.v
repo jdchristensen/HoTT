@@ -261,7 +261,5 @@ Lemma ap_isinj_embedding_beta {X Y : Type} (f : X -> Y) {I : IsEmbedding f} {x0 
 Proof.
   equiv_intro (equiv_ap_isembedding f x0 x1) q.
   induction q. cbn.
-  refine (ap _ _ @ _).
-  - exact (isinj_embedding_beta f).
-  - apply ap_1.
+  exact (ap _ (isinj_embedding_beta f)).
 Defined.
