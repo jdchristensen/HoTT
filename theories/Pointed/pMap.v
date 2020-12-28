@@ -210,15 +210,15 @@ Defined.
 Proposition contr_pmap_from_contr `{Funext} {X Y : pType} `{Contr X}
   : Contr (X ->* Y).
 Proof.
-    exists pconst.
-    intro f.
-    apply path_pforall.
-    srapply Build_pHomotopy.
-    + intro x.
-      exact ((point_eq f)^ @ contr_dom_equiv f (point _) x).
-    + cbn.
-      refine (_ @ (concat_1p _)^).
-      unfold contr_dom_equiv.
-      refine (1 @@ ap (ap f) (concat_Vp _) @ _).
-      apply concat_p1.
+  exists pconst.
+  intro f.
+  apply path_pforall.
+  srapply Build_pHomotopy.
+  - intro x.
+    exact ((point_eq f)^ @ contr_dom_equiv f (point _) x).
+  - cbn.
+    refine (_ @ (concat_1p _)^).
+    unfold contr_dom_equiv.
+    refine (1 @@ ap (ap f) (concat_Vp _) @ _).
+    apply concat_p1.
 Defined.
