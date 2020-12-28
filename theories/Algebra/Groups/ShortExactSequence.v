@@ -38,13 +38,10 @@ Local Existing Instance ishprop_isexact_hset.
 
 (** For a pointed set Y and a function f : X -> Y, the projection map from the fibre to X is an embedding. *)
 (* jarlg: This is mapinO_pr1, with some juggling. Can't be placed in HSet.v or HFiber.v due to dependencies. Could be inlined using rapply, but that takes a second to resolve. So a lemma seems justified, but where should it be placed? *)
-Lemma isembedding_pr1_hset `{Funext} {X Y : hSet} (f : X -> Y) (y : Y)
+Lemma isembedding_pr1_hset `{Funext} {X : Type} {Y : hSet} (f : X -> Y) (y : Y)
   : IsEmbedding (pr1 : hfiber f y -> X).
 Proof.
-  (* jarlg: rapply here works, but it's faster to give the whole proof. *)
-  nrapply (snd (iff_forall_inO_mapinO_pr1 (Tr (-1)) _)).
-  apply mapinO_pr1.
-  exact inO_hfiber_ino_map.
+  rapply istruncmap_mapinO_tr.
 Defined.
 
 (* jarlg: Changed to (-1)-exactness from pure exactness since it's what I want to use in practice. I didn't find converting from pure exactness to (-1)-exactness easy inline (or even as a standalone proof). *)
@@ -58,15 +55,13 @@ Proof.
     + apply path_universe_uncurried; symmetry.
       apply equiv_grp_hfiber.
       exact a.
-    + apply hprop_allpath.
-      intros x y.
-      assert (u : Tr (-1) (hfiber (cxfib cx) x)) by apply (conn x).
+    + snrapply trunc_contr.
+      exists (mon_unit : grp_kernel f).
+      intro y.
+      apply path_sigma_hprop; simpl.
       assert (v : Tr (-1) (hfiber (cxfib cx) y)) by apply (conn y).
-      strip_truncations. (* jarlg: Slightly slow, would be good to avoid. *)
-      refine (u.2^ @ _ @ v.2).
-      apply (isinj_embedding pr1).
-      * apply isembedding_pr1_hset.
-      * reflexivity.
+      strip_truncations.
+      exact (ap pr1 v.2).
   - intro isemb_f.
     exists (grp_iscomplex_trivial_l f).
     intros y; rapply contr_inhabited_hprop.
@@ -169,44 +164,55 @@ Proof.
     + rapply (equiv_grp_isexact_isembedding i)^-1%equiv.
 Defined.
 
+(* TODO: move *)
+(* This could be abstracted so that the pullback is known to be a pointed type and the pullback projections are known to be pointed maps. *)
+Definition pfiber_pullback_along' {A B C} (g : C ->* A) (f : B -> A)
+  : hfiber (g ^*' f) (point C) <~> hfiber f (point A).
+Proof.
+  refine (_ oE hfiber_pullback_along' _ _ _); cbn.
+  srapply (equiv_functor_hfiber2 (h:=equiv_idmap) (k:=equiv_idmap)).
+  - reflexivity.
+  - apply (point_eq g).
+Defined.
+
+(* TODO: move *)
+Lemma cancelL_isembedding {A B C : Type} `{IsHSet B} {f : A -> B} {g : B -> C} `{IsEmbedding (g o f)}
+  : IsEmbedding f.
+Proof.
+  apply isembedding_isinj_hset.
+  rapply (cancelL_isinjective (g:=g)).
+  rapply isinj_embedding.
+Defined.
+
 Lemma ses_pb `{Univalence} {C : Group} (S : ShortExactSequence) (phi : C $-> ses_C S)
   : ShortExactSequence.
 Proof.
-  pose (B' := grp_pullback (ses_p S) phi).
-
-  snrapply (Build_SES (Z:=ses_carrier S [4]) (Z':=ses_carrier S [0])
+  srapply (Build_SES (Z:=ses_carrier S [4]) (Z':=ses_carrier S [0])
                    (B:=grp_pullback (ses_p S) phi)
                    (grp_pullback_corec _ _ (ses_i S) grp_homo_const _)
                    (grp_pullback_pr2 (ses_p S) phi)).
-  - exact H.
   - exact (ses_start S).
   - exact (ses_end S).
   - intro x; exact (ses_cx_B S x @ (grp_homo_unit phi)^).
 
   (** The corec-induced map into the pullback is an embedding, since (ses_i S) is one. *)
-  - rapply isembedding_isinj_hset.
-    rapply (cancelL_isinjective (g:=grp_pullback_pr1 (ses_p S) phi)); cbn.
-    apply isinj_embedding.
+  - rapply (cancelL_isembedding (g:=grp_pullback_pr1 (ses_p S) phi)); cbn.
     apply (equiv_grp_isexact_isembedding (K:=ses_carrier S [4])).
-    apply (transport (fun f => IsExact (Tr (-1)) f (ses_i S)) (x:=ses_fn S [3])).
-
-    (* jarlg: How to do this bullet nicely? *)
-    + pose (c := ses_start S).
-      assert (c' : Contr (ses_carrier S [4] ->* ses_carrier S [3])) by apply contr_pmap_from_contr.
-      apply path_contr.
-
-    + exact (ses_isexact S [2]).
+    snrapply (transport (fun f => IsExact (Tr (-1)) f (ses_i S)) _ (ses_isexact S [2])).
+    srapply path_contr.
+    srapply contr_pmap_from_contr.
+    srapply trunc_contr.
+    exact (ses_start S).
 
   (** The pullback of the surjection (ses_p S) along phi is a surjection. *)
   - rapply conn_map_pullback'.
     apply (equiv_grp_isexact_issurjection (C:=ses_carrier S [0])).
-    apply (transport (fun f => IsExact (Tr (-1)) (ses_p S) f) (x:=ses_fn S [0])).
+    snrapply (transport _ _ (ses_isexact S [0])).
 
-    + apply path_pforall.
-      srapply Build_pHomotopy.
-      * intro x; apply (path_contr (Contr0 := ses_end S)).
-      * apply path_ishprop.
-    + exact (ses_isexact S [0]).
+    apply path_pforall.
+    srapply Build_pHomotopy.
+    * intro x; apply (@path_contr _ (ses_end S)).
+    * apply path_ishprop.
 
   (** Transfering exactness to the pullback. *)
   - snrapply Build_IsExact.
@@ -214,27 +220,11 @@ Proof.
       * reflexivity.
       * apply path_ishprop.
 
-    + intros [b' p]; cbn.
-      rapply contr_inhabited_hprop.
-      pose (bf := (grp_pullback_pr1 _ _ b'; ((pullback_commsq (ses_p S) phi) b' @ ap phi p @ grp_homo_unit phi)) : pfiber (ses_p S)).
-      pose proof (@center _ (conn_map_isexact (IsExact:=ses_isexact S [1]) bf)) as y.
-      strip_truncations.
-      destruct y as [y q].
-      apply tr.
-      exists y.
-
-      nrapply equiv_path_sigma_hprop.
-
-      * intro a.
-        unfold ispointed_group. (* jarlg: Why is this necessary? *)
-        exact _. (* jarlg: What is this finding? *)
-
-      * apply equiv_path_sigma.
-        exists (ap pr1 q).
-        refine (transport_sigma' _ _@ _); cbn.
-        apply equiv_path_sigma; cbn.
-        exists p^; apply path_ishprop.
-
-        Unshelve. (* jarlg: Can this be avoided? *)
-        all: exact _.
+    + snrapply (cancelR_equiv_conn_map _ _ (pfiber_pullback_along' phi (ses_p S))).
+      refine (conn_map_homotopic _ _ _ _ (conn_map_isexact (IsExact:=ses_isexact S [1]))).
+      cbn.
+      intro a.
+      rapply path_sigma_hprop.
+      -- intro a'.  rapply istrunc_paths.
+      -- reflexivity.
 Defined.
