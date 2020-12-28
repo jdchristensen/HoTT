@@ -207,22 +207,18 @@ Proof.
 Defined.
 
 (** The space of pointed maps from a contractible type is contractible. (Assuming X is a proposition suffices to be contractible since X is pointed.) *)
-Proposition contr_pmap_from_contr `{Funext} {X Y : pType} `{IsHProp X}
+Proposition contr_pmap_from_contr `{Funext} {X Y : pType} `{Contr X}
   : Contr (X ->* Y).
 Proof.
-  srapply Build_Contr.
-  - exact pconst.
-  - intro f.
-    apply equiv_path_pforall.
+    exists pconst.
+    intro f.
+    apply path_pforall.
     srapply Build_pHomotopy.
     + intro x.
-      assert (C : Contr X) by exact (contr_inhabited_hprop _ x).
-      pose (c := (contr x)^ @ contr (point X)).
       exact ((point_eq f)^ @ contr_dom_equiv f (point _) x).
     + cbn.
-      unfold contr_dom_equiv.
       refine (_ @ (concat_1p _)^).
-      apply moveR_Mp.
-      refine (ap (ap f) (concat_Vp (contr (point X))) @ _ @ (concat_Vp _)^).
-      apply ap_1.
+      unfold contr_dom_equiv.
+      refine (1 @@ ap (ap f) (concat_Vp _) @ _).
+      apply concat_p1.
 Defined.

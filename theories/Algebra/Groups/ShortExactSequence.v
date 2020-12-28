@@ -201,7 +201,6 @@ Proof.
     snrapply (transport (fun f => IsExact (Tr (-1)) f (ses_i S)) _ (ses_isexact S [2])).
     srapply path_contr.
     srapply contr_pmap_from_contr.
-    srapply trunc_contr.
     exact (ses_start S).
 
   (** The pullback of the surjection (ses_p S) along phi is a surjection. *)
