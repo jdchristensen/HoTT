@@ -255,3 +255,13 @@ Definition equiv_isequiv_ap_isembedding `{Funext} {A B} (f : A -> B)
 Proof.
   exact (equiv_iff_hprop (@isequiv_ap_isembedding _ _ f) (@isembedding_isequiv_ap _ _ f)).
 Defined.
+
+Lemma ap_isinj_embedding_beta {X Y : Type} (f : X -> Y) {I : IsEmbedding f} {x0 x1 : X}
+  : forall (p : f x0 = f x1), ap f (isinj_embedding f I x0 x1 p) = p.
+Proof.
+  equiv_intro (equiv_ap_isembedding f x0 x1) q.
+  induction q. cbn.
+  refine (ap _ _ @ _).
+  - exact (isinj_embedding_beta f).
+  - apply ap_1.
+Defined.

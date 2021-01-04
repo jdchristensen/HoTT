@@ -4,6 +4,7 @@
 Require Import Basics.
 Require Import Types.
 Require Import HProp.
+Require Export Types.Arrow. (* jarlg: For IsInjective. *)
 
 
 Local Open Scope path_scope.
@@ -109,27 +110,8 @@ Definition ismono {X Y} (f : X -> Y)
   := forall (Z : hSet),
      forall g h : Z -> X, f o g = f o h -> g = h.
 
-Definition isinj {X Y} (f : X -> Y)
-  := forall x0 x1 : X,
-       f x0 = f x1 -> x0 = x1.
-
-Lemma isinj_embedding {A B : Type} (m : A -> B) : IsEmbedding m -> isinj m.
-Proof.
-  intros ise x y p.
-  pose (ise (m y)).
-  assert (q : (x;p) = (y;1) :> hfiber m (m y)) by apply path_ishprop.
-  exact (ap pr1 q).
-Defined.
-
-Definition isinj_section {A B : Type} {s : A -> B} {r : B -> A}
-      (H : r o s == idmap) : isinj s.
-Proof.
-  intros a a' alpha.
-  exact ((H a)^ @ ap r alpha @ H a').
-Defined.
-
 Lemma isembedding_isinj_hset {A B : Type} `{IsHSet B} (m : A -> B)
-: isinj m -> IsEmbedding m.
+: IsInjective m -> IsEmbedding m.
 Proof.
   intros isi b.
   apply hprop_allpath; intros [x p] [y q].
@@ -137,7 +119,7 @@ Proof.
   exact (isi x y (p @ q^)).
 Defined.
 
-Lemma ismono_isinj `{Funext} {X Y} (f : X -> Y) : isinj f -> ismono f.
+Lemma ismono_isinj `{Funext} {X Y} (f : X -> Y) : IsInjective f -> ismono f.
 Proof.
   intros ? ? ? ? H'.
   apply path_forall.
@@ -146,9 +128,7 @@ Proof.
   eauto.
 Qed.
 
-Definition isinj_ismono {X Y} (f : X -> Y)
-           (H : ismono f)
-: isinj f
+Definition isinj_ismono {X Y} (f : X -> Y) (H : ismono f) : IsInjective f
   := fun x0 x1 H' =>
        ap10 (H (BuildhSet Unit)
                (fun _ => x0)
