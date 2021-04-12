@@ -1,6 +1,9 @@
 -R theories HoTT
--Q contrib ""
-COQC = hoqc
+-Q contrib HoTT.Contrib
+
+#-arg -boot
+-arg -noinit
+-arg -indices-matter
 
 #
 #   Table of contents:
@@ -35,13 +38,24 @@ theories/Basics.v
 
 theories/Basics/Notations.v
 theories/Basics/Utf8.v
+
 theories/Basics/Overture.v
-theories/Basics/UniverseLevel.v
 theories/Basics/PathGroupoids.v
+theories/Basics/UniverseLevel.v
 theories/Basics/Contractible.v
 theories/Basics/Equivalences.v
-theories/Basics/Trunc.v
 theories/Basics/Decidable.v
+theories/Basics/Datatypes.v
+theories/Basics/Logic.v
+
+theories/Basics/Tactics.v
+
+theories/Basics/Nat.v
+theories/Basics/Trunc.v
+theories/Basics/Numeral.v
+theories/Basics/Decimal.v
+theories/Basics/Hexadecimal.v
+
 
 #
 #   Wildcat
@@ -106,7 +120,15 @@ theories/Cubical/DPathCube.v
 theories/Spaces/Nat.v
 theories/Spaces/List.v
 theories/Spaces/Cantor.v
+
+theories/Spaces/Finite/Fin.v
+theories/Spaces/Finite/FinNat.v
+theories/Spaces/Finite/FinInduction.v
+theories/Spaces/Finite/Finite.v
+theories/Spaces/Finite/FinSeq.v
+theories/Spaces/Finite/Tactics.v
 theories/Spaces/Finite.v
+
 theories/Spaces/Universe.v
 theories/Spaces/Card.v
 theories/Spaces/Circle.v
@@ -137,7 +159,6 @@ theories/Spaces/No/Addition.v
 theories/Spaces/Torus/Torus.v
 theories/Spaces/Torus/TorusEquivCircles.v
 theories/Spaces/Torus/TorusHomotopy.v
-
 
 #
 #   Modalities
@@ -343,6 +364,16 @@ theories/Spectra/Spectrum.v
 theories/Spectra/Coinductive.v
 
 #
+#   Universal Algebra
+#
+
+theories/Algebra/Universal/Algebra.v
+theories/Algebra/Universal/Homomorphism.v
+theories/Algebra/Universal/Operation.v
+theories/Algebra/Universal/Congruence.v
+theories/Algebra/Universal/TermAlgebra.v
+
+#
 #   Algebra
 #
 
@@ -375,6 +406,7 @@ theories/Algebra/Groups/GrpPullback.v
 theories/Algebra/Groups/FreeProduct.v
 theories/Algebra/Groups/GroupCoeq.v
 theories/Algebra/Groups/Presentation.v
+theories/Algebra/Groups/ShortExactSequence.v
 
 theories/Algebra/Groups/FreeGroup.v
 

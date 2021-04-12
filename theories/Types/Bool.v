@@ -113,6 +113,7 @@ Section BoolForall.
               || intros []
               || intro
               || apply path_forall).
+    
   Defined.
 End BoolForall.
 
@@ -139,6 +140,7 @@ Lemma eval_bool_isequiv (f : Bool -> Bool) `{IsEquiv Bool Bool f}
 Proof.
   pose proof (eissect f true).
   pose proof (eissect f false).
+  simpl in *.
   destruct (f true), (f false).
   - etransitivity; try (eassumption || (symmetry; eassumption)).
   - simpl. reflexivity.

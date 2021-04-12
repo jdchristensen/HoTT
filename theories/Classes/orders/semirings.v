@@ -182,6 +182,7 @@ Section semiring_order.
 End semiring_order.
 
 (* Due to bug #2528 *)
+#[export]
 Hint Extern 7 (PropHolds (0 ≤ _ + _)) =>
   eapply @nonneg_plus_compat : typeclass_instances.
 
@@ -345,6 +346,7 @@ Section strict_semiring_order.
 End strict_semiring_order.
 
 (* Due to bug #2528 *)
+#[export]
 Hint Extern 7 (PropHolds (0 < _ + _)) =>
   eapply @pos_plus_compat : typeclass_instances.
 
@@ -557,10 +559,15 @@ Section pseudo_semiring_order.
   Qed.
 End pseudo_semiring_order.
 
+#[export]
 Hint Extern 7 (PropHolds (0 < 1)) => eapply @lt_0_1 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (0 < 2)) => eapply @lt_0_2 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (0 < 3)) => eapply @lt_0_3 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (0 < 4)) => eapply @lt_0_4 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (2 ≶ 0)) => eapply @apart_0_2 : typeclass_instances.
 
 Section full_pseudo_semiring_order.
@@ -761,7 +768,7 @@ Section full_pseudo_semiring_order.
   apply lt_not_le_flip, lt_0_2.
   Qed.
 
-  Lemma repeat_nat_nonneg : forall n, 0 <= Peano.nat_iter n (plus 1) 0.
+  Lemma repeat_nat_nonneg : forall n, 0 <= Nat.nat_iter n (plus 1) 0.
   Proof.
   induction n;simpl.
   - reflexivity.
@@ -770,7 +777,7 @@ Section full_pseudo_semiring_order.
     + apply IHn.
   Qed.
 
-  Lemma repeat_nat_pos : forall n, 0 < Peano.nat_iter (S n) (plus 1) 0.
+  Lemma repeat_nat_pos : forall n, 0 < Nat.nat_iter (S n) (plus 1) 0.
   Proof.
   intros n. simpl.
   apply pos_plus_le_lt_compat_l.
@@ -793,9 +800,13 @@ Section full_pseudo_semiring_order.
 End full_pseudo_semiring_order.
 
 (* Due to bug #2528 *)
+#[export]
 Hint Extern 7 (PropHolds (0 ≤ 1)) => eapply @le_0_1 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (0 ≤ 2)) => eapply @le_0_2 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (0 ≤ 3)) => eapply @le_0_3 : typeclass_instances.
+#[export]
 Hint Extern 7 (PropHolds (0 ≤ 4)) => eapply @le_0_4 : typeclass_instances.
 
 Section dec_semiring_order.
@@ -939,13 +950,17 @@ Section another_semiring_strict.
 End another_semiring_strict.
 
 (* Due to bug #2528 *)
+#[export]
 Hint Extern 15 (PropHolds (_ ≤ _ _)) =>
   eapply @preserves_nonneg : typeclass_instances.
+#[export]
 Hint Extern 15 (PropHolds (_ < _ _)) =>
   eapply @preserves_pos : typeclass_instances.
 
 (* Oddly enough, the above hints do not work for goals of the following shape? *)
+#[export]
 Hint Extern 15 (PropHolds (_ ≤ '_)) =>
   eapply @preserves_nonneg : typeclass_instances.
+#[export]
 Hint Extern 15 (PropHolds (_ < '_)) =>
   eapply @preserves_pos : typeclass_instances.

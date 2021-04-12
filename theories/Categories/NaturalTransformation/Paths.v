@@ -1,6 +1,6 @@
 (** * Classify the path space of natural transformations *)
 Require Import Category.Core Functor.Core NaturalTransformation.Core.
-Require Import Equivalences HoTT.Types Trunc.
+Require Import Equivalences HoTT.Types Trunc Basics.Tactics.
 
 Set Universe Polymorphism.
 Set Implicit Arguments.
@@ -72,14 +72,14 @@ Section path_natural_transformation.
       := (fun H _ => match H with idpath => idpath end).
 
     Lemma eisretr_path_natural_transformation
-    : Sect path_natural_transformation path_inv.
+    : path_inv o path_natural_transformation == idmap.
     Proof.
       repeat intro.
       refine (center _).
     Qed.
 
     Lemma eissect_path_natural_transformation
-    : Sect path_inv path_natural_transformation.
+    : path_natural_transformation o path_inv == idmap.
     Proof.
       repeat intro.
       refine (center _).

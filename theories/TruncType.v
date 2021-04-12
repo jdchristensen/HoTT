@@ -126,7 +126,7 @@ Proof.
   exact _.
 Defined.
 
-Global Instance Sn_trunctype: forall n, IsTrunc n.+1 (sigT (IsTrunc n)) |0.
+Global Instance Sn_trunctype: forall n, IsTrunc n.+1 (sig (IsTrunc n)) |0.
 Proof.
   intro n.
   apply (trunc_equiv' _ issig_trunctype^-1).
@@ -182,5 +182,11 @@ Definition path_iff_ishprop `{IsHProp A, IsHProp B}
 Definition path_iff_hprop {A B : hProp}
 : (A -> B) -> (B -> A) -> A = B :> hProp
   := fun f g => path_iff_hprop_uncurried (f,g).
+
+Lemma equiv_path_iff_ishprop {A B : Type} `{IsHProp A, IsHProp B}
+  : (A <-> B) <~> (A = B).
+Proof.
+  exact (Build_Equiv _ _ path_iff_ishprop_uncurried _).
+Defined.
 
 End TruncType.

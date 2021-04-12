@@ -167,7 +167,7 @@ Section isequiv.
     intro.
     - match goal with
         | [ |- @pr1 ?A ?P ?x = ?y ]
-          => change (x.1 = (existT P y idpath).1)
+          => change (x.1 = (exist P y idpath).1)
       end.
       apply (ap pr1).
       apply contr.
@@ -212,7 +212,7 @@ Section AdjunctionEquivalences'.
                _ _ _ _
                (equiv_isequiv
                   (equiv_hom_set_adjunction T (fst cd) (snd cd))^-1)).
-    Grab Existential Variables.
+    Unshelve.
     simpl.
     intros.
     exact (adjunction_hom__of__adjunction_unit__commutes T _ _ _ _ _ _).

@@ -74,7 +74,7 @@ Definition path_sum_inr (A : Type) {B : Type} {x x' : B}
 (** This lets us identify the path space of a sum type, up to equivalence. *)
 
 Definition eisretr_path_sum {A B} {z z' : A + B}
-: Sect (@path_sum_inv _ _ z z') (path_sum z z')
+: (path_sum z z') o (@path_sum_inv _ _ z z') == idmap
   := fun p => match p as p in (_ = z') return
                     path_sum z z' (path_sum_inv p) = p
               with
@@ -87,7 +87,7 @@ Definition eisretr_path_sum {A B} {z z' : A + B}
               end.
 
 Definition eissect_path_sum {A B} {z z' : A + B}
-: Sect (path_sum z z') (@path_sum_inv _ _ z z').
+: (@path_sum_inv _ _ z z') o (path_sum z z') == idmap.
 Proof.
   intro p.
   destruct z, z', p; exact idpath.
@@ -977,7 +977,7 @@ Defined.
 
 (** ** Binary coproducts are equivalent to dependent sigmas where the first component is a bool. *)
 
-Definition sigT_of_sum A B (x : A + B)
+Definition sig_of_sum A B (x : A + B)
 : { b : Bool & if b then A else B }
   := (_;
       match
@@ -992,30 +992,30 @@ Definition sigT_of_sum A B (x : A + B)
         | inr b => b
       end).
 
-Definition sum_of_sigT A B (x : { b : Bool & if b then A else B })
+Definition sum_of_sig A B (x : { b : Bool & if b then A else B })
 : A + B
   := match x with
        | (true; a) => inl a
        | (false; b) => inr b
      end.
 
-Global Instance isequiv_sigT_of_sum A B : IsEquiv (@sigT_of_sum A B) | 0.
+Global Instance isequiv_sig_of_sum A B : IsEquiv (@sig_of_sum A B) | 0.
 Proof.
-  apply (isequiv_adjointify (@sigT_of_sum A B)
-                            (@sum_of_sigT A B)).
+  apply (isequiv_adjointify (@sig_of_sum A B)
+                            (@sum_of_sig A B)).
   - intros [[] ?]; exact idpath.
   - intros []; exact idpath.
 Defined.
 
-Global Instance isequiv_sum_of_sigT A B : IsEquiv (sum_of_sigT A B)
-  := isequiv_inverse (@sigT_of_sum A B).
+Global Instance isequiv_sum_of_sig A B : IsEquiv (sum_of_sig A B)
+  := isequiv_inverse (@sig_of_sum A B).
 
 (** An alternative way of proving the truncation property of [sum]. *)
 Definition trunc_sum' n A B `{IsTrunc n Bool, IsTrunc n A, IsTrunc n B}
 : (IsTrunc n (A + B)).
 Proof.
   eapply trunc_equiv'; [ esplit;
-                         exact (@isequiv_sum_of_sigT _ _)
+                         exact (@isequiv_sum_of_sig _ _)
                        | ].
   typeclasses eauto.
 Defined.

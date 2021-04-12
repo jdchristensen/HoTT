@@ -23,6 +23,7 @@ Qed.
 End contents.
 
 (* Due to bug #2528 *)
+#[export]
 Hint Extern 3 (PropHolds (_ <> _)) => eapply @apart_ne : typeclass_instances.
 
 Lemma projected_strong_setoid `{IsApart B} `{Apart A} `{IsHSet A}
@@ -57,7 +58,7 @@ Qed.
 Instance sig_strong_setoid `{IsApart A} (P: A -> Type) `{forall x, IsHProp (P x)}
   : IsApart (sig P).
 Proof.
-apply (projected_strong_setoid (@proj1_sig _ P)).
+apply (projected_strong_setoid (@proj1 _ P)).
 - intros. split;apply Sigma.equiv_path_sigma_hprop.
 - intros;apply reflexivity.
 Qed.

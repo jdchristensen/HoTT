@@ -30,7 +30,7 @@ Section prod_algebra.
 
   Definition ops_prod_algebra (u : Symbol σ)
     : Operation carriers_prod_algebra (σ u)
-    := op_prod_algebra (σ u) (λ (i:I), u ^^ A i).
+    := op_prod_algebra (σ u) (λ (i:I), u.#(A i)).
 
   Definition ProdAlgebra : Algebra σ
     := BuildAlgebra carriers_prod_algebra ops_prod_algebra.
@@ -166,11 +166,7 @@ Section bin_prod_algebra.
 End bin_prod_algebra.
 
 Module prod_algebra_notations.
-
-  Global Notation "A × B" := (BinProdAlgebra A B)
-                             (at level 40, left associativity)
-                             : Algebra_scope.
-
+  Global Notation "A × B" := (BinProdAlgebra A B) : Algebra_scope.
 End prod_algebra_notations.
 
 Import prod_algebra_notations.

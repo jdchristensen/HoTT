@@ -481,6 +481,7 @@ Section Reflective_Subuniverse.
     := fun _ => inO_equiv_inO (O T) (to O T)^-1.
 
     (* We don't make this an ordinary instance, but we allow it to solve [In O] constraints if we already have [IsEquiv] as a hypothesis.  *)
+    #[local]
     Hint Immediate inO_isequiv_to_O : typeclass_instances.
 
     Definition inO_iff_isequiv_to_O (T:Type)
@@ -491,9 +492,9 @@ Section Reflective_Subuniverse.
 
     (** Thus, [T] is in a subuniverse as soon as [to O T] admits a retraction. *)
     Definition inO_to_O_retract (T:Type) (mu : O T -> T)
-    : Sect (to O T) mu -> In O T.
+    : mu o (to O T) == idmap -> In O T.
     Proof.
-      unfold Sect; intros H.
+      intros H.
       apply inO_isequiv_to_O.
       apply isequiv_adjointify with (g:=mu).
       - refine (O_indpaths (to O T o mu) idmap _).
@@ -853,6 +854,7 @@ Section Reflective_Subuniverse.
       all: refine (inO_hfiber pr1 x); assumption.
     Defined.
 
+    #[local]
     Hint Immediate inO_unsigma : typeclass_instances.
 
     (** The reflector preserving hfibers is a characterization of lex modalities.  Here is the comparison map. *)
@@ -886,10 +888,10 @@ Section Reflective_Subuniverse.
         exact (to O _ (a;p)).
       - apply O_functor.
         exact (functor_sigma idmap (fun x => to O (P x))).
-      - unfold Sect, O_functor; rapply O_indpaths.
+      - unfold O_functor; rapply O_indpaths.
         intros [a p]; simpl.
         abstract (repeat (rewrite O_rec_beta); reflexivity).
-      - unfold Sect, O_functor; rapply O_indpaths.
+      - unfold O_functor; rapply O_indpaths.
         intros [a op]; revert op; rapply O_indpaths; intros p; simpl.
         abstract (repeat (rewrite O_rec_beta); reflexivity).
     Defined.
@@ -1628,6 +1630,24 @@ Section ConnectedMaps.
   : (forall b, P b) <~> (forall a, P (f a))
   := Build_Equiv _ _ _ (isequiv_o_conn_map f P).
 
+  (** When considering lexness properties, we often want to consider the property of the universe of modal types being modal.  We can't say this directly (except in the accessible, hence liftable, case) because it lives in a higher universe, but we can make a direct extendability statement.  Here we prove a lemma that oo-extendability into the universe follows from plain extendability, essentially because the type of equivalences between two [O]-modal types is [O]-modal. *)
+  Definition ooextendable_TypeO_from_extension
+             {A B : Type} (f : A -> B) `{IsConnMap O _ _ f}
+             (extP : forall P : A -> Type_ O, ExtensionAlong f (fun _ : B => Type_ O) P)
+    : ooExtendableAlong f (fun _ => Type_ O).
+  Proof.
+    (** By definition, in addition to our assumption [extP] that maps into [Type_ O] extend along [f], we must show that sections of families of equivalences are [ooExtendableAlong] it.  *)
+    intros [|[|n]].
+    - exact tt.                                 (* n = 0 *)
+    (** Note that due to the implementation of [ooExtendableAlong], we actually have to use [extP] twice (there should probably be a general cofixpoint lemma for this). *)
+    - split; [ apply extP | intros; exact tt ]. (* n = 1 *)
+    - split; [ apply extP | ].                  (* n > 1 *)
+      (** What remains is to extend families of paths. *)
+      intros P Q; rapply (ooextendable_postcompose' (fun b => P b <~> Q b)).
+      + intros x; refine (equiv_path_TypeO _ _ _ oE equiv_path_universe _ _).
+      + rapply ooextendable_conn_map_inO.
+  Defined.
+
   (** Conversely, if a map satisfies this elimination principle (expressed via extensions), then it is connected.  This completes the proof of Lemma 7.5.7 from the book. *)
   Lemma conn_map_from_extension_elim {A B : Type} (f : A -> B)
   : (forall (P : B -> Type) {P_inO : forall b:B, In O (P b)}
@@ -1686,6 +1706,7 @@ Section ConnectedMaps.
               (equiv_sigma_contr (fun a:A => const tt a = tt)) _).
   Defined.
 
+  #[local]
   Hint Immediate isconnected_conn_map_to_unit : typeclass_instances.
 
   Global Instance conn_map_to_unit_isconnected {A : Type}
@@ -1893,7 +1914,7 @@ Class O_eq@{i1 i2 j} (O1 : Subuniverse@{i1}) (O2 : Subuniverse@{i2}) :=
 
 Global Existing Instances O_eq_l O_eq_r.
 
-Notation "O1 <=> O2" := (O_eq O1 O2) (at level 70) : subuniverse_scope.
+Infix "<=>" := O_eq : subuniverse_scope.
 
 Definition issig_O_eq O1 O2 : _ <~> O_eq O1 O2 := ltac:(issig).
 
@@ -2040,3 +2061,7 @@ Proof.
   - pose (inO_leq O' (Sep O));
     intros; rapply ooextendable_conn_map_inO.
 Defined.
+
+#[export] Hint Immediate inO_isequiv_to_O : typeclass_instances.
+#[export] Hint Immediate inO_unsigma : typeclass_instances.
+#[export] Hint Immediate isconnected_conn_map_to_unit : typeclass_instances.

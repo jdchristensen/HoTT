@@ -20,7 +20,7 @@ Definition pUnit : pType := (Build_pType Unit _).
 
 (** A sigma type of pointed components is pointed. *)
 Global Instance ispointed_sigma `{IsPointed A} `{IsPointed (B (point A))}
-: IsPointed (sigT B)
+: IsPointed (sig B)
   := (point A; point (B (point A))).
 
 (** A product of pointed types is pointed. *)
@@ -396,14 +396,9 @@ Proof.
   exact _.
 Defined.
 
-(** A pointed version of Sect (sometimes useful for proofs of some equivalences) *)
-Definition pSect {A B : pType} (s : A ->* B) (r : B ->* A) : Type
-  := r o* s ==* pmap_idmap.
-
-Arguments pSect _ _ / _ _.
-
 (* A pointed equivalence is a section of its inverse *)
-Definition peissect {A B : pType} (f : A <~>* B) : pSect f (pequiv_inverse f). 
+Definition peissect {A B : pType} (f : A <~>* B)
+  : (pequiv_inverse f) o* f ==* pmap_idmap. 
 Proof.
   srefine (Build_pHomotopy _ _).
   1: apply (eissect f). 
@@ -414,7 +409,8 @@ Proof.
 Defined.
 
 (* A pointed equivalence is a retraction of its inverse *)
-Definition peisretr {A B : pType} (f : A <~>* B) : pSect (pequiv_inverse f) f.
+Definition peisretr {A B : pType} (f : A <~>* B)
+  : f o* (pequiv_inverse f) ==* pmap_idmap.
 Proof.
   srefine (Build_pHomotopy _ _).
   1: apply (eisretr f).
@@ -478,7 +474,6 @@ Notation "A ->** B" := (ppForall A (fun _ => B)) : pointed_scope.
 
 Notation "'ppforall'  x .. y , P"
   := (ppForall _ (fun x => .. (ppForall _ (fun y => P)) ..))
-     (at level 200, x binder, y binder, right associativity)
      : pointed_scope.
 
 (** ** 1-categorical properties of [pForall]. *)

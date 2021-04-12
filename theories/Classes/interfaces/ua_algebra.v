@@ -1,7 +1,7 @@
 (** This file defines [Algebra]. *)
 
 Require Export
-  Coq.Unicode.Utf8
+  HoTT.Utf8
   HoTT.Basics
   HoTT.Classes.implementations.ne_list
   HoTT.Classes.implementations.family_prod.
@@ -160,6 +160,8 @@ Arguments BuildAlgebra {σ} carriers operations.
     family of carriers. *)
 Global Coercion carriers : Algebra >-> Funclass.
 
+Bind Scope Algebra_scope with Algebra.
+
 Definition SigAlgebra (σ : Signature) : Type
   := {c : Carriers σ | ∀ (u : Symbol σ), Operation c (σ u) }.
 
@@ -240,11 +242,8 @@ Defined.
 Module algebra_notations.
 
 (** Given [A : Algebra σ] and function symbol [u : Symbol σ], we use
-    the notation [u ^^ A] to refer to the corresponding algebra
+    the notation [u .# A] to refer to the corresponding algebra
     operation of type [Operation A (σ u)]. *)
-
-  Global Notation "u ^^ A" := (operations A u)
-                              (at level 60, no associativity)
-                              : Algebra_scope.
+  Global Notation "u .# A" := (operations A u) : Algebra_scope.
 
 End algebra_notations.
