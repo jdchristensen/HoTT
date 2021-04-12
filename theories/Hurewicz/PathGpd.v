@@ -1,5 +1,6 @@
 Require Import Overture.
 Require Import PathGroupoids.
+Require Import Basics.Tactics.
 
 Local Open Scope path_scope.
 

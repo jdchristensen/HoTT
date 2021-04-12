@@ -69,11 +69,11 @@ Section PreGroupMap.
 
 End PreGroupMap.
 
-Hint Extern 4 (IsPreGroupPreserving (_ ∘ _)) =>
+Global Hint Extern 4 (IsPreGroupPreserving (_ ∘ _)) =>
   class_apply @compose_pg_morphism : typeclass_instances.
-Hint Extern 4 (IsPreGroupPreserving (_ o _)) =>
+Global Hint Extern 4 (IsPreGroupPreserving (_ o _)) =>
   class_apply @compose_pg_morphism : typeclass_instances.
-Hint Extern 4 (IsPreGroupPreserving (_^-1)) =>
+Global Hint Extern 4 (IsPreGroupPreserving (_^-1)) =>
   class_apply @invert_pg_morphism : typeclass_instances.
 
 Record MagmaMap (X Y : Magma) := {
@@ -231,12 +231,12 @@ Proof.
   srapply equiv_adjointify.
   + exact (fun f => magmamap_compose f e).
   + exact (fun g => magmamap_compose g (magmaequiv_inverse e)).
-  + unfold Sect; intro f.
+  + intro f.
     refine (_ @ _).
     1:apply magmamap_compose_assoc.
     refine ((ap (magmamap_compose f) (ap magmamap (mecompose_Ve e))) @ _).
     apply magmamap_compose_f1.
-  + unfold Sect; intro g.
+  + intro g.
     refine (_ @ _).
     1:apply magmamap_compose_assoc.
     refine ((ap (magmamap_compose g) (ap magmamap (mecompose_eV e))) @ _).
@@ -249,12 +249,12 @@ Proof.
   srapply equiv_adjointify.
   + exact (fun f => magmamap_compose e f).
   + exact (fun g => magmamap_compose (magmaequiv_inverse e) g).
-  + unfold Sect; intro f.
+  + intro f.
     refine (_ @ _).
     1:symmetry; apply magmamap_compose_assoc.
     refine ((ap (fun g => magmamap_compose g f) (ap magmamap (mecompose_eV e))) @ _).
     apply magmamap_compose_1f.
-  + unfold Sect; intro g.
+  + intro g.
     refine (_ @ _).
     1:symmetry; apply magmamap_compose_assoc.
     refine ((ap (fun f => magmamap_compose f g) (ap magmamap (mecompose_Ve e))) @ _).
