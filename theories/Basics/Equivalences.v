@@ -1,7 +1,12 @@
 (* -*- mode: coq; mode: visual-line -*- *)
 (** * Equivalences *)
 
-Require Import Basics.Overture Basics.PathGroupoids Basics.Notations Basics.Contractible.
+Require Import
+  Basics.Overture
+  Basics.PathGroupoids
+  Basics.Notations
+  Basics.Contractible
+  Basics.Tactics.
 Local Open Scope path_scope.
 
 (** We now give many ways to construct equivalences.  In each case, we define an instance of the typeclass [IsEquiv] named [isequiv_X], followed by an element of the record type [Equiv] named [equiv_X].
@@ -130,7 +135,7 @@ End EquivTransport.
 Section Adjointify.
 
   Context {A B : Type} (f : A -> B) (g : B -> A).
-  Context (isretr : Sect g f) (issect : Sect f g).
+  Context (isretr : f o g == idmap) (issect : g o f == idmap).
 
   (* This is the modified [eissect]. *)
   Let issect' := fun x =>
@@ -161,11 +166,11 @@ Arguments isequiv_adjointify {A B}%type_scope (f g)%function_scope isretr issect
 Arguments equiv_adjointify {A B}%type_scope (f g)%function_scope isretr issect.
 
 (** An involution is an endomap that is its own inverse. *)
-Definition isequiv_involution {X : Type} (f : X -> X) (isinvol : Sect f f)
+Definition isequiv_involution {X : Type} (f : X -> X) (isinvol : f o f == idmap)
 : IsEquiv f
   := isequiv_adjointify f f isinvol isinvol.
 
-Definition equiv_involution {X : Type} (f : X -> X) (isinvol : Sect f f)
+Definition equiv_involution {X : Type} (f : X -> X) (isinvol : f o f == idmap)
 : X <~> X
   := equiv_adjointify f f isinvol isinvol.
 
@@ -241,7 +246,7 @@ Proof.
            (fun x => (x ; center (P x)))
            (fun x => 1)
            (fun xy => match xy with
-                      | existT x y => ap (exist _ x) (contr _)
+                      | exist x y => ap (exist _ x) (contr _)
                       end)).
   intros [x y].
   rewrite <- ap_compose.
@@ -386,6 +391,7 @@ Section EquivInverse.
 End EquivInverse.
 
 (** If the goal is [IsEquiv _^-1], then use [isequiv_inverse]; otherwise, don't pretend worry about if the goal is an evar and we want to add a [^-1]. *)
+#[export]
 Hint Extern 0 (IsEquiv _^-1) => apply @isequiv_inverse : typeclass_instances.
 
 (** [Equiv A B] is a symmetric relation. *)
@@ -416,6 +422,14 @@ Proof.
   1:apply ap, p.
   apply ap, eisretr.
 Defined.
+
+Definition equiv_ap_inv `(f : A -> B) `{IsEquiv A B f} (x y : B)
+  : (f^-1 x = f^-1 y) <~> (x = y)
+  := (@equiv_ap B A f^-1 _ x y)^-1%equiv.
+
+Definition equiv_ap_inv' `(f : A <~> B) (x y : B)
+  : (f^-1 x = f^-1 y) <~> (x = y)
+  := (equiv_ap' f^-1%equiv x y)^-1%equiv.
 
 (** If [g \o f] and [f] are equivalences, so is [g].  This is not an Instance because it would require Coq to guess [f]. *)
 Definition cancelR_isequiv {A B C} (f : A -> B) {g : B -> C}

@@ -31,6 +31,7 @@ Section AssumeFunext.
   Defined.
 
   (** As usual, we can't make both of these [Instances]. *)
+  #[local]
   Hint Immediate isequiv_contr_map : typeclass_instances.
 
   (** It follows that when proving a map is an equivalence, we may assume its codomain is inhabited. *)
@@ -43,7 +44,7 @@ Section AssumeFunext.
   Defined.
 
   Global Instance contr_sect_equiv {A B} (f : A -> B) `{IsEquiv A B f}
-    : Contr {g : B -> A & Sect g f}.
+    : Contr {g : B -> A & f o g == idmap}.
   Proof.
     refine (contr_change_center (f^-1 ; eisretr f)).
     refine (contr_equiv' { g : B -> A & f o g = idmap } _).
@@ -53,7 +54,7 @@ Section AssumeFunext.
   Defined.
 
   Global Instance contr_retr_equiv {A B} (f : A -> B) `{IsEquiv A B f}
-    : Contr {g : B -> A & Sect f g}.
+    : Contr {g : B -> A & g o f == idmap}.
   Proof.
     refine (contr_change_center (f^-1 ; eissect f)).
     refine (contr_equiv' { g : B -> A & g o f = idmap } _).
@@ -186,3 +187,7 @@ Section AssumeFunext.
   Defined.
 
 End AssumeFunext.
+
+(** We make this a global hint outside of the section. *)
+#[export]
+Hint Immediate isequiv_contr_map : typeclass_instances.

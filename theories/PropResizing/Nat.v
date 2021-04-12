@@ -263,7 +263,7 @@ Section AssumeStuff.
       apply equiv_ap; try exact _.
       apply path_sigma_hprop, path_equiv@{s s s u}, path_arrow.
       intros [].
-    - clear B;intros B BC.
+    - try clear B;intros B BC.
       refine (contr_equiv (B = B) (graph_succ_path_equiv B B)).
   Qed.
 
@@ -602,7 +602,7 @@ Section AssumeStuff.
 
   Instance contr_le_zero@{} : Contr {n:N & n <= zero}.
   Proof.
-    exists (existT (fun n => n <= zero) zero (N_zero_le zero)).
+    exists (exist (fun n => n <= zero) zero (N_zero_le zero)).
     intros [n H].
     apply path_sigma_hprop.
     exact (N_le_zero n H)^.
@@ -855,7 +855,7 @@ Section AssumeStuff.
 
     Local Definition equiv_seg_succ@{} (n m : N) (H : m < succ n)
                (f : { m : N & m <= n} -> X) (xsn : X)
-      : equiv_N_segment_succ_maps n (f,xsn) (m ; N_lt_le m _ H) = f (existT (fun m=>m<=n) m (fst (N_lt_succ_iff_le m _) H)).
+      : equiv_N_segment_succ_maps n (f,xsn) (m ; N_lt_le m _ H) = f (exist (fun m=>m<=n) m (fst (N_lt_succ_iff_le m _) H)).
     Proof.
       cbn.
       generalize (N_le_eq_or_lt m (succ n) (N_lt_le m (succ n) H)).

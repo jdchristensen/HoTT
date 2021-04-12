@@ -15,10 +15,8 @@ Delimit Scope positive_scope with pos.
 
 (** Here are some notations that let us right binary positive integers more easily. *)
 Notation "1" := xH : positive_scope.
-Notation "p ~ 1" := (x1 p)
- (at level 7, left associativity, format "p '~' '1'") : positive_scope.
-Notation "p ~ 0" := (x0 p)
- (at level 7, left associativity, format "p '~' '0'") : positive_scope.
+Notation "p ~ 1" := (x1 p) : positive_scope.
+Notation "p ~ 0" := (x0 p) : positive_scope.
 
 Local Open Scope positive_scope.
 
@@ -55,6 +53,15 @@ Proof.
   intros P a f.
   srapply IHp.
 Qed.
+
+Definition pos_peano_rec (P : Type)
+  : P -> (Pos -> P -> P) -> Pos -> P
+  := pos_peano_ind (fun _ => P).
+
+Definition pos_peano_rec_beta_pos_succ (P : Type)
+  (a : P) (f : Pos -> P -> P) (p : Pos)
+  : pos_peano_rec P a f (pos_succ p) = f p (pos_peano_rec P a f p)
+  := pos_peano_ind_beta_pos_succ (fun _ => P) a f p.
 
 (** ** Properties of constructors *)
 
@@ -384,6 +391,12 @@ Definition pos_of_decimal_int (d:Decimal.int) : option Pos :=
   | Decimal.Neg _ => None
   end.
 
+Definition pos_of_number_uint (d:Numeral.int) : option Pos :=
+  match d with
+  | Numeral.IntDec d => pos_of_decimal_int d
+  | Numeral.IntHex _ => None
+  end.
+
 Fixpoint pos_to_little_uint p :=
   match p with
   | 1 => Decimal.D1 Decimal.Nil
@@ -395,5 +408,6 @@ Definition pos_to_uint p := Decimal.rev (pos_to_little_uint p).
 
 Definition pos_to_decimal_int n := Decimal.Pos (pos_to_uint n).
 
-Numeral Notation Pos pos_of_decimal_int pos_to_uint : positive_scope.
+Definition pos_to_number_uint p := Numeral.UIntDec (pos_to_uint p).
 
+Number Notation Pos pos_of_number_uint pos_to_number_uint : positive_scope.

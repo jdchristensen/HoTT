@@ -1,6 +1,6 @@
 (** * Definitions and theorems about {iso,epi,mono,}morphisms in a precategory *)
 Require Import Category.Core Functor.Core.
-Require Import HoTT.Tactics Trunc HProp Types.Sigma Equivalences.
+Require Import HoTT.Tactics Basics.Trunc Basics.Tactics HProp Types.Sigma Equivalences.
 
 Set Universe Polymorphism.
 Set Implicit Arguments.
@@ -22,6 +22,7 @@ Arguments morphism_inverse {C s d} m {_}.
 
 Local Notation "m ^-1" := (morphism_inverse m) : morphism_scope.
 
+#[export]
 Hint Resolve left_inverse right_inverse : category morphism.
 Hint Rewrite @left_inverse @right_inverse : category.
 Hint Rewrite @left_inverse @right_inverse : morphism.
@@ -148,7 +149,7 @@ Section iso_contr.
   Qed.
 
   (** *** Equality between isomorphisms is equivalent to by equality between their forward components *)
-  Global Instance isequiv_path_isomorphic
+  Global Instance isequiv_path_isomorphic {i j}
   : IsEquiv (path_isomorphic i j).
   Proof.
     intros.
@@ -193,6 +194,7 @@ Section iso_equiv_relation.
     | abstract iso_comp_t @right_inverse ].
   Defined.
 
+  #[local]
   Hint Immediate isisomorphism_inverse : typeclass_instances.
 
   (** *** Being isomorphic is a reflexive relation *)
@@ -214,6 +216,7 @@ Section iso_equiv_relation.
        end.
 End iso_equiv_relation.
 
+#[export]
 Hint Immediate isisomorphism_inverse : typeclass_instances.
 
 (** ** Epimorphisms and Monomorphisms *)
@@ -374,7 +377,13 @@ Section EpiMono.
   End iso.
 End EpiMono.
 
-Hint Immediate @isepimorphism_identity @ismonomorphism_identity @ismonomorphism_compose @isepimorphism_compose : category morphism.
+#[export] Hint Immediate isisomorphism_inverse : typeclass_instances.
+
+#[export]
+Hint Immediate
+  isepimorphism_identity ismonomorphism_identity
+  ismonomorphism_compose isepimorphism_compose
+  : category morphism.
 
 (** ** Lemmas about [idtoiso] *)
 Section iso_lemmas.
@@ -455,6 +464,7 @@ Section iso_lemmas.
   Defined.
 End iso_lemmas.
 
+#[export]
 Hint Extern 1 (@IsIsomorphism _ _ _ (@morphism_of ?C ?D ?F ?s ?d ?m))
 => apply (@iso_functor C D F s d m) : typeclass_instances.
 

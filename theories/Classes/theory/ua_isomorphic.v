@@ -28,9 +28,7 @@ Global Existing Instance is_homomorphism_isomorphic.
 Global Existing Instance is_isomorphism_isomorphic.
 
 Module isomorphic_notations.
-  Global Notation "A ≅ B" := (Isomorphic A B)
-                             (at level 75, no associativity)
-                             : Algebra_scope.
+  Global Notation "A ≅ B" := (Isomorphic A B) : Algebra_scope.
 End isomorphic_notations.
 
 Import isomorphic_notations.
@@ -135,7 +133,7 @@ Qed.
 Section isequiv_isomorphic_id.
   Context `{Univalence} {σ} (A B : Algebra σ) `{IsHSetAlgebra B}.
 
-  Lemma sect_id_isomorphic : Sect id_isomorphic (@isomorphic_id σ A B).
+  Lemma sect_id_isomorphic : (@isomorphic_id σ A B) o id_isomorphic == idmap.
   Proof.
     intro F.
     apply path_hset_isomorphic.
@@ -147,7 +145,7 @@ Section isequiv_isomorphic_id.
     apply transport_path_universe.
   Qed.
 
-  Lemma sect_isomorphic_id : Sect (@isomorphic_id σ A B) id_isomorphic.
+  Lemma sect_isomorphic_id : id_isomorphic o (@isomorphic_id σ A B) == idmap.
   Proof.
     intro p.
     destruct p.

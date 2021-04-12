@@ -1,7 +1,13 @@
 (* -*- mode: coq; mode: visual-line -*-  *)
 (** * Truncatedness *)
 
-Require Import Overture PathGroupoids Contractible Equivalences.
+Require Import
+  Basics.Overture
+  Basics.PathGroupoids
+  Basics.Contractible
+  Basics.Equivalences
+  Basics.Tactics
+  Basics.Nat.
 Local Open Scope trunc_scope.
 Local Open Scope path_scope.
 Generalizable Variables A B m n f.
@@ -60,6 +66,12 @@ Definition int_to_trunc_index (v : Decimal.int) : option trunc_index
                         end
      end.
 
+Definition num_int_to_trunc_index (v : Numeral.int) : option trunc_index :=
+  match v with
+  | Numeral.IntDec v => int_to_trunc_index v
+  | Numeral.IntHex _ => None
+  end.
+
 Fixpoint trunc_index_to_little_uint n acc :=
   match n with
   | minus_two => acc
@@ -75,7 +87,11 @@ Definition trunc_index_to_int n :=
   | n => Decimal.Pos (Decimal.rev (trunc_index_to_little_uint n Decimal.zero))
   end.
 
-Numeral Notation trunc_index int_to_trunc_index trunc_index_to_int : trunc_scope (warning after 5000).
+Definition trunc_index_to_num_int n :=
+  Numeral.IntDec (trunc_index_to_int n).
+
+Number Notation trunc_index num_int_to_trunc_index trunc_index_to_num_int
+  : trunc_scope.
 
 (** ** Arithmetic on truncation-levels. *)
 Fixpoint trunc_index_add (m n : trunc_index) : trunc_index
@@ -254,7 +270,7 @@ Proof.
   simple_induction n n IH; simpl; intros A H x y.
   - apply contr_paths_contr.
   - apply IH, H.
-Qed.
+Defined.
 
 (** This could be an [Instance] (with very high priority, so it doesn't get applied trivially).  However, we haven't given typeclass search any hints allowing it to solve goals like [m <= n], so it would only ever be used trivially.  *)
 Definition trunc_leq {m n} (Hmn : m <= n) `{IsTrunc m A}
@@ -283,8 +299,11 @@ Definition trunc_hset {n} {A} `{IsHSet A}
   := (@trunc_leq 0 n.+3 tt _ _).
 
 (** Consider the preceding definitions as instances for typeclass search, but only if the requisite hypothesis is already a known assumption; otherwise they result in long or interminable searches. *)
+#[export]
 Hint Immediate trunc_contr : typeclass_instances.
+#[export]
 Hint Immediate trunc_hprop : typeclass_instances.
+#[export]
 Hint Immediate trunc_hset : typeclass_instances.
 
 (** Equivalence preserves truncation (this is, of course, trivial with univalence).
@@ -399,6 +418,20 @@ Defined.
 Definition equiv_iff_hprop `{IsHProp A} `{IsHProp B}
   : (A -> B) -> (B -> A) -> (A <~> B)
   := fun f g => equiv_iff_hprop_uncurried (f, g).
+
+Corollary iff_contr_hprop (A : Type) `{IsHProp A}
+  : Contr A <-> A.
+Proof.
+  split.
+  - apply center.
+  - rapply contr_inhabited_hprop.
+Defined.
+
+Corollary equiv_contr_hprop (A : Type) `{Funext} `{IsHProp A}
+  : Contr A <~> A.
+Proof.
+  exact (equiv_iff_hprop_uncurried (iff_contr_hprop A)).
+Defined.
 
 (** Truncatedness is an hprop. *)
 Global Instance ishprop_istrunc `{Funext} (n : trunc_index) (A : Type)

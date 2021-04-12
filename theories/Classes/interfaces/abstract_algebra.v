@@ -1,4 +1,4 @@
-Require Coq.Init.Peano.
+Require Import Spaces.Nat.
 Require Export HoTT.Classes.interfaces.canonical_names.
 Require Import HProp.
 
@@ -48,6 +48,7 @@ Section setoid_morphisms.
 End setoid_morphisms.
 
 (* HOTT TODO check if this is ok/useful *)
+#[export]
 Hint Extern 4 (?f _ = ?f _) => eapply (ap f) : core.
 
 Section setoid_binary_morphisms.
@@ -148,17 +149,20 @@ Section upper_classes.
     ; dec_recip_inverse : forall x, x <> 0 -> x / x = 1 }.
 
   Class FieldCharacteristic@{j} {Aap : Apart@{i j} A} (k : nat) : Type@{j}
-    := field_characteristic : forall n : nat, Peano.lt 0 n ->
-      iff@{j j j} (forall m : nat, not@{j j} (paths@{Set} n (Peano.mult k m)))
-        (@apart A Aap (Peano.nat_iter n (1 +) 0) 0).
+    := field_characteristic : forall n : nat, Nat.lt@{i} 0 n ->
+      iff@{j j j} (forall m : nat, not@{j j} (paths@{Set} n (Nat.mul k m)))
+        (@apart A Aap (Nat.nat_iter n (1 +) 0) 0).
 
 End upper_classes.
 
 (* Due to bug #2528 *)
+#[export]
 Hint Extern 4 (PropHolds (1 <> 0)) =>
   eapply @intdom_nontrivial : typeclass_instances.
+#[export]
 Hint Extern 5 (PropHolds (1 ≶ 0)) =>
   eapply @field_nontrivial : typeclass_instances.
+#[export]
 Hint Extern 5 (PropHolds (1 <> 0)) =>
   eapply @decfield_nontrivial : typeclass_instances.
 
@@ -168,6 +172,7 @@ Integers -> IntegralDomain -> Ring and sometimes directly. Making this an
 instance with a low priority instead of using intdom_ring:> IsRing forces Coq to
 take the right way 
 *)
+#[export]
 Hint Extern 10 (IsRing _) => apply @intdom_ring : typeclass_instances.
 
 Arguments recip_inverse {A Aplus Amult Azero Aone Anegate Aap Arecip IsField} _.
@@ -275,7 +280,14 @@ Section jections.
     apply injective.
     assumption.
   Qed.
+
 End jections.
+
+Global Instance isinj_idmap A : @IsInjective A A idmap
+  := fun x y => idmap.
+
+#[export]
+Hint Unfold IsInjective : typeclass_instances.
 
 Section strong_injective.
   Context {A B} {Aap : Apart A} {Bap : Apart B} (f : A -> B) .
@@ -298,6 +310,10 @@ Proof.
   unfold IsSemiGroupPreserving; exact _.
 Defined.
 
+Definition issig_IsSemiRingPreserving {A B : Type}
+  `{Plus A, Plus B, Mult A, Mult B, Zero A, Zero B, One A, One B} {f : A -> B}
+  : _ <~> IsSemiRingPreserving f := ltac:(issig).
+
 Definition issig_IsMonoidPreserving {A B : Type} `{SgOp A} `{SgOp B}
   `{MonUnit A} `{MonUnit B} {f : A -> B} : _ <~> IsMonoidPreserving f
   := ltac:(issig).
@@ -310,6 +326,15 @@ Proof.
   srapply (trunc_equiv' _ (equiv_sigma_prod0 _ _)^-1).
   srapply trunc_prod.
   unfold IsUnitPreserving.
+  exact _.
+Defined.
+
+Global Instance ishprop_issemiringpreserving `{Funext} {A B : Type} `{IsHSet B}
+  `{Plus A, Plus B, Mult A, Mult B, Zero A, Zero B, One A, One B}
+  (f : A -> B)
+  : IsHProp (IsSemiRingPreserving f).
+Proof.
+  snrapply (trunc_equiv' _ issig_IsSemiRingPreserving).
   exact _.
 Defined.
 

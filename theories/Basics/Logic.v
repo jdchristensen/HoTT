@@ -10,29 +10,28 @@
 (*   This file has been modified for the purposes of the HoTT library.  *)
 (************************************************************************)
 
-Require Import Notations.
+Set Implicit Arguments.
 
-Ltac easy :=
-  let rec use_hyp H :=
-    match type of H with
-    | _ => try solve [inversion H]
-    end
-  with do_intro := let H := fresh in intro H; use_hyp H
-  with destruct_hyp H := case H; clear H; do_intro; do_intro in
-  let rec use_hyps :=
-    match goal with
-    | H : _ |- _ => solve [inversion H]
-    | _ => idtac
-    end in
-  let rec do_atom :=
-    solve [reflexivity | symmetry; trivial] ||
-    contradiction ||
-    (split; do_atom)
-  with do_ccl := trivial; repeat do_intro; do_atom in
-  (use_hyps; do_ccl) || fail "Cannot solve this goal".
+Require Export Basics.Notations.
 
-Tactic Notation "now" tactic(t) := t; easy.
+Global Set Universe Polymorphism.
+Global Set Asymmetric Patterns.
 
-Create HintDb rewrite discriminated.
-Hint Variables Opaque : rewrite.
-Create HintDb typeclass_instances discriminated.
+Notation "A -> B" := (forall (_ : A), B) : type_scope.
+
+(** * Propositional connectives *)
+
+(** [True] is the unit type. *)
+Inductive True : Type :=
+  I : True.
+
+(** [False] is the empty type. *)
+Inductive False : Type :=.
+
+(** [not A], written [~A], is the negation of [A] *)
+Definition not (A:Type) : Type := A -> False.
+
+(* Notation "~ x" := (not x) : type_scope. *)
+
+#[export] Hint Unfold not : core.
+#[export] Hint Resolve I : core.

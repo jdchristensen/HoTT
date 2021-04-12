@@ -70,6 +70,62 @@ Definition equiv_path_TypeO@{i j} {fs : Funext} O (T T' : Type_ O)
 Global Instance inO_TypeO {O : Subuniverse} (A : Type_ O) : In O A
   := A.2.
 
+(** ** Properties of Subuniverses *)
+
+(** A map is O-local if all its fibers are. *)
+Class MapIn (O : Subuniverse) {A B : Type} (f : A -> B)
+  := inO_hfiber_ino_map : forall (b:B), In O (hfiber f b).
+
+Global Existing Instance inO_hfiber_ino_map.
+
+Section Subuniverse.
+  Context (O : Subuniverse).
+
+  (** Being a local map is an hprop *)
+  Global Instance ishprop_mapinO `{Funext} {A B : Type} (f : A -> B)
+  : IsHProp (MapIn O f).
+  Proof.
+    apply trunc_forall.
+  Defined.
+
+  (** Anything homotopic to a local map is local. *)
+  Definition mapinO_homotopic {A B : Type} (f : A -> B) {g : A -> B}
+             (p : f == g) `{MapIn O _ _ f}
+  : MapIn O g.
+  Proof.
+    intros b.
+    exact (inO_equiv_inO (hfiber f b)
+                          (equiv_hfiber_homotopic f g p b)).
+  Defined.
+
+  (** The projection from a family of local types is local. *)
+  Global Instance mapinO_pr1 {A : Type} {B : A -> Type}
+         `{forall a, In O (B a)}
+  : MapIn O (@pr1 A B).
+  Proof.
+    intros a.
+    exact (inO_equiv_inO (B a) (hfiber_fibration a B)).
+  Defined.
+
+  (** A family of types is local if and only if the associated projection map is local. *)
+  Lemma iff_forall_inO_mapinO_pr1 {A : Type} (B : A -> Type)
+    : (forall a, In O (B a)) <-> MapIn O (@pr1 A B).
+  Proof.
+    split.
+    - exact _. (* Uses the instance mapinO_pr1 above. *)
+    - rapply functor_forall; intros a x.
+      exact (inO_equiv_inO (hfiber pr1 a)
+                           (hfiber_fibration a B)^-1%equiv).
+  Defined.
+
+  Lemma equiv_forall_inO_mapinO_pr1 `{Funext} {A : Type} (B : A -> Type)
+    : (forall a, In O (B a)) <~> MapIn O (@pr1 A B).
+  Proof.
+    exact (equiv_iff_hprop_uncurried (iff_forall_inO_mapinO_pr1 B)).
+  Defined.
+
+End Subuniverse.
+
 (** *** Reflections *)
 
 (** A pre-reflection is a map to a type in the subuniverse. *)
@@ -425,6 +481,7 @@ Section Reflective_Subuniverse.
     := fun _ => inO_equiv_inO (O T) (to O T)^-1.
 
     (* We don't make this an ordinary instance, but we allow it to solve [In O] constraints if we already have [IsEquiv] as a hypothesis.  *)
+    #[local]
     Hint Immediate inO_isequiv_to_O : typeclass_instances.
 
     Definition inO_iff_isequiv_to_O (T:Type)
@@ -435,9 +492,9 @@ Section Reflective_Subuniverse.
 
     (** Thus, [T] is in a subuniverse as soon as [to O T] admits a retraction. *)
     Definition inO_to_O_retract (T:Type) (mu : O T -> T)
-    : Sect (to O T) mu -> In O T.
+    : mu o (to O T) == idmap -> In O T.
     Proof.
-      unfold Sect; intros H.
+      intros H.
       apply inO_isequiv_to_O.
       apply isequiv_adjointify with (g:=mu).
       - refine (O_indpaths (to O T o mu) idmap _).
@@ -797,6 +854,7 @@ Section Reflective_Subuniverse.
       all: refine (inO_hfiber pr1 x); assumption.
     Defined.
 
+    #[local]
     Hint Immediate inO_unsigma : typeclass_instances.
 
     (** The reflector preserving hfibers is a characterization of lex modalities.  Here is the comparison map. *)
@@ -830,10 +888,10 @@ Section Reflective_Subuniverse.
         exact (to O _ (a;p)).
       - apply O_functor.
         exact (functor_sigma idmap (fun x => to O (P x))).
-      - unfold Sect, O_functor; rapply O_indpaths.
+      - unfold O_functor; rapply O_indpaths.
         intros [a p]; simpl.
         abstract (repeat (rewrite O_rec_beta); reflexivity).
-      - unfold Sect, O_functor; rapply O_indpaths.
+      - unfold O_functor; rapply O_indpaths.
         intros [a op]; revert op; rapply O_indpaths; intros p; simpl.
         abstract (repeat (rewrite O_rec_beta); reflexivity).
     Defined.
@@ -1210,6 +1268,14 @@ Section ConnectedTypes.
   : IsConnected O A -> IsConnected O B
     := isconnected_equiv A f.
 
+  (** The O-connected types form a subuniverse. *)
+  Definition Conn : Subuniverse.
+  Proof.
+    rapply (Build_Subuniverse (IsConnected O)).
+    simpl; intros T U isconnT f isequivf.
+    exact (isconnected_equiv T f isconnT).
+  Defined.
+
   (** Connectedness of a type [A] can equivalently be characterized by the fact that any map to an [O]-type [C] is nullhomotopic.  Here is one direction of that equivalence. *)
   Definition isconnected_elim {A : Type} `{IsConnected O A} (C : Type) `{In O C} (f : A -> C)
   : NullHomotopy f.
@@ -1310,13 +1376,6 @@ End ConnectedTypes.
 
 (** ** Modally truncated maps *)
 
-(** A map is "in [O]" if each of its fibers is. *)
-
-Class MapIn (O : ReflectiveSubuniverse) {A B : Type} (f : A -> B)
-  := inO_hfiber_ino_map : forall (b:B), In O (hfiber f b).
-
-Global Existing Instance inO_hfiber_ino_map.
-
 Section ModalMaps.
   Context (O : ReflectiveSubuniverse).
 
@@ -1325,25 +1384,6 @@ Section ModalMaps.
   : MapIn O f.
   Proof.
     intros b; exact _.
-  Defined.
-
-  (** Anything homotopic to a modal map is modal. *)
-  Definition mapinO_homotopic {A B : Type} (f : A -> B) {g : A -> B}
-             (p : f == g) `{MapIn O _ _ f}
-  : MapIn O g.
-  Proof.
-    intros b.
-    refine (inO_equiv_inO (hfiber f b)
-                          (equiv_hfiber_homotopic f g p b)).
-  Defined.
-
-  (** The projection from a family of modal types is modal. *)
-  Global Instance mapinO_pr1 {A : Type} {B : A -> Type}
-         `{forall a, In O (B a)}
-  : MapIn O (@pr1 A B).
-  Proof.
-    intros a.
-    refine (inO_equiv_inO (B a) (hfiber_fibration a B)).
   Defined.
 
   (** A slightly specialized result: if [Empty] is modal, then a map with decidable hprop fibers (such as [inl] or [inr]) is modal. *)
@@ -1357,13 +1397,6 @@ Section ModalMaps.
     destruct (equiv_decidable_hprop (hfiber f b)) as [e|e].
     - exact (inO_equiv_inO Unit e^-1).
     - exact (inO_equiv_inO Empty e^-1).
-  Defined.
-
-  (** Being modal is an hprop *)
-  Global Instance ishprop_mapinO `{Funext} {A B : Type} (f : A -> B)
-  : IsHProp (MapIn O f).
-  Proof.
-    apply trunc_forall.
   Defined.
 
   (** Any map between modal types is modal. *)
@@ -1597,6 +1630,24 @@ Section ConnectedMaps.
   : (forall b, P b) <~> (forall a, P (f a))
   := Build_Equiv _ _ _ (isequiv_o_conn_map f P).
 
+  (** When considering lexness properties, we often want to consider the property of the universe of modal types being modal.  We can't say this directly (except in the accessible, hence liftable, case) because it lives in a higher universe, but we can make a direct extendability statement.  Here we prove a lemma that oo-extendability into the universe follows from plain extendability, essentially because the type of equivalences between two [O]-modal types is [O]-modal. *)
+  Definition ooextendable_TypeO_from_extension
+             {A B : Type} (f : A -> B) `{IsConnMap O _ _ f}
+             (extP : forall P : A -> Type_ O, ExtensionAlong f (fun _ : B => Type_ O) P)
+    : ooExtendableAlong f (fun _ => Type_ O).
+  Proof.
+    (** By definition, in addition to our assumption [extP] that maps into [Type_ O] extend along [f], we must show that sections of families of equivalences are [ooExtendableAlong] it.  *)
+    intros [|[|n]].
+    - exact tt.                                 (* n = 0 *)
+    (** Note that due to the implementation of [ooExtendableAlong], we actually have to use [extP] twice (there should probably be a general cofixpoint lemma for this). *)
+    - split; [ apply extP | intros; exact tt ]. (* n = 1 *)
+    - split; [ apply extP | ].                  (* n > 1 *)
+      (** What remains is to extend families of paths. *)
+      intros P Q; rapply (ooextendable_postcompose' (fun b => P b <~> Q b)).
+      + intros x; refine (equiv_path_TypeO _ _ _ oE equiv_path_universe _ _).
+      + rapply ooextendable_conn_map_inO.
+  Defined.
+
   (** Conversely, if a map satisfies this elimination principle (expressed via extensions), then it is connected.  This completes the proof of Lemma 7.5.7 from the book. *)
   Lemma conn_map_from_extension_elim {A B : Type} (f : A -> B)
   : (forall (P : B -> Type) {P_inO : forall b:B, In O (P b)}
@@ -1655,6 +1706,7 @@ Section ConnectedMaps.
               (equiv_sigma_contr (fun a:A => const tt a = tt)) _).
   Defined.
 
+  #[local]
   Hint Immediate isconnected_conn_map_to_unit : typeclass_instances.
 
   Global Instance conn_map_to_unit_isconnected {A : Type}
@@ -1862,7 +1914,7 @@ Class O_eq@{i1 i2 j} (O1 : Subuniverse@{i1}) (O2 : Subuniverse@{i2}) :=
 
 Global Existing Instances O_eq_l O_eq_r.
 
-Notation "O1 <=> O2" := (O_eq O1 O2) (at level 70) : subuniverse_scope.
+Infix "<=>" := O_eq : subuniverse_scope.
 
 Definition issig_O_eq O1 O2 : _ <~> O_eq O1 O2 := ltac:(issig).
 
@@ -2009,3 +2061,7 @@ Proof.
   - pose (inO_leq O' (Sep O));
     intros; rapply ooextendable_conn_map_inO.
 Defined.
+
+#[export] Hint Immediate inO_isequiv_to_O : typeclass_instances.
+#[export] Hint Immediate inO_unsigma : typeclass_instances.
+#[export] Hint Immediate isconnected_conn_map_to_unit : typeclass_instances.

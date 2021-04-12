@@ -1,4 +1,5 @@
 Require Import HoTT.Basics HoTT.Types.
+Require Import HProp HFiber.
 Require Import PathAny.
 Require Export Classes.interfaces.abstract_algebra.
 Require Export Classes.theory.groups.
@@ -26,11 +27,12 @@ Record Group := {
   group_isgroup : IsGroup group_type;
 }.
 
-Arguments group_type {_}.
 Arguments group_sgop {_}.
 Arguments group_unit {_}.
 Arguments group_inverse {_}.
 Arguments group_isgroup {_}.
+(** We should never need to unfold the proof that something is a group. *)
+Global Opaque group_isgroup.
 
 (** We coerce groups back to types. *)
 Coercion group_type : Group >-> Sortclass.
@@ -38,6 +40,33 @@ Global Existing Instances group_sgop group_unit group_inverse group_isgroup.
 
 Definition issig_group : _ <~> Group
   := ltac:(issig).
+
+(** * Proof automation *)
+(** Many times in group theoretic proofs we want some form of automation for obvious identities. Here we implement such a behaviour. *)
+
+(** We create a database of hints for the group theory library *)
+Create HintDb group_db.
+
+(** Our group laws can be proven easily with tactics such as [rapply associativity]. However this requires a typeclass search on more general algebraic structures. Therefore we explicitly list many groups laws here so that coq can use them. We also create hints for each law in our groups database. *)
+Local Definition grp_law_associativity {G : Group} (x y z : G) := associativity x y z.
+#[export] Hint Immediate grp_law_associativity : group_db.
+Local Definition grp_law_left_identity {G : Group} (x : G) := left_identity x.
+#[export] Hint Immediate grp_law_left_identity : group_db.
+Local Definition grp_law_right_identity {G : Group} (x : G) := right_identity x.
+#[export] Hint Immediate grp_law_right_identity : group_db.
+Local Definition grp_law_left_inverse {G : Group} (x : G) := left_inverse x.
+#[export] Hint Immediate grp_law_left_inverse : group_db.
+Local Definition grp_law_right_inverse {G : Group} (x : G) := right_inverse x.
+#[export] Hint Immediate grp_law_right_inverse : group_db.
+
+(** Given path types in a product we may want to decompose. *)
+#[export] Hint Extern 5 (@paths (_ * _) _ _) => (apply path_prod) : group_db.
+(** Given path types in a sigma type of a hprop family (i.e. a subset) we may want to decompose. *)
+#[export] Hint Extern 6 (@paths (sig _) _ _) => (rapply path_sigma_hprop) : group_db.
+
+(** We also declare a tactic (notation) for automatically solving group laws *)
+(** TODO: improve this tactic so that it also rewrites and is able to solve basic group lemmas. *)
+Tactic Notation "grp_auto" := hnf; intros; eauto with group_db.
 
 (** Groups are pointed sets with point the identity. *)
 Global Instance ispointed_group (G : Group)
@@ -69,19 +98,7 @@ Proof.
   apply left_identity.
 Defined.
 
-(** Inverses are involutive *)
-(* Check negate_involutive. *)
-
-(** Inverses distribute over the group operation *)
-(* Check negate_sg_op. *)
-
-(** Group elements can be cancelled on the left of an equation *)
-(* Check group_cancelL. *)
-
-(** Group elements can be cancelled on the right of an equation *)
-(* Check group_cancelR. *)
-
-(** Definition of Group Homomorphism *)
+(** ** Group homomorphisms *)
 
 (* A group homomorphism consists of a map between groups and a proof that the map preserves the group operation. *)
 Record GroupHomomorphism (G H : Group) := Build_GroupHomomorphism' {
@@ -124,6 +141,7 @@ Definition grp_homo_unit {G H} (f : GroupHomomorphism G H)
 Proof.
   apply monmor_unitmor.
 Defined.
+#[export] Hint Immediate grp_homo_unit : group_db.
 
 (** Group homomorphisms preserve group operations *)
 Definition grp_homo_op {G H} (f : GroupHomomorphism G H)
@@ -131,6 +149,7 @@ Definition grp_homo_op {G H} (f : GroupHomomorphism G H)
 Proof.
   apply monmor_sgmor.
 Defined.
+#[export] Hint Immediate grp_homo_op : group_db.
 
 (** Group homomorphisms preserve inverses *)
 Definition grp_homo_inv {G H} (f : GroupHomomorphism G H)
@@ -144,6 +163,7 @@ Proof.
     apply left_inverse.
   + apply right_inverse.
 Defined.
+#[export] Hint Immediate grp_homo_inv : group_db.
 
 (** When building a group homomorphism we only need that it preserves the group operation, since we can prove that the identity is preserved. *)
 Definition Build_GroupHomomorphism {G H : Group}
@@ -166,19 +186,6 @@ Definition grp_homo_compose {G H K : Group}
 Proof.
   intros f g.
   srapply (Build_GroupHomomorphism (f o g)).
-Defined.
-
-Definition grp_homo_id {G : Group} : GroupHomomorphism G G.
-Proof.
-  srapply (Build_GroupHomomorphism idmap).
-Defined.
-
-Definition grp_homo_const {G H : Group} : GroupHomomorphism G H.
-Proof.
-  snrapply Build_GroupHomomorphism.
-  - exact (fun _ => mon_unit).
-  - intros x y.
-    exact (left_identity mon_unit)^.
 Defined.
 
 (* An isomorphism of groups is a group homomorphism that is an equivalence. *)
@@ -256,6 +263,19 @@ Proof.
   srapply Build_GroupIsomorphism.
   1: exact (grp_homo_compose g f).
   exact _.
+Defined.
+
+Definition grp_homo_id {G : Group} : GroupHomomorphism G G.
+Proof.
+  srapply (Build_GroupHomomorphism idmap).
+Defined.
+
+Definition grp_homo_const {G H : Group} : GroupHomomorphism G H.
+Proof.
+  snrapply Build_GroupHomomorphism.
+  - exact (fun _ => mon_unit).
+  - intros x y.
+    exact (left_identity mon_unit)^.
 Defined.
 
 (** Under univalence, equality of groups is equivalent to isomorphism of groups. *)
@@ -349,11 +369,141 @@ Proof.
   all: intro; apply negate_involutive.
 Defined.
 
-(** Trivial group *)
+(** ** Working with equations in groups *)
+
+(** Inverses are involutive *)
+(* Check negate_involutive. *)
+
+(** Inverses distribute over the group operation *)
+(* Check negate_sg_op. *)
+
+(** Group elements can be cancelled both on the left and the right. *)
+(* Check group_cancelR. *)
+(* Check group_cancelL. *)
+
+(* TODO make all of these into equivalences *)
+Lemma group_moveR_gV {G : Group} (x y : G)
+  : x = y <~> x * -y = mon_unit.
+Proof.
+  apply equiv_iff_hprop.
+  1: intros []; apply right_inverse.
+  intro p.
+  apply (group_cancelR (-y)).
+  exact (p @ (right_inverse y)^).
+Defined.
+
+Lemma group_moveR_Vg {G : Group} (x y : G)
+  : x = y <~> -y * x = mon_unit.
+Proof.
+  apply equiv_iff_hprop.
+  1: intros []; apply left_inverse.
+  intro p.
+  apply (group_cancelL (-y)).
+  exact (p @ (left_inverse y)^).
+Defined.
+
+Lemma group_moveL_1M {G : Group} (x y : G)
+  : x * (-y) = mon_unit -> x = y.
+Proof.
+  intro p.
+  apply (group_cancelR (- y)).
+  exact (p @ (right_inverse y)^).
+Defined.
+
+Lemma group_moveL_M1 {G : Group} (x y : G)
+  : -y * x = mon_unit -> x = y.
+Proof.
+  intro p.
+  apply (group_cancelL (- y)).
+  exact (p @ (left_inverse y)^).
+Defined.
+
+Lemma group_moveL_gM {G : Group} (x y z : G)
+  : x * -z = y -> x = y * z.
+Proof.
+  intro p.
+  apply (group_cancelR (- z)).
+  refine (_ @ associativity _ _ _).
+  exact (p @ (right_identity y)^ @ (ap (fun a => y * a) (right_inverse z))^).
+Defined.
+
+Lemma group_moveL_Mg {G : Group} (x y z : G)
+  : -y * x = z -> x = y * z.
+Proof.
+  intro p.
+  apply (group_cancelL (- y)).
+  refine (_ @ (associativity _ _ _)^).
+  exact (p @ (left_identity z)^ @ (ap (fun a => a * z) (left_inverse y))^).
+Defined.
+
+Lemma group_moveR_1M {G : Group} (x y : G)
+  : mon_unit = y * (-x) -> x = y.
+Proof.
+  intro p.
+  apply (group_cancelR (- x)).
+  exact (right_inverse x @ p).
+Defined.
+
+Lemma group_moveR_M1 {G : Group} (x y : G)
+  : mon_unit = -x * y -> x = y.
+Proof.
+  intro p.
+  apply (group_cancelL (- x)).
+  exact (left_inverse x @ p).
+Defined.
+
+Lemma group_moveR_gM {G : Group} (x y z : G)
+  : x = z * -y -> x * y = z.
+Proof.
+  intro p.
+  apply (group_cancelR (- y)).
+  refine ((associativity _ _ _)^ @ _).
+  exact (ap (fun a => x * a) (right_inverse y) @ right_identity _ @ p).
+Defined.
+
+Lemma group_moveR_Mg {G : Group} (x y z : G)
+  : y = -x * z -> x * y = z.
+Proof.
+  intro p.
+  apply (group_cancelL (- x)).
+ refine (associativity _ _ _ @ _).
+  exact (ap (fun a => a * y) (left_inverse x) @ left_identity _ @ p).
+Defined.
+
+(** Given a group element [a0 : A] over [b : B], multiplication by [a] establishes an equivalence between the kernel and the fiber over [b]. *)
+Lemma equiv_grp_hfiber {A B : Group} (f : GroupHomomorphism A B) (b : B)
+  : forall (a0 : hfiber f b), hfiber f b <~> hfiber f mon_unit.
+Proof.
+  intros [a0 p].
+  refine (equiv_transport (hfiber f) _ _ (right_inverse b) oE _).
+  rapply (equiv_functor_hfiber (h:=right_mult_equiv (-a0)) (k:=right_mult_equiv (- b))).
+  intro a; cbn; symmetry.
+  refine (_ @ ap (fun x => f a * (- x)) p).
+  exact (grp_homo_op f _ _ @ ap (fun x => f a * x) (grp_homo_inv f a0)).
+Defined.
+
+(** ** The trivial group *)
+
 Definition grp_trivial : Group.
 Proof.
   refine (Build_Group Unit (fun _ _ => tt) tt (fun _ => tt) _).
   repeat split; try exact _; by intros [].
+Defined.
+
+(** Map out of trivial group *)
+Definition grp_trivial_rec (G : Group) : GroupHomomorphism grp_trivial G.
+Proof.
+  snrapply Build_GroupHomomorphism.
+  1: exact (fun _ => group_unit).
+  intros ??; symmetry; apply left_identity.
+Defined.
+
+(** Map into trivial group *)
+Definition grp_trivial_corec (G : Group) : GroupHomomorphism G grp_trivial.
+Proof.
+  snrapply Build_GroupHomomorphism.
+  1: exact (fun _ => tt).
+  intros ??; symmetry; apply left_identity.
 Defined.
 
 (** * Direct product of group *)
@@ -370,32 +520,9 @@ Proof.
   (** Inverse *)
   { intros [g h].
     exact (-g, -h). }
-  (** Group laws *)
-  srapply Build_IsGroup.
-  (** Monoid laws *)
-  { srapply Build_IsMonoid.
-    (** Semigroup lawss *)
-    { srapply Build_IsSemiGroup.
-      (** Associativity *)
-      intros [g1 h1] [g2 h2] [g3 h3].
-      apply path_prod; cbn.
-      1,2: apply associativity. }
-    (** Left identity *)
-    { intros [g h].
-      apply path_prod; cbn.
-      1,2: apply left_identity. }
-    (** Right identity *)
-    { intros [g h].
-      apply path_prod; cbn.
-      1,2: apply right_identity. } }
-  (** Left inverse *)
-  { intros [g h].
-    apply path_prod; cbn.
-    1,2: apply left_inverse. }
-  (** Right inverse *)
-  { intros [g h].
-    apply path_prod; cbn.
-    1,2: apply right_inverse. }
+  repeat split.
+  1: exact _.
+  all: grp_auto.
 Defined.
 
 Proposition grp_prod_corec {G H K : Group}
@@ -494,13 +621,18 @@ Proof.
     exact (isequiv_adjointify f g p q).
 Defined.
 
+Global Instance is1cat_strong `{Funext} : Is1Cat_Strong Group.
+Proof.
+  rapply Build_Is1Cat_Strong.
+  all: intros; apply equiv_path_grouphomomorphism; intro; reflexivity.
+Defined.
+
+(** *** Properties of maps to and from the trivial group *)
+
 Global Instance isinitial_grp_trivial : IsInitial grp_trivial.
 Proof.
   intro G.
-  snrefine (_;_).
-  { snrapply Build_GroupHomomorphism.
-    1: exact (fun _ => group_unit).
-    intros ??; symmetry; apply left_identity. }
+  exists (grp_trivial_rec _).
   intros g [].
   apply (grp_homo_unit g).
 Defined.
@@ -509,7 +641,7 @@ Global Instance contr_grp_homo_trivial_source `{Funext} G
   : Contr (GroupHomomorphism grp_trivial G).
 Proof.
   snrapply Build_Contr.
-  1: exact (pr1 (isinitial_grp_trivial _)).
+  1: exact (grp_trivial_rec _).
   intros g.
   rapply equiv_path_grouphomomorphism.
   intros [].
@@ -520,10 +652,7 @@ Defined.
 Global Instance isterminal_grp_trivial : IsTerminal grp_trivial.
 Proof.
   intro G.
-  snrefine (_;_).
-  { snrapply Build_GroupHomomorphism.
-    1: exact (fun _ => tt).
-    intros ??; symmetry; apply left_identity. }
+  exists (grp_trivial_corec _).
   intros g x.
   apply path_contr.
 Defined.
@@ -538,3 +667,32 @@ Proof.
   intros x.
   apply path_contr.
 Defined.
+
+Global Instance ishprop_grp_iso_trivial `{Univalence} (G : Group)
+  : IsHProp (GroupIsomorphism G grp_trivial).
+Proof.
+  apply equiv_hprop_allpath.
+  intros f g.
+  apply equiv_path_groupisomorphism; intro; apply path_ishprop.
+Defined.
+
+(** ** Free groups *)
+
+Definition FactorsThroughFreeGroup (S : Type) (F_S : Group)
+  (i : S -> F_S) (A : Group) (g : S -> A) : Type
+  := {f : F_S $-> A & f o i == g}.
+
+(** Universal property of a free group on a set (type). *)
+Class IsFreeGroupOn (S : Type) (F_S : Group) (i : S -> F_S)
+  := contr_isfreegroupon : forall (A : Group) (g : S -> A),
+      Contr (FactorsThroughFreeGroup S F_S i A g).
+Global Existing Instance contr_isfreegroupon.
+
+(** A group is free if there exists a generating type on which it is a free group *)
+Class IsFreeGroup (F_S : Group)
+  := isfreegroup : {S : _ & {i : _ & IsFreeGroupOn S F_S i}}.
+
+Global Instance isfreegroup_isfreegroupon (S : Type) (F_S : Group) (i : S -> F_S)
+  {H : IsFreeGroupOn S F_S i}
+  : IsFreeGroup F_S
+  := (S; i; H).

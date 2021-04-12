@@ -1,5 +1,6 @@
 (** * Morphisms in a functor category *)
 Require Import Category.Core Functor.Core NaturalTransformation.Paths FunctorCategory.Core Category.Morphisms NaturalTransformation.Core NaturalTransformation.Composition.Core.
+Require Import Basics.Tactics.
 
 Set Universe Polymorphism.
 Set Implicit Arguments.
@@ -37,8 +38,10 @@ Proof.
   - exact (apD10 (ap components_of right_inverse) x).
 Defined.
 
+#[export]
 Hint Immediate isisomorphism_components_of : typeclass_instances.
 (** When one of the functors is the identity functor, we fail to match correctly, because [apply] is stupid.  So we do its work for it. *)
+#[export]
 Hint Extern 10 (@IsIsomorphism _ _ _ (@components_of ?C ?D ?F ?G ?T ?x))
 => apply (fun H' => @isisomorphism_components_of _ C D F G T H' x)
    : typeclass_instances.
@@ -71,6 +74,7 @@ Proof.
     ).
 Defined.
 
+#[export]
 Hint Immediate isisomorphism_natural_transformation : typeclass_instances.
 
 (** ** Variant of [idtoiso] for natural transformations *)
