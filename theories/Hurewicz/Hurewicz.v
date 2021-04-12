@@ -15,7 +15,6 @@ Proof.
   clearbody F; clear f e.
   srapply isequiv_adjointify.
   1: apply loops_functor, (pequiv_inverse F).
-  1,2: unfold Sect.
   1: change (loops_functor F o* (loops_functor F^-1*) == pmap_idmap).
   2: change (loops_functor F^-1* o* loops_functor F == pmap_idmap).
   1,2: apply pointed_htpy.

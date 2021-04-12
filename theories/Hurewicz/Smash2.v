@@ -206,11 +206,11 @@ Defined.
 
 (** These facts are taken as axioms for now. *)
 Local Lemma sect1 `{Funext} (X Y Z : pType)
-  : Sect (nested_pprecompose Z (psm X Y)) (pmap_uncurry X Y Z).
+  : (pmap_uncurry X Y Z) o (nested_pprecompose Z (psm X Y)) == idmap.
 Admitted.
 
 Local Lemma sect2 `{Funext} (X Y Z : pType)
-  : Sect (pmap_uncurry X Y Z) (nested_pprecompose Z (psm X Y)).
+  : (nested_pprecompose Z (psm X Y)) o (pmap_uncurry X Y Z) == idmap.
 Admitted.
 
 Global Instance isequiv_pmap_uncurry `{Funext} (X Y Z : pType)
@@ -219,7 +219,7 @@ Proof.
   snrapply isequiv_adjointify.
   - exact (nested_pprecompose Z (psm X Y)).
   - apply sect1.
-  - apply sect2.
+  - rapply sect2.  (* Just [apply] works, but is very slow. *)
 Defined.
 
 (** CS Lemma 2.31 [van Doorn, Theorem 4.3.28] *)
@@ -521,7 +521,7 @@ Proof.
 Defined.
 
 (** TODO: move this to Types.Prod *)
-Definition prod_symm {A B : Type} : A * B -> B * A :=
+Definition prod_symm {A B : Type} : prod A B -> prod B A :=
   fun x => match x with (a , b) => (b , a) end.
 
 (** Swapping the order of a product of categories is a functor *)

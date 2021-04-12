@@ -1,6 +1,5 @@
 (* In this file we construct the smashing map (CS Defn 2.26, equation (2.1)). *)
 
-Require Import Coq.Init.Peano.
 Require Import Spaces.Nat.
 Require Import Basics Types Pointed.
 Require Import Hurewicz.PathGpd.  (* Temporary. *)
