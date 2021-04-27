@@ -25,6 +25,9 @@
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Monomorphic</span> <span class="kn">Axiom</span> <span class="nv">ExcludedMiddle</span> : Type0.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Existing Class</span> <span class="nf">ExcludedMiddle</span>.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
+<span class="sd">(** Mark this axiom as a &quot;global axiom&quot;, which some of our tactics will automatically handle. *)</span>
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Instance</span> <span class="nf">is_global_axiom_excludedmiddle</span> : IsGlobalAxiom ExcludedMiddle := {}.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight">
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Axiom</span> <span class="nv">LEM</span> : <span class="kr">forall</span> `{ExcludedMiddle} (P : <span class="kt">Type</span>), IsHProp P -&gt; P + ~P.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Definition</span> <span class="nf">ExcludedMiddle_type</span> := <span class="kr">forall</span> (<span class="nv">P</span> : <span class="kt">Type</span>), IsHProp P -&gt; P + ~P.</span></span><span class="alectryon-wsp">

@@ -398,12 +398,27 @@
   x <span class="kp">uconstr</span>:(p _) ||
   x <span class="kp">uconstr</span>:(p).</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
+<span class="sd">(** We keep a list of global axioms that we will solve automatically, even when not using typeclass search. *)</span>
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Unset Primitive Projections</span>.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Class</span> <span class="nf">IsGlobalAxiom</span> (<span class="nv">A</span> : <span class="kt">Type</span>) := {}.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Set Primitive Projections</span>.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Global</span> <span class="kn">Hint Mode</span> IsGlobalAxiom + : typeclass_instances.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight">
+<span class="sd">(** We add [Funext] to the list here, and will later add [Univalence]. *)</span>
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Instance</span> <span class="nf">is_global_axiom_funext</span> : IsGlobalAxiom Funext := {}.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight">
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Ltac</span> <span class="nf">is_global_axiom</span> A := <span class="kr">let</span> <span class="nv">_</span> := <span class="kp">constr</span>:(_ : IsGlobalAxiom A) <span class="kr">in</span> <span class="kp">idtac</span>.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight">
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Ltac</span> <span class="nf">global_axiom</span> := <span class="kp">try</span> <span class="kr">match goal with</span>
+    | |- <span class="nl">?G</span>  =&gt; is_global_axiom G; <span class="bp">exact</span> _
+<span class="kr">end</span>.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="sd">(** A shorter name for [simple refine]. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Tactic Notation</span> <span class="s2">&quot;srefine&quot;</span> <span class="kp">uconstr</span>(term) := <span class="nb">simple refine</span> term.</span></span><span class="alectryon-wsp">
-</span></span><span class="alectryon-wsp"><span class="highlight"><span class="sd">(** A shorter name for [notypeclasses refine]. *)</span>
-</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Tactic Notation</span> <span class="s2">&quot;nrefine&quot;</span> <span class="kp">uconstr</span>(term) := <span class="nb">notypeclasses refine</span> term.</span></span><span class="alectryon-wsp">
-</span></span><span class="alectryon-wsp"><span class="highlight"><span class="sd">(** A shorter name for [simple notypeclasses refine]. *)</span>
-</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Tactic Notation</span> <span class="s2">&quot;snrefine&quot;</span> <span class="kp">uconstr</span>(term) := <span class="nb">simple notypeclasses refine</span> term.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight"><span class="sd">(** A shorter name for [notypeclasses refine]; also handles global axioms. *)</span>
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Tactic Notation</span> <span class="s2">&quot;nrefine&quot;</span> <span class="kp">uconstr</span>(term) := <span class="nb">notypeclasses refine</span> term; global_axiom.</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp"><span class="highlight"><span class="sd">(** A shorter name for [simple notypeclasses refine]; also handles global axioms. *)</span>
+</span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Tactic Notation</span> <span class="s2">&quot;snrefine&quot;</span> <span class="kp">uconstr</span>(term) := <span class="nb">simple notypeclasses refine</span> term; global_axiom.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="sd">(** Note that the Coq standard library has a [rapply], but it is like our [rapply&#39;] with many-holes first.  We prefer fewer-holes first, for instance so that a theorem producing an equivalence will by preference be used to produce an equivalence rather than to apply the coercion of that equivalence to a function. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Tactic Notation</span> <span class="s2">&quot;rapply&quot;</span> <span class="kp">uconstr</span>(term)
