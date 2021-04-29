@@ -190,7 +190,7 @@
     | pEquiv <span class="nl">?X</span> <span class="nl">?Y</span> =&gt; <span class="nb">destruct</span> f <span class="kr">as</span> [f <span class="nl">?iseq</span>]
     <span class="kr">end</span>;
     <span class="kr">match</span> <span class="kp">type of</span> f <span class="kr">with</span>
-    | _ -&gt;* <span class="nl">?Y</span> =&gt; <span class="nb">destruct</span> Y <span class="kr">as</span> [Y ?], f <span class="kr">as</span> [f p]; <span class="nb">cbn</span> <span class="kr">in</span> *; <span class="nb">destruct</span> p; <span class="nb">cbn</span>
+    | _ -&gt;* <span class="nl">?Y</span> =&gt; <span class="kr">let</span> <span class="nv">p</span> := <span class="kp">fresh</span> <span class="kr">in</span> <span class="nb">destruct</span> Y <span class="kr">as</span> [Y ?], f <span class="kr">as</span> [f p]; <span class="nb">cbn</span> <span class="kr">in</span> *; <span class="nb">destruct</span> p; <span class="nb">cbn</span>
     <span class="kr">end</span>.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="sd">(** ** Equivalences to sigma-types. *)</span>

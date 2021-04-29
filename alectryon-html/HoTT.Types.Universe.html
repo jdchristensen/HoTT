@@ -129,7 +129,7 @@
   : path_universe (transport idmap p) = p
   := eissect (equiv_path A B) p.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Definition</span> <span class="nf">path_universe_uncurried_transport_idmap</span> {<span class="nv">A</span> <span class="nv">B</span> : <span class="kt">Type</span>} (<span class="nv">p</span> : A = B)
-  : path_universe_uncurried (equiv_transport idmap A B p) = p
+  : path_universe_uncurried (equiv_transport idmap p) = p
   := eissect (equiv_path A B) p.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Definition</span> <span class="nf">equiv_path_path_universe</span> {<span class="nv">A</span> <span class="nv">B</span> : <span class="kt">Type</span>} (<span class="nv">f</span> : A &lt;~&gt; B)
   : equiv_path A B (path_universe f) = f

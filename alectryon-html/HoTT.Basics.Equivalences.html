@@ -125,7 +125,7 @@ ap f (eissect f a) @ h a</span></div></blockquote></div></div></small><span clas
 </span></span><span class="alectryon-wsp">    </span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="nb">apply</span> whiskerR, eisadj.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp">  </span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Qed</span>.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
-  <span class="c">(* This should not be an instance; it can cause the unifier to spin forever searching for functions to be hoomotpic to. *)</span>
+  <span class="c">(* This should not be an instance; it can cause the unifier to spin forever searching for functions to be homotopic to. *)</span>
 </span></span><span class="alectryon-wsp">  </span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Definition</span> <span class="nf">isequiv_homotopic</span> : IsEquiv g
     := Build_IsEquiv _ _ g (f ^-<span class="mi">1</span>) sect retr adj.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
@@ -141,7 +141,7 @@ ap f (eissect f a) @ h a</span></div></blockquote></div></div></small><span clas
 <span class="sd">(** Transporting is an equivalence. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Section</span> <span class="nf">EquivTransport</span>.</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
-</span></span><span class="alectryon-wsp">  </span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Context</span> {<span class="nv">A</span> : <span class="kt">Type</span>} (<span class="nv">P</span> : A -&gt; <span class="kt">Type</span>) (<span class="nv">x</span> <span class="nv">y</span> : A) (<span class="nv">p</span> : x = y).</span></span><span class="alectryon-wsp">
+</span></span><span class="alectryon-wsp">  </span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Context</span> {<span class="nv">A</span> : <span class="kt">Type</span>} (<span class="nv">P</span> : A -&gt; <span class="kt">Type</span>) {<span class="nv">x</span> <span class="nv">y</span> : A} (<span class="nv">p</span> : x = y).</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 </span></span><span class="alectryon-wsp">  </span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Instance</span> <span class="nf">isequiv_transport</span> : IsEquiv (transport P p) | <span class="mi">0</span>
     := Build_IsEquiv (P x) (P y) (transport P p) (transport P p^)
