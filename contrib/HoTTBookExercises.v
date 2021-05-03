@@ -579,7 +579,7 @@ Definition Book_2_13 := @HoTT.Types.Bool.equiv_bool_aut_bool.
 (** Exercise 3.1 *)
 
 Definition Book_3_1_solution_1 {A B} (f : A <~> B) (H : IsHSet A)
-  := @HoTT.Basics.Trunc.trunc_equiv' A B f 0 H.
+  := @HoTT.Basics.Trunc.istrunc_equiv_istrunc A B f 0 H.
 
 (** Alternative solutions: [Book_3_1_solution_2] using UA, and [Book_3_1_solution_3] using two easy lemmas that may be of independent interest *)
 
@@ -626,7 +626,7 @@ Defined.
 (* ================================================== ex:isset-coprod *)
 (** Exercise 3.2 *)
 
-Definition Book_3_2_solution_1 := @HoTT.Types.Sum.hset_sum.
+Definition Book_3_2_solution_1 := @HoTT.Types.Sum.ishset_sum.
 
 (** Alternative solution for replaying *)
 
@@ -646,7 +646,7 @@ Defined.
 (** Exercise 3.3 *)
 
 Definition Book_3_3_solution_1 (A : Type) (B : A -> Type)
-   := @HoTT.Types.Sigma.trunc_sigma A B 0.
+   := @HoTT.Types.Sigma.istrunc_sigma A B 0.
 
 (** This exercise is hard because 2-paths over Sigma types are not treated in the first three chapters of the book. Consult theories/Types/Sigma.v *)
 
@@ -713,10 +713,10 @@ Defined.
 
 Definition LEM := forall (A : Type), IsHProp A -> A + ~A.
 
-Definition LEM_hProp_Bool (lem : LEM) (hprop : hProp) : Bool
+Definition LEM_hProp_Bool (lem : LEM) (hprop : HProp) : Bool
   := match (lem hprop _) with inl _ => true | inr _ => false end.
 
-Lemma Book_3_9_solution_1 `{Univalence} : LEM -> hProp <~> Bool.
+Lemma Book_3_9_solution_1 `{Univalence} : LEM -> HProp <~> Bool.
 Proof.
   intro lem.
   apply (equiv_adjointify (LEM_hProp_Bool lem) is_true).
@@ -1207,7 +1207,7 @@ Proof.
     refine ((equiv_concat_l (transport_paths_lr q p)^ p)^-1 oE _).
     refine ((equiv_concat_l (concat_p_pp _ _ _) _)^-1 oE _).
     apply equiv_moveR_Vp. }
-  assert (HK := @trunc_equiv _ _ e^-1 (-1)).
+  assert (HK := @istrunc_equiv_istrunc _ _ e^-1 (-1)).
   assert (u : forall (X:Type) (p:X=X), p @ 1 = 1 @ p).
   { intros X p; rewrite concat_p1, concat_1p; reflexivity. }
   pose (alpha := (fun X p => (idpath X ; u X p)) : K).
@@ -1234,7 +1234,7 @@ Defined.
 Definition Book_4_6_iii (qua1 qua2 : QInv_Univalence_type) : Empty.
 Proof.
   apply (Book_4_6_ii qua1 qua2).
-  refine (trunc_succ).
+  refine (istrunc_succ).
   exists (fun A => 1); intros u.
   set (B := {X : Type & X = X}) in *.
   exact (allqinv_coherent qua2 B B (idmap ; (idmap ; (fun A:B => 1 , u)))).
@@ -1401,7 +1401,10 @@ End Book_5_5.
 (* ================================================== ex:torus *)
 (** Exercise 6.1 *)
 
-
+Definition Book_6_1_i := @HoTT.Cubical.DPath.dp_concat.
+Definition Book_6_1_ii := @HoTT.Cubical.DPath.dp_apD_pp.
+(** We don't have the full induction principle for the torus *)
+(* Definition Book_6_1_iii := ? *)
 
 (* ================================================== ex:suspS1 *)
 (** Exercise 6.2 *)
@@ -1411,6 +1414,7 @@ End Book_5_5.
 (* ================================================== ex:torus-s1-times-s1 *)
 (** Exercise 6.3 *)
 
+Definition Book_6_3 := @HoTT.Spaces.Torus.TorusEquivCircles.equiv_torus_prod_Circle.
 
 
 (* ================================================== ex:nspheres *)
@@ -1523,7 +1527,7 @@ Section Book_6_9.
   Proof. apply path_forall. intro b. pose proof (inverse (negb_ne (f b).2)) as fst.
   unfold centerAllExOthBool.
   apply (@path_sigma _ _ (negb b; not_fixed_negb b) (f b) fst); simpl.
-  apply equiv_hprop_allpath. apply trunc_forall.
+  apply equiv_hprop_allpath. apply istrunc_forall.
   Defined.
 
   Definition contrAllExOthBool `{Funext} : Contr (AllExistsOther Bool) :=
@@ -1641,8 +1645,8 @@ End Book_7_1.
 (** Exercise 7.9 *)
 
 (** Solution for the case (oo,-1). *)
-Definition Book_7_9_oo_neg1 `{Univalence} (AC_oo_neg1 : forall X : hSet, IsProjective' X) (A : Type)
-  : merely (exists X : hSet, exists p : X -> A, IsSurjection p)
+Definition Book_7_9_oo_neg1 `{Univalence} (AC_oo_neg1 : forall X : HSet, IsProjective' X) (A : Type)
+  : merely (exists X : HSet, exists p : X -> A, IsSurjection p)
   := @HoTT.Projective.projective_cover_AC AC_oo_neg1 _ A.
 
 (* ================================================== ex:acconn *)

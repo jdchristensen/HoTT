@@ -102,7 +102,7 @@ Global Instance trunc_operation `{Funext} {σ : Signature}
   (A : Carriers σ) {n} `{!∀ s, IsTrunc n (A s)} (w : SymbolType σ)
   : IsTrunc n (Operation A w).
 Proof.
-  induction w; apply (istrunc_trunctype_type (BuildTruncType n _)).
+  induction w; exact _.
 Defined.
 
 (** Uncurry of an [f : Operation A w], such that
@@ -181,7 +181,7 @@ Global Instance hprop_is_trunc_algebra `{Funext} (n : trunc_index)
   {σ : Signature} (A : Algebra σ)
   : IsHProp (IsTruncAlgebra n A).
 Proof.
-  apply trunc_forall.
+  apply istrunc_forall.
 Qed.
 
 Global Instance trunc_algebra_succ {σ : Signature} (A : Algebra σ)

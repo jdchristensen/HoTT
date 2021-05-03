@@ -102,11 +102,11 @@ Section Equiv.
     `{Transitive _ R} `{Symmetric _ R} `{Reflexive _ R}.
 
   (* The proposition of being in a given class in a quotient. *)
-  Definition in_class : A / R -> A -> hProp.
+  Definition in_class : A / R -> A -> HProp.
   Proof.
     srapply Quotient_ind.
     { intros a b.
-      exact (BuildhProp (R a b)). }
+      exact (Build_HProp (R a b)). }
     intros x y p.
     refine (transport_const _ _ @ _).
     funext z.
@@ -164,7 +164,7 @@ Section Equiv.
     - apply related_quotient_paths.
   Defined.
 
-  Definition Quotient_rec2 `{Funext} {B : hSet} {dclass : A -> A -> B}
+  Definition Quotient_rec2 `{Funext} {B : HSet} {dclass : A -> A -> B}
     {dequiv : forall x x', R x x' -> forall y y',
       R y y' -> dclass x y = dclass x' y'}
     : A / R -> A / R -> B.
@@ -190,7 +190,7 @@ Section Equiv.
   Proof.
     apply Quotient_ind with dclass.
     { srapply Quotient_ind.
-      1: intro; apply trunc_succ.
+      1: intro; apply istrunc_succ.
       intros ???; apply path_ishprop. }
     intros; apply path_ishprop.
   Defined.
@@ -207,7 +207,7 @@ Section Equiv.
 
   (* Universal property of quotient *)
   (* Lemma 6.10.3 *)
-  Theorem equiv_quotient_ump (B : hSet)
+  Theorem equiv_quotient_ump (B : HSet)
     : (A / R -> B) <~> {f : A -> B & forall x y, R x y -> f x = f y}.
   Proof.
     srapply equiv_adjointify.

@@ -99,7 +99,7 @@ Section IsEquivHomotopic.
     apply whiskerR, eisadj.
   Qed.
 
-  (* This should not be an instance; it can cause the unifier to spin forever searching for functions to be hoomotpic to. *)
+  (* This should not be an instance; it can cause the unifier to spin forever searching for functions to be homotopic to. *)
   Definition isequiv_homotopic : IsEquiv g
     := Build_IsEquiv _ _ g (f ^-1) sect retr adj.
 
@@ -115,7 +115,7 @@ Definition isequiv_homotopic' {A B : Type} (f : A <~> B) {g : A -> B} (h : f == 
 (** Transporting is an equivalence. *)
 Section EquivTransport.
 
-  Context {A : Type} (P : A -> Type) (x y : A) (p : x = y).
+  Context {A : Type} (P : A -> Type) {x y : A} (p : x = y).
 
   Global Instance isequiv_transport : IsEquiv (transport P p) | 0
     := Build_IsEquiv (P x) (P y) (transport P p) (transport P p^)
@@ -141,7 +141,7 @@ Section Adjointify.
   Let issect' := fun x =>
     ap g (ap f (issect x)^)  @  ap g (isretr (f x))  @  issect x.
 
-  Let is_adjoint' (a : A) : isretr (f a) = ap f (issect' a).
+  Local Definition is_adjoint' (a : A) : isretr (f a) = ap f (issect' a).
   Proof.
     unfold issect'.
     apply moveR_M1.
@@ -369,26 +369,21 @@ Definition equiv_inj `(f : A -> B) `{IsEquiv A B f} {x y : A}
   := (ap f)^-1.
 
 (** The inverse of an equivalence is an equivalence. *)
-Section EquivInverse.
-
-  Context {A B : Type} (f : A -> B) {feq : IsEquiv f}.
-
-  Theorem eisadj_other (b : B) : eissect f (f^-1 b) = ap f^-1 (eisretr f b).
-  Proof.
-    apply (equiv_inj (ap f)).
-    (* We will prove the equality as a composite of four paths, working right to left.
-       The LHS remains [ap f (eissect f (f^-1 b))] throughout the process.
-       Both sides of the equation are paths of type [f (f^-1 (f (f^-1 b))) = f (f^-1 b)]. *)
-    refine (_ @ _ @ _ @ _); revgoals.
-    1: apply ap_compose.
-    1: symmetry; apply (ap_homotopic_id (eisretr f)).
-    1: symmetry; apply concat_pp_V.
-    1: symmetry; apply eisadj.
-  Qed.
-
-  Global Instance isequiv_inverse : IsEquiv f^-1 | 10000
-    := Build_IsEquiv B A f^-1 f (eissect f) (eisretr f) eisadj_other.
-End EquivInverse.
+Global Instance isequiv_inverse {A B : Type} (f : A -> B) {feq : IsEquiv f}
+  : IsEquiv f^-1 | 10000.
+Proof.
+  refine (Build_IsEquiv B A f^-1 f (eissect f) (eisretr f) _).
+  intro b.
+  apply (equiv_inj (ap f)).
+(* We will prove the equality as a composite of four paths, working right to left.
+  The LHS remains [ap f (eissect f (f^-1 b))] throughout the process.
+  Both sides of the equation are paths of type [f (f^-1 (f (f^-1 b))) = f (f^-1 b)]. *)
+  refine (_ @ _ @ _ @ _); revgoals.
+  1: apply ap_compose.
+  1: symmetry; apply (ap_homotopic_id (eisretr f)).
+  1: symmetry; apply concat_pp_V.
+  1: symmetry; apply eisadj.
+Defined.
 
 (** If the goal is [IsEquiv _^-1], then use [isequiv_inverse]; otherwise, don't pretend worry about if the goal is an evar and we want to add a [^-1]. *)
 #[export]

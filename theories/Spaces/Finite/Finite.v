@@ -35,7 +35,7 @@ Defined.
 Global Instance ishprop_finite X
 : IsHProp (Finite X).
 Proof.
-  refine (trunc_equiv' _ (issig_finite X)).
+  refine (istrunc_equiv_istrunc _ (issig_finite X)).
   apply ishprop_sigma_disjoint; intros n m Hn Hm.
   strip_truncations.
   refine (nat_eq_fin_equiv n m (Hm oE Hn^-1)).
@@ -321,7 +321,7 @@ Proof.
   strip_truncations.
   simple refine (finite_equiv' _
             (equiv_functor_forall' (P := fun x => Y (e^-1 x)) e _) _); try exact _.
-  { intros x; refine (equiv_transport _ _ _ (eissect e x)). }
+  { intros x; refine (equiv_transport _ (eissect e x)). }
   set (Y' := Y o e^-1); change (Finite (forall x, Y' x)).
   assert (forall x, Finite (Y' x)) by exact _; clearbody Y'; clear e.
   generalize dependent (fcard X); intros n Y' ?.
