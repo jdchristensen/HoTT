@@ -132,7 +132,7 @@ Definition isequiv_iterated_loops_connequiv `{Funext} {X Y : pType} (n : nat)
   (f : X ->* Y) (HE : isconnequiv n f)
   : IsEquiv (iterated_loops_functor n.+1 f).
 Proof.
-  nrapply isequiv_connequiv_minus_one; [exact _|].  (* Funext. *)
+  nrapply isequiv_connequiv_minus_one.
   apply isconnequiv_iterated_loops.
   refine (transport (fun k => isconnequiv k f) _ HE).
   symmetry; apply trunc_index_inc'_zero.

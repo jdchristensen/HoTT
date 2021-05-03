@@ -50,7 +50,7 @@ Proof.
   - exists (extension_conn_map_elim n f P d).
     intros y. apply (allpath_extension_conn_map n); assumption.
     (* m = S m' *)
-  - intros e e'. refine (trunc_equiv _ (path_extension e e')).
+  - intros e e'. refine (istrunc_isequiv_istrunc _ (path_extension e e')).
 (* magically infers: paths in extensions = extensions into paths,
                        which by induction is m'-truncated. *)
 Defined.
@@ -127,7 +127,8 @@ Definition merely_path_is0connected `{Univalence}
            (A : Type) `{IsConnected 0 A} (x y : A)
 : merely (x = y).
 Proof.
-  refine ((equiv_path_Tr x y)^-1 (path_contr (tr x) (tr y))).
+  (** This follows immediately from the previous result. *)
+  rapply center.
 Defined.
 
 Definition is0connected_merely_allpath `{Univalence}
@@ -139,7 +140,7 @@ Proof.
   apply (contr_inhabited_hprop).
   - apply hprop_allpath; intros z w.
     strip_truncations.
-    refine (equiv_path_Tr z w (p z w)).
+    exact (equiv_path_Tr z w (p z w)).
   - apply tr; assumption.
 Defined.
 

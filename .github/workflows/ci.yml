@@ -1,25 +1,60 @@
 ## This is the name of the CI
 name: CI
 
-## These are the actions that trigger the CI to run
-on: [push, pull_request]
+## These are the triggers for the CI to run
+on: [ push , pull_request ]
 
 jobs:
-  build:
-    # TODO: Eventually include different OS's in the matrix
 
+  build:
     strategy:
       fail-fast: false
       matrix:
-        env:
-        - { UPDATE_HTML: "", UPDATE_QUICK_DOC: "", UPDATE_DEP_GRAPHS: "", BUILD_COQ: "", FORCE_COQ_VERSION: "", VALIDATE: "" }
-        - { LABEL: "update dep graphs", UPDATE_DEP_GRAPHS: "yes", BUILD_COQ: "yes", UPDATE_QUICK_DOC: "" }
-        - { LABEL: "update quick doc", UPDATE_QUICK_DOC: "yes" }
-        - { LABEL: "update html", UPDATE_HTML: "yes", UPDATE_QUICK_DOC: "" }
-        - { LABEL: "validate", VALIDATE: "yes"   , UPDATE_QUICK_DOC: "" }
-        - { LABEL: "with submodule coq", FORCE_COQ_VERSION: ""      , BUILD_COQ: "yes", UPDATE_QUICK_DOC: "" }
-        - { LABEL: "building coq master", FORCE_COQ_VERSION: "master", BUILD_COQ: "yes", UPDATE_QUICK_DOC: "" }
+        # We build on our supported version of coq and the master version
+        coq_version: [ '8.13' , 'latest' , 'dev' ]
+        ocaml_version: [ '4.11-flambda' ]
+        include:
+        - coq_version: 'dev'
+          extra_gh_reportify: '--warnings'
+        
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout branch
+    - uses: actions/checkout@v2
+    # Checkout submodules
+    - uses: snickerbockers/submodules-init@v4
+    # We use the coq docker so we don't have to build coq
+    - uses: coq-community/docker-coq-action@v1
+      with:
+        coq_version: ${{ matrix.coq_version }}
+        ocaml_version: ${{ matrix.ocaml_version }}
+        custom_script: |
+          startGroup "Workaround permission issue" # https://github.com/coq-community/docker-coq-action#permissions
+            sudo chown -R coq:coq .
+          endGroup
+          sudo apt-get -o Acquire::Retries=30 update -q
+          sudo apt-get -o Acquire::Retries=30 install python -y --allow-unauthenticated
+          etc/coq-scripts/github/reportify-coq.sh --stdout --errors ${{ matrix.extra_gh_reportify }} etc/coq-scripts/timing/make-pretty-timed.sh -j2 TIMING=1
+          make
+    - name: Revert permissions
+      # to avoid a warning at cleanup time - https://github.com/coq-community/docker-coq-action#permissions
+      if: ${{ always() }}
+      run: sudo chown -R 1001:116 .
 
+
+  doc:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - label: update dep graphs
+          env: { UPDATE_DEP_GRAPHS: "yes", BUILD_COQ: "yes", UPDATE_QUICK_DOC: "" }
+        - label: update quick doc
+          env: { UPDATE_QUICK_DOC: "yes" }
+        - label: update html
+          env: { UPDATE_HTML: "yes", UPDATE_QUICK_DOC: "" }
+        - label: validate
+          env: { VALIDATE: "yes"   , UPDATE_QUICK_DOC: "" }
     env: ${{ matrix.env }}
 
     # The operating system
@@ -79,19 +114,22 @@ jobs:
         echo | coqtop
         export COMMITISH="$(git rev-list HEAD -1)"
 
-    - name: Run ./autogen.sh
-      run: ./autogen.sh
-
-    - name: Run ./configure
-      run: ./configure
+    # we display errors in the changes tab from all jobs
+    # we only display warnings from the master job, so we don't get duplicate warnings
+    - name: add warning problem matchers
+      run: |
+        #echo "::add-matcher::etc/coq-scripts/github/coqdoc.json" # disabled for now, since they don't have file names
+      if: ${{ matrix.display-warnings }}
 
     - name: make strict-test
       run: make strict-test
       if: env.UPDATE_QUICK_DOC == ''
 
+    # we display errors in the changes tab from all jobs
+    # we only display warnings from the master job, so we don't get duplicate warnings
     - name: Build with timing
       run: |
-        etc/coq-scripts/timing/make-pretty-timed.sh -j2
+        etc/coq-scripts/github/reportify-coq.sh --stdout --errors ${EXTRA_GH_REPORTIFY} etc/coq-scripts/timing/make-pretty-timed.sh -j2 TIMING=1
         make
       if: env.UPDATE_QUICK_DOC == ''
 
@@ -103,3 +141,46 @@ jobs:
       run: etc/ci/after_success.sh
       env:
         ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+  
+  alectryon:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: snickerbockers/submodules-init@v4
+    - name: add problem matchers
+      run: |
+        #echo "::add-matcher::etc/coq-scripts/github/coq-oneline-error.json" # now via a script
+        #echo "::add-matcher::etc/coq-scripts/github/coqdoc.json" # disabled for now, since they don't have file names
+        echo "::add-matcher::etc/coq-scripts/github/alectryon-error.json"
+        #echo "::add-matcher::etc/coq-scripts/github/alectryon-warning.json" # too noisy right now, cf https://github.com/cpitclaudel/alectryon/issues/34 and https://github.com/cpitclaudel/alectryon/issues/33
+    - uses: coq-community/docker-coq-action@v1
+      with:
+        coq_version: 8.13
+        ocaml_version: 4.11-flambda
+        custom_script: |
+          opam install -y coq-serapi
+          sudo apt-get -o Acquire::Retries=30 update -q
+          sudo apt-get -o Acquire::Retries=30 install python3-pip autoconf -y --allow-unauthenticated
+          python3 -m pip install --user --upgrade pygments dominate beautifulsoup4 docutils
+          startGroup "Workaround permission issue" # https://github.com/coq-community/docker-coq-action#permissions
+            sudo chown -R coq:coq .
+          endGroup
+          etc/coq-scripts/github/reportify-coq.sh --errors make TIMED=1 -j2 --output-sync GH_REPORT_ERRORS=1
+          make alectryon ALECTRYON_EXTRAFLAGS=--traceback
+    - name: Revert permissions
+      # to avoid a warning at cleanup time - https://github.com/coq-community/docker-coq-action#permissions
+      if: ${{ always() }}
+      run: sudo chown -R 1001:116 .
+    - name: upload alectryon artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: alectryon-html
+        path: alectryon-html
+    - name: Deploy html files
+      uses: JamesIves/github-pages-deploy-action@releases/v4
+      with:
+        dry-run: ${{ github.ref != 'refs/heads/master' || github.event_name != 'push' }}
+        branch: gh-pages
+        folder: alectryon-html
+        target-folder: alectryon-html
+        single-commit: false

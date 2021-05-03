@@ -44,7 +44,7 @@ Global Instance T_set : IsHSet (T N).
 Proof.
 assert (E : sig (fun _ : N => N) <~> (T N)).
 - issig.
-- apply (trunc_equiv' _ E).
+- apply (istrunc_equiv_istrunc _ E).
 Qed.
 
 Global Instance inject : Cast N (T N) := fun x => C x 0.
@@ -321,7 +321,7 @@ Definition Z_path {x y} : PairT.equiv x y -> Z_of_pair x = Z_of_pair y
   := related_classes_eq _.
 
 Definition related_path {x y} : Z_of_pair x = Z_of_pair y -> PairT.equiv x y
-  := classes_eq_related@{UN UN Ularge Ularge Uhuge} _ _ _.
+  := classes_eq_related@{UN UN Ularge Uhuge} _ _ _.
 
 Definition Z_rect@{i} (P : Z -> Type@{i}) {sP : forall x, IsHSet (P x)}
   (dclass : forall x : PairT.T N, P (' x))
@@ -358,8 +358,8 @@ Definition Z_ind3@{i j} (P : Z -> Z -> Z -> Type@{i})
 Proof.
 apply (@Z_ind (fun x => forall y z, _));intros x.
 2:apply (Z_ind2@{i j} _);auto.
-apply (@Forall.trunc_forall@{UN j j} _).
-intros. apply Forall.trunc_forall@{UN i j}.
+apply (@Forall.istrunc_forall@{UN j j} _).
+intros. apply Forall.istrunc_forall@{UN i j}.
 Defined.
 
 Definition Z_rec@{i} {T : Type@{i} } {sT : IsHSet T}
@@ -377,7 +377,7 @@ Definition Z_rec2@{i j} {T:Type@{i} } {sT : IsHSet T}
   (dequiv : forall x1 x2, PairT.equiv x1 x2 -> forall y1 y2, PairT.equiv y1 y2 ->
     dclass x1 y1 = dclass x2 y2),
   Z -> Z -> T
-  := @quotient_rec2@{UN UN j i} _ _ _ _ _ (BuildhSet _).
+  := @quotient_rec2@{UN UN j i} _ _ _ _ _ (Build_HSet _).
 
 Definition Z_rec2_compute {T sT} dclass dequiv x y
   : @Z_rec2 T sT dclass dequiv (' x) (' y) = dclass x y
@@ -496,15 +496,15 @@ apply Z_path;red;simpl.
 ring_with_nat.
 Qed.
 
-Definition Zle_hProp@{} : Z -> Z -> hProp@{UN}.
+Definition Zle_HProp@{} : Z -> Z -> HProp@{UN}.
 Proof.
-apply (@Z_rec2@{Ularge Ularge} _ (@istrunc_trunctype@{UN Ularge Uhuge} _ _)
-  (fun q r => BuildhProp (PairT.Tle q r))).
-intros. apply path_hprop@{UN Ularge Uhuge}. simpl.
+apply (@Z_rec2@{Ularge Ularge} _ (@trunctype_istrunc@{Ularge} _ _)
+  (fun q r => Build_HProp (PairT.Tle q r))).
+intros. apply path_hprop. simpl.
 apply (PairT.le_respects _);trivial.
 Defined.
 
-Global Instance Zle@{} : Le Z := fun x y => Zle_hProp x y.
+Global Instance Zle@{} : Le Z := fun x y => Zle_HProp x y.
 
 Global Instance ishprop_Zle : is_mere_relation _ Zle.
 Proof. unfold Zle;exact _. Qed.
@@ -605,15 +605,15 @@ intros a b. change (Decidable (PairT.Tle a b)).
 unfold PairT.Tle. apply _.
 Qed.
 
-Definition Zlt_hProp@{} : Z -> Z -> hProp@{UN}.
+Definition Zlt_HProp@{} : Z -> Z -> HProp@{UN}.
 Proof.
-apply (@Z_rec2@{Ularge Ularge} _ (@istrunc_trunctype@{UN Ularge Uhuge} _ _)
-  (fun q r => BuildhProp (PairT.Tlt q r))).
-intros. apply path_hprop@{UN Ularge Uhuge}. simpl.
+apply (@Z_rec2@{Ularge Ularge} _ (@trunctype_istrunc@{Ularge} _ _)
+  (fun q r => Build_HProp (PairT.Tlt q r))).
+intros. apply path_hprop. simpl.
 apply (PairT.lt_respects _);trivial.
 Defined.
 
-Global Instance Zlt@{} : Lt Z := fun x y => Zlt_hProp x y.
+Global Instance Zlt@{} : Lt Z := fun x y => Zlt_HProp x y.
 
 Global Instance ishprop_Zlt : is_mere_relation _ Zlt.
 Proof. unfold Zlt;exact _. Qed.
@@ -701,15 +701,15 @@ Qed.
 
 Local Existing Instance pseudo_order_apart.
 
-Definition Zapart_hProp@{} : Z -> Z -> hProp@{UN}.
+Definition Zapart_HProp@{} : Z -> Z -> HProp@{UN}.
 Proof.
-apply (@Z_rec2@{Ularge Ularge} _ (@istrunc_trunctype@{UN Ularge Uhuge} _ _)
-  (fun q r => BuildhProp (PairT.Tapart q r))).
-intros. apply path_hprop@{UN Ularge Uhuge}. simpl.
+apply (@Z_rec2@{Ularge Ularge} _ _
+  (fun q r => Build_HProp (PairT.Tapart q r))).
+intros. apply path_hprop. simpl.
 apply (PairT.apart_respects _);trivial.
 Defined.
 
-Global Instance Zapart@{} : Apart Z := fun x y => Zapart_hProp x y.
+Global Instance Zapart@{} : Apart Z := fun x y => Zapart_HProp x y.
 
 Lemma Zapart_def' : forall a b, apart (' a) (' b) = PairT.Tapart a b.
 Proof. reflexivity. Qed.
@@ -802,8 +802,8 @@ split;[apply _|split;try apply _|].
     trivial.
 - apply @Z_ind2.
   + intros a b.
-    apply @trunc_prod;[|apply _].
-    apply (@trunc_arrow _).
+    apply @istrunc_prod;[|apply _].
+    apply (@istrunc_arrow _).
     apply ishprop_sum;try apply _.
     intros E1 E2;apply (irreflexivity lt a).
     transitivity b;trivial.

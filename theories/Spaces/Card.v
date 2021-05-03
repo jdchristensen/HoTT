@@ -4,35 +4,36 @@ Require Import HoTT.Basics HoTT.Types HoTT.HSet HoTT.TruncType.
 Require Import HoTT.Classes.interfaces.abstract_algebra.
 Require Import HoTT.Truncations.
 
-Opaque trunc_equiv. (** This speeds things up considerably *)
+(** This speeds things up considerably *)
+Local Opaque equiv_isequiv istrunc_isequiv_istrunc.
 
 (** ** Definitions and operations *)
 
-Definition Card := Trunc 0 hSet.
+Definition Card := Trunc 0 HSet.
 
 Definition sum_card (a b : Card) : Card.
 Proof.
   strip_truncations.
-  refine (tr (BuildhSet (a + b))).
+  refine (tr (Build_HSet (a + b))).
 Defined.
 
 Definition prod_card (a b : Card) : Card.
 Proof.
   strip_truncations.
-  refine (tr (BuildhSet (a * b))).
+  refine (tr (Build_HSet (a * b))).
 Defined.
 
 Definition exp_card `{Funext} (b a : Card) : Card.
 Proof.
   strip_truncations.
-  refine (tr (BuildhSet (b -> a))).
+  refine (tr (Build_HSet (b -> a))).
 Defined.
 
-Definition leq_card `{Univalence} : Card -> Card -> hProp.
+Definition leq_card `{Univalence} : Card -> Card -> HProp.
 Proof.
   refine (Trunc_rec (fun a => _)).
   refine (Trunc_rec (fun b => _)).
-  refine (hexists (fun (i : a -> b) => isinj i)).
+  exact (hexists (fun (i : a -> b) => isinj i)).
 Defined.
 
 (** ** Properties *)
@@ -41,8 +42,8 @@ Section contents.
 
   Global Instance plus_card : Plus Card := sum_card.
   Global Instance mult_card : Mult Card := prod_card.
-  Global Instance zero_card : Zero Card := tr (BuildhSet Empty).
-  Global Instance one_card : One Card := tr (BuildhSet Unit).
+  Global Instance zero_card : Zero Card := tr (Build_HSet Empty).
+  Global Instance one_card : One Card := tr (Build_HSet Unit).
   Global Instance le_card : Le Card := leq_card.
 
   (* Reduce an algebraic equation to an equivalence *)
@@ -51,8 +52,9 @@ Section contents.
 
   (* Simplify an equation by unfolding all the definitions apart from
   the actual operations. *)
+  (* Note that this is an expensive thing to do, and will be very slow unless we tell it not to unfold the following. *)
   Local Ltac simpl_ops :=
-    cbv-[plus_card mult_card zero_card one_card].
+    cbv-[plus_card mult_card zero_card one_card exp_card].
 
   (** We only make the instances of upper classes global, since the
   other instances will be project anyway. *)

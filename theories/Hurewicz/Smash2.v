@@ -419,7 +419,7 @@ Lemma O_inverts_from_isequiv_pmap_precomp {O : ReflectiveSubuniverse} `{Funext} 
   : (forall Z : Type, In O Z -> forall z : Z, IsEquiv (fun g : B ->* {| pointed_type := Z; ispointed_type := z |} => g o* f)) -> O_inverts O f.
 Proof.
   intro K.
-  nrapply O_inverts_from_isequiv_precompose; [exact _|].
+  nrapply O_inverts_from_isequiv_precompose.
   intros Z inZ.
   rapply equiv_isequiv_ppmap_compose_isequiv_compose.
 Defined.
@@ -433,8 +433,8 @@ Proof.
   1: intros g; exact (g o* ptr).
   1: rapply pmap_uncurry_nat_X.
   snrapply (isequiv_commsq (@equiv_ptr_rec _ m.+1 Y (X ->** T) _)).
-  3,4: exact idmap.
-  1,4,5,6: exact _.
+  2,3: exact idmap.
+  3,4,5: exact _.
   1: rapply (@istrunc_ppmap n m X T).
   reflexivity.
 Defined.
@@ -445,7 +445,6 @@ Global Instance isequiv_ptr_smash_functor `{Funext} {n m : trunc_index} (X Y : p
   : IsEquiv (ptr_functor (m +2+ n).+1 (Smash_functor (@ptr m.+1 Y) (@pmap_idmap X))).
 Proof.
   snrapply O_inverts_from_isequiv_pmap_precomp.
-  1: exact _. (* Funext. *)
   intros Z inZ z.
   srapply (isequiv_pmap_precomp_smash_ptr_idmap n m).
 Defined.

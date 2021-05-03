@@ -36,7 +36,7 @@ Definition path_forall_1 `{P : A -> Type} (f : forall x, P x)
 
 (** The identification of the path space of a dependent function space, up to equivalence, is of course just funext. *)
 
-Definition equiv_apD10 `{Funext} {A : Type} (P : A -> Type) f g
+Definition equiv_apD10 {A : Type} (P : A -> Type) f g
 : (f = g) <~> (f == g)
   := Build_Equiv _ _ (@apD10 A P f g) _.
 
@@ -346,7 +346,7 @@ Proof.
   intro f.  apply path_forall.  intro a.  apply contr.
 Defined.
 
-Global Instance trunc_forall `{P : A -> Type} `{forall a, IsTrunc n (P a)}
+Global Instance istrunc_forall `{P : A -> Type} `{forall a, IsTrunc n (P a)}
   : IsTrunc n (forall a, P a) | 100.
 Proof.
   generalize dependent P.
@@ -354,7 +354,7 @@ Proof.
   (* case [n = -2], i.e. contractibility *)
   - exact _.
   (* case n = n'.+1 *)
-  - intros f g; apply (trunc_equiv _ (apD10 ^-1)).
+  - intros f g; apply (istrunc_isequiv_istrunc _ (apD10 ^-1)).
 Defined.
 
 (** ** Contractibility: A product over a contractible type is equivalent to the fiber over the center. *)
@@ -370,6 +370,8 @@ Proof.
   - intros f; apply path_forall; intros a.
     apply apD.
 Defined.
+
+End AssumeFunext.
 
 (** ** Symmetry of curried arguments *)
 
@@ -394,5 +396,3 @@ Defined.
 Definition equiv_flip `(P : A -> B -> Type)
   : (forall a b, P a b) <~> (forall b a, P a b)
   := Build_Equiv _ _ (@flip _ _ P) _.
-
-End AssumeFunext.

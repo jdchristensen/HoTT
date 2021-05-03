@@ -34,6 +34,10 @@ Defined.
 (** See the note by [Funext] in Overture.v *)
 Monomorphic Axiom Univalence : Type0.
 Existing Class Univalence.
+
+(** Mark this axiom as a "global axiom", which some of our tactics will automatically handle. *)
+Global Instance is_global_axiom_univalence : IsGlobalAxiom Univalence := {}.
+
 Axiom isequiv_equiv_path : forall `{Univalence} (A B : Type), IsEquiv (equiv_path A B).
 Global Existing Instance isequiv_equiv_path.
 
@@ -82,7 +86,7 @@ Definition path_universe_transport_idmap {A B : Type} (p : A = B)
   : path_universe (transport idmap p) = p
   := eissect (equiv_path A B) p.
 Definition path_universe_uncurried_transport_idmap {A B : Type} (p : A = B)
-  : path_universe_uncurried (equiv_transport idmap A B p) = p
+  : path_universe_uncurried (equiv_transport idmap p) = p
   := eissect (equiv_path A B) p.
 Definition equiv_path_path_universe {A B : Type} (f : A <~> B)
   : equiv_path A B (path_universe f) = f
@@ -485,7 +489,8 @@ Theorem equiv_induction_inv {U : Type} (P : forall V, V <~> U -> Type) :
 Proof.
   intros H0 V.
   apply (equiv_ind (equiv_path V U)).
-  intro p; induction p; apply H0.
+  (* We manually apply [paths_ind_r] to reduce universe levels. *)
+  revert V; rapply paths_ind_r; apply H0.
 Defined.
 
 Definition equiv_induction_inv_comp {U : Type} (P : forall V, V <~> U -> Type)
@@ -495,16 +500,16 @@ Definition equiv_induction_inv_comp {U : Type} (P : forall V, V <~> U -> Type)
 
 (** ** Based equivalence types *)
 
-Global Instance contr_basedequiv {X : Type}
-: Contr {Y : Type & X <~> Y}.
+Global Instance contr_basedequiv@{u +} {X : Type@{u}}
+: Contr {Y : Type@{u} & X <~> Y}.
 Proof.
   exists (X; equiv_idmap).
   intros [Y f]; revert Y f.
   exact (equiv_induction _ idpath).
 Defined.
 
-Global Instance contr_basedequiv' {X : Type}
-: Contr {Y : Type & Y <~> X}.
+Global Instance contr_basedequiv'@{u +} {X : Type@{u}}
+: Contr {Y : Type@{u} & Y <~> X}.
 Proof.
   (* The next line is used so that Coq can figure out the type of (X; equiv_idmap). *)
   srapply Build_Contr.
@@ -520,7 +525,7 @@ Global Instance istrunc_paths_Type `{Funext}
        {n : trunc_index} {A B : Type} `{IsTrunc n.+1 B}
 : IsTrunc n.+1 (A = B).
 Proof.
-  refine (trunc_equiv _ path_universe_uncurried).
+  refine (istrunc_isequiv_istrunc _ path_universe_uncurried).
 Defined.
 
 (** We can also say easily that the universe is not a set. *)

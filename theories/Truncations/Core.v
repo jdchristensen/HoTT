@@ -54,7 +54,7 @@ Definition Trunc_rec {n A X} `{IsTrunc n X}
 Definition Tr (n : trunc_index) : Modality.
 Proof.
   srapply (Build_Modality (IsTrunc n)).
-  - intros A B ? f ?; apply (trunc_equiv A f).
+  - intros A B ? f ?; apply (istrunc_isequiv_istrunc A f).
   - exact (Trunc n).
   - intros; apply istrunc_truncation.
   - intros A; apply tr.
@@ -167,11 +167,11 @@ Local Open Scope trunc_scope.
 
 (** We define [merely A] to be an inhabitant of the universe [hProp] of hprops, rather than a type.  We can always treat it as a type because there is a coercion, but this means that if we need an element of [hProp] then we don't need a separate name for it. *)
 
-Definition merely (A : Type@{i}) : hProp@{i} := BuildhProp (Tr (-1) A).
+Definition merely (A : Type@{i}) : HProp@{i} := Build_HProp (Tr (-1) A).
 
-Definition hexists {X} (P : X -> Type) : hProp := merely (sig P).
+Definition hexists {X} (P : X -> Type) : HProp := merely (sig P).
 
-Definition hor (P Q : Type) : hProp := merely (P + Q).
+Definition hor (P Q : Type) : HProp := merely (P + Q).
 
 Notation "A \/ B" := (hor A B) : type_scope.
 
@@ -240,7 +240,7 @@ Proof.
       exact (fun x => tr (tr x)). }
     { srapply Trunc_rec.
       srapply Trunc_rec.
-      1: srapply trunc_leq.
+      1: srapply istrunc_leq.
       exact tr. }
     { srapply Trunc_ind.
       simpl.
@@ -248,7 +248,7 @@ Proof.
       2: reflexivity.
       intro.
       apply istrunc_paths.
-      srapply (trunc_leq (m:=n)).
+      srapply (istrunc_leq (m:=n)).
       by apply trunc_index_leq_succ'. }
     srapply Trunc_ind; reflexivity.
   + set (min := trunc_index_min n m).
@@ -257,7 +257,7 @@ Proof.
     unfold min; clear min.
     symmetry.
     srapply equiv_tr.
-    srapply trunc_leq.
+    srapply istrunc_leq.
     3:{ (** Strangely, if [istrunc_inO_tr] were a [Hint Immediate], rather than our [Hint Extern], then typeclass inference would be able to find this all on its own, although the documentation for [Hint Immediate] suggests that it shouldn't because the following tactic doesn't solve it completely. *)
         simple apply istrunc_inO_tr; trivial.
         exact _. }
@@ -266,7 +266,7 @@ Defined.
 
 Definition Trunc_swap n m X : Tr n (Tr m X) <~> Tr m (Tr n X).
 Proof.
-  refine (_ oE equiv_transport (fun x => Tr x _) _ _ _ oE Trunc_min n m _).
+  refine (_ oE equiv_transport (fun x => Tr x _) _ oE Trunc_min n m _).
   2: apply trunc_index_min_swap.
   symmetry.
   apply Trunc_min.
@@ -304,7 +304,8 @@ Defined.
 Local Instance O_lex_leq_Tr `{Univalence} (n : trunc_index)
   : Tr n <<< Tr n.+1.
 Proof.
-  intros A; unshelve econstructor; intros P' P_inO; pose (P := fun x => BuildTruncType n (P' x)).
+  intros A; unshelve econstructor; intros P' P_inO;
+    pose (P := fun x => Build_TruncType n (P' x)).
   - refine (Trunc_rec P).
   - intros; exact _.
   - intros; cbn. reflexivity.

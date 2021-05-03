@@ -1,10 +1,8 @@
 (* -*- mode: coq; mode: visual-line -*-  *)
-(** * H-Sets *)
-
-Require Import Basics.
-Require Import Types.
+Require Import Basics Types.
 Require Import HProp.
 
+(** * H-Sets *)
 
 Local Open Scope path_scope.
 
@@ -42,7 +40,7 @@ Defined.
 
 Global Instance axiomK_isprop A : IsHProp (axiomK A) | 0.
 Proof.
-  apply (trunc_equiv _ equiv_hset_axiomK).
+  apply (istrunc_equiv_istrunc _ equiv_hset_axiomK).
 Defined.
 
 Theorem hset_path2 {A} `{IsHSet A} {x y : A} (p q : x = y):
@@ -61,7 +59,7 @@ Defined.
 Lemma axiomK_idpath {A} (x : A) (K : axiomK A) :
   K x (idpath x) = idpath (idpath x).
 Proof.
-  pose (T1A := @trunc_succ _ A (@hset_axiomK A K)).
+  pose (T1A := @istrunc_succ _ A (@hset_axiomK A K)).
   exact (@hset_path2 (x=x) (T1A x x) _ _ _ _).
 Defined.
 
@@ -106,7 +104,7 @@ Defined.
 
 (** We will now prove that for sets, monos and injections are equivalent.*)
 Definition ismono {X Y} (f : X -> Y)
-  := forall (Z : hSet),
+  := forall (Z : HSet),
      forall g h : Z -> X, f o g = f o h -> g = h.
 
 Definition isinj {X Y} (f : X -> Y)
@@ -150,7 +148,7 @@ Definition isinj_ismono {X Y} (f : X -> Y)
            (H : ismono f)
 : isinj f
   := fun x0 x1 H' =>
-       ap10 (H (BuildhSet Unit)
+       ap10 (H (Build_HSet Unit)
                (fun _ => x0)
                (fun _ => x1)
                (ap (fun x => unit_name x) H'))
