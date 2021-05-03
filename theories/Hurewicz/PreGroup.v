@@ -426,7 +426,7 @@ Proof.
     apply istrunc_loops.
     exact H0.
   - intros X H0.
-    apply (trunc_equiv _ (unfold_iterated_loops' _ _)^-1).
+    apply (istrunc_equiv_istrunc _ (unfold_iterated_loops' _ _)^-1).
     (* The induction hypothesis and H0 get used automatically by Coq. *)
 Defined.
 
@@ -529,7 +529,6 @@ Local Definition isequiv_precompose_loops_ptr `{Univalence} (n : nat)
   : IsEquiv (precompose_loops_ptr n X Y).
 Proof.
   snrapply (isequiv_precompose_O_inverts 0%trunc _).
-  - exact _.  (* Funext *)
   - rapply tr0_inverts_loops_ptr.
   - rapply ishset_magma_iterated_loops.
     (* [exact _] works, but is slow. *)
@@ -547,7 +546,6 @@ Proof.
   - nrapply Build_Equiv.  rapply isequiv_precompose_loops_ptr.
   - intro g; cbn.
     nrapply (equiv_pregrouppreserving 0%trunc (loops_ptr n X) g).
-    + exact _.  (* Funext *)
     + rapply ishset_magma_iterated_loops. (* Found by typeclass inference, but slow. *)
     + rapply zero_conn_loops_ptr.         (* Found by typeclass inference, but slow. *)
 Defined.
