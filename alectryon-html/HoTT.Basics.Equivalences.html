@@ -724,8 +724,7 @@ df x</span></div></blockquote></div></div></small><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="c">(* Build an element of a possibly-nested record type out of hypotheses in the context. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Ltac</span> <span class="nf">build_record</span> :=
-  <span class="kp">first</span> [ <span class="nb">cbn</span>; multi_assumption
-        | <span class="nb">cbn</span>; <span class="nb">unshelve</span> <span class="nb">econstructor</span>; build_record ].</span></span><span class="alectryon-wsp">
+  <span class="nb">cbn</span>; multi_assumption + (<span class="nb">unshelve</span> <span class="nb">econstructor</span>; build_record).</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="c">(* Construct an equivalence between two possibly-nested record/sigma types that differ only by associativity and permutation of their components.  We could use [Build_Equiv] and directly construct [eisadj] by decomposing to reflexivity as well, but often with large nested types it seems to be faster to adjointify. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Ltac</span> <span class="nf">make_equiv</span> :=
@@ -907,12 +906,11 @@ df x</span></div></blockquote></div></div></small><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="sd">(** Going the other direction, we have to be willing to insert identity paths to fill in the based path-spaces that got destructed.  In fact [econstructor] is already willing to do that, since [idpath] is the constructor of [paths].  However, our previous [build_record] won&#39;t manage to get to the point of being able to apply [econstructor] to the necessary paths, since it&#39;ll get stuck earlier on trying to find the basepoint.  Thus, we give a version of [build_record] that is willing to create existential variables (&quot;evars&quot;) for goals that it can&#39;t solve, in hopes that a later [idpath] (produced by [econstructor]) will determine them by unification.  Note that if there are other fields that depend on the basepoint that occur before the [idpath], the evar will -- and, indeed, must -- get instantiated by them instead.  This is why [multi_assumption], above, must be willing to instantiate evars. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Ltac</span> <span class="nf">build_record_with_evars</span> :=
-  <span class="kp">first</span> [ <span class="nb">cbn</span>; multi_assumption
-        | <span class="nb">cbn</span>; <span class="nb">unshelve</span> <span class="nb">econstructor</span>; build_record_with_evars
-        <span class="sd">(** Create a fresh evar to solve this goal *)</span>
-        | <span class="kr">match goal with</span>
-            |- <span class="nl">?G</span> =&gt; <span class="kr">let</span> <span class="nv">x</span> := <span class="kp">fresh</span> <span class="kr">in</span> <span class="nb">evar</span> (x : G); <span class="bp">exact</span> x
-          <span class="kr">end</span>; build_record_with_evars ].</span></span><span class="alectryon-wsp">
+  (<span class="nb">cbn</span>; multi_assumption + (<span class="nb">unshelve</span> <span class="nb">econstructor</span>; build_record_with_evars)) +
+  <span class="sd">(** Create a fresh evar to solve this goal *)</span>
+  (<span class="kr">match goal with</span>
+     |- <span class="nl">?G</span> =&gt; <span class="kr">let</span> <span class="nv">x</span> := <span class="kp">fresh</span> <span class="kr">in</span> <span class="nb">evar</span> (x : G); <span class="bp">exact</span> x
+   <span class="kr">end</span>; build_record_with_evars).</span></span><span class="alectryon-wsp">
 </span></span><span class="alectryon-wsp"><span class="highlight">
 <span class="sd">(** Now here&#39;s the improved version of [make_equiv]. *)</span>
 </span></span><span class="alectryon-sentence"><span class="alectryon-input"><span class="highlight"><span class="kn">Ltac</span> <span class="nf">make_equiv_contr_basedpaths</span> :=
