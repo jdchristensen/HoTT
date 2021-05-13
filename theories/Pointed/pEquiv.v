@@ -114,5 +114,23 @@ Definition equiv_pequiv_precompose `{Funext} {A B C : pType} (f : A <~>* B)
   := equiv_precompose_cat_equiv f.
 
 Definition equiv_pequiv_postcompose `{Funext} {A B C : pType} (f : B <~>* C)
-  : (A ->* B) <~> (A ->* C)
-  := equiv_postcompose_cat_equiv f.
+  : (A ->* B) <~> (A ->* C).
+Proof.
+  srapply equiv_adjointify.
+  - exact (fun g => f o* g).
+  - exact (fun g => f^-1* o* g).
+  - intro g.
+    apply path_pforall.
+    by apply moveR_pequiv_Mf.
+  - intro g.
+    apply path_pforall.
+    by apply moveR_pequiv_Vf.
+Defined.
+
+Proposition equiv_pequiv_inverse `{Funext} {A B : pType}
+  : (A <~>* B) <~> (B <~>* A).
+Proof.
+  refine (issig_pequiv' _ _ oE _ oE (issig_pequiv' A B)^-1).
+  srapply (equiv_functor_sigma' (equiv_equiv_inverse _ _)); intro e; cbn.
+  exact (equiv_moveR_equiv_V _ _ oE equiv_path_inverse _ _).
+Defined.

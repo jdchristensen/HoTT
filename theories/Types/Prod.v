@@ -260,6 +260,28 @@ Definition equiv_functor_prod_r {A A' B : Type} (f : A <~> A')
   : A * B <~> A' * B
   := f *E 1.
 
+Definition equiv_prod_contr_l {A B : Type} (C : B -> Contr A)
+  : A * B <~> B.
+Proof.
+  srapply (equiv_adjointify snd (fun b => (@center A (C b), b))).
+  1: reflexivity.
+  intro x.
+  apply path_prod; cbn.
+  - apply (C (snd x)).
+  - reflexivity.
+Defined.
+
+Definition equiv_prod_contr_r {A B : Type} (C : A -> Contr B)
+  : A * B <~> A.
+Proof.
+  srapply (equiv_adjointify fst (fun a => (a, @center B (C a)))).
+  1: reflexivity.
+  intro x.
+  apply path_prod; cbn.
+  1: reflexivity.
+  apply (C (fst x)).
+Defined.
+
 (** ** Logical equivalences *)
 
 Definition iff_functor_prod {A A' B B' : Type} (f : A <-> A') (g : B <-> B')

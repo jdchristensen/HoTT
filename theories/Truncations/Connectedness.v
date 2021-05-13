@@ -192,6 +192,18 @@ Proof.
     exact (center (merely X)).
 Defined.
 
+(** If the fiber of a map into a pointed, connected type is O-local, then the map is O-local. *)
+Lemma mapinO_inO_fiber_connected@{u v} `{Univalence} (O : Subuniverse)
+      {A B : Type@{u}} (b0 : B) `{IsConnected 0 B} (f : A -> B)
+  : In O (hfiber f b0) -> MapIn O f.
+Proof.
+  intros inO b.
+  assert (p : merely (b0 = b))
+    by rapply merely_path_is0connected@{u v u u u u u u u}.
+  strip_truncations.
+  by apply (transport (In O o hfiber f) p).
+Defined.
+
 (* Truncation preserves connectedness. Note that this is for different levels. *)
 Global Instance isconnected_trunc {X : Type} (n m : trunc_index) `{IsConnected n X}
   : IsConnected n (Tr m X).
