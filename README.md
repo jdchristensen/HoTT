@@ -4,6 +4,7 @@ which we are formalizing the results in the paper:
 - [CS] The Hurewicz Theorem in Homotopy Type Theory,
   J. Daniel Christensen and Luis Scoccola,
   [arxiv:2007.05833](https://arxiv.org/abs/2007.05833).
+  To appear in Algebraic & Geometric Topology.
 
 This README refers to the numbering that matches the numbering in v1 and v2 of that preprint.
 
@@ -64,3 +65,5 @@ In the paper, we define the sum `m + n` of natural numbers by induction on `n`,
 so that `m+1` is the successor of `m`.
 In the HoTT library, the other convention is used, so to translate between
 the paper and the formalization, one must change `m+n` to `n+m` everywhere.
+
+This version builds with Coq 8.14.0.  It doesn't build with 8.16.1.
