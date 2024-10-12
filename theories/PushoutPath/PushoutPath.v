@@ -215,6 +215,16 @@ Definition identity_zigzag_Pinf {A : Type} {B : Type} (R : A -> B -> Type) (a0 :
 
 Definition identity_zigzag_Qinf {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) (b : B) : Type := Colimit (identity_zigzag_Q_seq R a0 b).
 
+Definition identity_zigzag_Pswap {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) (a : A) (t : nat) : (identity_zigzag_P R a0 a t) <~> (identity_zigzag_P R a a0 t).
+Proof.
+  induction t.
+  + simpl.
+    snrapply Build_Equiv.
+    2: exact (isequiv_path_inverse a0 a).
+  + simpl.
+    snrapply Build_Equiv.
+Admitted.
+
 Definition identity_zigzag_concatQPinf `{Funext} {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) : (identity_zigzag_Qinf R a0 b) -> (identity_zigzag_Pinf R a0 a) := functor_colimit (identity_zigzag_seq_concatQP R a0 a b r) _ _.
 
 Definition identity_zigzag_concatPQinf `{Funext} {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) : (identity_zigzag_Pinf R a0 a) -> (identity_zigzag_Qinf R a0 b) := (colim_succ_seq_to_colim_seq _) o (functor_colimit (identity_zigzag_seq_concatPQ R a0 a b r) _ _ ).
@@ -321,6 +331,15 @@ Proof.
     destruct r as [a r].
     destruct r as [b r].
     snrapply path_forall.
+    snrapply Pushout_ind.
+    + intro a'.
+      simpl.
+
+      
+
+
+
+
     
 
 
