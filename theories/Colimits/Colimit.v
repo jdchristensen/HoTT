@@ -222,6 +222,48 @@ Section FunctorialityColimit.
       = cocone_postcompose HQ1 (functor_colimit m HQ1 HQ2)
     := (eisretr (cocone_postcompose HQ1) _)^.
 
+  (** Additional coherence with postcompose and precompose *)
+
+  Definition cocone_precompose_postcompose_comp {D1 D2 : Diagram G}
+    (m : DiagramMap D1 D2) {Q1 Q2 : Type} (HQ1 : IsColimit D1 Q1)
+    (HQ2 : IsColimit D2 Q2) {T : Type} (t : Q2 -> T)
+    : cocone_postcompose HQ1 (t o (functor_colimit m HQ1 HQ2))
+      = cocone_precompose m (cocone_postcompose HQ2 t).
+    Proof.
+      rewrite (cocone_postcompose_comp (functor_colimit m _ _) _ _).
+      rewrite <- (functor_colimit_commute m HQ1 HQ2).
+      rewrite (cocone_precompose_postcompose m t HQ2).
+      reflexivity.
+    Defined.
+
+  (** Functoriality of colimit *)
+
+  Definition pre_functoriality_functor_colimit {D1 D2 D3 : Diagram G} 
+    (m : DiagramMap D1 D2) (n : DiagramMap D2 D3) 
+    {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
+    (HQ3 : IsColimit D3 Q3)
+    : cocone_postcompose HQ1 ((functor_colimit n HQ2 HQ3) o (functor_colimit m HQ1 HQ2))
+      = cocone_postcompose HQ1 (functor_colimit (diagram_comp n m) HQ1 HQ3).
+    Proof.
+      rewrite (cocone_precompose_postcompose_comp m HQ1 HQ2 _).
+      rewrite <- (functor_colimit_commute n HQ2 HQ3).
+      rewrite (cocone_precompose_comp n m _).
+      rewrite (functor_colimit_commute (diagram_comp n m) _ _).
+      reflexivity.
+    Defined.
+
+  Definition functoriality_functor_colimit {D1 D2 D3 : Diagram G} 
+    (m : DiagramMap D1 D2) (n : DiagramMap D2 D3) 
+    {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
+    (HQ3 : IsColimit D3 Q3)
+    : (functor_colimit n HQ2 HQ3) o (functor_colimit m HQ1 HQ2)
+      = (functor_colimit (diagram_comp n m) HQ1 HQ3).
+    Proof.
+      apply (@equiv_inj _ _ 
+        (cocone_postcompose HQ1) (iscolimit_unicocone HQ1 Q3) _ _ 
+        (pre_functoriality_functor_colimit m n HQ1 HQ2 HQ3)).
+    Defined.
+
   (** ** Colimits of equivalent diagrams *)
 
   (** Now we have than two equivalent diagrams have equivalent colimits. *)
