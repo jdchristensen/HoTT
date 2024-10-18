@@ -49,8 +49,7 @@ Proof.
     + exact (sig (fun a => prod (R a b) (P0 a))).
     + intro x.
       exact (snd (pr2 x)).
-    + intro a.
-      destruct a as [a [r p]].
+    + intros [a [r p]].
       exact (a ; (r , (concatQP0 a b r p))).
   - intros a b r p. (** Constructing P_{t-1} -> Q_t (concatPQ) *)
     snrapply pushr.
@@ -64,8 +63,7 @@ Proof.
     + exact (sig (fun b => prod (R a b) (Q b))).
     + intro x.
       exact (snd (pr2 x)).
-    + intro b.
-      destruct b as [b [r p]].
+    + intros [b [r p]].
       exact (b ; (r , concatPQ a b r p)).
   - intros a b r p. (** Consructing Q_t -> P_t (concatQP) *)
     snrapply pushr.
@@ -128,26 +126,16 @@ Definition identity_zigzag_initial {A : Type} {B : Type} (R : A -> B -> Type)
   (a0 : A) : zigzag_type R a0.
 Proof.
   snrapply (Build_zigzag_type A B R a0).
-  - exact (fun a => Empty).
-  - exact (fun b => Empty).
-  - intros a b r q.
-    destruct q.
-  - exact (fun b => Empty). (** Define Q_0 := Empty *)
-  - intros a b r q. (** Define P_{-1} -> Q_0 *)
-    destruct q.
-  - intros b q. (** Define Q_{-1} -> Q_0 *)
-    destruct q.
-  - exact (fun a => a0 = a). (** Define P_0 := Id a0 *)
-  - intros a b r q. (** Define Q_0 -> P_0 *)
-    destruct q.
-  - intros a p. (** Define P_{-1} -> P_0 *)
-    destruct p.
-  - intros.
-    intro q.
-    destruct q.
-  - intros.
-    intro q.
-    destruct q.
+  1, 2, 4: exact (fun b => Empty). (** Define Q_0 := Empty *)
+  4: exact (fun a => a0 = a). (** Define P_0 := Id a0 *)
+  all: intros.
+  - destruct q.
+  - destruct p. (** Define P_{-1} -> Q_0 *)
+  - destruct x. (** Define Q_{-1} -> Q_0 *)
+  - destruct q. (** Define Q_0 -> P_0 *)
+  - destruct x. (** Define P_{-1} -> P_0 *)
+  - intros [].
+  - intros [].
 Defined.
 
 Definition identity_zigzag {A : Type} {B : Type} (R : A -> B -> Type) 
@@ -197,13 +185,13 @@ Definition identity_zigzag_concatQP {A : Type} {B : Type} (R : A -> B -> Type)
 
 
 Definition identity_zigzag_concatPQ {A : Type} {B : Type} (R : A -> B -> Type) 
-  (a0 : A) (a : A) (b : B) (r : R a b) (t : nat) : 
-  (identity_zigzag_P R a0 a t) -> (identity_zigzag_Q R a0 b (S t)) := 
+  (a0 : A) (a : A) (b : B) (r : R a b) (t : nat) 
+  : (identity_zigzag_P R a0 a t) -> (identity_zigzag_Q R a0 b (S t)) := 
   (identity_zigzag R a0 (S t)).(concatPQ R a0) a b r.
 
 Definition identity_zigzag_concatQPQ {A : Type} {B : Type} (R : A -> B -> Type) 
-  (a0 : A) (a : A) (b : B) (r : R a b) (t : nat) : 
-  (compose (identity_zigzag_concatPQ R a0 a b r t) 
+  (a0 : A) (a : A) (b : B) (r : R a b) (t : nat) 
+  : (compose (identity_zigzag_concatPQ R a0 a b r t) 
     (identity_zigzag_concatQP R a0 a b r t)) 
   == (identity_zigzag_iotaQ R a0 b t) := 
   (identity_zigzag R a0 (S t)).(concatQPQ R a0) a b r.
@@ -216,8 +204,8 @@ Definition identity_zigzag_concatPQP {A : Type} {B : Type} (R : A -> B -> Type)
   (identity_zigzag R a0 (S t)).(concatPQP R a0) a b r.
 
 Definition identity_zigzag_seq_concatQP {A : Type} {B : Type} (R : A -> B -> Type) 
-  (a0 : A) (a : A) (b : B) (r : R a b) : 
-  DiagramMap (identity_zigzag_Q_seq R a0 b) (identity_zigzag_P_seq R a0 a).
+  (a0 : A) (a : A) (b : B) (r : R a b) 
+  : DiagramMap (identity_zigzag_Q_seq R a0 b) (identity_zigzag_P_seq R a0 a).
 Proof.
   snrapply Build_DiagramMap.
   - intro t.
@@ -232,12 +220,12 @@ Proof.
       exact (identity_zigzag_concatQPQ R a0 a b r t _).
 Defined.
 
-Definition identity_zigzag_seq_concatPQ {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) : DiagramMap (identity_zigzag_P_seq R a0 a) (succ_seq (identity_zigzag_Q_seq R a0 b)).
+Definition identity_zigzag_seq_concatPQ {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) 
+  (a : A) (b : B) (r : R a b) 
+  : DiagramMap (identity_zigzag_P_seq R a0 a) (succ_seq (identity_zigzag_Q_seq R a0 b)).
 Proof.
   snrapply Build_DiagramMap.
   - intro t.
-    simpl.
-    Compute (Graph.graph0 sequence_graph).
     exact (identity_zigzag_concatPQ R a0 a b r t).
   - intros t p q x.
     destruct q.
@@ -277,7 +265,7 @@ Definition identity_zigzag_concatQPinf `{Funext} {A : Type} {B : Type}
 Definition identity_zigzag_concatPQinf `{Funext} {A : Type} {B : Type} 
   (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) 
   : (identity_zigzag_Pinf R a0 a) -> (identity_zigzag_Qinf R a0 b) := 
-  (colim_succ_seq_to_colim_seq _) 
+  (colim_succ_seq_to_colim_seq _)
   o (functor_colimit (identity_zigzag_seq_concatPQ R a0 a b r) _ _ ).
 
 Section Death.
@@ -297,14 +285,17 @@ Proof.
   snrapply Colimit_ind.
   - simpl.
     intros t p.
-    transitivity (inj (identity_zigzag_Q_seq R a0 b) (S t) (identity_zigzag_concatPQ R a0 a b r t (identity_zigzag_concatQP R a0 a b r t p))).
+    transitivity (inj (identity_zigzag_Q_seq R a0 b) (S t) 
+      (identity_zigzag_concatPQ R a0 a b r t (identity_zigzag_concatQP R a0 a b r t p))).
     + reflexivity.
-    + transitivity (inj (identity_zigzag_Q_seq R a0 b) (S t) (identity_zigzag_iotaQ R a0 b t p)).
+    + transitivity (inj (identity_zigzag_Q_seq R a0 b) (S t) 
+      (identity_zigzag_iotaQ R a0 b t p)).
       * apply ap.
         exact (identity_zigzag_concatQPQ R a0 a b r t p).
       * apply (glue (identity_zigzag_Q_seq R a0 b)).
   - intros t n q p.
     destruct q.
+    simpl.
     admit.
 Admitted.
 
