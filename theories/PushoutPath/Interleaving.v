@@ -71,23 +71,33 @@ Section Transfinite_composition.
     (** This is a map colim [A] to colim [succ_seq A] *)
 
     Definition abs_colim_seq_to_abs_colim_succ_seq
-        : transfinite_A -> transfinite_succ_A.
-    Proof.
-        apply (cocone_postcompose_inv col_A).
-        srapply Build_Cocone.
-        - intros n a. exact (col_succ_A n a^+).
-        - intros m n [] a. exact (legs_comm col_succ_A m (S m) idpath a^+).
-    Defined.
+        : transfinite_A -> transfinite_succ_A 
+    := functor_colimit (seq_to_succ_seq A) _ _.
 
     (** We hope that these maps are quasi-inverses of each other *)
+    
+        (** Hack while I think about this property *)
+
+        Definition ret_abs_colim_succ_seq_to_abs_seq
+            : abs_colim_seq_to_abs_colim_succ_seq 
+                o abs_colim_succ_seq_to_abs_colim_seq
+                == idmap.
+        Admitted.
+
+        Definition sec_abs_colim_succ_seq_to_abs_seq
+            : abs_colim_succ_seq_to_abs_colim_seq
+                o abs_colim_seq_to_abs_colim_succ_seq
+                == idmap.
+        Admitted.
 
     Definition equiv_abs_colim_succ_seq_to_abs_colim_seq
         : IsEquiv abs_colim_succ_seq_to_abs_colim_seq.
     Proof.
         snrapply isequiv_adjointify.
         - exact abs_colim_seq_to_abs_colim_succ_seq.
-        - intro a. 
-    Admitted.
+        - exact sec_abs_colim_succ_seq_to_abs_seq.
+        - exact ret_abs_colim_succ_seq_to_abs_seq.
+    Defined.
 
 End Transfinite_composition.
 
@@ -125,8 +135,6 @@ Section Intersplitting.
             comm_triangle^).
         reflexivity.
     Defined.
-
-
 
 End Intersplitting.
 
