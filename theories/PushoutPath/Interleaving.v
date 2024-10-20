@@ -50,7 +50,7 @@ Proof.
  - intros m n [] a. exact (DiagramMap_comm f _ a).
 Defined.
 
-(** We show that the map induced by succ_seq_to_seq_map is an equivalence. *)
+(** We show that the map induced by [succ_seq_to_seq] is an equivalence. *)
 
 Section Is_Equiv_colim_succ_seq_to_seq_map.
   Context `{Funext} {A : Sequence}
@@ -58,13 +58,15 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     {transfinite_succ_A : Type} 
     (col_succ_A : IsColimit (succ_seq A) transfinite_succ_A).
 
-    (** This is a map [transfinite_A -> transfinite_succ_A] *)
+  (** We take the colimit of [seq_to_succ_seq]
+    and obtain a map [transfinite_A -> transfinite_succ_A] *)
 
   Definition abs_colim_seq_to_abs_colim_succ_seq
     : transfinite_A -> transfinite_succ_A 
   := functor_colimit (seq_to_succ_seq A) col_A col_succ_A.
 
-    (** We make a cocone from [succ_seq A] to [transfinite_A] *)
+  (** The legs of [col_A] induces a cocone from [succ_seq A] 
+    over [transfinite_A] *)
 
   Definition cocone_succ_seq_over_col 
     : Cocone (succ_seq A) transfinite_A.
@@ -74,8 +76,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     - intros m n [] a. exact (legs_comm col_A _ _ _ _).
   Defined.
 
-  (** Using the cocone above, 
-      we obtain a map [transfinite_succ_A -> transfinite_A] *)
+  (** The cocone above induces a map [transfinite_succ_A -> transfinite_A] *)
 
   Definition abs_colim_succ_seq_to_abs_colim_seq
     : transfinite_succ_A -> transfinite_A 
@@ -84,9 +85,9 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
   (** Our goal is to show that these maps are quasi-inverses
       of each other. *)
 
-  (** We start with showing that [abs_colim_seq_to_abs_colim_succ_seq]
-      is a split-monomorphism. [cocone_succ_seq_over_col] defines 
-      essentially the same cocone as [col_A]. I.e. the following 
+  (** We start by showing that [abs_colim_seq_to_abs_colim_succ_seq]
+      is a split-monomorphism. Observe that [cocone_succ_seq_over_col]
+      essentially defines the same cocone as [col_A]. I.e. the following 
       diagram is commutative:
     
                   A          succ_seq A
@@ -119,7 +120,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     reflexivity.
   Defined.
 
-  (** The cocone [col_A] indeces [idmap : transfinite_A -> transfinite_A]. *)
+  (** The cocone [col_A] induces [idmap : transfinite_A -> transfinite_A]. *)
 
   Definition col_legs_induces_idmap 
     : cocone_postcompose_inv col_A col_A = idmap.
@@ -190,8 +191,7 @@ End Is_Equiv_colim_succ_seq_to_seq_map.
 
 (** Intersplitting is a pun of interleaving and splitting. 
     We will at first only assume that every other triangle
-    is commutative. Intuitively, one may think of A as a retract of B. 
-    We then expect colim A to be a retract of colim B as well. *)
+    is commutative. In this case, colim A is a retract of colim B. *)
 
 Section Intersplitting.
   Context `{Funext} {A B : Sequence} 
