@@ -413,6 +413,8 @@ Definition equiv_ap_inv' `(f : A <~> B) (x y : B)
   : (f^-1 x = f^-1 y) <~> (x = y)
   := (equiv_ap' f^-1%equiv x y)^-1%equiv.
 
+(** We define the 2-out-of-3 property, or 2 for 3 property *)
+
 (** If [g \o f] and [f] are equivalences, so is [g].  This is not an Instance because it would require Coq to guess [f]. *)
 Definition cancelR_isequiv {A B C} (f : A -> B) {g : B -> C}
   `{IsEquiv A B f} `{IsEquiv A C (g o f)}
@@ -456,6 +458,58 @@ Definition isequiv_commsq' {A B C D}
 Proof.
   refine (@cancelL_isequiv _ _ _ k f _ _).
   refine (isequiv_homotopic _ p).
+Defined.
+
+(** We define the 2-out-of-6 property *)
+
+Definition two_out_of_six_snd {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  : IsEquiv g.
+Proof.
+  destruct H as [gf_inv gf_s gf_r gf_adj].
+  destruct H0 as [hg_inv hg_s hg_r hg_adj].
+  snrapply isequiv_adjointify.
+  - exact (hg_inv o h).
+  - Check (fun x => ap (hg_inv o h) (gf_s x)^). 
+    exact (fun x => ap g (ap (hg_inv o h) (gf_s x)^ @ hg_r ((f o gf_inv) x)) @ gf_s x).
+  - exact hg_r.
+Defined.
+
+Definition two_out_of_six_fst {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  : IsEquiv f.
+Proof.
+  snrapply cancelL_isequiv.
+  - exact C.
+  - exact g.
+  - exact (two_out_of_six_snd f g h).
+  - exact H.
+Defined.
+
+Definition two_out_of_six_thr {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  : IsEquiv h.
+Proof.
+  snrapply cancelR_isequiv.
+  - exact B.
+  - exact g.
+  - exact (two_out_of_six_snd f g h).
+  - exact H0.
+Defined.
+
+Definition two_out_of_six {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  : IsEquiv f * IsEquiv g * IsEquiv h.
+Proof.
+  split.
+  - split.
+    + exact (two_out_of_six_fst f g h).
+    + exact (two_out_of_six_snd f g h).
+  - exact (two_out_of_six_thr f g h).
 Defined.
 
 (** Based homotopy spaces *)
