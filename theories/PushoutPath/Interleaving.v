@@ -227,6 +227,19 @@ Section Intersplitting.
         reflexivity.
     Defined.
 
+    Definition isequiv_colim_composite
+        : IsEquiv ((functor_colimit u col_B col_succ_A) o (functor_colimit d col_A col_B)).
+    Proof.
+        apply (@isequiv_homotopic
+          transfinite_A
+          transfinite_succ_A
+          (abs_colim_seq_to_abs_colim_succ_seq col_A col_succ_A)
+          ((functor_colimit u _ _) o (functor_colimit d _ _))
+          (equiv_abs_colim_seq_to_abs_colim_succ_seq col_A col_succ_A)).
+        apply apD10.
+        exact colimit_comm_triangle.
+    Defined.
+
 End Intersplitting.
 
 (** Now we will assume that every triangle is commutative.
@@ -234,12 +247,29 @@ End Intersplitting.
     this diagram is an equivalence. *)
 
 Section Interleaving.
-    Context {A B : Sequence} 
-        {transfiniteA : Type} (colA : IsColimit A transfiniteA)
-        {transfiniteB : Type} (colB : IsColimit B transfiniteB)
+    Context `{Funext} {A B : Sequence} 
+        {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
+        {transfinite_succ_A : Type} (col_succ_A : IsColimit (succ_seq A) transfinite_succ_A)
+        {transfinite_B : Type} (col_B : IsColimit B transfinite_B)
+        {transfinite_succ_B : Type} (col_succ_B : IsColimit (succ_seq B) transfinite_succ_B)
         (d : DiagramMap A B) 
         (u : DiagramMap B (succ_seq A))
         (tri1 : seq_to_succ_seq A = diagram_comp u d)
         (tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u).
+
+    Definition isequiv_interleaved_colim_maps
+        : IsEquiv (functor_colimit d _ _) * IsEquiv (functor_colimit u _ _) * IsEquiv (functor_colimit (succ_seq_map_seq_map d) _ _).
+    Proof.
+        snrapply two_out_of_six.
+        - exact (isequiv_colim_composite col_A col_succ_A col_B d u tri1).
+        - exact (isequiv_colim_composite col_B col_succ_B col_succ_A u (succ_seq_map_seq_map d) tri2).
+    Defined.
+
+    Definition equiv_interleaved_colim : transfinite_A <~> transfinite_B.
+    Proof.
+        snrapply Build_Equiv.
+        - exact (functor_colimit d col_A col_B).
+        - exact ((fst o fst) isequiv_interleaved_colim_maps).
+    Defined.
 
 End Interleaving.
