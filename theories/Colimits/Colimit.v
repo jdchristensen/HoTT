@@ -231,8 +231,8 @@ Section FunctorialityColimit.
       = cocone_precompose m (cocone_postcompose HQ2 t).
     Proof.
       lhs refine (cocone_postcompose_comp (functor_colimit m _ _) _ _).
-      lhs refine (ap (fun x => cocone_postcompose x t) 
-        (functor_colimit_commute m HQ1 HQ2)^).
+      lhs_V refine (ap (fun x => cocone_postcompose x t) 
+        (functor_colimit_commute m HQ1 HQ2)).
       lhs refine (cocone_precompose_postcompose m t HQ2).
       reflexivity.
     Defined.
@@ -247,7 +247,7 @@ Section FunctorialityColimit.
       = cocone_postcompose HQ1 (functor_colimit (diagram_comp n m) HQ1 HQ3).
   Proof.
     lhs refine (cocone_precompose_postcompose_comp m HQ1 HQ2 _).
-    lhs refine (ap _ (functor_colimit_commute n HQ2 HQ3)^).
+    lhs_V refine (ap _ (functor_colimit_commute n HQ2 HQ3)).
     lhs refine (cocone_precompose_comp n m _ HQ3).
     lhs refine (functor_colimit_commute (diagram_comp n m) _ _).
     reflexivity.

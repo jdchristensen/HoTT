@@ -108,7 +108,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
 
   Definition cocone_succ_seq_over_col_is_ess_col 
     : cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col
-    = iscolimit_cocone col_A.
+      = iscolimit_cocone col_A.
   Proof.
     apply (path_cocone 
       legs_comm_cocone_succ_seq_over_col_with_col).
@@ -137,17 +137,18 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
       o abs_colim_seq_to_abs_colim_succ_seq] *)
 
   Definition cocone_precompose_seq_to_succ_seq_cocone_succ_seq_over_col_induces_comp
-    : cocone_postcompose_inv col_A (cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col)
-    = abs_colim_succ_seq_to_abs_colim_seq
-    o abs_colim_seq_to_abs_colim_succ_seq. 
+    : cocone_postcompose_inv col_A 
+      (cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col)
+      = abs_colim_succ_seq_to_abs_colim_seq
+      o abs_colim_seq_to_abs_colim_succ_seq. 
   Proof.
     apply (@equiv_inj _ _ (cocone_postcompose col_A)
       (iscolimit_unicocone col_A transfinite_A) _ _).
     rhs snrapply cocone_postcompose_comp.
     unfold abs_colim_seq_to_abs_colim_succ_seq.
-    rhs snrapply (ap (fun x => cocone_postcompose x 
+    rhs_V snrapply (ap (fun x => cocone_postcompose x 
       abs_colim_succ_seq_to_abs_colim_seq) 
-      (functor_colimit_commute _ _ _)^).
+      (functor_colimit_commute _ _ _)).
     rhs snrapply cocone_precompose_postcompose.
     unfold abs_colim_succ_seq_to_abs_colim_seq.
     rhs snrapply (ap (fun x => cocone_precompose (seq_to_succ_seq A) x) 
@@ -161,7 +162,8 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     o abs_colim_seq_to_abs_colim_succ_seq
     = idmap.
   Proof.
-    lhs snrapply cocone_precompose_seq_to_succ_seq_cocone_succ_seq_over_col_induces_comp^.
+    lhs_V snrapply 
+      cocone_precompose_seq_to_succ_seq_cocone_succ_seq_over_col_induces_comp.
     lhs snrapply (ap (fun x => cocone_postcompose_inv col_A x) 
       cocone_succ_seq_over_col_is_ess_col).
     exact (col_legs_induces_idmap).
@@ -222,13 +224,14 @@ Section Intersplitting.
     = (functor_colimit u _ _) o (functor_colimit d _ _).
   Proof.
     rhs snrapply functor_colimit_compose.
-    rhs refine (ap (fun x => functor_colimit x col_A col_succ_A) 
-      comm_triangle^).
+    rhs_V refine (ap (fun x => functor_colimit x col_A col_succ_A) 
+      comm_triangle).
     reflexivity.
   Defined.
 
   Definition isequiv_colim_composite
-    : IsEquiv ((functor_colimit u col_B col_succ_A) o (functor_colimit d col_A col_B)).
+    : IsEquiv ((functor_colimit u col_B col_succ_A) 
+      o (functor_colimit d col_A col_B)).
   Proof.
     apply (@isequiv_homotopic
       transfinite_A
@@ -249,9 +252,11 @@ End Intersplitting.
 Section Interleaving.
   Context `{Funext} {A B : Sequence} 
     {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
-    {transfinite_succ_A : Type} (col_succ_A : IsColimit (succ_seq A) transfinite_succ_A)
+    {transfinite_succ_A : Type} (col_succ_A : IsColimit (succ_seq A) 
+      transfinite_succ_A)
     {transfinite_B : Type} (col_B : IsColimit B transfinite_B)
-    {transfinite_succ_B : Type} (col_succ_B : IsColimit (succ_seq B) transfinite_succ_B)
+    {transfinite_succ_B : Type} (col_succ_B : IsColimit (succ_seq B) 
+      transfinite_succ_B)
     (d : DiagramMap A B) 
     (u : DiagramMap B (succ_seq A))
     (tri1 : seq_to_succ_seq A = diagram_comp u d)
@@ -262,7 +267,8 @@ Section Interleaving.
   Proof.
     snrapply two_out_of_six.
     - exact (isequiv_colim_composite col_A col_succ_A col_B d u tri1).
-    - exact (isequiv_colim_composite col_B col_succ_B col_succ_A u (succ_seq_map_seq_map d) tri2).
+    - exact (isequiv_colim_composite col_B col_succ_B col_succ_A u 
+      (succ_seq_map_seq_map d) tri2).
   Defined.
 
   Definition equiv_interleaved_colim : transfinite_A <~> transfinite_B.
