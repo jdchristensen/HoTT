@@ -221,7 +221,7 @@ Section Intersplitting.
     abs_colim_seq_to_abs_colim_succ_seq col_A col_succ_A 
     = (functor_colimit u _ _) o (functor_colimit d _ _).
   Proof.
-    rhs snrapply functoriality_functor_colimit.
+    rhs snrapply functor_colimit_compose.
     rhs refine (ap (fun x => functor_colimit x col_A col_succ_A) 
       comm_triangle^).
     reflexivity.

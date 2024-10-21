@@ -239,7 +239,7 @@ Section FunctorialityColimit.
 
   (** Functoriality of colimits *)
 
-  Definition pre_functoriality_functor_colimit {D1 D2 D3 : Diagram G} 
+  Definition postcompose_functor_colimit_compose {D1 D2 D3 : Diagram G} 
     (m : DiagramMap D1 D2) (n : DiagramMap D2 D3) 
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
@@ -253,7 +253,7 @@ Section FunctorialityColimit.
     reflexivity.
   Defined.
 
-  Definition functoriality_functor_colimit {D1 D2 D3 : Diagram G} 
+  Definition functor_colimit_compose {D1 D2 D3 : Diagram G} 
     (m : DiagramMap D1 D2) (n : DiagramMap D2 D3) 
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
@@ -262,7 +262,7 @@ Section FunctorialityColimit.
   Proof.
     apply (@equiv_inj _ _ 
       (cocone_postcompose HQ1) (iscolimit_unicocone HQ1 Q3) _ _ 
-      (pre_functoriality_functor_colimit m n HQ1 HQ2 HQ3)).
+      (postcompose_functor_colimit_compose m n HQ1 HQ2 HQ3)).
   Defined.
 
   (** ** Colimits of equivalent diagrams *)
