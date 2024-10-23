@@ -12,6 +12,9 @@ Require Import Colimits.Sequential.
 Require Import Diagram.
 Require Import Types.
 
+Locate Is1Cat_Strong.
+
+
 (** Suppose we have sequences A_i and B_i. An interleaving from 
     A_i to B_i consists of two natural transformations
     d : A_i => B_i (d for down) and u : B_i => A_i+1 (u for up), 
@@ -50,42 +53,62 @@ Proof.
  - intros m n [] a. exact (DiagramMap_comm f _ a).
 Defined.
 
+(** Cocones over a sequence defines a cocone over the successor sequence *)
+
+Definition succ_seq_cocone_seq_cocone {A : Sequence} (T : Type) (C : Cocone A T)
+  : Cocone (succ_seq A) T.
+Proof.
+  srapply Build_Cocone.
+  - intros n a. exact (C (S n) a).
+  - intros m n [] a. rapply (legs_comm C).
+Defined.
+
+(** [cocone_precompose (seq_to_succ_seq A)] is an equivalence *)
+
+Definition isequiv_cocone_precompose_seq_to_succ_seq
+  `{Funext} {A : Sequence} {X : Type} 
+  : IsEquiv (cocone_precompose (seq_to_succ_seq A) (X:= X)).
+Proof.
+  snrapply isequiv_adjointify.
+  - exact (succ_seq_cocone_seq_cocone X).
+  - intro C.
+    srapply path_cocone.
+    + intros n a. simpl. exact (legs_comm C n _ idpath a).
+    + intros m n [] a. simpl.
+      snrapply (ap (fun x => x @ _) (concat_1p _)).
+  - intro C.
+    srapply path_cocone.
+    + intros n a. simpl. exact (legs_comm C n _ idpath a).
+    + intros m n [] a. simpl.
+      snrapply (ap (fun x => x @ _) (concat_1p _)).
+Defined.
+
+(** The cocone [col_A] induces [idmap : transfinite_A -> transfinite_A]. *)
+
+Definition col_legs_induces_idmap `{Funext} {A : Sequence}
+  {transfinite_A} (col_A : IsColimit A transfinite_A) 
+  : cocone_postcompose_inv col_A col_A = idmap.
+Proof.
+  apply (@equiv_inj _ _ (cocone_postcompose col_A)
+    (iscolimit_unicocone col_A transfinite_A) _ _).
+  lhs snrapply (eisretr (cocone_postcompose col_A)).
+  snrapply (cocone_postcompose_identity col_A)^.
+Defined.
+
 (** We show that the map induced by [succ_seq_to_seq] is an equivalence. *)
 
 Section Is_Equiv_colim_succ_seq_to_seq_map.
   Context `{Funext} {A : Sequence}
-    {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
-    {transfinite_succ_A : Type} 
-    (col_succ_A : IsColimit (succ_seq A) transfinite_succ_A).
-
-  (** We take the colimit of [seq_to_succ_seq]
-    and obtain a map [transfinite_A -> transfinite_succ_A] *)
-
-  Definition abs_colim_seq_to_abs_colim_succ_seq
-    : transfinite_A -> transfinite_succ_A 
-  := functor_colimit (seq_to_succ_seq A) col_A col_succ_A.
+    {transfinite_A : Type} (col_A : IsColimit A transfinite_A).
 
   (** The legs of [col_A] induces a cocone from [succ_seq A] 
     over [transfinite_A] *)
 
   Definition cocone_succ_seq_over_col 
-    : Cocone (succ_seq A) transfinite_A.
-  Proof.
-    srapply Build_Cocone.
-    - intros n a. exact (col_A (S n) a).
-    - intros m n [] a. exact (legs_comm col_A _ _ _ _).
-  Defined.
+    : Cocone (succ_seq A) transfinite_A
+  := succ_seq_cocone_seq_cocone transfinite_A col_A.
 
-  (** The cocone above induces a map [transfinite_succ_A -> transfinite_A] *)
-
-  Definition abs_colim_succ_seq_to_abs_colim_seq
-    : transfinite_succ_A -> transfinite_A 
-  := (cocone_postcompose_inv col_succ_A cocone_succ_seq_over_col).
-
-  (** Our goal is to show that these maps are quasi-inverses
-      of each other. *)
-
-  (** We start by showing that [abs_colim_seq_to_abs_colim_succ_seq]
+  (** We start by showing that [abstr_colim_seq_to_abstr_colim_succ_seq]
       is a split-monomorphism. Observe that [cocone_succ_seq_over_col]
       essentially defines the same cocone as [col_A]. I.e. the following 
       diagram is commutative:
@@ -115,78 +138,103 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     intros m n [] a. 
     unfold legs_comm_cocone_succ_seq_over_col_with_col.
     simpl.
-    lhs refine 
-      (ap (fun x => x @ legs_comm col_A m (S m) 1 a) (concat_1p _)).
-    reflexivity.
+    refine (ap (fun x => x @ legs_comm col_A m (S m) 1 a) (concat_1p _)).
   Defined.
 
-  (** The cocone [col_A] induces [idmap : transfinite_A -> transfinite_A]. *)
+  (* The cocone of [succ_seq A] over colim A is universal *)
 
-  Definition col_legs_induces_idmap 
-    : cocone_postcompose_inv col_A col_A = idmap.
+  Instance iscolimit_succ_seq_A_over_transfinite_A : IsColimit (succ_seq A) transfinite_A.
   Proof.
-    apply (@equiv_inj _ _ (cocone_postcompose col_A)
-      (iscolimit_unicocone col_A transfinite_A) _ _).
-    lhs snrapply (eisretr (cocone_postcompose col_A)).
-    rhs snrapply (cocone_postcompose_identity col_A).
-    reflexivity.
+  snrapply (Build_IsColimit cocone_succ_seq_over_col).
+  snrapply Build_UniversalCocone.
+  intro Y.
+  srapply isequiv_adjointify.
+  - intro C.
+    exact (cocone_postcompose_inv col_A (cocone_precompose (seq_to_succ_seq A) C)).
+  - intro C.
+    snrapply (equiv_inj (cocone_precompose (seq_to_succ_seq A))).
+    + exact (isequiv_cocone_precompose_seq_to_succ_seq (X:= Y)).
+    + lhs_V snrapply cocone_precompose_postcompose.
+      lhs snrapply (ap (fun x => cocone_postcompose x _)
+        cocone_succ_seq_over_col_is_ess_col).
+      snrapply (eisretr (cocone_postcompose col_A)).
+  - intro f.
+    snrapply (equiv_inj (cocone_postcompose col_A)).
+    + exact (iscolimit_unicocone col_A Y).
+    + lhs snrapply (eisretr (cocone_postcompose col_A)).
+      lhs_V snrapply cocone_precompose_postcompose.
+      snrapply (ap (fun x => cocone_postcompose x f) cocone_succ_seq_over_col_is_ess_col).
   Defined.
 
-  (** [cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col] 
-      induces the composite [abs_colim_succ_seq_to_abs_colim_seq
-      o abs_colim_seq_to_abs_colim_succ_seq] *)
+  (** Alias for the above instance. *)
 
-  Definition cocone_precompose_seq_to_succ_seq_cocone_succ_seq_over_col_induces_comp
-    : cocone_postcompose_inv col_A 
-      (cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col)
-      = abs_colim_succ_seq_to_abs_colim_seq
-      o abs_colim_seq_to_abs_colim_succ_seq. 
+  Definition col_succ := iscolimit_succ_seq_A_over_transfinite_A.
+
+  (** We take the colimit of [seq_to_succ_seq]
+      and obtain a map [transfinite_A -> transfinite_A] *)
+
+  Definition abstr_colim_seq_to_abstr_colim_succ_seq
+    : transfinite_A -> transfinite_A 
+  := functor_colimit (seq_to_succ_seq A) col_A col_succ.
+
+  Definition abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap
+    : abstr_colim_seq_to_abstr_colim_succ_seq = idmap.
   Proof.
-    apply (@equiv_inj _ _ (cocone_postcompose col_A)
-      (iscolimit_unicocone col_A transfinite_A) _ _).
-    rhs snrapply cocone_postcompose_comp.
-    unfold abs_colim_seq_to_abs_colim_succ_seq.
-    rhs_V snrapply (ap (fun x => cocone_postcompose x 
-      abs_colim_succ_seq_to_abs_colim_seq) 
-      (functor_colimit_commute _ _ _)).
-    rhs snrapply cocone_precompose_postcompose.
-    unfold abs_colim_succ_seq_to_abs_colim_seq.
-    rhs snrapply (ap (fun x => cocone_precompose (seq_to_succ_seq A) x) 
-      (eisretr (cocone_postcompose col_succ_A) cocone_succ_seq_over_col)).
-    lhs snrapply (eisretr (cocone_postcompose col_A)).
-    reflexivity.
+    unfold abstr_colim_seq_to_abstr_colim_succ_seq, functor_colimit.
+    rewrite cocone_succ_seq_over_col_is_ess_col.
+    snrapply (equiv_inj (cocone_postcompose col_A)).
+    - snrapply (iscolimit_unicocone col_A).
+    - lhs snrapply (eisretr (cocone_postcompose col_A)).
+      snrapply (cocone_postcompose_identity col_A)^.
   Defined.
 
-  Definition sec_abs_colim_seq_to_abs_succ_seq
-    : abs_colim_succ_seq_to_abs_colim_seq
-    o abs_colim_seq_to_abs_colim_succ_seq
+  (** The cocone [cocone_succ_seq_over_col] induces a map 
+      [transfinite_A -> transfinite_A] *)
+
+  Definition abstr_colim_succ_seq_to_abstr_colim_seq
+    : transfinite_A -> transfinite_A 
+  := (cocone_postcompose_inv col_succ cocone_succ_seq_over_col).
+
+  Definition abstr_colim_succ_seq_to_abstr_colim_seq_is_idmap
+    : abstr_colim_succ_seq_to_abstr_colim_seq = idmap.
+  Proof.
+    unfold abstr_colim_succ_seq_to_abstr_colim_seq.
+    snrapply (equiv_inj (cocone_postcompose col_A)).
+    - snrapply (iscolimit_unicocone col_A).
+    - lhs snrapply (eisretr (cocone_postcompose col_A)).
+      lhs snrapply (cocone_succ_seq_over_col_is_ess_col).
+      snrapply (cocone_postcompose_identity col_A)^.
+  Defined.
+
+  (** The maps defined above are equivalences *)
+
+  Definition sec_abstr_colim_seq_to_abstr_succ_seq
+    : abstr_colim_succ_seq_to_abstr_colim_seq
+    o abstr_colim_seq_to_abstr_colim_succ_seq
     = idmap.
   Proof.
-    lhs_V snrapply 
-      cocone_precompose_seq_to_succ_seq_cocone_succ_seq_over_col_induces_comp.
-    lhs snrapply (ap (fun x => cocone_postcompose_inv col_A x) 
-      cocone_succ_seq_over_col_is_ess_col).
-    exact (col_legs_induces_idmap).
+    lhs snrapply (ap _ abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap).
+    snrapply abstr_colim_succ_seq_to_abstr_colim_seq_is_idmap.
   Defined.
 
-  (** Hack while I think about this property *)
+  Definition ret_abstr_colim_seq_to_abstr_succ_seq
+    : abstr_colim_seq_to_abstr_colim_succ_seq 
+    o abstr_colim_succ_seq_to_abstr_colim_seq
+    = idmap.
+  Proof.
+    lhs snrapply (ap _ abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap).
+    snrapply abstr_colim_succ_seq_to_abstr_colim_seq_is_idmap.
+  Defined.
 
-    Definition ret_abs_colim_seq_to_abs_succ_seq
-      : abs_colim_seq_to_abs_colim_succ_seq 
-      o abs_colim_succ_seq_to_abs_colim_seq
-      = idmap.
-    Proof.
-    Admitted.
-
-  (** [abs_colim_seq_to_abs_colim_succ_seq] is an equivalence *)
+  (** [abstr_colim_seq_to_abstr_colim_succ_seq] is an equivalence *)
     
-  Definition equiv_abs_colim_seq_to_abs_colim_succ_seq
-    : IsEquiv abs_colim_seq_to_abs_colim_succ_seq.
+  Definition equiv_abstr_colim_seq_to_abstr_colim_succ_seq
+    : IsEquiv abstr_colim_seq_to_abstr_colim_succ_seq.
   Proof.
     snrapply isequiv_adjointify.
-    - exact abs_colim_succ_seq_to_abs_colim_seq.
-    - exact (apD10 ret_abs_colim_seq_to_abs_succ_seq).
-    - exact (apD10 sec_abs_colim_seq_to_abs_succ_seq).
+    - exact abstr_colim_succ_seq_to_abstr_colim_seq.
+    - exact (apD10 ret_abstr_colim_seq_to_abstr_succ_seq).
+    - exact (apD10 sec_abstr_colim_seq_to_abstr_succ_seq).
   Defined.
 
 End Is_Equiv_colim_succ_seq_to_seq_map.
@@ -198,8 +246,6 @@ End Is_Equiv_colim_succ_seq_to_seq_map.
 Section Intersplitting.
   Context `{Funext} {A B : Sequence} 
     {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
-    {transfinite_succ_A : Type} 
-    (col_succ_A : IsColimit (succ_seq A) transfinite_succ_A)
     {transfinite_B : Type} (col_B : IsColimit B transfinite_B)
     (d : DiagramMap A B) 
     (u : DiagramMap B (succ_seq A))
@@ -220,25 +266,28 @@ Section Intersplitting.
   *)
 
   Definition colimit_comm_triangle : 
-    abs_colim_seq_to_abs_colim_succ_seq col_A col_succ_A 
-    = (functor_colimit u _ _) o (functor_colimit d _ _).
+    abstr_colim_seq_to_abstr_colim_succ_seq col_A
+    = (functor_colimit u _ (col_succ col_A)) o (functor_colimit d _ _).
   Proof.
     rhs snrapply functor_colimit_compose.
-    rhs_V refine (ap (fun x => functor_colimit x col_A col_succ_A) 
+    snrapply (ap (fun x => functor_colimit x col_A (col_succ col_A)) 
       comm_triangle).
-    reflexivity.
   Defined.
 
+  Definition colim_d_split_epi : 
+    idmap = (functor_colimit u _ (col_succ col_A)) o (functor_colimit d _ _)
+  := ((abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap col_A)^ @ colimit_comm_triangle).
+
   Definition isequiv_colim_composite
-    : IsEquiv ((functor_colimit u col_B col_succ_A) 
+    : IsEquiv ((functor_colimit u col_B (col_succ col_A)) 
       o (functor_colimit d col_A col_B)).
   Proof.
     apply (@isequiv_homotopic
       transfinite_A
-      transfinite_succ_A
-      (abs_colim_seq_to_abs_colim_succ_seq col_A col_succ_A)
+      transfinite_A
+      (abstr_colim_seq_to_abstr_colim_succ_seq col_A)
       ((functor_colimit u _ _) o (functor_colimit d _ _))
-      (equiv_abs_colim_seq_to_abs_colim_succ_seq col_A col_succ_A)).
+      (equiv_abstr_colim_seq_to_abstr_colim_succ_seq col_A)).
     apply apD10.
     exact colimit_comm_triangle.
   Defined.
@@ -252,22 +301,18 @@ End Intersplitting.
 Section Interleaving.
   Context `{Funext} {A B : Sequence} 
     {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
-    {transfinite_succ_A : Type} (col_succ_A : IsColimit (succ_seq A) 
-      transfinite_succ_A)
     {transfinite_B : Type} (col_B : IsColimit B transfinite_B)
-    {transfinite_succ_B : Type} (col_succ_B : IsColimit (succ_seq B) 
-      transfinite_succ_B)
     (d : DiagramMap A B) 
     (u : DiagramMap B (succ_seq A))
     (tri1 : seq_to_succ_seq A = diagram_comp u d)
     (tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u).
 
   Definition isequiv_interleaved_colim_maps
-    : IsEquiv (functor_colimit d _ _) * IsEquiv (functor_colimit u _ _) * IsEquiv (functor_colimit (succ_seq_map_seq_map d) _ _).
+    : IsEquiv (functor_colimit d _ _) * IsEquiv (functor_colimit u _ (col_succ col_A)) * IsEquiv (functor_colimit (succ_seq_map_seq_map d) (col_succ col_A) (col_succ col_B)).
   Proof.
     snrapply two_out_of_six.
-    - exact (isequiv_colim_composite col_A col_succ_A col_B d u tri1).
-    - exact (isequiv_colim_composite col_B col_succ_B col_succ_A u 
+    - exact (isequiv_colim_composite col_A col_B d u tri1).
+    - exact (isequiv_colim_composite col_B (col_succ col_A) u 
       (succ_seq_map_seq_map d) tri2).
   Defined.
 
