@@ -258,12 +258,10 @@ Section FunctorialityColimit.
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
     : (functor_colimit n HQ2 HQ3) o (functor_colimit m HQ1 HQ2)
-      = (functor_colimit (diagram_comp n m) HQ1 HQ3).
-  Proof.
-    apply (@equiv_inj _ _ 
+      = (functor_colimit (diagram_comp n m) HQ1 HQ3) 
+  :=  @equiv_inj _ _ 
       (cocone_postcompose HQ1) (iscolimit_unicocone HQ1 Q3) _ _ 
-      (postcompose_functor_colimit_compose m n HQ1 HQ2 HQ3)).
-  Defined.
+      (postcompose_functor_colimit_compose m n HQ1 HQ2 HQ3).
 
   (** ** Colimits of equivalent diagrams *)
 
