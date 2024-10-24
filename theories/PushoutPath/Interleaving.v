@@ -254,7 +254,7 @@ Section Intersplitting.
   (** Given the data above, we show that the associated diagram in the
       colimit is also commutative.
 
-                  ≃
+                  id
         col A_i -----> col A_i+1
             \           ^
              \         /
@@ -282,9 +282,7 @@ Section Intersplitting.
     : IsEquiv ((functor_colimit u col_B (col_succ col_A)) 
       o (functor_colimit d col_A col_B)).
   Proof.
-    apply (@isequiv_homotopic
-      transfinite_A
-      transfinite_A
+    apply (@isequiv_homotopic transfinite_A _
       (abstr_colim_seq_to_abstr_colim_succ_seq col_A)
       ((functor_colimit u _ _) o (functor_colimit d _ _))
       (equiv_abstr_colim_seq_to_abstr_colim_succ_seq col_A)).
@@ -294,9 +292,8 @@ Section Intersplitting.
 
 End Intersplitting.
 
-(** Now we will assume that every triangle is commutative.
-    By the 2-out-of-6 property, it follows that every map in
-    this diagram is an equivalence. *)
+(** Assuming that there are [A, B : Sequence] that fits in an interleaving diagram,
+    their colimits are isomorphic. We proceed by using th 2-out-of-6 property.  *)
 
 Section Interleaving.
   Context `{Funext} {A B : Sequence} 
