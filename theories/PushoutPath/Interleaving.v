@@ -292,6 +292,61 @@ Section Intersplitting.
 
 End Intersplitting.
 
+Section Interme.
+  Context `{Funext} {A B : Sequence}
+    (f : forall (n : nat), A n -> B n)
+    (g : forall (n : nat), B n -> A (S n))
+    (U : forall (n : nat), (fun (x : A n) => x^+) == (g n) o (f n))
+    (L : forall (n : nat), (fun (x : B n) => x^+) == (f (S n)) o (g n)).
+
+  Definition zigzag_map : DiagramMap A B.
+  Proof.
+    snrapply Build_DiagramMap.
+    - exact f.
+    - intros n m y x; destruct y.
+      lhs apply (L n).
+      apply ap.
+      exact (U n x)^.
+  Defined.
+
+  Definition zigzag_map_inv : DiagramMap B (succ_seq A).
+  Proof.
+    snrapply Build_DiagramMap.
+    - exact g.
+    - intros n m y x; destruct y.
+      lhs apply (U (S n)).
+      apply ap.
+      exact (L n x)^.
+  Defined.
+
+  Local Open Scope path_scope.
+
+  Definition zigzag_map_tr : (diagram_comp zigzag_map_inv zigzag_map) = seq_to_succ_seq A.
+  Proof.
+    snrapply path_DiagramMap.
+    - intros n x.
+      simpl.
+      exact (U n x)^.
+    - (* Conduct "a little path algebra" *) 
+      intros n m y x; destruct y.
+      simpl.
+      unfold CommutativeSquares.comm_square_comp.
+      rewrite (ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^)).
+      rewrite (ap_V _ (L n (f n x))).
+      rhs apply (concat_p1 (ap (fun a => a ^+) (U n x)^)).
+      rewrite (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _).
+      rewrite (concat_p_pp ((ap _ _)^) (ap _ _) _).
+      rewrite (concat_Vp _).
+      rewrite (concat_1p _).
+      apply (cancelR _ _ ((U n.+1 x ^+))).
+      lhs refine (concat_pp_p _ _ _).
+      rewrite (concat_Vp _).
+      rewrite (concat_p1 _).
+      rewrite (ap_compose (f n.+1) (g n.+1) _)^.
+      refine (concat_Ap _ _)^.
+  Defined.
+End Interme.
+
 (** Assuming that there are [A, B : Sequence] that fits in an interleaving diagram,
     their colimits are isomorphic. We proceed by using th 2-out-of-6 property.  *)
 
