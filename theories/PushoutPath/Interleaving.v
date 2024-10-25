@@ -239,7 +239,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
 
 End Is_Equiv_colim_succ_seq_to_seq_map.
 
-(** Intersplitting is a pun of interleaving and splitting. 
+(** Intersplitting is a portmanteau of interleaving and splitting. 
     We will at first only assume that every other triangle
     is commutative. In this case, colim A is a retract of colim B. *)
 
@@ -299,7 +299,7 @@ Section Interme.
     (U : forall (n : nat), (fun (x : A n) => x^+) == (g n) o (f n))
     (L : forall (n : nat), (fun (x : B n) => x^+) == (f (S n)) o (g n)).
 
-  Definition zigzag_map : DiagramMap A B.
+  Definition zigzag_glue_map : DiagramMap A B.
   Proof.
     snrapply Build_DiagramMap.
     - exact f.
@@ -309,7 +309,7 @@ Section Interme.
       exact (U n x)^.
   Defined.
 
-  Definition zigzag_map_inv : DiagramMap B (succ_seq A).
+  Definition zigzag_glue_map_inv : DiagramMap B (succ_seq A).
   Proof.
     snrapply Build_DiagramMap.
     - exact g.
@@ -321,7 +321,7 @@ Section Interme.
 
   Local Open Scope path_scope.
 
-  Definition zigzag_map_tr : (diagram_comp zigzag_map_inv zigzag_map) = seq_to_succ_seq A.
+  Definition zigzag_glue_map_tr : (diagram_comp zigzag_glue_map_inv zigzag_glue_map) = seq_to_succ_seq A.
   Proof.
     snrapply path_DiagramMap.
     - intros n x.
@@ -331,19 +331,41 @@ Section Interme.
       intros n m y x; destruct y.
       simpl.
       unfold CommutativeSquares.comm_square_comp.
+      (* We need to show, stripping brackets:
+      1)   U n.+1 (g n (f n x))
+      2) @ ap (g n.+1) (L n (f n x))^) 
+      3) @ ap (g n.+1) (L n (f n x) @ ap (f n.+1) (U n x)^)
+      4) @ (U n.+1 x ^+)^ 
+          = 
+      5)  ap (fun a : A n.+1%nat => a ^+) (U n x)^ 
+      6) @ 1
+       *)
+      (* Bring the concatenation out of `ap` in 3) *)
       rewrite (ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^)).
+      (* Bring the inverse out of `ap` in 1) *)
       rewrite (ap_V _ (L n (f n x))).
+      (* Remove reflexivity 6) *)
       rhs apply (concat_p1 (ap (fun a => a ^+) (U n x)^)).
+      (* Change associativity of 1 2 3 *)
       rewrite (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _).
+      (* Change associativity of 2 3 3.5 *)
       rewrite (concat_p_pp ((ap _ _)^) (ap _ _) _).
+      (* 2 and 3 are inverse *)
       rewrite (concat_Vp _).
+      (* Remove the reflexivity *)
       rewrite (concat_1p _).
+      (* Add (U n.+1 x ^* ) on the right to both sides *)
       apply (cancelR _ _ ((U n.+1 x ^+))).
+      (* Change associativity on the left... *)
       lhs refine (concat_pp_p _ _ _).
+      (* ...and cancel 4 with the newly-added path *)
       rewrite (concat_Vp _).
+      (* Remove the residual 1 *)
       rewrite (concat_p1 _).
+      (* `ap` of `ap` is `ap` of composition of functions *)
       rewrite (ap_compose (f n.+1) (g n.+1) _)^.
-      refine (concat_Ap _ _)^.
+      (* Finish by naturality of `ap` *)
+      exact (concat_Ap _ _)^.
   Defined.
 End Interme.
 
@@ -354,10 +376,42 @@ Section Interleaving.
   Context `{Funext} {A B : Sequence} 
     {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
     {transfinite_B : Type} (col_B : IsColimit B transfinite_B)
-    (d : DiagramMap A B) 
-    (u : DiagramMap B (succ_seq A))
-    (tri1 : seq_to_succ_seq A = diagram_comp u d)
-    (tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u).
+    (f : forall (n : nat), A n -> B n)
+    (g : forall (n : nat), B n -> A (S n))
+    (U : forall (n : nat), (fun (x : A n) => x^+) == (g n) o (f n))
+    (L : forall (n : nat), (fun (x : B n) => x^+) == (f (S n)) o (g n)).
+
+  Let d := zigzag_glue_map f g U L.
+
+  Let u := zigzag_glue_map_inv f g U L.
+
+  (** The first equality needed is exactly what we came up with in the previous section. *)
+  Let tri1 : seq_to_succ_seq A = diagram_comp u d
+    := (zigzag_glue_map_tr f g U L)^.
+
+  (** The second one requires some massaging: applying `zigzag_glue_map_tr` to the shifted 
+  functions doesn't exactly give us `(succ_seq_map_seq_map d)`, but we can find an equality
+  between them. *)
+  (* TODO: This probably shouldn't be necessary. *)
+  Let tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u.
+  Proof.
+    symmetry.
+    pose (f' := g);
+    pose (g' := (fun n => f (S n)));
+    pose (U' := L);
+    pose (L' := (fun n => U (S n)));
+    (* Coq can't guess `succ_seq A` here *)
+    pose (attempt := (@zigzag_glue_map_tr _ B (succ_seq A) f' g' U' L')).
+    assert (eq : (succ_seq_map_seq_map d) = (@zigzag_glue_map_inv B (succ_seq A) f' g' U' L')).
+    - snrapply path_DiagramMap.
+      + reflexivity.
+      + intros n m y x; destruct y. 
+        simpl.
+        rewrite (concat_1p _).
+        rewrite (concat_p1 _).
+        reflexivity.
+    - exact (transport (fun x => diagram_comp x u = seq_to_succ_seq B) eq^ attempt).
+  Defined.
 
   Definition isequiv_interleaved_colim_maps
     : IsEquiv (functor_colimit d _ _) * IsEquiv (functor_colimit u _ (col_succ col_A)) * IsEquiv (functor_colimit (succ_seq_map_seq_map d) (col_succ col_A) (col_succ col_B)).
@@ -374,5 +428,4 @@ Section Interleaving.
     - exact (functor_colimit d col_A col_B).
     - exact ((fst o fst) isequiv_interleaved_colim_maps).
   Defined.
-
 End Interleaving.
