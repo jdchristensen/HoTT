@@ -292,6 +292,10 @@ Section Intersplitting.
 
 End Intersplitting.
 
+(** Given families of maps `f n : A n -> B n` and `g : B n -> A (n + 1)` with homotopies
+showing that they form zigzags, construct the actual diagram maps and show that their
+composition is equal to the successor diagram map. *)
+
 Section Interme.
   Context `{Funext} {A B : Sequence}
     (f : forall (n : nat), A n -> B n)
@@ -299,6 +303,8 @@ Section Interme.
     (U : forall (n : nat), (fun (x : A n) => x^+) == (g n) o (f n))
     (L : forall (n : nat), (fun (x : B n) => x^+) == (f (S n)) o (g n)).
 
+  (** The map built from `f`. Note that [zigzag_glue_map_tri] depends heavily on the exact 
+  homotopy used here. *)
   Definition zigzag_glue_map : DiagramMap A B.
   Proof.
     snrapply Build_DiagramMap.
@@ -309,6 +315,7 @@ Section Interme.
       exact (U n x)^.
   Defined.
 
+  (** The map built from `g`. *)
   Definition zigzag_glue_map_inv : DiagramMap B (succ_seq A).
   Proof.
     snrapply Build_DiagramMap.
@@ -321,7 +328,8 @@ Section Interme.
 
   Local Open Scope path_scope.
 
-  Definition zigzag_glue_map_tr : (diagram_comp zigzag_glue_map_inv zigzag_glue_map) = seq_to_succ_seq A.
+  (** Show that the composition of the two maps is the successor map. *)
+  Definition zigzag_glue_map_tri : (diagram_comp zigzag_glue_map_inv zigzag_glue_map) = seq_to_succ_seq A.
   Proof.
     snrapply path_DiagramMap.
     - intros n x.
@@ -370,7 +378,7 @@ Section Interme.
 End Interme.
 
 (** Assuming that there are [A, B : Sequence] that fits in an interleaving diagram,
-    their colimits are isomorphic. We proceed by using th 2-out-of-6 property.  *)
+    their colimits are isomorphic. We proceed by using the 2-out-of-6 property.  *)
 
 Section Interleaving.
   Context `{Funext} {A B : Sequence} 
@@ -384,12 +392,15 @@ Section Interleaving.
   Let d := zigzag_glue_map f g U L.
 
   Let u := zigzag_glue_map_inv f g U L.
+  
+  (* We need two equalities: [seq_to_succ_seq A = d o u] and 
+  [seq_to_succ_seq B = (succ_seq_map_seq_map d) o u. *)
 
-  (** The first equality needed is exactly what we came up with in the previous section. *)
+  (* The first equality needed is exactly what we came up with in the previous section. *)
   Let tri1 : seq_to_succ_seq A = diagram_comp u d
-    := (zigzag_glue_map_tr f g U L)^.
+    := (zigzag_glue_map_tri f g U L)^.
 
-  (** The second one requires some massaging: applying `zigzag_glue_map_tr` to the shifted 
+  (* The second one requires some massaging: applying [zigzag_glue_map_tr] to the shifted 
   functions doesn't exactly give us `(succ_seq_map_seq_map d)`, but we can find an equality
   between them. *)
   (* TODO: This probably shouldn't be necessary. *)
@@ -401,7 +412,7 @@ Section Interleaving.
     pose (U' := L);
     pose (L' := (fun n => U (S n)));
     (* Coq can't guess `succ_seq A` here *)
-    pose (attempt := (@zigzag_glue_map_tr _ B (succ_seq A) f' g' U' L')).
+    pose (attempt := (@zigzag_glue_map_tri _ B (succ_seq A) f' g' U' L')).
     assert (eq : (succ_seq_map_seq_map d) = (@zigzag_glue_map_inv B (succ_seq A) f' g' U' L')).
     - snrapply path_DiagramMap.
       + reflexivity.
