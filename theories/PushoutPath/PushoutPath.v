@@ -155,163 +155,21 @@ Section Sequence.
 
 End Sequence.
 
-Definition identity_zigzag_Pinf {A : Type} {B : Type} (R : A -> B -> Type) 
-  (a0 : A) (a : A) : Type := 
+Section Colimit.
+  Context {A B : Type} (R : A -> B -> Type) (a0 : A).
+
+Definition identity_zigzag_Pinf (a : A) : Type := 
   Colimit (identity_zigzag_P_seq R a0 a).
 
-Definition identity_zigzag_Qinf {A : Type} {B : Type} (R : A -> B -> Type) 
-  (a0 : A) (b : B) : Type := 
+Definition identity_zigzag_Qinf (b : B) : Type :=
   Colimit (identity_zigzag_Q_seq R a0 b).
 
-Definition identity_zigzag_Pswap {A : Type} {B : Type} (R : A -> B -> Type) 
-  (a0 : A) (a : A) (t : nat) 
-  : (identity_zigzag_P R a0 a t) <~> (identity_zigzag_P R a a0 t).
-Proof.
-  induction t.
-  + simpl.
-    snrapply Build_Equiv.
-    2: exact (isequiv_path_inverse a0 a).
-  + simpl.
-    snrapply Build_Equiv.
-Admitted.
+  Context {a : A} {b : B} (r : R a b) `{Funext}.
 
-Definition identity_zigzag_concatQPinf `{Funext} {A : Type} {B : Type} 
-  (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) 
-  : (identity_zigzag_Qinf R a0 b) -> (identity_zigzag_Pinf R a0 a) := 
-  functor_colimit (identity_zigzag_seq_concatQP R a0 a b r) _ _.
+Definition identity_zigzag_concatQPinf
+  : (identity_zigzag_Qinf b) -> (identity_zigzag_Pinf a)
+  := functor_colimit (identity_zigzag_concatQP_seq R a0 r) _ _.
 
-Definition identity_zigzag_concatPQinf `{Funext} {A : Type} {B : Type} 
-  (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) 
-  : (identity_zigzag_Pinf R a0 a) -> (identity_zigzag_Qinf R a0 b) := 
-  (colim_succ_seq_to_colim_seq _)
-  o (functor_colimit (identity_zigzag_seq_concatPQ R a0 a b r) _ _ ).
-
-Section Death.
-  Context `{Funext} {A : Type} {B : Type} (R : A -> B -> Type) (a0 : A) 
-    (a : A) (b : B) (r : R a b).
-
-  Check (identity_zigzag_concatPQinf).
-
-End Death.
-
-Definition identity_zigzag_concatinf_retr `{Univalence} {A : Type} {B : Type} 
-  (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) 
-  : (identity_zigzag_concatPQinf R a0 a b r) 
-    o (identity_zigzag_concatQPinf R a0 a b r) 
-    == idmap.
-Proof.
-  snrapply Colimit_ind.
-  - simpl.
-    intros t p.
-    transitivity (inj (identity_zigzag_Q_seq R a0 b) (S t) 
-      (identity_zigzag_concatPQ R a0 a b r t (identity_zigzag_concatQP R a0 a b r t p))).
-    + reflexivity.
-    + transitivity (inj (identity_zigzag_Q_seq R a0 b) (S t) 
-      (identity_zigzag_iotaQ R a0 b t p)).
-      * apply ap.
-        exact (identity_zigzag_concatQPQ R a0 a b r t p).
-      * apply (glue (identity_zigzag_Q_seq R a0 b)).
-  - intros t n q p.
-    destruct q.
-    simpl.
-    admit.
-Admitted.
-
-Definition identity_zigzag_concatinf_sec `{Univalence} {A : Type} {B : Type}
-  (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) 
-  : (identity_zigzag_concatQPinf R a0 a b r) 
-    o (identity_zigzag_concatPQinf R a0 a b r) 
-    == idmap.
-Proof.
-Admitted.
-
-Definition isequiv_identity_zigzag_concatinf `{Univalence} {A : Type} 
-  {B : Type} (R : A -> B -> Type) (a0 : A) (a : A) (b : B) (r : R a b) 
-  : IsEquiv (identity_zigzag_concatPQinf R a0 a b r).
-Proof.
-  snrapply isequiv_adjointify.
-  2: exact (identity_zigzag_concatinf_retr R a0 a b r).
-  exact (identity_zigzag_concatinf_sec R a0 a b r).
-Defined.
-
-Definition relation_type {A : Type} {B : Type} (R : A -> B -> Type) 
-  : Type := { a : A | { b : B | R a b}}.
-
-Definition relation_pr1 {A: Type} {B : Type} (R : A -> B -> Type) 
-  : (relation_type R) -> A := pr1.
-
-Definition relation_pr2 {A: Type} {B : Type} (R : A -> B -> Type) 
-  : (relation_type R) -> B.
-Proof.
-  intro a.
-  destruct a as [a b].
-  exact (pr1 b).
-Defined.
-
-Definition relation_flip {A : Type} {B : Type} (R : A -> B -> Type) 
-  : forall (b : B)  (a : A), Type.
-Proof.
-  intros b a.
-  exact (R a b).
-Defined.
-
-Definition Pushout_relation {A : Type} {B : Type} (R : A -> B -> Type) : Type.
-Proof.
-  snrapply Pushout.
-  - exact (relation_type R).
-  - exact A.
-  - exact B.
-  - intro a.
-    destruct a as [a _].
-    exact a.
-  - intro a.
-    destruct a as [a [b r]].
-    exact b.
-Defined.
-
-Definition identity_zigzag_family `{Univalence} {A : Type} {B : Type} 
-  (R : A -> B -> Type) : (Pushout_relation R) -> (Pushout_relation R) -> Type.
-Proof.
-  snrapply Pushout_rec.
-  - intro x.
-    snrapply Pushout_rec.
-    + intro y.
-      exact (identity_zigzag_Pinf R x y).
-    + intro y.
-      exact (identity_zigzag_Qinf R x y).
-    + intro r.
-      destruct r as [a [b r]].
-      snrapply path_universe_uncurried.
-      snrapply Build_Equiv.
-      * exact (identity_zigzag_concatPQinf R x a b r).
-      * exact (isequiv_identity_zigzag_concatinf R x a b r).
-  - intro x.
-    pose (R' := (relation_flip R)).
-    snrapply Pushout_rec.
-    + intro y.
-      exact (identity_zigzag_Qinf R' x y).
-    + intro y.
-      exact (identity_zigzag_Pinf R' x y).
-    + intro r.
-      destruct r as [a [b r]].
-      snrapply path_universe_uncurried.
-      symmetry.
-      snrapply Build_Equiv.
-      * exact (identity_zigzag_concatPQinf R' x b a r).
-      * exact (isequiv_identity_zigzag_concatinf R' x b a r).
-  - intro r.
-    destruct r as [a [b r]].
-    snrapply path_forall.
-    snrapply Pushout_ind.
-    + intro a'.
-      simpl.
-
-      
-
-
-
-
-    
-
-
-      
+Definition identity_zigzag_concatPQinf 
+  : (identity_zigzag_Pinf a) -> (identity_zigzag_Qinf b)
+  := (colim_succ_seq_to_colim_seq _) o (functor_colimit (identity_zigzag_concatPQ_seq R a0 r) _ _ ).
