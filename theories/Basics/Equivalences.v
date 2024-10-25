@@ -462,55 +462,30 @@ Defined.
 
 (** We define the 2-out-of-6 property *)
 
-Definition two_out_of_six_snd {A B C D}
+Definition two_out_of_sixM {A B C D}
   (f : A -> B) (g : B -> C) (h : C -> D)
-  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  `{iegf : IsEquiv _ _ (g o f)} `{iehg : IsEquiv _ _ (h o g)}
   : IsEquiv g.
 Proof.
-  destruct H as [gf_inv gf_s gf_r gf_adj].
-  destruct H0 as [hg_inv hg_s hg_r hg_adj].
   snrapply isequiv_adjointify.
-  - exact (hg_inv o h).
-  - Check (fun x => ap (hg_inv o h) (gf_s x)^). 
-    exact (fun x => ap g (ap (hg_inv o h) (gf_s x)^ @ hg_r ((f o gf_inv) x)) @ gf_s x).
-  - exact hg_r.
+  - exact ((h o g)^-1 o h).
+  - exact (fun x => ap g (ap ((h o g)^-1 o h) ((eisretr (g o f)) x)^ 
+    @ (eissect (h o g)) ((f o (g o f)^-1) x)) 
+    @ (eisretr (g o f)) x).
+  - exact (eissect (h o g)).
 Defined.
 
-Definition two_out_of_six_fst {A B C D}
+Definition two_out_of_sixR {A B C D}
   (f : A -> B) (g : B -> C) (h : C -> D)
   `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
-  : IsEquiv f.
-Proof.
-  snrapply cancelL_isequiv.
-  - exact C.
-  - exact g.
-  - exact (two_out_of_six_snd f g h).
-  - exact H.
-Defined.
+  : IsEquiv f
+  := @cancelL_isequiv _ _ _ g _ (two_out_of_sixM f g h) _.
 
-Definition two_out_of_six_thr {A B C D}
+Definition two_out_of_sixL {A B C D}
   (f : A -> B) (g : B -> C) (h : C -> D)
   `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
-  : IsEquiv h.
-Proof.
-  snrapply cancelR_isequiv.
-  - exact B.
-  - exact g.
-  - exact (two_out_of_six_snd f g h).
-  - exact H0.
-Defined.
-
-Definition two_out_of_six {A B C D}
-  (f : A -> B) (g : B -> C) (h : C -> D)
-  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
-  : IsEquiv f * IsEquiv g * IsEquiv h.
-Proof.
-  split.
-  - split.
-    + exact (two_out_of_six_fst f g h).
-    + exact (two_out_of_six_snd f g h).
-  - exact (two_out_of_six_thr f g h).
-Defined.
+  : IsEquiv h
+  := @cancelR_isequiv _ _ _ g _ (two_out_of_sixM f g h) _.
 
 (** Based homotopy spaces *)
 

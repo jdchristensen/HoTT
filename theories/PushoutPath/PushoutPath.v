@@ -173,3 +173,5 @@ Definition identity_zigzag_concatQPinf
 Definition identity_zigzag_concatPQinf 
   : (identity_zigzag_Pinf a) -> (identity_zigzag_Qinf b)
   := (colim_succ_seq_to_colim_seq _) o (functor_colimit (identity_zigzag_concatPQ_seq R a0 r) _ _ ).
+
+End Colimit.

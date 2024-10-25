@@ -25,9 +25,7 @@ Require Import Types.
 >> 
 *)
 
-(** Given the setup above, we want to say that the colimit of the upper lower sequences are the same. *)
-
-(** From a sequence A, we can produce a diagram map from [A] to [succ_seq A]. It's the map that applies the arrow in the sequence to every element. *)
+(** Given the setup above, we want to say that the colimit of the upper lower sequences are the same. From a sequence A, we can produce a diagram map from [A] to [succ_seq A]. It's the map that applies the arrow in the sequence to every element. *)
 
 Definition seq_to_succ_seq (A : Sequence) : DiagramMap A (succ_seq A).
 Proof.
@@ -66,12 +64,12 @@ Proof.
   snrapply isequiv_adjointify.
   - exact (succ_seq_cocone_seq_cocone X).
   - intro C.
-    srapply path_cocone.
+    snrapply path_cocone.
     + intro n. simpl. exact (legs_comm C n _ idpath).
     + intros m n [] a. simpl.
       exact (concat_1p _ @@ 1).
   - intro C.
-    srapply path_cocone.
+    snrapply path_cocone.
     + intro n. simpl. exact (legs_comm C n _ idpath).
     + intros m n [] a. simpl.
       exact (concat_1p _ @@ 1).
@@ -83,10 +81,10 @@ Definition col_legs_induces_idmap `{Funext} {A : Sequence}
   {A_w} (colim_A : IsColimit A A_w) 
   : cocone_postcompose_inv colim_A colim_A = idmap.
 Proof.
-  rapply (equiv_inj (cocone_postcompose colim_A)).
+  snrapply (equiv_inj (cocone_postcompose colim_A)).
   - exact (iscolimit_unicocone colim_A A_w).
-  - lhs snrapply (eisretr (cocone_postcompose colim_A)).
-    snrapply (cocone_postcompose_identity colim_A)^.
+  - lhs nrapply (eisretr (cocone_postcompose colim_A)).
+    exact (cocone_postcompose_identity colim_A)^.
 Defined.
 
 (** We show that the map induced by [succ_seq_to_seq] is an equivalence. *)
@@ -99,7 +97,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
 
   Definition cocone_succ_seq_over_col 
     : Cocone (succ_seq A) A_w
-  := succ_seq_cocone_seq_cocone A_w colim_A.
+    := succ_seq_cocone_seq_cocone A_w colim_A.
 
   (** We start by showing that [abstr_colim_seq_to_abstr_colim_succ_seq] is a split-monomorphism. Observe that [cocone_succ_seq_over_col] essentially defines the same cocone as [colim_A]. I.e. the following  diagram is commutative: *)
   
@@ -119,11 +117,11 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
   Definition legs_comm_cocone_succ_seq_over_col_with_col 
     (n : sequence_graph) 
     : cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col n
-    == colim_A n := (legs_comm (iscolimit_cocone colim_A) _ _ _).
+      == colim_A n := (legs_comm (iscolimit_cocone colim_A) _ _ _).
 
   Definition cocone_succ_seq_over_col_is_ess_col 
     : cocone_precompose (seq_to_succ_seq A) cocone_succ_seq_over_col
-    = iscolimit_cocone colim_A.
+      = iscolimit_cocone colim_A.
   Proof.
     apply (path_cocone 
       legs_comm_cocone_succ_seq_over_col_with_col).
@@ -144,16 +142,16 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     exact (cocone_postcompose_inv colim_A (cocone_precompose (seq_to_succ_seq A) C)).
   - intro C.
     snrapply (equiv_inj (cocone_precompose (seq_to_succ_seq A))).
-    + exact (isequiv_cocone_precompose_seq_to_succ_seq (X:= Y)).
-    + lhs_V snrapply cocone_precompose_postcompose.
-      lhs snrapply (ap (fun x => cocone_postcompose x _)
+    + exact (isequiv_cocone_precompose_seq_to_succ_seq (X:=Y)).
+    + lhs_V nrapply cocone_precompose_postcompose.
+      lhs nrapply (ap (fun x => cocone_postcompose x _)
         cocone_succ_seq_over_col_is_ess_col).
-      snrapply (eisretr (cocone_postcompose colim_A)).
+      nrapply (eisretr (cocone_postcompose colim_A)).
   - intro f.
-    snrapply (equiv_inj (cocone_postcompose colim_A)).
+    nrapply (equiv_inj (cocone_postcompose colim_A)).
     + exact (iscolimit_unicocone colim_A Y).
-    + lhs snrapply (eisretr (cocone_postcompose colim_A)).
-      lhs_V snrapply cocone_precompose_postcompose.
+    + lhs nrapply (eisretr (cocone_postcompose colim_A)).
+      lhs_V nrapply cocone_precompose_postcompose.
       exact (ap (fun x => cocone_postcompose x f) cocone_succ_seq_over_col_is_ess_col).
   Defined.
 
@@ -165,7 +163,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
 
   Definition abstr_colim_seq_to_abstr_colim_succ_seq
     : A_w -> A_w 
-  := functor_colimit (seq_to_succ_seq A) colim_A colim_succ.
+    := functor_colimit (seq_to_succ_seq A) colim_A colim_succ.
 
   Definition abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap
     : abstr_colim_seq_to_abstr_colim_succ_seq = idmap.
@@ -183,7 +181,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
 
   Definition abstr_colim_succ_seq_to_abstr_colim_seq
     : A_w -> A_w 
-  := (cocone_postcompose_inv colim_succ cocone_succ_seq_over_col).
+    := (cocone_postcompose_inv colim_succ cocone_succ_seq_over_col).
 
   Definition abstr_colim_succ_seq_to_abstr_colim_seq_is_idmap
     : abstr_colim_succ_seq_to_abstr_colim_seq = idmap.
@@ -201,7 +199,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
   Definition sec_abstr_colim_seq_to_abstr_succ_seq
     : abstr_colim_succ_seq_to_abstr_colim_seq
     o abstr_colim_seq_to_abstr_colim_succ_seq
-    = idmap.
+      = idmap.
   Proof.
     lhs nrapply (ap _ abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap).
     exact abstr_colim_succ_seq_to_abstr_colim_seq_is_idmap.
@@ -210,7 +208,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
   Definition ret_abstr_colim_seq_to_abstr_succ_seq
     : abstr_colim_seq_to_abstr_colim_succ_seq 
     o abstr_colim_succ_seq_to_abstr_colim_seq
-    = idmap.
+      = idmap.
   Proof.
     lhs nrapply (ap _ abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap).
     exact abstr_colim_succ_seq_to_abstr_colim_seq_is_idmap.
@@ -258,7 +256,7 @@ Section Intersplitting.
 
   Definition colimit_comm_triangle : 
     abstr_colim_seq_to_abstr_colim_succ_seq colim_A
-    = (functor_colimit u _ (colim_succ colim_A)) o (functor_colimit d _ _).
+      = (functor_colimit u _ (colim_succ colim_A)) o (functor_colimit d _ _).
   Proof.
     rhs nrapply functor_colimit_compose.
     exact (ap (fun x => functor_colimit x colim_A (colim_succ colim_A)) 
@@ -267,7 +265,7 @@ Section Intersplitting.
 
   Definition colim_d_split_epi : 
     idmap = (functor_colimit u _ (colim_succ colim_A)) o (functor_colimit d _ _)
-  := ((abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap colim_A)^ @ colimit_comm_triangle).
+    := ((abstr_colim_seq_to_abstr_colim_succ_seq_is_idmap colim_A)^ @ colimit_comm_triangle).
 
   Definition isequiv_colim_composite
     : IsEquiv ((functor_colimit u colim_B (colim_succ colim_A)) 
@@ -386,7 +384,7 @@ Section Interleaving.
 
   (* The first equality needed is exactly what we came up with in the previous section. *)
   Let tri1 : seq_to_succ_seq A = diagram_comp u d
-    := (zigzag_glue_map_tri f g U L)^.
+   := (zigzag_glue_map_tri f g U L)^.
 
   (* The second one requires some massaging: applying [zigzag_glue_map_tr] to the shifted 
   functions doesn't exactly give us `(succ_seq_map_seq_map d)`, but we can find an equality
@@ -395,27 +393,26 @@ Section Interleaving.
   Let tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u.
   Proof.
     symmetry.
-    pose (f' := g);
-    pose (g' := (fun n => f (S n)));
-    pose (U' := L);
-    pose (L' := (fun n => U (S n)));
+    pose (f':=g);
+    pose (g':=(fun n => f (S n)));
+    pose (U':=L);
+    pose (L':=(fun n => U (S n)));
     (* Coq can't guess `succ_seq A` here *)
-    pose (attempt := (@zigzag_glue_map_tri _ B (succ_seq A) f' g' U' L')).
+    pose (attempt:=(@zigzag_glue_map_tri _ B (succ_seq A) f' g' U' L')).
     assert (eq : (succ_seq_map_seq_map d) = (@zigzag_glue_map_inv B (succ_seq A) f' g' U' L')).
     - snrapply path_DiagramMap.
       + reflexivity.
       + intros n m y x; destruct y. 
         simpl.
         rhs nrapply (concat_1p _).
-        lhs nrapply (concat_p1 _).
-        reflexivity.
+        nrapply (concat_p1 _).
     - exact (transport (fun x => diagram_comp x u = seq_to_succ_seq B) eq^ attempt).
   Defined.
 
   Definition isequiv_interleaved_colim_maps
-    : IsEquiv (functor_colimit d _ _) * IsEquiv (functor_colimit u _ (colim_succ colim_A)) * IsEquiv (functor_colimit (succ_seq_map_seq_map d) (colim_succ colim_A) (colim_succ colim_B)).
+    : IsEquiv (functor_colimit d _ _).
   Proof.
-    snrapply two_out_of_six.
+    nrapply two_out_of_sixR.
     - exact (isequiv_colim_composite colim_A colim_B d u tri1).
     - exact (isequiv_colim_composite colim_B (colim_succ colim_A) u 
       (succ_seq_map_seq_map d) tri2).
@@ -425,6 +422,6 @@ Section Interleaving.
   Proof.
     snrapply Build_Equiv.
     - exact (functor_colimit d colim_A colim_B).
-    - exact ((fst o fst) isequiv_interleaved_colim_maps).
+    - exact isequiv_interleaved_colim_maps.
   Defined.
 End Interleaving.
