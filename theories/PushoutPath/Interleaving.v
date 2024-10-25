@@ -283,9 +283,7 @@ Section Intersplitting.
 
 End Intersplitting.
 
-(** Given families of maps `f n : A n -> B n` and `g : B n -> A (n + 1)` with homotopies
-showing that they form zigzags, construct the actual diagram maps and show that their
-composition is equal to the successor diagram map. *)
+(** Given families of maps `f n : A n -> B n` and `g : B n -> A (n + 1)` with homotopies showing that they form zigzags, construct the actual diagram maps and show that their composition is equal to the successor diagram map. *)
 
 Section Interme.
   Context `{Funext} {A B : Sequence}
@@ -294,13 +292,12 @@ Section Interme.
     (U : forall (n : nat), (fun (x : A n) => x^+) == (g n) o (f n))
     (L : forall (n : nat), (fun (x : B n) => x^+) == (f (S n)) o (g n)).
 
-  (** The map built from `f`. Note that [zigzag_glue_map_tri] depends heavily on the exact 
-  homotopy used here. *)
+  (** The map built from `f`. Note that [zigzag_glue_map_tri] depends heavily on the exact homotopy used here. *)
   Definition zigzag_glue_map : DiagramMap A B.
   Proof.
     snrapply Build_DiagramMap.
     - exact f.
-    - intros n m y x; destruct y.
+    - intros n m [] x.
       lhs apply (L n).
       apply ap.
       exact (U n x)^.
@@ -311,7 +308,7 @@ Section Interme.
   Proof.
     snrapply Build_DiagramMap.
     - exact g.
-    - intros n m y x; destruct y.
+    - intros n m [] x.
       lhs apply (U (S n)).
       apply ap.
       exact (L n x)^.
@@ -327,7 +324,7 @@ Section Interme.
       simpl.
       exact (U n x)^.
     - (* Conduct "a little path algebra" *) 
-      intros n m y x; destruct y.
+      intros n m [] x.
       simpl.
       unfold CommutativeSquares.comm_square_comp.
       (* We need to show, stripping brackets:
@@ -340,29 +337,29 @@ Section Interme.
       6) @ 1
        *)
       (* Bring the concatenation out of `ap` in 3) *)
-      rewrite (ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^)).
+      lhs nrapply (1 @@ ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^) @@ 1).
       (* Bring the inverse out of `ap` in 1) *)
-      rewrite (ap_V _ (L n (f n x))).
+      lhs nrapply (1 @@ ap_V (g n.+1) (L n (f n x)) @@ 1 @@ 1).
       (* Remove reflexivity 6) *)
       rhs apply (concat_p1 (ap (fun a => a ^+) (U n x)^)).
       (* Change associativity of 1 2 3 *)
-      rewrite (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _).
+      lhs nrapply (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _ @@ 1).
       (* Change associativity of 2 3 3.5 *)
-      rewrite (concat_p_pp ((ap _ _)^) (ap _ _) _).
+      lhs nrapply (1 @@ concat_p_pp ((ap _ _)^) (ap _ _) _ @@ 1).
       (* 2 and 3 are inverse *)
-      rewrite (concat_Vp _).
+      lhs nrapply (1 @@ (concat_Vp (ap (g n.+1) (L n (f n x))) @@ 1) @@ 1).
       (* Remove the reflexivity *)
-      rewrite (concat_1p _).
+      lhs nrapply (1 @@ concat_1p _ @@ 1).
       (* Add (U n.+1 x ^* ) on the right to both sides *)
       apply (cancelR _ _ ((U n.+1 x ^+))).
       (* Change associativity on the left... *)
-      lhs refine (concat_pp_p _ _ _).
+      lhs nrapply (concat_pp_p _ _ _).
       (* ...and cancel 4 with the newly-added path *)
-      rewrite (concat_Vp _).
+      lhs nrapply (1 @@ concat_Vp _).
       (* Remove the residual 1 *)
-      rewrite (concat_p1 _).
+      lhs nrapply (concat_p1 _).
       (* `ap` of `ap` is `ap` of composition of functions *)
-      rewrite (ap_compose (f n.+1) (g n.+1) _)^.
+      lhs nrapply (1 @@ ap_compose (f n.+1) (g n.+1) _)^.
       (* Finish by naturality of `ap` *)
       exact (concat_Ap _ _)^.
   Defined.
@@ -373,8 +370,8 @@ End Interme.
 
 Section Interleaving.
   Context `{Funext} {A B : Sequence} 
-    {transfinite_A : Type} (col_A : IsColimit A transfinite_A)
-    {transfinite_B : Type} (col_B : IsColimit B transfinite_B)
+    {A_w : Type} (colim_A : IsColimit A A_w)
+    {B_w : Type} (colim_B : IsColimit B B_w)
     (f : forall (n : nat), A n -> B n)
     (g : forall (n : nat), B n -> A (S n))
     (U : forall (n : nat), (fun (x : A n) => x^+) == (g n) o (f n))
@@ -409,8 +406,8 @@ Section Interleaving.
       + reflexivity.
       + intros n m y x; destruct y. 
         simpl.
-        rewrite (concat_1p _).
-        rewrite (concat_p1 _).
+        rhs nrapply (concat_1p _).
+        lhs nrapply (concat_p1 _).
         reflexivity.
     - exact (transport (fun x => diagram_comp x u = seq_to_succ_seq B) eq^ attempt).
   Defined.
