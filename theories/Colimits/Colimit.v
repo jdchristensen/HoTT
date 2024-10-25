@@ -228,13 +228,12 @@ Section FunctorialityColimit.
     (m : DiagramMap D1 D2) {Q1 Q2 : Type} (HQ1 : IsColimit D1 Q1)
     (HQ2 : IsColimit D2 Q2) {T : Type} (t : Q2 -> T)
     : cocone_postcompose HQ1 (t o (functor_colimit m HQ1 HQ2))
-      = cocone_precompose m (cocone_postcompose HQ2 t).
+    = cocone_precompose m (cocone_postcompose HQ2 t).
     Proof.
-      lhs refine (cocone_postcompose_comp (functor_colimit m _ _) _ _).
-      lhs_V refine (ap (fun x => cocone_postcompose x t) 
+      lhs nrapply cocone_postcompose_comp.
+      lhs_V exact (ap (fun x => cocone_postcompose x t) 
         (functor_colimit_commute m HQ1 HQ2)).
-      lhs refine (cocone_precompose_postcompose m t HQ2).
-      reflexivity.
+      snrapply cocone_precompose_postcompose.
     Defined.
 
   (** Functoriality of colimits *)
@@ -244,13 +243,12 @@ Section FunctorialityColimit.
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
     : cocone_postcompose HQ1 ((functor_colimit n HQ2 HQ3) o (functor_colimit m HQ1 HQ2))
-      = cocone_postcompose HQ1 (functor_colimit (diagram_comp n m) HQ1 HQ3).
+    = cocone_postcompose HQ1 (functor_colimit (diagram_comp n m) HQ1 HQ3).
   Proof.
-    lhs refine (cocone_precompose_postcompose_comp m HQ1 HQ2 _).
-    lhs_V refine (ap _ (functor_colimit_commute n HQ2 HQ3)).
-    lhs refine (cocone_precompose_comp n m _ HQ3).
-    lhs refine (functor_colimit_commute (diagram_comp n m) _ _).
-    reflexivity.
+    lhs nrapply cocone_precompose_postcompose_comp.
+    lhs_V nrapply (ap _ (functor_colimit_commute n HQ2 HQ3)).
+    lhs nrapply cocone_precompose_comp.
+    snrapply functor_colimit_commute.
   Defined.
 
   Definition functor_colimit_compose {D1 D2 D3 : Diagram G} 
@@ -258,8 +256,8 @@ Section FunctorialityColimit.
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
     : (functor_colimit n HQ2 HQ3) o (functor_colimit m HQ1 HQ2)
-      = (functor_colimit (diagram_comp n m) HQ1 HQ3) 
-  :=  @equiv_inj _ _ 
+    = (functor_colimit (diagram_comp n m) HQ1 HQ3) 
+  := @equiv_inj _ _ 
       (cocone_postcompose HQ1) (iscolimit_unicocone HQ1 Q3) _ _ 
       (postcompose_functor_colimit_compose m n HQ1 HQ2 HQ3).
 
