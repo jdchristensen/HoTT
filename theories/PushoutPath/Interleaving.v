@@ -325,15 +325,7 @@ Section Interme.
       intros n m [] x.
       simpl.
       unfold CommutativeSquares.comm_square_comp.
-      (* We need to show, stripping brackets:
-      1)   U n.+1 (g n (f n x))
-      2) @ ap (g n.+1) (L n (f n x))^) 
-      3) @ ap (g n.+1) (L n (f n x) @ ap (f n.+1) (U n x)^)
-      4) @ (U n.+1 x ^+)^ 
-          = 
-      5)  ap (fun a : A n.+1%nat => a ^+) (U n x)^ 
-      6) @ 1
-       *)
+      Local Open Scope long_path_scope.
       (* Bring the concatenation out of `ap` in 3) *)
       lhs nrapply (1 @@ ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^) @@ 1).
       (* Bring the inverse out of `ap` in 1) *)
