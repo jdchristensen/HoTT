@@ -331,24 +331,24 @@ Section Interme.
       5)  ap (fun a : A n.+1%nat => a ^+) (U n x)^ 
       6) @ 1
        *)
-      (* Bring the concatenation out of `ap` in 3) *)
-      (* Remove reflexivity 6) *)
+      Open Scope long_path_scope.
+      (* Concatenate reflexivity path *)
       rhs nrapply (concat_p1 _).
-      (* Add (U n.+1 x ^* ) on the right to both sides *)
+      (* Move [U n.+1 x] to the left hand side on the right *)
       apply moveR_pV.
-      (* lhs nrefine (1 @@ _ @@ 1). *)
+      (* Split up ap on concatenations *)
       lhs nrapply (1 @@ ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^)).
       (* Bring the inverse out of `ap` in 1) *)
       lhs nrapply (1 @@ ap_V (g n.+1) (L n (f n x)) @@ 1).
       (* Change associativity of 1 2 3 *)
       lhs nrapply (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _).
-      
-      (* Change associativity of 2 3 3.5 *)
+      (* Cancel term by associativity *)
       lhs nrapply (1 @@ concat_V_pp _ _).
       (* `ap` of `ap` is `ap` of composition of functions *)
       lhs_V nrapply (1 @@ ap_compose (f n.+1) (g n.+1) _).
       (* Finish by naturality of `ap` *)
       exact (concat_Ap _ _)^.
+      Close Scope long_path_scope.
   Defined.
 End Interme.
 
