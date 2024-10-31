@@ -12,9 +12,8 @@ Require Import Colimits.Sequential.
 Require Import Diagram.
 Require Import Types.
 
-(** Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations d : A_i => B_i (d for down) and u : B_i => A_i+1 (u for up), such that the composites (u o d) and (d o i) correspond to the morphisms in the diagram itself. In other words, the following diagram is commutative: *)
-    
-(**  
+(** Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations d : A_i => B_i (d for down) and u : B_i => A_i+1 (u for up), such that the composites (u o d) and (d o i) correspond to the morphisms in the diagram itself. In other words, the following diagram is commutative:
+
 <<
     A_0 -------> A_1 ------> A_2 ------>
         \        ^  \        ^ 
@@ -22,10 +21,9 @@ Require Import Types.
           \    /      \    /         ...
            v  /        v  /
            B_0 ------> B_1 ------->
->> 
-*)
+>>
 
-(** Given the setup above, we want to say that the colimit of the upper lower sequences are the same. From a sequence A, we can produce a diagram map from [A] to [succ_seq A]. It's the map that applies the arrow in the sequence to every element. *)
+Given the setup above, we want to say that the colimit of the upper lower sequences are the same. From a sequence A, we can produce a diagram map from [A] to [succ_seq A]. It's the map that applies the arrow in the sequence to every element. *)
 
 Definition seq_to_succ_seq (A : Sequence) : DiagramMap A (succ_seq A).
 Proof.
@@ -99,9 +97,8 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     : Cocone (succ_seq A) A_w
     := succ_seq_cocone_seq_cocone A_w colim_A.
 
-  (** We start by showing that [abstr_colim_seq_to_abstr_colim_succ_seq] is a split-monomorphism. Observe that [cocone_succ_seq_over_col] essentially defines the same cocone as [colim_A]. I.e. the following  diagram is commutative: *)
+  (** We start by showing that [abstr_colim_seq_to_abstr_colim_succ_seq] is a split-monomorphism. Observe that [cocone_succ_seq_over_col] essentially defines the same cocone as [colim_A]. I.e. the following  diagram is commutative:
   
-  (**
   <<
                   A          succ_seq A
                ______          ______
@@ -335,29 +332,21 @@ Section Interme.
       6) @ 1
        *)
       (* Bring the concatenation out of `ap` in 3) *)
-      lhs nrapply (1 @@ ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^) @@ 1).
-      (* Bring the inverse out of `ap` in 1) *)
-      lhs nrapply (1 @@ ap_V (g n.+1) (L n (f n x)) @@ 1 @@ 1).
       (* Remove reflexivity 6) *)
-      rhs apply (concat_p1 (ap (fun a => a ^+) (U n x)^)).
-      (* Change associativity of 1 2 3 *)
-      lhs nrapply (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _ @@ 1).
-      (* Change associativity of 2 3 3.5 *)
-      lhs nrapply (1 @@ concat_p_pp ((ap _ _)^) (ap _ _) _ @@ 1).
-      (* 2 and 3 are inverse *)
-      lhs nrapply (1 @@ (concat_Vp (ap (g n.+1) (L n (f n x))) @@ 1) @@ 1).
-      (* Remove the reflexivity *)
-      lhs nrapply (1 @@ concat_1p _ @@ 1).
+      rhs nrapply (concat_p1 _).
       (* Add (U n.+1 x ^* ) on the right to both sides *)
-      apply (cancelR _ _ ((U n.+1 x ^+))).
-      (* Change associativity on the left... *)
-      lhs nrapply (concat_pp_p _ _ _).
-      (* ...and cancel 4 with the newly-added path *)
-      lhs nrapply (1 @@ concat_Vp _).
-      (* Remove the residual 1 *)
-      lhs nrapply (concat_p1 _).
+      apply moveR_pV.
+      (* lhs nrefine (1 @@ _ @@ 1). *)
+      lhs nrapply (1 @@ ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^)).
+      (* Bring the inverse out of `ap` in 1) *)
+      lhs nrapply (1 @@ ap_V (g n.+1) (L n (f n x)) @@ 1).
+      (* Change associativity of 1 2 3 *)
+      lhs nrapply (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _).
+      
+      (* Change associativity of 2 3 3.5 *)
+      lhs nrapply (1 @@ concat_V_pp _ _).
       (* `ap` of `ap` is `ap` of composition of functions *)
-      lhs nrapply (1 @@ ap_compose (f n.+1) (g n.+1) _)^.
+      lhs_V nrapply (1 @@ ap_compose (f n.+1) (g n.+1) _).
       (* Finish by naturality of `ap` *)
       exact (concat_Ap _ _)^.
   Defined.
