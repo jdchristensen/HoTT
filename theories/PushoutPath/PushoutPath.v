@@ -9,11 +9,7 @@ Require Import Colimits.Sequential.
 Require Import Diagram.
 Require Import Types.
 
-(** * Work towards characterizing the path types in a pushout of a span [R : A -> B -> Type]. *)
-
-(** The goal here is to work in half-steps, so that each construction only happens once. *)
-
-(** [C] will be used to denote a type that might be [A] or [B].  We think of a term of [Family C] as being the family [fun c => a0 squiggle_t c]. *)
+(** * Work towards characterizing the path types in a pushout of a span [R : A -> B -> Type]. The goal here is to work in half-steps, so that each construction only happens once. [C] will be used to denote a type that might be [A] or [B].  We think of a term of [Family C] as being the family [fun c => a0 squiggle_t c]. *)
 Definition Family (C : Type) := C -> Type.
 
 (** Here [P a] should be thought of as [a_0 squiggle_t a] and [Q b] as [a_0 squiggle_{t+1} b].  This describes the type of the "dot" operation [- ._t -]. This will also be used with [A] and [B] swapped and [R] flipped. *)
@@ -51,22 +47,20 @@ Section InductiveStep.
     := fun a b r p => inverse (pglue ((b ; r) , p)).
 End InductiveStep.
 
-Definition Dot {A B : Type} (R : A -> B -> Type) (P : Family A) (Q : Family B)
-  := forall (a : A) (b : B) (r : R a b) (p : P a), Q b.
 Section Sequence.
   Context {A B : Type} (R : A -> B -> Type) (a0 : A).
 
-  (** Use a record type for a full step to avoid the interleaved sequence and `flip R`. *)
+  (** Use a record type for a full step to avoid the interleaved sequence and [flip R]. *)
   Record zigzag_type : Type := {
     Pp : Family A; (** Stored from previous step *)
     Qp : Family B; (** Stored from previous step *)
     concatQPp : Dot (flip R) Qp Pp; (** Stored from previous step *)
-    Q : Family B; (** Paths of length t *)
-    concatPQ : Dot R Pp Q; (** t-1 -> t *)
-    iotaQ (b : B) (x : Qp b) : Q b; (** t-2 -> t *)
-    P : Family A; (** Paths of length t+1 *)
-    concatQP : Dot (flip R) Q P; (** t -> t+1 *)
-    iotaP (a : A) (x : Pp a) : P a; (** t-1 -> t+1 *)
+    Q : Family B; (** Paths of length [t] *)
+    concatPQ : Dot R Pp Q; (** [t-1 -> t] *)
+    iotaQ (b : B) (x : Qp b) : Q b; (** [t-2 -> t] *)
+    P : Family A; (** Paths of length [t+1] *)
+    concatQP : Dot (flip R) Q P; (** [t -> t+1] *)
+    iotaP (a : A) (x : Pp a) : P a; (** [t-1 -> t+1] *)
     concatQPQ (b : B) (a : A) (r : R a b) 
       : (compose (concatPQ a b r) (concatQPp b a r)) == (iotaQ b);
     concatPQP (a : A) (b : B) (r : R a b) 
@@ -95,12 +89,12 @@ Section Sequence.
     - exact (fun a => Empty).
     - exact (fun b => Empty).
     - intros b a r q; destruct q.
-    - exact (fun b => Empty). (** Define Q0 := Empty *)
+    - exact (fun b => Empty). (** Define [Q0 := Empty] *)
     - intros a b r q; destruct q.
     - intros b q; destruct q.
-    - exact (fun a => a0 = a). (** Define P0 := Id a0 *)
-    - intros b a r q; destruct q. (** Define Q0 -> P_0 *)
-    - intros a q; destruct q. (** Define P_{-1} -> P0 *)
+    - exact (fun a => a0 = a). (** Define [P0 := Id a0] *)
+    - intros b a r q; destruct q. (** Define [Q0 -> P_0] *)
+    - intros a q; destruct q. (** Define [P_-1 -> P0] *)
     - intros; intro q; destruct q.
     - intros; intro q; destruct q.
   Defined.

@@ -4,7 +4,7 @@ Require Import Colimits.GraphQuotient.
 Require Import WildCat.
 
 (** This file proves the induction principle for path spaces of coequalizers. This follows the paper PATH SPACES OF HIGHER INDUCTIVE TYPES
-IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories C and D as described by this paper. C will be denoted as [ptd_family_with_relations], and D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we will assume univalence throughout the entire section. *)
+IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories C and D as described by this paper. C will be denoted as [ptd_family_with_relations], and D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we will currently assume univalence throughout the entire section. *)
 
 Section FamilyCat.
   Context `{Univalence} {A : Type} (a0 : A) (R : A -> A -> Type).
@@ -74,7 +74,7 @@ Section FamilyCat.
           nrapply (ap (f_ g c) (gamma_ f s k)).
   Defined.
 
-  (* I don't think these are the 2-cells that I want. At some point I need to use funext. *)
+  (* I don't think these are the 2-cells that I want. At some point I'm forced to use funext. Switching these cells out with some homtopies sounds smarter, but I'm not so sure how this is done, as I need transports as well. *)
   Instance is2graph_ptd_family_with_relations : Is2Graph ptd_family_with_relations.
   Proof.
     intros Kre Kre'.
@@ -152,7 +152,7 @@ Section FamilyCat.
 
   (** Since the 2-cells are defined to be paths, we trivially have morphism extensionality, and the 1-category is strong. *)
 
-  (* It would still be nice if this could be true with a better choice of paths. Since I'm assuming univalence, there should be a way to do this. *)
+  (* It would still be nice if this could be true with a better choice of paths. Since I'm assuming univalence, maybe a homotopy version of the above could work out niceky. *)
   Instance hasmorext_ptd_family_with_relations : HasMorExt ptd_family_with_relations.
   Proof.
     snrapply Build_HasMorExt.
@@ -161,7 +161,7 @@ Section FamilyCat.
     all: intros []; reflexivity.
   Defined.
 
-  (** [ptd_family_graphquotient] represents the wild category of pointed type families over the graph quotient of R. *)
+  (** [ptd_family_graphquotient] represents the wild category of pointed type families over the [GraphQuotient R]. *)
 
   Definition ptd_family_graphquotient : Type
     := {L : GraphQuotient R -> Type & L (gq a0)}.
@@ -209,7 +209,7 @@ Section FamilyCat.
         nrapply (epsilon_ g).
   Defined.
 
-  (* I don't think these are the 2-cells that I want. At some point I need to use Funext. *)
+  (* Likewise as above, these 2-cells does not seem to be the correct choice. We should only have the same problems of defnining homotopical versions for these 2-cells as before. *)
   Instance is2graph_ptd_family_graphquotient : Is2Graph ptd_family_graphquotient.
   Proof.
     intros Lp Lp'.
@@ -269,7 +269,7 @@ Section FamilyCat.
     - exact (idpath (gq a0)).
   Defined.
 
-  (* The choice of 2-cells makes this difficult to prove, as funext gets in the way. *)
+  (* The choice of 2-cells makes this very difficult to prove, as funext gets in the way. Maybe there is a simple solution that I just don't know of ¯\_(ツ)_/¯*)
   Definition isinitial_initLp : IsInitial initLp.
   Proof.
     intro Lp.
