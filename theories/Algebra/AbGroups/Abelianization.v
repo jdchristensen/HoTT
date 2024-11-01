@@ -1,5 +1,5 @@
 Require Import Basics Types Truncations.Core.
-Require Import Cubical WildCat.
+Require Import Cubical.DPath WildCat.
 Require Import Colimits.Coeq.
 Require Import Algebra.AbGroups.AbelianGroup.
 Require Import Modalities.ReflectiveSubuniverse.
@@ -150,21 +150,12 @@ Section Abel.
     exact a.
   Defined.
 
-  (** And its recursion version. *)
-  Definition Abel_rec_hprop (P : Type) `{IsHProp P}
-    (a : G -> P)
-    : Abel -> P.
-  Proof.
-    apply (Abel_rec _ a).
-    intros; apply path_ishprop.
-  Defined.
-
 End Abel.
 
 (** The [IsHProp] argument of [Abel_ind_hprop] can usually be found by typeclass resolution, but [srapply] is slow, so we use this tactic instead. *)
 Local Ltac Abel_ind_hprop x := snrapply Abel_ind_hprop; [exact _ | intro x].
 
-(** We make sure that G is implicit in the arguments of [abel_in
+(** We make sure that [G] is implicit in the arguments of [abel_in]
  and [abel_in_comm]. *)
 Arguments abel_in {_}.
 Arguments abel_in_comm {_}.
@@ -176,9 +167,9 @@ Section AbelGroup.
   Context (G : Group).
 
   (** Firstly we derive the operation on Abel G. This is defined as follows:
-      <<
+<<
         abel_in x + abel_in y := abel_in (x * y)
-      >>
+>>
       But we need to also check that it preserves ab_comm in the appropriate way. *)
   Global Instance abel_sgop : SgOp (Abel G).
   Proof.
@@ -251,13 +242,13 @@ Section AbelGroup.
   Defined.
 
   (** Now we can define the negation. This is just
-      <<
+<<
         - (abel_in g) := abel_in (- g)
-      >>
+>>
       However when checking that it respects ab_comm we have to show the following:
-      <<
+<<
         abel_in (- z * - y * - x) = abel_in (- y * - z * - x)
-      >>
+>>
       there is no obvious way to do this, but we note that [abel_in (x * y)] is exactly the definition of [abel_in x + abel_in y]! Hence by commutativity we can show this. *)
   Global Instance abel_negate : Negate (Abel G).
   Proof.
@@ -340,6 +331,14 @@ Proof.
   Abel_ind_hprop x; revert y.
   Abel_ind_hprop y.
   apply grp_homo_op.
+Defined.
+
+Definition abel_ind_homotopy {G H : Group} {f g : Hom (A:=Group) (abel G) H}
+  (p : f $o abel_unit $== g $o abel_unit)
+  : f $== g.
+Proof.
+  rapply Abel_ind_hprop.
+  rapply p.
 Defined.
 
 (** Finally we can prove that our construction abel is an abelianization. *)
