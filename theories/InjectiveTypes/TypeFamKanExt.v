@@ -26,6 +26,7 @@ Section UniverseStructure.
   Notation "f <| j" := (LeftKanTypeFamily f j) (at level 40).
   Notation "f |> j" := (RightKanTypeFamily f j) (at level 40).
 
+  (** If [j] is an embedding, then [f <| j] and [f |> j] are extensions in the following sense: [(f <| j o j)x <~> fx <~> (f |> j o j)] *)
   Definition isext_leftkantypefamily@{} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
     (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} ((LeftKanTypeFamily@{} f j) (j x)) (f x).
@@ -48,7 +49,7 @@ End UniverseStructure.
 
 (*Move*)
 Definition isempty_empty_indexed_sig (A : Type) (P : A -> Type) (na : A -> Empty)
-  : sig (fun a => P a) <~> Empty := equiv_to_empty (fun ap => na ap.1).
+  : { a | P a } <~> Empty := equiv_to_empty (fun ap => na ap.1).
 
 Definition isunit_empty_indexed_forall `{Funext} (A : Type) (P : A -> Type) (na : A -> Empty)
   : (forall a, P a) <~> Unit.
@@ -71,7 +72,7 @@ Definition equiv_leftkantypefamily {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@
   : (sig f) <~> sig (LeftKanTypeFamily f j).
 Proof.
   snrapply equiv_adjointify.
-  - apply (fun w : sig f => (j w.1; (w.1; idpath); w.2)).
+  - apply (fun w : { f | (j w.1; (w.1; idpath); w.2)}).
   - apply (fun '((y; ((x; p); y')) : sig (LeftKanTypeFamily f j)) => (x; y')).
   - intros [y [[x []] y']]. reflexivity.
   - intros [x y]. reflexivity.
@@ -139,7 +140,11 @@ Defined.
 (** To see this we can construct the (co)unit transformations of our extensions *)
 Definition unit_leftkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
   : f =< (LeftKanTypeFamily f j o j) := (fun x A => ((x; idpath); A)).
+  
+Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
+  : (RightKanTypeFamily f j o j) =< f := (fun x A => A (x; idpath)).
 
+(** Universal property of the Kan extensions *)
 Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y} {f : X -> Type} {g : Y -> Type} (a : f =< g o j)
   : { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation j b) (unit_leftkantypefam f j) == a}.
 Proof.
@@ -156,12 +161,9 @@ Proof.
   - apply path_forall. intros y. apply path_forall. intros [[w []] c].
     srefine (ap10 (F w) c)^.
   - apply path_forall. intros x.
-  
+Admitted.
 
-Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
-  : (RightKanTypeFamily f j o j) =< f := (fun x A => A (x; idpath)).
-
-(** The above facts are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
+(** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkantypefamily `{Funext} {X Y : Type} (f : X -> Type)
   (g : Y -> Type) (j : X -> Y)
   : ((LeftKanTypeFamily f j) =< g) <~> (f =< g o j).
@@ -186,7 +188,8 @@ Proof.
 Defined.
 
 
-(*
+
+
 (** Using these facts we can show that the maps [_ <| j] and [_ |> j] are embeddings if [j] is an embedding *)
 Definition isembed_leftkantypefam_ext `{Funext} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j)
   : IsEmbedding (fun f => LeftKanTypeFamily f j).
@@ -214,4 +217,3 @@ Definition isembed_rightkantypefam_ext `{Funext} {X Y : Type} (j : X -> Y) (isem
   : IsEmbedding (fun f => RightKanTypeFamily f j).
 Proof.
 Admitted.
-*)
