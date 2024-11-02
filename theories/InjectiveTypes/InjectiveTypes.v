@@ -98,12 +98,12 @@ Defined.
 Definition retract_alg_inj_embedding@{v w vw | v <= vw, w <= vw}
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
   (Dai : IsAlgebraicInjectiveType@{w v w vw w vw vw} D)
-  : sig (fun r => r o j == idmap) := Dai _ _ _ _ idmap.
+  : { r | r o j == idmap } := Dai _ _ _ _ idmap.
 
 (** Any algebrically u,u^+-injective type [X : Type@{u}], is a retract of [X -> Type@{u}] *)
 Definition retract_type_family_alg_usuinj@{u su | u < su} `{Univalence}
   (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su su} D)
-  : sig (fun r : (D -> Type@{u}) -> D => r o (@paths D) == idmap)
+  : { r : (D -> Type@{u}) -> D | r o (@paths D) == idmap }
   := retract_alg_inj_embedding D (@paths D) isembedding_paths Dai.
 
 
@@ -117,7 +117,7 @@ Definition alg_uuinj_alg_usu_inj@{u su | u < su} (D : Type@{u}) (Dai : IsAlgebra
 
 Definition IsAlgebraicallyFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
-    sig (fun d : D => forall p : P, d = f p).
+    { d : D | forall p : P, d = f p}.
 (** Can think of algebraic flabbiness as algebriac injectivity, but only ranging over embeddings of propositions into the unit type *)
 
 (*Keep/Move elsewhere?*)
@@ -221,4 +221,4 @@ Definition uvinj_alg_uvinj
   : IsInjectiveType@{u v w uv uw vw uvw} D.
 Proof.
   intros X Y j isem f.
-
+Admitted.
