@@ -55,48 +55,46 @@ Section Sequence.
     Pp : Family A; (** Stored from previous step *)
     Qp : Family B; (** Stored from previous step *)
     concatQPp : Dot (flip R) Qp Pp; (** Stored from previous step *)
-    Q : Family B; (** Paths of length [t] *)
-    concatPQ : Dot R Pp Q; (** [t-1 -> t] *)
-    iotaQ (b : B) (x : Qp b) : Q b; (** [t-2 -> t] *)
-    P : Family A; (** Paths of length [t+1] *)
-    concatQP : Dot (flip R) Q P; (** [t -> t+1] *)
-    iotaP (a : A) (x : Pp a) : P a; (** [t-1 -> t+1] *)
-    concatQPQ (b : B) (a : A) (r : R a b) 
-      : (compose (concatPQ a b r) (concatQPp b a r)) == (iotaQ b);
-    concatPQP (a : A) (b : B) (r : R a b) 
-      : (compose (concatQP b a r) (concatPQ a b r)) == (iotaP a);
   }.
+
+  Definition Q (Z : zigzag_type) : Family B
+    := family_step (flip R) (concatQPp Z).
+
+  Definition concatPQ (Z : zigzag_type) : Dot R (Pp Z) (Q Z)
+    := dot_step (flip R) (concatQPp Z).
+
+  Definition iotaQ (Z : zigzag_type) : forall (b : B) (x : Qp Z b), Q Z b
+    := iota_step (flip R) (concatQPp Z).
+
+  Definition P (Z : zigzag_type) : Family A
+    := family_step R (concatPQ Z).
+
+  Definition concatQP (Z : zigzag_type) : Dot (flip R) (Q Z) (P Z)
+    := dot_step R (concatPQ Z).
+
+  Definition iotaP (Z : zigzag_type) : forall (a : A) (x : Pp Z a), P Z a
+    := iota_step R (concatPQ Z).
+
+  Definition concatQPQ (Z : zigzag_type)
+    : forall (b : B) (a : A) (r : R a b), (compose (concatPQ Z a b r) (concatQPp Z b a r)) == (iotaQ Z b)
+    := homotopy_step (flip R) (concatQPp Z).
+
+  Definition concatPQP (Z : zigzag_type)
+    : forall (a : A) (b : B) (r : R a b), (compose (concatQP Z b a r) (concatPQ Z a b r)) == (iotaP Z a)
+    := homotopy_step R (concatPQ Z).
 
   Definition zigzag_step : zigzag_type -> zigzag_type.
   Proof.
-    intros [_ _ _ Q0 _ _ P0 concatQP0 _ _ _];
-    pose (concatPQ := dot_step (flip R) concatQP0).
-    (* Naming them all seems to be necessary for Coq to not reorder goals. *)
-    snrapply (Build_zigzag_type P0 Q0 concatQP0).
-      - exact (family_step (flip R) concatQP0).
-      - exact concatPQ.
-      - exact (iota_step (flip R) concatQP0).
-      - exact (family_step R concatPQ).
-      - exact (dot_step R concatPQ).
-      - exact (iota_step R concatPQ).
-      - exact (homotopy_step (flip R) concatQP0).
-      - exact (homotopy_step R concatPQ).
+    intro Z.
+    exact (Build_zigzag_type (P Z) (Q Z) (concatQP Z)).
   Defined.
 
   Definition identity_zigzag_initial : zigzag_type.
   Proof.
     snrapply Build_zigzag_type.
-    - exact (fun a => Empty).
-    - exact (fun b => Empty).
-    - intros b a r q; destruct q.
-    - exact (fun b => Empty). (** Define [Q0 := Empty] *)
-    - intros a b r q; destruct q.
-    - intros b q; destruct q.
     - exact (fun a => a0 = a). (** Define [P0 := Id a0] *)
+    - exact (fun b => Empty). (** Define [Q0 := Empty] *)
     - intros b a r q; destruct q. (** Define [Q0 -> P_0] *)
-    - intros a q; destruct q. (** Define [P_-1 -> P0] *)
-    - intros; intro q; destruct q.
-    - intros; intro q; destruct q.
   Defined.
 
   Definition identity_zigzag : nat -> zigzag_type
