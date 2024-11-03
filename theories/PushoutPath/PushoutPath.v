@@ -106,44 +106,44 @@ Section Sequence.
   Proof.
     intro a.
     snrapply Build_Sequence.
-    - intro n; exact ((identity_zigzag n).(P) a).
-    - intro n; exact ((identity_zigzag (S n)).(iotaP) a).
+    - intro n; exact (P (identity_zigzag n) a).
+    - intro n; exact (iotaP (identity_zigzag (S n)) a).
   Defined.
 
   Definition identity_zigzag_Q_seq : B -> Sequence.
   Proof.
     intro b.
     snrapply Build_Sequence.
-    - intro n; exact ((identity_zigzag n).(Q) b).
-    - intro n; exact ((identity_zigzag (S n)).(iotaQ) b).
+    - intro n; exact (Q (identity_zigzag n) b).
+    - intro n; exact (iotaQ (identity_zigzag (S n)) b).
   Defined.
 
   Definition identity_zigzag_concatPQ_seq {a : A} {b : B} (r : R a b) 
     : DiagramMap (identity_zigzag_P_seq a) (succ_seq (identity_zigzag_Q_seq b)).
   Proof.
     snrapply Build_DiagramMap.
-    - intro n; exact ((identity_zigzag (S n)).(concatPQ) a b r).
+    - intro n; exact (concatPQ (identity_zigzag (S n)) a b r).
     - intros n m g x.
       destruct g.
-      transitivity ((identity_zigzag (S (S n))).(concatPQ) a b r ((identity_zigzag (S n)).(concatQP) b a r ((identity_zigzag (S n)).(concatPQ) a b r x))).
+      transitivity (concatPQ (identity_zigzag (S (S n))) a b r (concatQP (identity_zigzag (S n)) b a r (concatPQ (identity_zigzag (S n)) a b r x))).
       + symmetry.
-        exact ((identity_zigzag (S (S n))).(concatQPQ) b a r _).
+        exact (concatQPQ (identity_zigzag (S (S n))) b a r _).
       + apply ap.
-        exact ((identity_zigzag (S n)).(concatPQP) a b r _).
+        exact (concatPQP (identity_zigzag (S n)) a b r _).
   Defined.
 
   Definition identity_zigzag_concatQP_seq {a : A} {b : B} (r : R a b) 
     : DiagramMap (identity_zigzag_Q_seq b) (identity_zigzag_P_seq a).
   Proof.
     snrapply Build_DiagramMap.
-    - intro n; exact ((identity_zigzag n).(concatQP) b a r).
+    - intro n; exact (concatQP (identity_zigzag n) b a r).
     - intros n m g x.
       destruct g.
-      transitivity ((identity_zigzag (S n)).(concatQP) b a r ((identity_zigzag (S n)).(concatPQ) a b r ((identity_zigzag n).(concatQP) b a r x))).
+      transitivity (concatQP (identity_zigzag (S n)) b a r (concatPQ (identity_zigzag (S n)) a b r (concatQP (identity_zigzag n) b a r x))).
       + symmetry.
-        exact ((identity_zigzag (S n)).(concatPQP) a b r _).
+        exact (concatPQP (identity_zigzag (S n)) a b r _).
       + apply ap.
-        exact ((identity_zigzag (S n)).(concatQPQ) b a r _).
+        exact (concatQPQ (identity_zigzag (S n)) b a r _).
   Defined.
 
 End Sequence.
