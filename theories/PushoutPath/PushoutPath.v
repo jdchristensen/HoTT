@@ -63,31 +63,14 @@ Section Sequence.
   Definition concatPQ (Z : zigzag_type) : Dot R (Pp Z) (Q Z)
     := dot_step (flip R) (concatQPp Z).
 
-  Definition iotaQ (Z : zigzag_type) : forall (b : B) (x : Qp Z b), Q Z b
-    := iota_step (flip R) (concatQPp Z).
-
   Definition P (Z : zigzag_type) : Family A
     := family_step R (concatPQ Z).
 
   Definition concatQP (Z : zigzag_type) : Dot (flip R) (Q Z) (P Z)
     := dot_step R (concatPQ Z).
 
-  Definition iotaP (Z : zigzag_type) : forall (a : A) (x : Pp Z a), P Z a
-    := iota_step R (concatPQ Z).
-
-  Definition concatQPQ (Z : zigzag_type)
-    : forall (b : B) (a : A) (r : R a b), (compose (concatPQ Z a b r) (concatQPp Z b a r)) == (iotaQ Z b)
-    := homotopy_step (flip R) (concatQPp Z).
-
-  Definition concatPQP (Z : zigzag_type)
-    : forall (a : A) (b : B) (r : R a b), (compose (concatQP Z b a r) (concatPQ Z a b r)) == (iotaP Z a)
-    := homotopy_step R (concatPQ Z).
-
-  Definition zigzag_step : zigzag_type -> zigzag_type.
-  Proof.
-    intro Z.
-    exact (Build_zigzag_type (P Z) (Q Z) (concatQP Z)).
-  Defined.
+  Definition zigzag_step (Z : zigzag_type) : zigzag_type
+    := Build_zigzag_type (P Z) (Q Z) (concatQP Z).
 
   Definition identity_zigzag_initial : zigzag_type.
   Proof.
@@ -105,7 +88,7 @@ Section Sequence.
     intro a.
     snrapply Build_Sequence.
     - intro n; exact (P (identity_zigzag n) a).
-    - intro n; exact (iotaP (identity_zigzag (S n)) a).
+    - intro n. unfold P; cbn. apply iota_step.
   Defined.
 
   Definition identity_zigzag_Q_seq : B -> Sequence.
@@ -113,7 +96,7 @@ Section Sequence.
     intro b.
     snrapply Build_Sequence.
     - intro n; exact (Q (identity_zigzag n) b).
-    - intro n; exact (iotaQ (identity_zigzag (S n)) b).
+    - intro n. unfold Q; cbn. apply iota_step.
   Defined.
 
   Definition identity_zigzag_concatPQ_seq {a : A} {b : B} (r : R a b) 
@@ -123,11 +106,9 @@ Section Sequence.
     - intro n; exact (concatPQ (identity_zigzag (S n)) a b r).
     - intros n m g x.
       destruct g.
-      transitivity (concatPQ (identity_zigzag (S (S n))) a b r (concatQP (identity_zigzag (S n)) b a r (concatPQ (identity_zigzag (S n)) a b r x))).
-      + symmetry.
-        exact (concatQPQ (identity_zigzag (S (S n))) b a r _).
-      + apply ap.
-        exact (concatPQP (identity_zigzag (S n)) a b r _).
+      lhs_V nrapply homotopy_step.
+      apply ap.
+      apply homotopy_step.
   Defined.
 
   Definition identity_zigzag_concatQP_seq {a : A} {b : B} (r : R a b) 
@@ -137,11 +118,9 @@ Section Sequence.
     - intro n; exact (concatQP (identity_zigzag n) b a r).
     - intros n m g x.
       destruct g.
-      transitivity (concatQP (identity_zigzag (S n)) b a r (concatPQ (identity_zigzag (S n)) a b r (concatQP (identity_zigzag n) b a r x))).
-      + symmetry.
-        exact (concatPQP (identity_zigzag (S n)) a b r _).
-      + apply ap.
-        exact (concatQPQ (identity_zigzag (S n)) b a r _).
+      lhs_V nrapply homotopy_step.
+      apply ap.
+      apply homotopy_step.
   Defined.
 
 End Sequence.
