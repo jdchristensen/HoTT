@@ -215,10 +215,27 @@ End AssumePropResizing.
 
 (** ** Injectivity in Terms of Algebraic Injectivity in the Absence of Resizing *)
 
+Unset Printing Universes.
 
-Definition uvinj_alg_uvinj
+Definition uvinj_alg_uvinj@{u v w uv uw vw uvw | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw}
   (D : Type@{w}) (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D)
   : IsInjectiveType@{u v w uv uw vw uvw} D.
 Proof.
   intros X Y j isem f.
-Admitted.
+  apply tr.
+  srapply Dai.
+Defined.
+
+Definition ishprop_injectivity
+  `{Funext} (D : Type@{w})
+  : IsHProp@{t} (IsInjectiveType@{u v w uv uw vw uvw} D) := _.
+
+(*Fix Universes*)
+Definition inj_is_tr_alginj
+  `{Funext} {D : Type@{w}} (mDai : merely (IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D))
+  : (IsInjectiveType@{u v w uv uw vw uvw} D).
+Proof.
+  strip_truncations.
+  apply (uvinj_alg_uvinj D mDai).
+Defined.
+
