@@ -4,10 +4,10 @@ Require Import Colimits.GraphQuotient.
 Require Import WildCat.
 
 (** This file proves the induction principle for path spaces of coequalizers. This follows the paper PATH SPACES OF HIGHER INDUCTIVE TYPES
-IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories C and D as described by this paper. C will be denoted as [ptd_family_with_relations], and D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we will assume univalence throughout the entire section. *)
+IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories C and D as described by this paper. C will be denoted as [ptd_family_with_relations], and D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we might want to assume univalence throughout the entire section. *)
 
 Section FamilyCat.
-  Context `{Univalence} {A : Type} (a0 : A) (R : A -> A -> Type).
+  Context {A : Type} (a0 : A) (R : A -> A -> Type).
 
   (** [ptd_family_with_relations] is represents the wild category of pointed type families that respects relations. That is, if there is a term [r : R b c], then there is an equivalence [K b <~> K c]. *)
 
@@ -79,7 +79,11 @@ Section FamilyCat.
   Proof.
     intros Kre Kre'.
     snrapply Build_IsGraph.
-    intros f g. exact (f = g).
+    intros f g.
+    exact {h : forall a x, f_ f a x = f_ g a x 
+      & (h a0 (r_ Kre) @ d_ g = d_ f) 
+      * (forall b c, forall s : R b c, forall x, (gamma_ f s x) @ (h c (e_ Kre s x)) 
+        = (ap (e_ Kre' s) (h b x)) @ (gamma_ g s x))}.
   Defined.
 
   Instance is1cat_ptd_family_with_relations : Is1Cat ptd_family_with_relations.
@@ -87,78 +91,116 @@ Section FamilyCat.
     snrapply Build_Is1Cat'.
     - intros Kre Kre'.
       snrapply Build_Is01Cat.
-      + intros f. reflexivity.
-      + intros f g h p q. exact (q @ p).
+      + intros f. snrefine (_ ; (_ , _)).
+        * intros a x. reflexivity.
+        * cbn. nrapply concat_1p.
+        * intros b c s x. cbn.
+          rhs nrapply concat_1p.
+          nrapply concat_p1.
+      + intros f g h p q. snrefine (_ ; (_ , _)).
+        * intros a x. exact (pr1 q a x @ pr1 p a x).
+        * cbn.
+          lhs nrapply concat_pp_p.
+          lhs nrapply (1 @@ fst (pr2 p)).
+          nrapply (fst (pr2 q)).
+        * intros b c s x. cbn.
+          lhs nrapply concat_p_pp.
+          lhs nrapply (snd (pr2 q) b c s x @@ 1).
+          lhs nrapply concat_pp_p.
+          lhs nrapply (1 @@ snd (pr2 p) b c s x).
+          lhs nrapply concat_p_pp.
+          nrapply whiskerR.
+          nrapply (ap_pp _ _ _)^.
     - intros Kre Kre'.
       snrapply Build_Is0Gpd.
-      + intros f g p. exact p^.
+      + intros f g p. snrefine (_ ; (_ , _)).
+        * intros a x. exact (pr1 p a x)^.
+        * cbn. 
+          nrapply moveR_Vp.
+          exact (fst (pr2 p))^.
+        * intros b c s x. cbn.
+          nrapply moveR_pV.
+          rhs nrapply concat_pp_p.
+          rhs nrapply (ap_V _ _ @@ 1).
+          nrapply moveL_Vp.
+          nrapply (snd (pr2 p) _ _ _ _)^.
     - intros Kre Kre' Kre'' f.
       snrapply Build_Is0Functor.
-      + intros g h []. reflexivity.
+      + intros g h p. snrefine (_ ; (_ , _)).
+        * intros a x. cbn.
+          apply (ap (f_ f a)).
+          exact (pr1 p a x).
+        * cbn.
+          lhs nrapply concat_p_pp.
+          nrapply whiskerR.
+          lhs_V nrapply ap_pp.
+          apply (ap (ap (f_ f a0))).
+          exact (fst (pr2 p)).
+        * intros b c s x. cbn.
+          lhs nrapply concat_pp_p.
+          lhs_V nrapply (1 @@ ap_pp _ _ _).
+          lhs nrapply (1 @@ ap (ap (f_ f c)) (snd (pr2 p) b c s x)).
+          lhs nrapply (1 @@ ap_pp _ _ _).
+          lhs nrapply concat_p_pp.
+          rhs nrapply concat_p_pp.
+          nrapply whiskerR.
+          rhs_V nrapply (ap_compose _ _ _ @@ 1).
+          lhs_V nrapply (1 @@ ap_compose _ _ _).
+          nrapply (concat_Ap (gamma_ _ _) _)^.
     - intros Kre Kre' Kre'' f.
       snrapply Build_Is0Functor.
-      + intros g h []. reflexivity.
+      + intros g h p. snrefine (_ ; (_ , _)).
+        * intros a x. cbn.
+          exact (pr1 p a _).
+        * cbn.
+          lhs nrapply concat_p_pp.
+          lhs_V nrapply (concat_Ap _ _ @@ 1).
+          lhs nrapply concat_pp_p.
+          nrapply whiskerL.
+          exact (fst (pr2 p)).
+        * intros b c s x. cbn.
+          lhs nrapply concat_pp_p.
+          lhs nrapply (1 @@ concat_Ap _ _).
+          lhs nrapply concat_p_pp.
+          rhs nrapply concat_p_pp.
+          nrapply whiskerR.
+          nrapply (snd (pr2 p)).
     - intros Kre Kre' Kre'' Kre''' f g h.
-      snrapply path_sigma.
-      + reflexivity.
-      + unfold transport. 
-        snrapply path_prod.
-        * cbn.
-          lhs snrapply concat_p_pp.
-          apply (ap (fun x => x @ d_ h)).
-          lhs snrapply (ap_compose (f_ g a0) _ _ @@ 1).
-          snrapply (ap_pp _ _ _)^.
-        * cbn.
-          (* I don't like this *)
-          apply apD10^-1. intro b.
-          apply apD10^-1. intro c.
-          apply apD10^-1. intro s.
-          apply apD10^-1. intro k.
-          lhs_V nrapply concat_p_pp.
-          apply (ap (fun x => _ @ x)).
-          lhs nrapply (1 @@ ap_compose _ _ _).
-          nrapply (ap_pp _ _ _)^.
-    - intros Kre Kre' f.
-      snrapply path_sigma.
+      snrefine (_ ; (_ , _)).
       + reflexivity.
       + unfold transport.
-        snrapply path_prod.
-        * cbn.
-          lhs nrapply concat_p1.
-          nrapply ap_idmap.
-        * cbn.
-          (* I don't like this *)
-          apply apD10^-1. intro b.
-          apply apD10^-1. intro c.
-          apply apD10^-1. intro s.
-          apply apD10^-1. intro k.
-          lhs nrapply concat_1p.
-          nrapply ap_idmap.
+        lhs nrapply concat_1p.
+        cbn.
+        rhs nrapply concat_p_pp.
+        nrapply whiskerR.
+        lhs nrapply ap_pp.
+        nrapply whiskerR.
+        nrapply (ap_compose _ _ _)^.
+      + intros b c s x. cbn.
+        lhs nrapply concat_p1.
+        rhs nrapply concat_1p.
+        lhs nrapply concat_pp_p.
+        nrapply whiskerL.
+        lhs nrapply (1 @@ ap_compose _ _ _).
+        nrapply (ap_pp _ _ _)^.
     - intros Kre Kre' f.
-      snrapply path_sigma.
+      snrefine (_ ; (_ , _)).
       + reflexivity.
-      + unfold transport.
-        snrapply path_prod.
-        * cbn.
-          nrapply concat_1p.
-        * cbn.
-          (* I don't like this *)
-          apply apD10^-1. intro b.
-          apply apD10^-1. intro c.
-          apply apD10^-1. intro s.
-          apply apD10^-1. intro k.
-          nrapply concat_p1.
-  Defined.
-
-  (** Since the 2-cells are defined to be paths, we trivially have morphism extensionality, and the 1-category is strong. *)
-
-  (* It would still be nice if this could be true with a better choice of paths. Since I'm assuming univalence, there should be a way to do this. *)
-  Instance hasmorext_ptd_family_with_relations : HasMorExt ptd_family_with_relations.
-  Proof.
-    snrapply Build_HasMorExt.
-    intros Kre Kre' f g.
-    snrapply (Build_IsEquiv _ _ _ idmap).
-    all: intros []; reflexivity.
+      + unfold transport. cbn.
+        lhs nrapply concat_1p.
+        rhs nrapply concat_p1.
+        nrapply (ap_idmap _)^.
+      + intros b c s x. cbn.
+        lhs nrapply concat_p1.
+        apply (ap (fun x => 1 @ x)).
+        nrapply ap_idmap.
+    - intros Kre Kre' f.
+      snrefine (_ ; (_ , _)).
+      + reflexivity.
+      + unfold transport. reflexivity.
+      + intros b c s x. cbn.
+        repeat lhs nrapply concat_p1.
+        nrapply (concat_1p _)^.
   Defined.
 
   (** [ptd_family_graphquotient] represents the wild category of pointed type families over the graph quotient of R. *)
@@ -214,7 +256,8 @@ Section FamilyCat.
   Proof.
     intros Lp Lp'.
     snrapply Build_IsGraph.
-    intros f g. exact (f = g).
+    intros f g. 
+    exact {h : forall a, g_ f a == g_ g a & h (gq a0) (p_ Lp) @ epsilon_ g = epsilon_ f}.
   Defined.
 
   Instance is1cat_ptd_family_graphquotient : Is1Cat ptd_family_graphquotient.
@@ -222,43 +265,69 @@ Section FamilyCat.
     snrapply Build_Is1Cat'.
     - intros Lp Lp'.
       snrapply Build_Is01Cat.
-      + intro p. reflexivity.
-      + intros f g h [] []. reflexivity.
+      + intros f. snrefine (_ ; _).
+        * intros a. reflexivity.
+        * cbn. nrapply concat_1p.
+      + intros f g h H2 H1. snrefine (_ ; _).
+        * intros a x. exact (pr1 H1 a x @ pr1 H2 a x).
+        * cbn.
+          lhs snrapply concat_pp_p.
+          lhs snrapply (1 @@ pr2 H2).
+          snrapply (pr2 H1).
     - intros Lp Lp'.
       snrapply Build_Is0Gpd.
-      intros f g []. reflexivity.
+      intros f g H1. 
+      snrefine (_ ; _).
+      + intros a x. exact (pr1 H1 a x)^.
+      + cbn. snrapply moveR_Vp.
+        exact (pr2 H1)^.
     - intros Lp Lp' Lp'' f.
       snrapply Build_Is0Functor.
-      intros g h []. reflexivity.
+      intros g h H1.
+      snrefine (_ ; _).
+      + intros a x. cbn. 
+        exact (ap (g_ f a) (pr1 H1 a x)).
+      + cbn.
+        lhs snrapply concat_p_pp.
+        lhs_V snrapply (ap_pp _ _ _ @@ 1).
+        snrapply (ap (fun x => ap _ x @ _) (pr2 H1)).
     - intros Lp Lp' Lp'' f.
       snrapply Build_Is0Functor.
-      intros g h []. reflexivity.
-    - intros Lp Lp' Lp'' Lp''' f g h.
-      snrapply path_sigma.
-      + reflexivity.
+      intros g h H1.
+      snrefine (_ ; _).
+      + intros a x. cbn.
+        exact (pr1 H1 a _).
       + cbn.
         lhs nrapply concat_p_pp.
-        apply (ap (fun x => x @ epsilon_ h)).
-        lhs nrapply (ap_compose _ _ _ @@ 1).
-        nrapply (ap_pp _ _ _)^.
-    - intros Lp Lp' f.
-      snrapply path_sigma.
-      + reflexivity.
+        lhs nrapply ((concat_Ap _ _)^ @@ 1).
+        lhs nrapply concat_pp_p.
+        snrefine (ap _ _ @ _).
+        * exact (epsilon_ g).
+        * nrapply (pr2 H1).
+        * reflexivity.
+    - intros Lp Lp' Lp'' Lp''' f g h.
+      snrefine (_ ; _).
+      + intros a x. reflexivity.
       + cbn.
-        lhs nrapply concat_p1.
-        nrapply ap_idmap.
+        rhs nrapply concat_p_pp.
+        lhs nrapply concat_1p.
+        nrapply whiskerR.
+        lhs nrapply ap_pp.
+        nrapply whiskerR.
+        nrapply (ap_compose _ _ _)^.
     - intros Lp Lp' f.
-      snrapply path_sigma.
-      + reflexivity.
-      + cbn. nrapply concat_1p.
-  Defined.
-
-  Instance hasmorext_ptd_family_graphquotient : HasMorExt ptd_family_graphquotient.
-  Proof.
-    snrapply Build_HasMorExt.
-    intros Lp Lp' f g.
-    snrapply (Build_IsEquiv _ _ _ idmap).
-    all: intros []; reflexivity.
+      snrefine (_ ; _).
+      + intros a x. reflexivity.
+      + cbn.
+        lhs nrapply concat_1p.
+        rhs nrapply concat_p1.
+        nrapply (ap_idmap _)^.
+    - intros Lp Lp' f.
+      snrefine (_ ; _).
+      * intros a x. reflexivity.
+      * cbn.
+        rhs nrapply concat_1p.
+        nrapply concat_1p.
   Defined.
 
   (** The initial object of [ptd_family_graphquotient]. *)
@@ -269,7 +338,6 @@ Section FamilyCat.
     - exact (idpath (gq a0)).
   Defined.
 
-  (* The choice of 2-cells makes this difficult to prove, as funext gets in the way. *)
   Definition isinitial_initLp : IsInitial initLp.
   Proof.
     intro Lp.
@@ -277,12 +345,11 @@ Section FamilyCat.
     - srefine (_ ; _).
       + intros x []. exact (p_ Lp).
       + reflexivity.
-    - intro f.
-      snrapply path_sigma.
-      + cbn.
-        apply apD10^-1. intro x.
-        apply apD10^-1. intros []. exact (epsilon_ f)^.
-      + unfold transport. cbn.
-  Abort.
+    - intro f. cbn. 
+      snrefine (_ ; _).
+      + intros a []. 
+        exact (epsilon_ f)^.
+      + cbn. nrapply concat_Vp.
+  Defined.
 
 End FamilyCat.
