@@ -1,11 +1,11 @@
 (* -*- mode: coq; mode: visual-line -*-  *)
 (** * Injective Types *)
 
-(** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
+(** * Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
 
 (* MAKE NOTE OF CONVENTIONS FOR UNIVERSE NOTATION IN COMMENTS - also check spelling *)
 
-Require Import HoTT.Basics.
+Require Import Basics.
 Require Import PropResizing.
 Require Import Truncations.
 Require Import Types.Universe Types.Unit.
@@ -53,7 +53,7 @@ Proof.
 Defined.
 
 
-(** Constructions with Algebraically Injective Types *)
+(** ** Constructions with Algebraically Injective Types *)
 
 
 (** Retracts of algebraically injective types are algebraically injective *)
@@ -107,7 +107,7 @@ Definition retract_type_family_alg_usuinj@{u su | u < su} `{Univalence}
   := retract_alg_inj_embedding D (@paths D) isembedding_paths Dai.
 
 
-(** Algebraic Flabbiness and Resizing Constructions *)
+(** ** Algebraic Flabbiness and Resizing Constructions *)
 
 
 (** If [D : Type@{u}] is algebraically u,u^+-injective, then it is algebriacially u,u-injective *)
@@ -157,7 +157,7 @@ Proof.
 Defined.
 
 
-(** Algebraic Fabbiness with Resizing Axioms *)
+(** ** Algebraic Fabbiness with Resizing Axioms *)
 
 
 Section AssumePropResizing.
@@ -213,7 +213,7 @@ Section AssumePropResizing.
 End AssumePropResizing.
 
 
-(** Injectivity in Terms of Algebraic Injectivity in the Absence of Resizing *)
+(** ** Injectivity in Terms of Algebraic Injectivity in the Absence of Resizing *)
 
 
 Definition uvinj_alg_uvinj
