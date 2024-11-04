@@ -1,12 +1,14 @@
 (* -*- mode: coq; mode: visual-line -*-  *)
 (** * Kan Extension of Type Families *)
 
-(** Part of Formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
+(** * Part of Formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
 (** Many proofs guided by Martin Escardo's original Agda formalization of this paper which can be found at: https://www.cs.bham.ac.uk/~mhe/TypeTopology/InjectiveTypes.Article.html *)
 
-Require Import HoTT.Basics.
+Require Import Basics.
 Require Import Types.Sigma Types.Unit Types.Forall Types.Empty Types.Universe Types.Equiv.
 Require Import HFiber.
+Require Import Truncations.Core.
+Require Import ReflectiveSubuniverse.
 
 
 (** Being careful about universe structure for these first few definitions because they are used in the rest of the paper *)
@@ -152,6 +154,7 @@ Proof.
   - intros x. apply path_forall. intros y. reflexivity.
 Defined.
 
+(*
 Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y} {f : X -> Type} {g : Y -> Type} {a : f =< g o j}
   : Contr { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation j b) (unit_leftkantypefam f j) == a}.
 Proof.
@@ -161,6 +164,7 @@ Proof.
     srefine (ap10 (F w) c)^.
   - apply path_forall. intros x.
 Admitted.
+*)
 
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkantypefamily `{Funext} {X Y : Type} (f : X -> Type)
@@ -186,30 +190,6 @@ Proof.
     apply path_forall. intros [x p]. destruct p. reflexivity.
 Defined.
 
-(* Move elsewhere/generalize? *)
-Definition isembedding_pr1 {X : Type} {Y : X -> Type}
-  : (forall x, IsHProp (Y x)) -> (@IsTruncMap (-1) (sig Y) X pr1).
-Proof.
-  intros f x. apply hprop_allpath.
-  unfold hfiber. intros [[x' y'] []] [[x'' y''] p]. cbn in p. destruct p.
-  apply (ap (fun z => ((x''; z); idpath))).
-  apply path_ishprop.
-Defined.
-
-Definition ishprop_forall `{Funext} {X : Type} {Y : X -> Type}
-  : (forall x, IsHProp (Y x)) -> IsHProp (forall x, Y x).
-Proof.
-  intros fe. apply hprop_allpath.
-  intros f g. apply path_forall.
-  intros x. apply path_ishprop.
-Defined.
-
-Definition isembedding_isequiv {X Y} {f : X -> Y}
-  : IsEquiv f -> IsEmbedding f.
-Proof.
-  intros fe. apply isembedding_isequiv_ap. apply isequiv_ap.
-Defined.
-
 (** This section is all set up for the proof that the extension of an embedding is an embedding of type families *)
 Section EmbedProofLeft.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
@@ -217,22 +197,24 @@ Section EmbedProofLeft.
   Let s := (fun f => LeftKanTypeFamily f j).
   Let r := (fun g : Y -> Type => g o j).
 
-  Definition k : forall g, s (r g) =< g.
+  Local Definition k : forall g, s (r g) =< g.
     Proof. intros g y [[x p] C]; apply (transport g p C). Defined.
   
   Let M := { g | forall y, IsEquiv (k g y) }.
 
-  Definition t : forall (f : X -> Type) (x x' : X) (u : x' = x) (p : j x' = j x) (C : f x'), (ap j u = p)
+  Local Definition t : forall (f : X -> Type) (x x' : X) (u : x' = x) (p : j x' = j x) (C : f x'), (ap j u = p)
                     -> ((x'; p); ((x'; idpath); C))
                     = (((x; idpath); ((x'; p); C)) : sig (fun '((x; _) : hfiber j (j x)) => r (s f) x)).
   Proof. intros f x0 x0' [] p C0 []; reflexivity. Defined.
 
   Let q : (forall x x' : X, IsEquiv (@ap X Y j x x')) := fun x x' : X => isequiv_ap_isembedding j x x'.
 
-  Let pa : (forall x x' : X, (j x = j x') -> (x = x')) := fun x x' : X => (@equiv_inv _ _ _ (q x x')).
-  Let appa : (forall x x' p', ap j (pa x' x p') = p') := fun x x' : X => (eisretr (@ap X Y j x' x)).
+  Let pa : (forall x x' : X, (j x = j x') -> (x = x'))
+    := fun x x' : X => (@equiv_inv _ _ _ (q x x')).
+  Let appa : (forall x x' p', ap j (pa x' x p') = p')
+    := fun x x' : X => (eisretr (@ap X Y j x' x)).
 
-  Definition F : (X -> Type) -> M.
+  Local Definition F : (X -> Type) -> M.
   Proof.
     intros f. srefine (s f; _). intros y. snrapply isequiv_adjointify.
     - apply (fun '(((x; p); C) : s f y) => ((x; p); ((x; idpath); C))).
@@ -240,15 +222,14 @@ Section EmbedProofLeft.
     - intros [[x []] [[x' p'] C]]. apply (t f x x' (pa x' x p') p' C (appa x x' p')).
   Defined.
 
-  Definition isequiv_F : IsEquiv F.
+  Local Definition isequiv_F : IsEquiv F.
   Proof.
     snrapply isequiv_adjointify.
     - intros [g e]. apply (r g).
     - intros [g e]. srapply path_sigma.
       * apply path_forall. intros y. apply (@path_universe_uncurried H (s (r g) y) (g y)).
         apply issig_equiv. apply (k g y; e y).
-      * snrefine (path_contr _ _). refine contr_forall. intros y.
-        apply (contr_inhabited_hprop _ (e y)). (*Switch to ishprop_forall?*)
+      * snrefine (path_ishprop _ _). refine istrunc_forall.
     - intros f. apply path_forall. intros x.
       apply (path_universe_uncurried (isext_leftkantypefamily _ _ _ _)).
   Defined.
@@ -258,21 +239,26 @@ Section EmbedProofLeft.
     : IsEmbedding (fun f => LeftKanTypeFamily f j).
   Proof.
     snrapply (istruncmap_compose (-1) F (@pr1 (Y -> Type) (fun g => forall y, IsEquiv (k g y)))).
-    - apply isembedding_pr1. intros g. apply ishprop_forall. intros y. apply hprop_isequiv.
-    - apply (isembedding_isequiv isequiv_F).
+    - rapply istruncmap_mapinO_tr.
+    - rapply istruncmap_mapinO_tr.
+      rapply mapinO_isequiv.
+      apply isequiv_F.
   Defined.
 
 End EmbedProofLeft.
 
+(** Dual proof for the right Kan extension*)
 Section EmbedProofRight.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
 
   Let s := (fun f => RightKanTypeFamily f j).
   Let r := (fun g : Y -> Type => g o j).
 
+  (*
   Definition isembed_rightkantypefam_ext
     : IsEmbedding (fun f => RightKanTypeFamily f j).
   Proof.
   Admitted.
+  *)
 
 End EmbedProofRight.
