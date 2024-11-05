@@ -1,4 +1,3 @@
-(* -*- mode: coq; mode: visual-line -*-  *)
 (** * Injective Types *)
 
 (** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
@@ -19,7 +18,7 @@ Require Import TypeFamKanExt.
 Set Printing Universes.
 
 Section UniverseStructure.
-  Universe u v w uv uw vw uvw.
+  Universes u v w uv uw vw uvw.
   Constraint u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw,
     uv <= uvw, uw <= uvw, vw <= uvw.
 
@@ -38,9 +37,8 @@ Definition alg_uvinj_uv@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv suv} Type@{uv}.
 Proof.
   intros X Y j isem f.
-  snrefine (_; _).
-  - exact (LeftKanTypeFamily f j).
-  - intros x. apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
+  exists (LeftKanTypeFamily f j). (* elsewhere too *)
+  intros x. apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
 Defined.
 
 Definition alg_uvinj_uv'@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
@@ -52,9 +50,7 @@ Proof.
   - intros x. apply (path_universe_uncurried (isext_rightkantypefamily _ _ isem _)).
 Defined.
 
-
 (** Constructions with Algebraically Injective Types *)
-
 
 (** Retracts of algebraically injective types are algebraically injective *)
 Definition alg_inj_retract@{u v w w' uv uw vw uw' vw' uvw uvw' | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw,
@@ -169,10 +165,9 @@ Section AssumePropResizing.
     : IsAlgebraicallyFlabbyType@{u w uw} D.
   Proof.
     intros P PropP f.
-    pose (Q := resize_hprop@{u v} P).
-    pose (e := equiv_fun (equiv_resize_hprop P)^-1).
-    destruct (Daf Q _ (f o e)) as [d af].
-    refine (d; _).
+    pose (e := (equiv_resize_hprop@{u v} P)^-1).
+    destruct (Daf _ _ (f o e)) as [d af].
+    exists d.
     intros p. lhs apply (af (e^-1 p)).
     apply ap. apply eisretr.
   Defined.
@@ -183,12 +178,13 @@ Section AssumePropResizing.
     {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D)
     : IsAlgebraicInjectiveType@{u' v' w u'v' u'w v'w u'v'w} D.
   Proof.
-    apply alg_uflab_alg_uvinj in Dai.
-    apply universe_independent_alg_flab@{u u'v' w uw u'v'w} in Dai.
-    apply (alg_uvinj_alg_uvflab Dai).
+    (* jdc: Backward reasoning is best when it works. *)
+    apply alg_uvinj_alg_uvflab.
+    apply universe_independent_alg_flab.
+    exact (alg_uflab_alg_uvinj Dai).
   Defined.
 
-  (** Any algebrically injective type [D : Type@{u}], is a retract of [X -> Type@{u}] with [X : Type@{u}] -- Universe independent version of a previous statement *)
+  (** Any algebrically injective type [D : Type@{u}] is a retract of [X -> Type@{u}] with [X : Type@{u}] -- Universe independent version of a previous statement *)
   Definition retract_type_family_alg_inj@{u su | u < su} `{Univalence}
     {D : Type@{u}} (Dai : IsAlgebraicInjectiveType@{u u u u u u u} D)
     : exists (X : Type@{u}) (s : D -> (X -> Type@{u})) (r : (X -> Type@{u}) -> D), r o s == idmap.
@@ -221,4 +217,4 @@ Definition uvinj_alg_uvinj
   : IsInjectiveType@{u v w uv uw vw uvw} D.
 Proof.
   intros X Y j isem f.
-
+Abort.

@@ -58,7 +58,7 @@ Proof.
   apply (fun a => Empty_rec (na a)).
 Defined.
 
-(** For [y : Y] no in the image of [j], [(f <| j)y <~> Empty] and [(f |> j)y <~> Unit] *)
+(** For [y : Y] not in the image of [j], [(f <| j)y <~> Empty] and [(f |> j)y <~> Unit] *)
 Definition isempty_leftkantypefamily {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w})
   (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
   : LeftKanTypeFamily f j y <~> Empty := isempty_empty_indexed_sig _ _ (fun w => ynin w.1 w.2).
@@ -92,6 +92,7 @@ Defined.
 (** Here we are taking the perspective of a type family [f : X -> Type] being a sort of oo-presheaf, considering the interpretation of [X] as an oo-ggroupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets *)
 (** It is easy to see that a type family [f] is functorial if we define its action on paths as follows *)
 Definition path_action_type_family {X : Type} {x y : X} (f : X -> Type) (p : x = y) := transport f p.
+(* jdc: I don't think you need a separate name or notation for this.  We already have the concise name "transport f p" and notation "p # _".  And we already have functoriality lemmas for this. *)
 
 (* FIX *)
 Notation "f [ p ]" := (path_action_type_family f p) (at level 70).
@@ -111,6 +112,7 @@ Definition ooPresheafTransforms {X : Type@{u}} (f : X -> Type@{w}) (f' : X -> Ty
 
 Notation "f =< g" := (ooPresheafTransforms f g) (at level 60).
 
+(* jdc: again, this is an existing lemma about transport, probably in PathGroupoids.v *)
 (** It is again easy to see that these transformations are automatically natural by their definition *)
 Definition naturality_oopresheaftransforms {X : Type} {x y : X} (f f' : X -> Type)
   (a : f =< f') (p : x = y)
@@ -156,7 +158,7 @@ Proof.
   - apply path_forall. intros y. apply path_forall. intros [[w []] c].
     srefine (ap10 (F w) c)^.
   - apply path_forall. intros x.
-  
+Abort.
 
 Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
   : (RightKanTypeFamily f j o j) =< f := (fun x A => A (x; idpath)).
