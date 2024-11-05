@@ -206,7 +206,7 @@ End FamilyCat.
 Section PointedFamily.
   Context {A : Type} (a0 : A).
 
-  (** [ptd_family] represents the wild category of pointed type families over any pointed type A. *)
+  (** [ptd_family] represents the wild category of pointed type families over any pointed type [A]. *)
 
   Definition ptd_family : Type
     := {L : A -> Type & L a0}.
