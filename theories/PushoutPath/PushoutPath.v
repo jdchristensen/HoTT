@@ -51,10 +51,11 @@ Section Sequence.
   Context {A B : Type} (R : A -> B -> Type) (a0 : A).
 
   (** Use a record type for a full step to avoid the interleaved sequence and [flip R]. *)
+  (* jdc: rename to Zig? *)
   Record zigzag_type : Type := {
-    Pp : Family A; (** Stored from previous step *)
-    Qp : Family B; (** Stored from previous step *)
-    concatQPp : Dot (flip R) Qp Pp; (** Stored from previous step *)
+    Pp : Family A;
+    Qp : Family B;
+    concatQPp : Dot (flip R) Qp Pp;
   }.
 
   Definition Q (Z : zigzag_type) : Family B

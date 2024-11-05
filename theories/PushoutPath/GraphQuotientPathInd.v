@@ -4,12 +4,12 @@ Require Import Colimits.GraphQuotient.
 Require Import WildCat.
 
 (** This file proves the induction principle for path spaces of coequalizers. This follows the paper PATH SPACES OF HIGHER INDUCTIVE TYPES
-IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories C and D as described by this paper. C will be denoted as [ptd_family_with_relations], and D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we will currently assume univalence throughout the entire section. *)
+IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories [C] and [D] as described by this paper. [C] will be denoted [ptd_family_with_relations], and [D] will be denoted [ptd_family_graphquotient]. Since our final goal relies on the flattening lemma, we will currently assume univalence throughout the entire section. *)
 
 Section FamilyCat.
   Context `{Univalence} {A : Type} (a0 : A) (R : A -> A -> Type).
 
-  (** [ptd_family_with_relations] is represents the wild category of pointed type families that respects relations. That is, if there is a term [r : R b c], then there is an equivalence [K b <~> K c]. *)
+  (** [ptd_family_with_relations] represents the wild category of pointed type families that respect the relation. That is, if there is a term [r : R b c], then there is an equivalence [K b <~> K c]. *)
 
   Definition ptd_family_with_relations : Type 
     := {K : A -> Type & K a0 * forall b c : A, R b c -> K b <~> K c}.
@@ -26,7 +26,7 @@ Section FamilyCat.
   Definition e_ (Kre : ptd_family_with_relations) {b c : A} 
     : R b c -> (K_ Kre) b <~> (K_ Kre) c := snd (pr2 Kre) b c.
 
-  (** The arrows in this category is given by another triple. The first component is a collection of functions betwen the fibers of the type families. The second component is the assertion that this collection of functions respects the base point. The third component asserts that this collection is natural. *)
+  (** The arrows in this category are given by another triple. The first component is a collection of functions betwen the fibers of the type families. The second component is the assertion that this collection of functions respects the base point. The third component asserts that this collection is natural. *)
 
   Instance isgraph_ptd_family_with_relations : IsGraph ptd_family_with_relations.
   Proof.
@@ -38,7 +38,7 @@ Section FamilyCat.
         ((e_ Kre') s) o (f b) == (f c) o (e_ Kre) s}.
   Defined.
 
-  (** Accessors functions for the homs of [ptd_family_with_relations]. *)
+  (** Accessor functions for the homs of [ptd_family_with_relations]. *)
 
   (** first projection *)
   Definition f_ {Kre Kre' : ptd_family_with_relations} (f : Kre $-> Kre') (b : A)
@@ -152,7 +152,7 @@ Section FamilyCat.
 
   (** Since the 2-cells are defined to be paths, we trivially have morphism extensionality, and the 1-category is strong. *)
 
-  (* It would still be nice if this could be true with a better choice of paths. Since I'm assuming univalence, maybe a homotopy version of the above could work out niceky. *)
+  (* It would still be nice if this could be true with a better choice of paths. Since I'm assuming univalence, maybe a homotopy version of the above could work out nicely. *)
   Instance hasmorext_ptd_family_with_relations : HasMorExt ptd_family_with_relations.
   Proof.
     snrapply Build_HasMorExt.
@@ -174,7 +174,7 @@ Section FamilyCat.
   (** Second projection *)
   Definition p_ (Lp : ptd_family_graphquotient) : L_ Lp (gq a0) := pr2 Lp.
 
-  (** The arrows in this category is given by a touple. The first component is a collection of functions between the fibers of the type families. The second component is the assertion that this collection respects the basepoint. *)
+  (** The arrows in this category is given by a tuple. The first component is a collection of functions between the fibers of the type families. The second component is the assertion that this collection respects the basepoint. *)
 
   Instance isgraph_ptd_family_graphquotient : IsGraph ptd_family_graphquotient.
   Proof.

@@ -12,7 +12,7 @@ Require Import Colimits.Sequential.
 Require Import Diagram.
 Require Import Types.
 
-(** Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations d : A_i => B_i (d for down) and u : B_i => A_i+1 (u for up), such that the composites (u o d) and (d o i) correspond to the morphisms in the diagram itself. In other words, the following diagram is commutative:
+(** Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations [d : A_i => B_i] ([d] for down) and [u : B_i => A_i+1] ([u] for up), such that the following diagram is commutative:
 
 <<
     A_0 -------> A_1 ------> A_2 ------>
@@ -23,8 +23,9 @@ Require Import Types.
            B_0 ------> B_1 ------->
 >>
 
-Given the setup above, we want to say that the colimit of the upper lower sequences are the same. From a sequence A, we can produce a diagram map from [A] to [succ_seq A]. It's the map that applies the arrow in the sequence to every element. *)
+Given the setup above, we want to say that the colimit of the upper and lower sequences are the same. *)
 
+(** From a sequence [A], we can produce a diagram map from [A] to [succ_seq A]. It's the map that applies the arrow in the sequence to every element. *)
 Definition seq_to_succ_seq (A : Sequence) : DiagramMap A (succ_seq A).
 Proof.
   snrapply Build_DiagramMap.
@@ -32,9 +33,7 @@ Proof.
   - intros m n [] x. reflexivity.
 Defined.
 
-(** Given a map of sequences we can define a map between 
-    their succesor sequences. *)
-
+(** Given a map of sequences we can define a map between their succesor sequences. *)
 Definition succ_seq_map_seq_map {A B : Sequence} (f : DiagramMap A B) 
   : DiagramMap (succ_seq A) (succ_seq B).
 Proof.
@@ -43,8 +42,7 @@ Proof.
   - intros m n []. exact (DiagramMap_comm f _).
 Defined.
 
-(** A cocone over a sequence defines a cocone over the successor sequence *)
-
+(** A cocone over a sequence defines a cocone over the successor sequence. *)
 Definition succ_seq_cocone_seq_cocone {A : Sequence} (T : Type) (C : Cocone A T)
   : Cocone (succ_seq A) T.
 Proof.
@@ -53,8 +51,7 @@ Proof.
   - intros m n []. rapply (legs_comm C).
 Defined.
 
-(** [cocone_precompose (seq_to_succ_seq A)] is an equivalence *)
-
+(** [cocone_precompose (seq_to_succ_seq A)] is an equivalence. *)
 Definition isequiv_cocone_precompose_seq_to_succ_seq
   `{Funext} {A : Sequence} {X : Type} 
   : IsEquiv (cocone_precompose (seq_to_succ_seq A) (X:=X)).
@@ -74,7 +71,6 @@ Proof.
 Defined.
 
 (** The cocone [colim_A] induces [idmap : A_w -> A_w]. *)
-
 Definition col_legs_induces_idmap `{Funext} {A : Sequence}
   {A_w} (colim_A : IsColimit A A_w) 
   : cocone_postcompose_inv colim_A colim_A = idmap.
@@ -87,12 +83,12 @@ Defined.
 
 (** We show that the map induced by [succ_seq_to_seq] is an equivalence. *)
 
+(* jdc: Let's use CamelCase names for Sections.  They can also be less descriptive, since they are never looked up. *)
 Section Is_Equiv_colim_succ_seq_to_seq_map.
   Context `{Funext} {A : Sequence}
     {A_w : Type} (colim_A : IsColimit A A_w).
 
-  (** The legs of [colim_A] induces a cocone from [succ_seq A] over [A_w] *)
-
+  (** The legs of [colim_A] induces a cocone from [succ_seq A] over [A_w]. *)
   Definition cocone_succ_seq_over_col 
     : Cocone (succ_seq A) A_w
     := succ_seq_cocone_seq_cocone A_w colim_A.
@@ -127,7 +123,7 @@ Section Is_Equiv_colim_succ_seq_to_seq_map.
     simpl. exact (concat_1p _ @@ 1).
   Defined.
 
-  (* The cocone of [succ_seq A] over colim A is universal *)
+  (* The cocone of [succ_seq A] over colim A is universal *) (* jdc: I'll let you add periods and remove blank lines throughout. *)
 
   Instance iscolimit_succ_seq_A_over_A_w : IsColimit (succ_seq A) A_w.
   Proof.
@@ -350,6 +346,7 @@ Section Interme.
   Defined.
 End Interme.
 
+(* jdc: No line breaks in comments *)
 (** Assuming that there are [A, B : Sequence] that fits in an interleaving diagram,
     their colimits are isomorphic. We proceed by using the 2-out-of-6 property.  *)
 
@@ -371,13 +368,13 @@ Section Interleaving.
 
   (* The first equality needed is exactly what we came up with in the previous section. *)
   Let tri1 : seq_to_succ_seq A = diagram_comp u d
-   := (zigzag_glue_map_tri f g U L)^.
+    := (zigzag_glue_map_tri f g U L)^.
 
   (* The second one requires some massaging: applying [zigzag_glue_map_tr] to the shifted 
   functions doesn't exactly give us [succ_seq_map_seq_map d], but we can find an equality
   between them. *)
   (* TODO: This probably shouldn't be necessary. *)
-  Let tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u.
+  Definition tri2 : seq_to_succ_seq B = diagram_comp (succ_seq_map_seq_map d) u.
   Proof.
     symmetry.
     pose (f':=g);
