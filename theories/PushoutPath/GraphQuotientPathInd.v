@@ -4,7 +4,7 @@ Require Import Colimits.GraphQuotient.
 Require Import WildCat.
 
 (** This file proves the induction principle for path spaces of coequalizers. This follows the paper PATH SPACES OF HIGHER INDUCTIVE TYPES
-IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the categories C and D as described by this paper. C will be denoted as [ptd_family_with_relations], and D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we might want to assume univalence throughout the entire section. *)
+IN HOMOTOPY TYPE THEORY by Kraus and von Raumer. Their formalization can be found at https://gitlab.com/fplab/freealgstr. In the [FamilyCat] section we will define the category C, per the paper. We denote C as [ptd_family_with_relations]. The category D will be derived form a slightly more general type. D will be denoted as [ptd_family_graphquotient]. Since our final goal relies on the flatting lemma, we might want to assume univalence at some point. *)
 
 Section FamilyCat.
   Context {A : Type} (a0 : A) (R : A -> A -> Type).
@@ -74,7 +74,6 @@ Section FamilyCat.
           nrapply (ap (f_ g c) (gamma_ f s k)).
   Defined.
 
-  (* I don't think these are the 2-cells that I want. At some point I need to use funext. *)
   Instance is2graph_ptd_family_with_relations : Is2Graph ptd_family_with_relations.
   Proof.
     intros Kre Kre'.
@@ -202,43 +201,47 @@ Section FamilyCat.
         repeat lhs nrapply concat_p1.
         nrapply (concat_1p _)^.
   Defined.
+End FamilyCat.
 
-  (** [ptd_family_graphquotient] represents the wild category of pointed type families over the graph quotient of R. *)
+Section PointedFamily.
+  Context {A : Type} (a0 : A).
 
-  Definition ptd_family_graphquotient : Type
-    := {L : GraphQuotient R -> Type & L (gq a0)}.
+  (** [ptd_family] represents the wild category of pointed type families over any pointed type A. *)
+
+  Definition ptd_family : Type
+    := {L : A -> Type & L a0}.
 
   (** Accessor functions fpr [ptd_family_graphquotient]. *)
 
   (** First projection *)
-  Definition L_ : ptd_family_graphquotient -> GraphQuotient R -> Type := pr1.
+  Definition L_ : ptd_family -> A -> Type := pr1.
 
   (** Second projection *)
-  Definition p_ (Lp : ptd_family_graphquotient) : L_ Lp (gq a0) := pr2 Lp.
+  Definition p_ (Lp : ptd_family) : L_ Lp a0 := pr2 Lp.
 
   (** The arrows in this category is given by a touple. The first component is a collection of functions between the fibers of the type families. The second component is the assertion that this collection respects the basepoint. *)
 
-  Instance isgraph_ptd_family_graphquotient : IsGraph ptd_family_graphquotient.
+  Instance isgraph_ptd_family : IsGraph ptd_family.
   Proof.
     snrapply Build_IsGraph.
     intros Lp Lp'.
-    exact {g : forall x : GraphQuotient R, L_ Lp x -> L_ Lp' x 
+    exact {g : forall x : A, L_ Lp x -> L_ Lp' x 
       & g _ (p_ Lp) = p_ Lp'}.
   Defined.
 
   (** Accessor functions for the homs of [ptd_family_graphquotient]. *)
 
   (** First projection *)
-  Definition g_ {Lp Lp' : ptd_family_graphquotient} (f : Lp $-> Lp') (x : GraphQuotient R) 
+  Definition g_ {Lp Lp' : ptd_family} (f : Lp $-> Lp') (x : A) 
     : L_ Lp x -> L_ Lp' x := pr1 f x.
 
   (** Second projection *)
-  Definition epsilon_ {Lp Lp' : ptd_family_graphquotient} (f : Lp $-> Lp') 
+  Definition epsilon_ {Lp Lp' : ptd_family} (f : Lp $-> Lp') 
     : g_ f _ (p_ Lp) = p_ Lp' := pr2 f.
 
   (** [ptd_family_graphquotient] defines a 1-category with morphism extensionality. *)
 
-  Instance is01cat_ptd_family_graphquotient : Is01Cat ptd_family_graphquotient.
+  Instance is01cat_ptd_family_graphquotient : Is01Cat ptd_family.
   Proof.
     snrapply Build_Is01Cat.
     - intros Lp. srefine (_ ; _).
@@ -251,16 +254,15 @@ Section FamilyCat.
         nrapply (epsilon_ g).
   Defined.
 
-  (* I don't think these are the 2-cells that I want. At some point I need to use Funext. *)
-  Instance is2graph_ptd_family_graphquotient : Is2Graph ptd_family_graphquotient.
+  Instance is2graph_ptd_family_graphquotient : Is2Graph ptd_family.
   Proof.
     intros Lp Lp'.
     snrapply Build_IsGraph.
     intros f g. 
-    exact {h : forall a, g_ f a == g_ g a & h (gq a0) (p_ Lp) @ epsilon_ g = epsilon_ f}.
+    exact {h : forall a, g_ f a == g_ g a & h a0 (p_ Lp) @ epsilon_ g = epsilon_ f}.
   Defined.
 
-  Instance is1cat_ptd_family_graphquotient : Is1Cat ptd_family_graphquotient.
+  Instance is1cat_ptd_family_graphquotient : Is1Cat ptd_family.
   Proof.
     snrapply Build_Is1Cat'.
     - intros Lp Lp'.
@@ -331,11 +333,11 @@ Section FamilyCat.
   Defined.
 
   (** The initial object of [ptd_family_graphquotient]. *)
-  Definition initLp : ptd_family_graphquotient.
+  Definition initLp : ptd_family.
   Proof.
     srefine (_ ; _).
-    - intro x. exact (gq a0 = x).
-    - exact (idpath (gq a0)).
+    - intro x. exact (a0 = x).
+    - exact (idpath a0).
   Defined.
 
   Definition isinitial_initLp : IsInitial initLp.
@@ -352,4 +354,13 @@ Section FamilyCat.
       + cbn. nrapply concat_Vp.
   Defined.
 
-End FamilyCat.
+End PointedFamily.
+
+(** We specialize the previous section to graph quotients. *)
+
+Section PointedFamilyGraphquotient.
+  Context {A : Type} (a0 : A) (R : A -> A -> Type).
+
+  Definition ptd_family_graphquotient := ptd_family (A := GraphQuotient R) (gq a0).
+
+End PointedFamilyGraphquotient.
