@@ -31,6 +31,15 @@ Section UniverseStructure.
     := forall (X : Type@{u}) (Y : Type@{v}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j)
       (f : X -> D), sig@{vw uw} (fun f' => f' o j == f).
 
+  (** Contractible types are algebraically injective. *)
+  Definition is_alginj_contr@{} (D : Type@{w}) (cD : Contr D)
+    : IsAlgebraicInjectiveType@{} D.
+  Proof.
+    intros X Y j isem f.
+    srefine (const (center D); _).
+    intros x. apply (contr _).
+  Defined.
+
 End UniverseStructure.
 
 (** [Type@{uv}] is algebraically u,v-injective in at least two ways *)
@@ -239,3 +248,24 @@ Proof.
   apply (uvinj_alg_uvinj D mDai).
 Defined.
 
+(** Injective types are retracts of any type that they embed into, in an unspecified way *)
+Definition retract_inj_embedding@{v w vw | v <= vw, w <= vw}
+  (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
+  (Dai : IsAlgebraicInjectiveType@{w v w vw w vw vw} D)
+  : merely { r | r o j == idmap } := tr (Dai _ _ _ _ idmap).
+
+(** The retract of an injective type is injective *)
+Definition inj_retract
+  `{Funext} {D' : Type@{w'}} {D : Type@{w}} (r : D -> D') {s : D' -> D}
+  (retr : r o s == idmap) (Di : IsInjectiveType@{u v w uv uw vw uvw} D)
+  : IsInjectiveType@{u v w' uv uw' vw' uvw'} D'.
+Proof.
+  intros X Y j isem f.
+  unfold IsInjectiveType in Di.
+  pose proof (mD := Di X Y j isem (s o f)).
+  strip_truncations; apply tr.
+  snrefine (r o mD.1; _).
+  intros x.
+  rhs_V apply (retr (f x)).
+  apply (ap r (mD.2 x)).
+Defined.
