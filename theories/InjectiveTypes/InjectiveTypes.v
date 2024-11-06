@@ -58,7 +58,8 @@ Proof.
   intros X Y j isem f.
   snrefine (_; _).
   - exact (RightKanTypeFamily f j).
-  - intros x. apply (path_universe_uncurried (isext_rightkantypefamily _ _ isem _)).
+  - intros x. 
+    apply (path_universe_uncurried (isext_rightkantypefamily _ _ isem _)).
 Defined.
 
 
@@ -121,8 +122,10 @@ Definition retract_power_universe_alg_usuinj@{u su | u < su} `{Univalence}
 
 (** If [D : Type@{u}] is algebraically u,u^+-injective, then it is algebraically u,u-injective. *)
 (** Note that this proof is made trivial by the library's handeling of universes. *)
-Definition alg_uuinj_alg_usu_inj@{u su | u < su} (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su su} D)
-  : IsAlgebraicInjectiveType@{u u u u u u u} D := Dai.
+Definition alg_uuinj_alg_usu_inj@{u su | u < su}
+  (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su su} D)
+  : IsAlgebraicInjectiveType@{u u u u u u u} D
+  := Dai.
 
 Definition IsAlgebraicallyFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
@@ -197,8 +200,8 @@ Section AssumePropResizing.
   Proof.
     refine (D; _).
     refine ((@paths D); _).
-    apply universe_independent_alg_inj@{u u u u su u u u su u su u su} in Dai.
-    apply (retract_power_universe_alg_usuinj D Dai).
+    apply (retract_power_universe_alg_usuinj D).
+    apply (universe_independent_alg_inj@{u u u u su u u u su u su u su} Dai).
   Defined.
 
   (** Any retract of a type family [X -> Type@{u}] is algebraically injective. *)
@@ -233,7 +236,8 @@ Definition ishprop_injectivity
 
 (*Fix Universes*)
 Definition inj_is_tr_alginj
-  `{Funext} {D : Type@{w}} (mDai : merely (IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D))
+  `{Funext} {D : Type@{w}}
+  (mDai : merely (IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D))
   : (IsInjectiveType@{u v w uv uw vw uvw} D).
 Proof.
   strip_truncations.

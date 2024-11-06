@@ -27,8 +27,8 @@ Section UniverseStructure.
   Notation "f |> j" := (RightKanTypeFamily f j) (at level 40).
 
   (** If [j] is an embedding, then [f <| j] and [f |> j] are extensions in the following sense: [(f <| j o j)x <~> fx <~> (f |> j o j)]. *)
-  Definition isext_leftkantypefamily@{} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
-    (isem : IsEmbedding@{u v uv} j) (x : X)
+  Definition isext_leftkantypefamily@{} {X : Type@{u}} {Y : Type@{v}}
+    (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} ((LeftKanTypeFamily@{} f j) (j x)) (f x).
   Proof.
     transparent assert (C : (Contr (hfiber@{u v} j (j x)))).
@@ -36,8 +36,8 @@ Section UniverseStructure.
     - snrapply (@equiv_contr_sigma@{uv w uvw} _ _ C).
   Defined.
 
-  Definition isext_rightkantypefamily@{} `{Funext} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
-    (isem : IsEmbedding@{u v uv} j) (x : X)
+  Definition isext_rightkantypefamily@{} `{Funext} {X : Type@{u}} {Y : Type@{v}}
+    (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} ((RightKanTypeFamily@{} f j) (j x)) (f x).
   Proof.
     transparent assert (C : (Contr (hfiber@{u v} j (j x)))).
@@ -61,17 +61,18 @@ Proof.
 Defined.
 
 (** For [y : Y] not in the image of [j], [(f <| j)y <~> Empty] and [(f |> j)y <~> Unit]. *)
-Definition isempty_leftkantypefamily {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w})
-  (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
+Definition isempty_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
+  (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
   : LeftKanTypeFamily f j y <~> Empty
   := isempty_empty_indexed_sig _ _ (fun w => ynin w.1 w.2).
 
-Definition isunit_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w})
-  (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
+Definition isunit_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
+  (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
   : RightKanTypeFamily f j y <~> Unit
   := isunit_empty_indexed_forall _ _ (fun w => ynin w.1 w.2).
 
-Definition equiv_leftkantypefamily {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
+Definition equiv_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
+  (f : X -> Type@{w}) (j : X -> Y)
   : (sig f) <~> sig (LeftKanTypeFamily f j). (*Can I rewrite these [sig]'s with better notation?*)
 Proof.
   snrapply equiv_adjointify.
@@ -81,7 +82,8 @@ Proof.
   - intros [x y]. reflexivity.
 Defined.
 
-Definition equiv_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
+Definition equiv_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
+  (f : X -> Type@{w}) (j : X -> Y)
   : (forall x, f x) <~> (forall y, (RightKanTypeFamily f j) y).
 Proof.
   snrapply equiv_adjointify.
@@ -113,8 +115,8 @@ Definition whisker_transformation {X Y} (j : X -> Y) {f g : Y -> Type} (a : f =<
   := fun x A => (a (j x) A).
 
 (** If [j] is an embedding then [(f <| j) =< (f |> j)]. *)
-Definition transform_leftkantypefam_rightkantypefam {X Y : Type} (f : X -> Type)
-  (j : X -> Y) (isem : IsEmbedding j)
+Definition transform_leftkantypefam_rightkantypefam {X Y : Type}
+  (f : X -> Type) (j : X -> Y) (isem : IsEmbedding j)
   : (LeftKanTypeFamily f j) =< (RightKanTypeFamily f j).
 Proof.
   intros y [w' z] w.
@@ -131,7 +133,8 @@ Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
   : (RightKanTypeFamily f j o j) =< f := (fun x A => A (x; idpath)).
 
 (** Universal property of the Kan extensions. *)
-Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y} {f : X -> Type} {g : Y -> Type} (a : f =< g o j)
+Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
+  {f : X -> Type} {g : Y -> Type} (a : f =< g o j)
   : { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation j b) (unit_leftkantypefam f j) == a}.
 Proof.
   snrefine (_; _).
@@ -139,7 +142,8 @@ Proof.
   - intros x. apply path_forall. intros y. reflexivity.
 Defined.
 
-Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y} {f : X -> Type} {g : Y -> Type} {a : f =< g o j}
+Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
+  {f : X -> Type} {g : Y -> Type} {a : f =< g o j}
   : Contr { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation j b) (unit_leftkantypefam f j) == a}.
 Proof.
   apply (Build_Contr _ (univ_property_LeftKanTypeFam a)).
@@ -192,7 +196,8 @@ Section EmbedProofLeft.
                     = (((x; idpath); ((x'; p); C)) : sig (fun '((x; _) : hfiber j (j x)) => r (s f) x)).
   Proof. intros f x0 x0' [] p C0 []; reflexivity. Defined.
 
-  Let q : (forall x x' : X, IsEquiv (@ap X Y j x x')) := fun x x' : X => isequiv_ap_isembedding j x x'.
+  Let q : (forall x x' : X, IsEquiv (@ap X Y j x x'))
+    := fun x x' : X => isequiv_ap_isembedding j x x'.
 
   Let pa : (forall x x' : X, (j x = j x') -> (x = x'))
     := fun x x' : X => (@equiv_inv _ _ _ (q x x')).
@@ -204,7 +209,8 @@ Section EmbedProofLeft.
     intros f. srefine (s f; _). intros y. snrapply isequiv_adjointify.
     - apply (fun '(((x; p); C) : s f y) => ((x; p); ((x; idpath); C))).
     - intros [[x []] C]. reflexivity.
-    - intros [[x []] [[x' p'] C]]. apply (t f x x' (pa x' x p') p' C (appa x x' p')).
+    - intros [[x []] [[x' p'] C]].
+      apply (t f x x' (pa x' x p') p' C (appa x x' p')).
   Defined.
 
   Local Definition isequiv_F : IsEquiv F.
