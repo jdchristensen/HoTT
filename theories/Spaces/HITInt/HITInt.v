@@ -74,6 +74,34 @@ Section IntegersHITLemmas.
     - exact (fun z t => (transport_const (ret z) (f (g2 t))) @ (r t)).
   Defined.
 
+  Definition IntegersHIT_rec_beta_sec
+    (P: Type)
+    (t0 : P)
+    (f :  P -> P)
+    (g1 :  P -> P)
+    (g2 :  P -> P)
+    (s : forall  (t : P ), (g1 (f t)= t))
+    (r : forall  (t : P ), (f (g2 t)= t))
+    : forall (z: IntegersHIT),
+      (let f':= (IntegersHIT_rec P t0 f g1 g2 s r) in
+      ((ap f' (sec z)) = s (f' z))).
+  Proof.
+  Admitted.
+
+  Definition IntegersHIT_rec_beta_ret
+    (P: Type)
+    (t0 : P)
+    (f :  P -> P)
+    (g1 :  P -> P)
+    (g2 :  P -> P)
+    (s : forall  (t : P ), (g1 (f t)= t))
+    (r : forall  (t : P ), (f (g2 t)= t))
+    : forall (z: IntegersHIT),
+      (let f':= (IntegersHIT_rec P t0 f g1 g2 s r) in
+      ((ap f' (ret z)) = r (f' z))).
+  Proof.
+  Admitted.
+
   Definition pred1_is_pred2
     (z : IntegersHIT)
     : pred1 z = pred2 z
@@ -650,15 +678,12 @@ Definition uniquenessZ
     intros z H.
     apply (ap g1) in H.
     exact (((pg _ _ _ _ _ _ _ _ compat z)^) @ H).
-  -
-    intros z H.
+  - intros z H.
     apply (ap g2) in H.
     exact (((ph _ _ _ _ _ _ _ _ compat z)^) @ H).
-  -
-    simpl.
+  - simpl.
     intros z t.
     rewrite transport_paths_FlFr.
-    simpl.
     rewrite ap_pp.
     rewrite concat_p_pp.
     (* rewrite concat_p_pp. *)
@@ -667,10 +692,40 @@ Definition uniquenessZ
     rewrite concat_p_pp.
     rewrite ap_V.
     rewrite (inv_pp _ _)^.
+    (* rewrite (concat_p_pp _ _ _)^. *)
+    (* rewrite concat_p_pp. *)
     rewrite concat_p_pp.
     rewrite (ps _ _ _ _ _ _ _ _ compat z)^.
+    rewrite (concat_p_pp _ _ _)^.
+    apply moveR_Vp.
+    rewrite (ap_compose _ _ _)^.
+    rewrite IntegersHIT_rec_beta_sec.
+    apply (concat_A1p (f := g1 o e)).
+  - simpl.
+    intros z t.
+    rewrite transport_paths_FlFr.
+    rewrite ap_pp.
+    rewrite concat_p_pp.
+    (* rewrite concat_p_pp. *)
+    (* rewrite inv_pp. *)
+    rewrite (inv_pp _ _)^.
+    rewrite concat_p_pp.
+    rewrite ap_V.
+    rewrite (inv_pp _ _)^.
+    (* rewrite (concat_p_pp _ _ _)^. *)
+    (* rewrite concat_p_pp. *)
+    rewrite concat_p_pp.
+    rewrite (pr _ _ _ _ _ _ _ _ compat z)^.
+    rewrite (concat_p_pp _ _ _)^.
+    apply moveR_Vp.
+    rewrite (ap_compose _ _ _)^.
+    rewrite IntegersHIT_rec_beta_ret.
+    apply (concat_A1p (f := f o g2)).
+Defined.
 
-    (* rewrite moveL_Mp.
+
+
+    (* .
     rewrite moveL_Mp. *)
 
 
