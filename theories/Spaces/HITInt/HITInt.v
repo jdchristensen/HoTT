@@ -306,7 +306,7 @@ Defined.
 
 
 Record EquivBiInv A B := {
-  equiv_fun_binv : A -> B ;
+  equiv_fun_binv :> A -> B ;
   equiv_isequiv_binv : BiInv equiv_fun_binv
 }.
 
@@ -503,7 +503,7 @@ Check prBiInv.
 
 Search prBiInv.
 
-Definition cancel
+(* Definition cancel
   (A: Type)
   (x y :A)
   (p : x = y)
@@ -513,9 +513,9 @@ Definition cancel
   induction p.
   simpl.
   reflexivity.
-Defined.
+Defined. *)
 
-Definition cancel2
+Definition cancel
   (A: Type)
   (x y :A)
   (p : x = y)
@@ -538,7 +538,7 @@ Definition compat_implies_prBiInv
   (a: A -> C)
   (b : B -> D)
   :
-    (forall (x : A), ((equiv_fun_binv C D e') o a) x = (b o (equiv_fun_binv A B e)) x) -> prBiInv A B C D e e' a b.
+    (forall (x : A), (e' o a) x = (b o e) x) -> prBiInv A B C D e e' a b.
 Proof.
   revert b.  
   generalize dependent e.
@@ -569,7 +569,7 @@ Proof.
     simpl.
     intro y.
     simpl.
-    exact (cancel2 C (a y) (b y) (H y)). (*There is a bug somewhere, this cannot be resolved by doing induction (X y) *)
+    exact (cancel C (a y) (b y) (H y)). (*There is a bug somewhere, this cannot be resolved by doing induction (X y) *)
 Defined.
 
 Definition integershit_to_biinv
@@ -590,20 +590,53 @@ Section Test.
 
 Context {P : Type} {e: EquivBiInv P P}.
 
-Definition f := (equiv_fun_binv P P e).
-Definition g1 := (ret_binv f (equiv_isequiv_binv P P e)).
-Definition g2 := (sec_binv f (equiv_isequiv_binv P P e)).
-Definition r := (isret_binv f (equiv_isequiv_binv P P e) ).
-Definition s := (issec_binv f (equiv_isequiv_binv P P e) ).
+Local Definition f := (equiv_fun_binv P P e).
+Local Definition g1 := (ret_binv f (equiv_isequiv_binv P P e)).
+Local Definition g2 := (sec_binv f (equiv_isequiv_binv P P e)).
+Local Definition s := (issec_binv f (equiv_isequiv_binv P P e) ).
+Local Definition r := (isret_binv f (equiv_isequiv_binv P P e) ).
 
 
+(* Compute ap (IntegersHIT_rec P t0 f g1 g2 s r) (sec z).
+
+Compute (IntegersHIT_ind_beta_sec P t0 f g1 g2 s r). *)
+
+(* 
+Definition inv_pp' {A : Type} {x y z w : A} (p : x = y) (q : y = z) (r: z = w):
+  r^ @ (q^ @ p^) = (p @ q @ r)^.
+  Proof.
+  induction r.
+  induction q.
+  induction p.
+  reflexivity.
+Defined.
+
+Definition inv_pp'' {A : Type} {x y z : A} (p : x = y) (q : y = z):
+  q^ @ p^ = (p @ q )^.
+  Proof.
+  induction q.
+  induction p.
+  reflexivity.
+Defined. *)
+
+
+(* ((ap k (sec z))^ @
+((pg IntegersHIT IntegersHIT P P integershit_to_biinv e k k compat
+(succ z))^ @ (ap g1 (pf z)^ @ ap g1 (ap f t)))) @ ap rec
+(sec z) =
+t *)
+
+(* Check ret_binv e. *)
 
 Definition uniquenessZ
   (t0 : P)
   (k: IntegersHIT -> P)
   (p0 : (k zero_i) = t0)
   (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-  : forall (z : IntegersHIT), k z = (IntegersHIT_rec P t0 f g1 g2 s r) z.
+  (* (x := sgdshj) *)
+  (rec := IntegersHIT_rec P t0 f g1 g2 s r)
+  (compat := compat_implies_prBiInv _ _ _ _ integershit_to_biinv e k k pf)
+  : forall (z : IntegersHIT), k z = rec z.
   Proof.
   snrapply IntegersHIT_ind.
   - simpl.
@@ -611,24 +644,43 @@ Definition uniquenessZ
   - simpl.
     intros z H.
     apply (ap f) in H. 
-    exact (((pf z)^) @ H).
+    (* exact (((pf z)^) @ H). *)
+    exact (((pe _ _ _ _ _ _ _ _ compat z)^) @ H).
   - simpl.
     intros z H.
     apply (ap g1) in H.
-    exact (((pg _ _ _ _ _ _ _ _ (compat_implies_prBiInv _ _ _ _ integershit_to_biinv e k k pf) z)^) @ H).
+    exact (((pg _ _ _ _ _ _ _ _ compat z)^) @ H).
   -
     intros z H.
     apply (ap g2) in H.
-    exact (((ph _ _ _ _ _ _ _ _ (compat_implies_prBiInv _ _ _ _ integershit_to_biinv e k k pf) z)^) @ H).
+    exact (((ph _ _ _ _ _ _ _ _ compat z)^) @ H).
   -
     simpl.
-    intros.
+    intros z t.
+    rewrite transport_paths_FlFr.
+    simpl.
+    rewrite ap_pp.
+    rewrite concat_p_pp.
+    (* rewrite concat_p_pp. *)
+    (* rewrite inv_pp. *)
+    rewrite (inv_pp _ _)^.
+    rewrite concat_p_pp.
+    rewrite ap_V.
+    rewrite (inv_pp _ _)^.
+    rewrite concat_p_pp.
+    rewrite (ps _ _ _ _ _ _ _ _ compat z)^.
+
+    (* rewrite moveL_Mp.
+    rewrite moveL_Mp. *)
+
+
+    exact ((ps _ _ _ _ _ _ _ _ compat z)^).
+    exact (concat_A1p (A := P) (f := (g1 o f)) s (x := (k z)) (y := rec(z)) t).
     (* exact ((ps _ _ _ _ _ _ _ _ (compat_implies_prBiInv _ _ _ _ integershit_to_biinv e k k pf) z)). *)
 Admitted.
 
 
 End Test.
-
 
 
 Definition IntITtoIntHIT_comp_succ
@@ -663,7 +715,7 @@ Definition IntITtoIntHIT_is_linv_lemma_zero :
 Defined.
 
 
-Definition IntITtoIntHIT_is_linv_lemma_idmap
+Definition IntITtoIntHIT_is_linv_comp_idmap
   (z: IntegersHIT)
   : succ (idmap z) = idmap  ( succ z).
   Proof.
@@ -678,17 +730,14 @@ Definition IntITtoIntHIT_is_linv_lemma_idmap':
     reflexivity.
 Defined.
 
-Compute  (IntITtoIntHIT ( IntHITtoIntIT zero_i)).
-
-Check uniquenessZ.
-
 Definition IntITtoIntHIT_is_linv
  (z : IntegersHIT )
  : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
 Proof.
   exact (((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i (IntITtoIntHIT o IntHITtoIntIT)  IntITtoIntHIT_is_linv_lemma_zero IntITtoIntHIT_comp_succ') z) 
-  @ ((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i idmap IntITtoIntHIT_is_linv_lemma_idmap' IntITtoIntHIT_is_linv_lemma_idmap) z)^).
+  @ ((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i idmap IntITtoIntHIT_is_linv_lemma_idmap' IntITtoIntHIT_is_linv_comp_idmap) z)^).
 Defined.
+
 
 
 (*   
