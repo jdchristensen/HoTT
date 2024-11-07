@@ -50,6 +50,8 @@ Module Export IntegersHIT.
       (let f':= IntegersHIT_ind in
       ((apD f' (ret z)) = r z (f' z))).
 
+  Check IntegersHIT_ind_beta_sec.
+
   End IntegersHIT.
 End IntegersHIT.
 
@@ -74,6 +76,7 @@ Section IntegersHITLemmas.
     - exact (fun z t => (transport_const (ret z) (f (g2 t))) @ (r t)).
   Defined.
 
+
   Definition IntegersHIT_rec_beta_sec
     (P: Type)
     (t0 : P)
@@ -86,7 +89,12 @@ Section IntegersHITLemmas.
       (let f':= (IntegersHIT_rec P t0 f g1 g2 s r) in
       ((ap f' (sec z)) = s (f' z))).
   Proof.
-  Admitted.
+    intro z.
+    unfold IntegersHIT_rec.
+    refine (cancelL _ _ _ _ ).
+    refine ((apD_const _ _)^ @ _).
+    rapply IntegersHIT_ind_beta_sec.
+  Defined.
 
   Definition IntegersHIT_rec_beta_ret
     (P: Type)
@@ -100,7 +108,13 @@ Section IntegersHITLemmas.
       (let f':= (IntegersHIT_rec P t0 f g1 g2 s r) in
       ((ap f' (ret z)) = r (f' z))).
   Proof.
-  Admitted.
+    intro z.
+    unfold IntegersHIT_rec.
+    refine (cancelL _ _ _ _ ).
+    refine ((apD_const _ _)^ @ _).
+    rapply IntegersHIT_ind_beta_ret.
+  Defined.
+
 
   Definition pred1_is_pred2
     (z : IntegersHIT)
@@ -115,10 +129,26 @@ Section IntegersHITLemmas.
     intros.
     exact ((ap succ (pred1_is_pred2 z)) @ (ret z)).
   Defined.
+
+
+  Definition integershit_to_biinv
+      : EquivBiInv IntegersHIT IntegersHIT.
+  Proof.
+    snrapply Build_EquivBiInv.
+    - exact succ.
+    - snrapply pair.
+      -- snrapply exist.
+        --- exact pred1.
+        --- exact sec.
+      -- snrapply exist.
+        --- exact pred2.
+        --- exact ret.
+  Defined.
+
 End IntegersHITLemmas.
 
 Section IntegersHITEquiv.
-    Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
+Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
     {s : forall  (t : P ), g1 (f t)= t} {r : forall  (t : P ), f (g2 t)= t}.
 
   Definition IntHITtoIntIT : IntegersHIT -> Int.
@@ -217,405 +247,7 @@ Section IntegersHITEquiv.
 End IntegersHITEquiv.
 
 
-(* END OF THE PART THAT IS COMPLETED*)
-(* ----------------------------------------------------------------------------*)
-
-(* The subsequent section contains incomplete proofs I am currently working on. I included them to show the work in progress.*)
-
-
-(* for some reason we need to make the implicit arguments explicit at several places in the following lemmas*)
-Definition compatibility_sec
-  (P: Type)
-  (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), (g1 (f t)= t))
-  (r : forall  (t : P ), (f (g2 t)= t))
-  (k: IntegersHIT -> P)
-  (p0 : (k zero_i) = t0)
-  (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-    : forall  (z : IntegersHIT), s (k z) = (ap g1 (pf z)) 
-      @ ((left_inverse_compatible (s := s) k p0 pf) (succ z)) @ (ap k (sec z)).
-Proof.
-  (*TODO: The proof of this will be established once the equivalence induction principle for bi-invertible maps is done*)
-Abort.
-
-Definition compatibility_ret
-  (P: Type)
-  (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), (g1 (f t)= t))
-  (r : forall  (t : P ), (f (g2 t)= t))
-  (k: IntegersHIT -> P)
-  (p0 : (k zero_i) = t0)
-  (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-    : forall  (z : IntegersHIT), r (k z) 
-    = (ap f ((right_inverse_compatible (P := P) (t0 := t0) (f := f) (g1 := g1) (g2 := g2) (s := s) (r := r) k p0 pf) z)) 
-        @ (pf (pred2 z)) @ (ap k (ret z)).
-Proof.
-  (*TODO: The proof of this will be established once the equivalence induction principle for bi-invertible maps is done*)
-Abort.
-
-
-(*The following general uniqueness prenciple relies on the two preceeding lemmas.*)
-
-Definition uniquenessZ
-  (P: Type)
-  (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), (g1 (f t)= t))
-  (r : forall  (t : P ), (f (g2 t)= t))
-  (k: IntegersHIT -> P)
-  (p0 : (k zero_i) = t0)
-  (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-  : forall (z : IntegersHIT), k z = (IntegersHIT_rec P t0 f g1 g2 s r) z.
-  Proof.
-  snrapply IntegersHIT_ind.
-  - simpl.
-    exact p0.
-  - simpl.
-    intros.
-    apply (ap f) in X. (*give it a name*)
-    exact (((pf z)^) @ X).
-  - simpl.
-    intros z H.
-    apply (ap g1) in H.
-    exact ((((left_inverse_compatible (s := s) k p0 pf) z)^) @ H).
-  - simpl.
-    intros z H.
-    apply (ap g2) in H.
-    exact ((((right_inverse_compatible (P := P) (t0 := t0) (f := f) (g1 := g1) (g2 := g2) (s := s) (r := r) k p0 pf) z)^) @ H).
-  - simpl.
-    intros.
-    (* TODO *)
-    (* Here and in the next goal the preceeding lemmas should be used, once they are proved.*)
-Abort.
-
-
-(* The idea is to approach the two lemmas above by deriving first an equivalence induction principle for biinvertible maps.
-We use BiInv from BiInv.v. We will need however some further stuff that is not in the file such as a record for biinvertible maps.*)
-
-Generalizable Variables A B C D f.
-
-
-(* Here are some projections *)
-Definition ret_binv `(f : A -> B)
-  : BiInv f ->  (B -> A).
-  intro.
-  exact (pr1 (fst X)).
-Defined.
-
-Definition sec_binv `(f : A -> B)
-  : BiInv f ->  (B -> A).
-  intro.
-  exact (pr1 (snd X)).
-Defined.
-
-Check sec_binv.
-
-Definition isret_binv `(f : A -> B)
-  : forall (e: BiInv f), f o (sec_binv f e)   == idmap.
-  intro.
-  simpl.
-  exact (pr2 (snd e)).
-Defined.
-
-Definition issec_binv `(f : A -> B)
-  : forall (e: BiInv f), (ret_binv f e) o f   == idmap.
-  intro.
-  simpl.
-  exact (pr2 (fst e)).
-Defined.
-
-
-Record EquivBiInv A B := {
-  equiv_fun_binv :> A -> B ;
-  equiv_isequiv_binv : BiInv equiv_fun_binv
-}.
-
-Definition issig_equivbiinv (A B : Type)
-  : {f : A -> B & BiInv f} <~> EquivBiInv A B.
-Proof.
-  issig.
-Defined.
-
-(* Some lemmas to send equivalences and biinvertible maps back and forth.*)
-
-Definition isequiv_biinv_record A B
-  : EquivBiInv A B -> A <~> B.
-Proof.
-  intros [f e].
-  exact (Build_Equiv A B f (isequiv_biinv f e)).
-Defined.
-
-Definition biinv_isequiv_record A B
-  :  A <~> B -> EquivBiInv A B.
-Proof.
-  intros [f e].
-  exact (Build_EquivBiInv A B f (biinv_isequiv f e)).
-Defined.
-
-Definition iff_biinv_isequiv_record A B
-  : EquivBiInv A B <-> A <~> B.
-Proof.
-  split.
-  - apply isequiv_biinv_record.
-  - apply biinv_isequiv_record.
-Defined.
-
-Definition equiv_biinv_isequiv_record `{Funext} A B
-  : EquivBiInv A B <~> (A <~> B) .
-Proof.
-  refine ((issig_equiv A B) oE _ oE (issig_equivbiinv A B)^-1).
-  rapply (equiv_functor_sigma_id equiv_biinv_isequiv).
-Defined.
-
-Context `{Univalence}.
-
-Definition equiv_path_binv (A B : Type@{u}) (p : A = B) : EquivBiInv A B 
-  := (((equiv_fun (equiv_biinv_isequiv_record A B)^-1) o (equiv_path A B)) p).
-
-(* TODO: The following should be derivable from equiv_path being an equivalence using univalence. It should NOT be an extra axiom.*)
-Axiom isequiv_equiv_path_binv : forall `{Univalence} (A B : Type@{u}), IsEquiv (equiv_path_binv A B).
-Global Existing Instance isequiv_equiv_path_binv.
-
-
-
-(* To get our equivalence induction principle for biinvertible maps we define the following variant of equiv_ind *)
-
-Definition equiv_ind_binv `(e: BiInv (f : A -> B))  (P : B -> Type)
-  : (forall x:A, P (f x)) -> forall y:B, P y
-  := fun g y => transport P ((proj2 (snd e)) y) (g (proj1 (snd e) y)).
-
-Arguments equiv_ind_binv {A B} f {_} P _ _.
-
-(* The following gives for each type trivial biinvertible map. This can be made cleaner by defining it directly.*)
-(* Definition equiv_idmap_binv (A : Type) : (EquivBiInv A A) 
-    := Build_EquivBiInv A A (equiv_fun (equiv_idmap A)) (biinv_isequiv (equiv_fun (equiv_idmap A)) (equiv_isequiv (equiv_idmap A))). *)
-
-Definition equiv_idmap_binv (A : Type) 
-  : (EquivBiInv A A).
-Proof.
-  snrapply (Build_EquivBiInv A A).
-  - exact idmap.
-  -
-    snrapply pair.
-    -- snrapply exist.
-       --- exact idmap.
-       --- simpl.
-           reflexivity. 
-    -- snrapply exist.
-       --- exact idmap.
-       --- simpl.
-           reflexivity.
-Defined.
-
-(** A typeclass that includes the data making [f] into a bi-invertible equivalence. *)
-Class IsBinv {A B : Type} (f : A -> B) := {
-  sec_proj : B -> A ;
-  ret_proj : B -> A ;
-  eisretr : f o sec_proj == idmap ;
-  eissect : ret_proj o f == idmap ;
-}.
-
-
-Record EquivBiInv_record A B := {
-  equiv_fun_binv' : A -> B ;
-  equiv_isequiv_binv' : IsBinv equiv_fun_binv'
-}.
-
-
-(* Search prod. *)
-
-(* Check Build_prod. *)
-
-
-
-Definition equiv_idmap_binv_record (A : Type) 
-  : (EquivBiInv_record A A).
-Proof.
-  snrapply Build_EquivBiInv_record.
-  - exact idmap.
-  - snrapply Build_IsBinv.
-    -- exact idmap.
-    -- exact idmap.
-    -- simpl.
-       reflexivity.
-    -- simpl.
-       reflexivity.
-Defined.   
-
-    (* := Build_EquivBiInv' A A idmap (Build_IsBinv A A idmap idmap idmap idpath idpath). *)
-
-
-(* Print equiv_idmap_binv. *)
-
-(** The equivalence induction principle*)
-(** Paulin-Mohring style *)
-Theorem equiv_induction_binv {U : Type} (P : forall V, EquivBiInv U V -> Type)
-  : (P U (equiv_idmap_binv U)) -> (forall V (w :  EquivBiInv U V), P V w).
-Proof.
-  intros H0 V w.
-  snrapply (equiv_ind_binv (equiv_path_binv U V)).
-  - apply equiv_biinv_isequiv.
-    apply isequiv_equiv_path_binv.
-  - intro p.
-    induction p.
-    exact H0.
-Defined.
-
-
-(** Martin-Lof style *)
-Theorem equiv_induction_binv' 
-  (P : forall U V, (EquivBiInv U V) -> Type)
-  : (forall T, P T T (equiv_idmap_binv T)) -> (forall U V (w : (EquivBiInv U V)), P U V w).
-Proof.
-  intros H0 U V w.
-  snrapply (equiv_ind_binv (equiv_path_binv U V)). 
-  - apply equiv_biinv_isequiv.
-    apply isequiv_equiv_path_binv.
-  - intro p.
-    induction p.
-    apply H0.
-Defined.
-
-
-
-
-(* 
-Definition compatibility_sec2
-  (P: Type)
-  (t0 : P)
-  (* (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), (g1 (f t)= t))
-  (r : forall  (t : P ), (f (g2 t)= t))  *)
-  (e: EquivBiInv P P)
-  (k: IntegersHIT -> P)
-  (p0 : (k zero_i) = t0)
-  (pf : forall (z : IntegersHIT), ((equiv_fun_binv P P e) o k) z = (k o succ) z)
-    : forall  (z : IntegersHIT), (pr2 (fst (equiv_isequiv_binv P P e))) (k z) 
-    = (ap (pr1 (fst (equiv_isequiv_binv P P e))) (pf z)) 
-    @ ((left_inverse_compatible (f := (equiv_fun_binv P P e)) (g1 := (proj1 (fst (equiv_isequiv_binv P P e)))) (s := (proj2 (fst (equiv_isequiv_binv P P e))))  k p0 pf) (succ z)) @ (ap k (sec z)).
-Proof.
-  intro.
-  simpl.
-  generalize dependent e.
-  snrapply equiv_induction_binv.
-
-  (* snrapply (equiv_induction_binv (U := P)). *)
-  (*TODO: The proof of this will be established once the equivalence induction principle for bi-invertible maps is done*)
-Abort. *)
-
-
-(*(r := (proj2 (snd (equiv_isequiv_binv P P e))))*)
-(*(g2 := (proj1 (snd (equiv_isequiv_binv P P e))))*)
-
-
-Record prBiInv A B C D (e: EquivBiInv A B) (e' : EquivBiInv C D) (a: A -> C) (b: B -> D)
-  := {
-  pe : forall (x : A), ((equiv_fun_binv C D e') o a) x = (b o (equiv_fun_binv A B e)) x;
-  pg : forall (y : B), ((ret_binv (equiv_fun_binv C D e') (equiv_isequiv_binv C D e')) o b) y = (a o (ret_binv (equiv_fun_binv A B e) (equiv_isequiv_binv A B e))) y;
-  ph : forall (y : B), ((sec_binv (equiv_fun_binv C D e') (equiv_isequiv_binv C D e')) o b) y = (a o (sec_binv (equiv_fun_binv A B e) (equiv_isequiv_binv A B e))) y;
-  ps : forall (x: A), (issec_binv (equiv_fun_binv C D e') (equiv_isequiv_binv C D e') (a x)) = ((ap (ret_binv (equiv_fun_binv C D e') (equiv_isequiv_binv C D e')) (pe x)) @ (pg ((equiv_fun_binv A B e) x)) @ (ap a (issec_binv (equiv_fun_binv A B e) (equiv_isequiv_binv A B e) x) ));
-  pr : forall (y: B), (isret_binv (equiv_fun_binv C D e') (equiv_isequiv_binv C D e') (b y)) = ((ap (equiv_fun_binv C D e') (ph y)) @ (pe (sec_binv (equiv_fun_binv A B e) (equiv_isequiv_binv A B e) y)) @ (ap b (isret_binv (equiv_fun_binv A B e) (equiv_isequiv_binv A B e) y) ));
-}.
-
-Check prBiInv.
-
-Search prBiInv.
-
-(* Definition cancel
-  (A: Type)
-  (x y :A)
-  (p : x = y)
-  :
-   1 = (ap idmap (p @ p^)) @ 1.
-  Proof.
-  induction p.
-  simpl.
-  reflexivity.
-Defined. *)
-
-Definition cancel
-  (A: Type)
-  (x y :A)
-  (p : x = y)
-  :
-   1 = (ap idmap (p^)) @ p @ 1.
-  Proof.
-  induction p.
-  simpl.
-  reflexivity.
-Defined.
-
-Context {K : Type}.
-
-Compute issec_binv idmap ((idmap; fun x0 : K => 1), (idmap; fun x0 : K => 1)).
-
-Definition compat_implies_prBiInv
-  (A B C D: Type)
-  (e: EquivBiInv A B)
-  (e':  EquivBiInv C D)
-  (a: A -> C)
-  (b : B -> D)
-  :
-    (forall (x : A), (e' o a) x = (b o e) x) -> prBiInv A B C D e e' a b.
-Proof.
-  revert b.  
-  generalize dependent e.
-  revert B.
-  snrapply equiv_induction_binv.
-  generalize dependent e'.
-  revert D.
-  snrapply equiv_induction_binv.
-  simpl.
-  intros b H.
-  snrapply Build_prBiInv.
-  - simpl.
-    exact H.
-  - 
-    intro y.
-    simpl.
-    exact (H y)^.
-  -
-    intro y.
-    simpl. 
-    exact (H y)^.
-  -
-    simpl.
-    intro x.
-    induction (H x).
-    reflexivity.
-  -
-    simpl.
-    intro y.
-    simpl.
-    exact (cancel C (a y) (b y) (H y)). (*There is a bug somewhere, this cannot be resolved by doing induction (X y) *)
-Defined.
-
-Definition integershit_to_biinv
-    : EquivBiInv IntegersHIT IntegersHIT.
-Proof.
-  snrapply Build_EquivBiInv.
-  - exact succ.
-  - snrapply pair.
-    -- snrapply exist.
-       --- exact pred1.
-       --- exact sec.
-    -- snrapply exist.
-       --- exact pred2.
-       --- exact ret.
-Defined.
-
-Section Test.
-
+Section Uniqueness.
 Context {P : Type} {e: EquivBiInv P P}.
 
 Local Definition f := (equiv_fun_binv P P e).
@@ -624,55 +256,21 @@ Local Definition g2 := (sec_binv f (equiv_isequiv_binv P P e)).
 Local Definition s := (issec_binv f (equiv_isequiv_binv P P e) ).
 Local Definition r := (isret_binv f (equiv_isequiv_binv P P e) ).
 
-
-(* Compute ap (IntegersHIT_rec P t0 f g1 g2 s r) (sec z).
-
-Compute (IntegersHIT_ind_beta_sec P t0 f g1 g2 s r). *)
-
-(* 
-Definition inv_pp' {A : Type} {x y z w : A} (p : x = y) (q : y = z) (r: z = w):
-  r^ @ (q^ @ p^) = (p @ q @ r)^.
-  Proof.
-  induction r.
-  induction q.
-  induction p.
-  reflexivity.
-Defined.
-
-Definition inv_pp'' {A : Type} {x y z : A} (p : x = y) (q : y = z):
-  q^ @ p^ = (p @ q )^.
-  Proof.
-  induction q.
-  induction p.
-  reflexivity.
-Defined. *)
-
-
-(* ((ap k (sec z))^ @
-((pg IntegersHIT IntegersHIT P P integershit_to_biinv e k k compat
-(succ z))^ @ (ap g1 (pf z)^ @ ap g1 (ap f t)))) @ ap rec
-(sec z) =
-t *)
-
-(* Check ret_binv e. *)
-
 Definition uniquenessZ
   (t0 : P)
   (k: IntegersHIT -> P)
   (p0 : (k zero_i) = t0)
   (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-  (* (x := sgdshj) *)
   (rec := IntegersHIT_rec P t0 f g1 g2 s r)
   (compat := compat_implies_prBiInv _ _ _ _ integershit_to_biinv e k k pf)
   : forall (z : IntegersHIT), k z = rec z.
   Proof.
-  snrapply IntegersHIT_ind.
+  snrapply IntegersHIT_ind. 
   - simpl.
     exact p0.
   - simpl.
     intros z H.
     apply (ap f) in H. 
-    (* exact (((pf z)^) @ H). *)
     exact (((pe _ _ _ _ _ _ _ _ compat z)^) @ H).
   - simpl.
     intros z H.
@@ -686,14 +284,10 @@ Definition uniquenessZ
     rewrite transport_paths_FlFr.
     rewrite ap_pp.
     rewrite concat_p_pp.
-    (* rewrite concat_p_pp. *)
-    (* rewrite inv_pp. *)
     rewrite (inv_pp _ _)^.
     rewrite concat_p_pp.
     rewrite ap_V.
     rewrite (inv_pp _ _)^.
-    (* rewrite (concat_p_pp _ _ _)^. *)
-    (* rewrite concat_p_pp. *)
     rewrite concat_p_pp.
     rewrite (ps _ _ _ _ _ _ _ _ compat z)^.
     rewrite (concat_p_pp _ _ _)^.
@@ -706,14 +300,10 @@ Definition uniquenessZ
     rewrite transport_paths_FlFr.
     rewrite ap_pp.
     rewrite concat_p_pp.
-    (* rewrite concat_p_pp. *)
-    (* rewrite inv_pp. *)
     rewrite (inv_pp _ _)^.
     rewrite concat_p_pp.
     rewrite ap_V.
     rewrite (inv_pp _ _)^.
-    (* rewrite (concat_p_pp _ _ _)^. *)
-    (* rewrite concat_p_pp. *)
     rewrite concat_p_pp.
     rewrite (pr _ _ _ _ _ _ _ _ compat z)^.
     rewrite (concat_p_pp _ _ _)^.
@@ -721,22 +311,8 @@ Definition uniquenessZ
     rewrite (ap_compose _ _ _)^.
     rewrite IntegersHIT_rec_beta_ret.
     apply (concat_A1p (f := f o g2)).
-Defined.
-
-
-
-    (* .
-    rewrite moveL_Mp. *)
-
-
-    exact ((ps _ _ _ _ _ _ _ _ compat z)^).
-    exact (concat_A1p (A := P) (f := (g1 o f)) s (x := (k z)) (y := rec(z)) t).
-    (* exact ((ps _ _ _ _ _ _ _ _ (compat_implies_prBiInv _ _ _ _ integershit_to_biinv e k k pf) z)). *)
-Admitted.
-
-
-End Test.
-
+Defined.  
+End Uniqueness.
 
 Definition IntITtoIntHIT_comp_succ
   (z: Int)
@@ -793,171 +369,20 @@ Proof.
   @ ((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i idmap IntITtoIntHIT_is_linv_lemma_idmap' IntITtoIntHIT_is_linv_comp_idmap) z)^).
 Defined.
 
-
-
-(*   
-  - simpl.
-    exact p0.
-  - simpl.
-    intros.
-    apply (ap f) in X. (*give it a name*)
-    exact (((pf z)^) @ X).
-  - simpl.
-    intros z H.
-    apply (ap g1) in H.
-    exact ((((left_inverse_compatible (s := s) k p0 pf) z)^) @ H).
-  - simpl.
-    intros z H.
-    apply (ap g2) in H.
-    exact ((((right_inverse_compatible (P := P) (t0 := t0) (f := f) (g1 := g1) (g2 := g2) (s := s) (r := r) k p0 pf) z)^) @ H).
-  - simpl.
-    intros.
-
-    (* TODO *)
-    (* Here and in the next goal the preceeding lemmas should be used, once they are proved.*)
-Abort. *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    (* exact (issec_binv idmap ((idmap; fun x0 : C => 1), (idmap; fun x0 : C => 1)) (a x) = (ap (ret_binv idmap ((idmap; fun x0 : C => 1), (idmap; fun x0 : C => 1))) (X x) @ (X x)^) @ 1)
-    (* reflexivity. *)
-    exact (cancel C (a x) (b x) (X x)).
-
-  reflexivity. *)
-
-
-
-  revert pe.
-  revert b.  
-  generalize dependent e.
-  revert B.
-
-  (* generalize dependent e'. *)
-
-
-
-
-
-
-
-
-
-
-
-
-Compute IntITtoIntHIT (negS 5).
-
-Compute IntITtoIntHIT (posS 2).
-
-
-
-
-Compute IntITtoIntHIT (posS 5).
-
-Compute IntITtoIntHIT (negS 1).
-
-Compute IntITtoIntHIT zero. 
-
-Compute IntHITtoIntIT zero_i.
-
-Compute IntHITtoIntIT (succ (pred2 zero_i)).
-
-Compute IntHITtoIntIT (pred1 (succ (pred2 zero_i))).
-
-Compute IntHITtoIntIT (succ (succ (succ zero_i))).
-
-Compute IntHITtoIntIT (succ (succ zero_i)).
-
-
-Check IntegersHIT_ind.
-  About IntegersHIT_ind.
-  Check transport_const.
-Check IntegersHIT_ind.
-
-
-
-
-
-
-
-Print equiv_induction.
-
-
-
-
-
-
-Check Build_EquivBiInv.
-
-
-
-
-(* Context A B (e : EquivBiInv A B).
-
-Compute (biinv_isequiv_record A B o isequiv_biinv_record A B) e.
-
-Context C D (f : C <~> D).
-
-Compute (isequiv_biinv_record  C D o biinv_isequiv_record C D) f. *)
-
-
-
-Definition equiv_biinv_isequiv_record A B
-  : BiInv (isequiv_biinv_record A B).
+Definition isequiv_IntHIT_Int
+  : IntegersHIT <~> Int.
 Proof.
-    simpl.
-    split.
-    -
-      (* exact (biinv_isequiv_record A B). *)
-      exact (biinv_isequiv_record A B, fun _  => reflexivity).
-    exact {|equiv_fun_binv := isequiv_biinv_record|}.
-
-
-Definition equiv_biinv_isequiv_record A B
-  :EquivBiInv A B <~> (A <~> B).
-Proof.
-  simpl.
-  (* split. *)
-  symmetry.
-  exact (Build_Equiv _ _ (biinv_isequiv_record A B) {|equiv_inv := (isequiv_biinv_record A B); eisretr := |} ).
-  apply iff_biinv_isequiv_record.
-Abort.
-
-
-
-
-
-
-(* Definition half :=
-  {| equiv_fun_binv := false;
-     Rat_bottom_nonzero := O_S 1;
-     Rat_irreducible := one_two_irred |}. *)
-
-
-
-Check equiv_idmap_binv.
-
-
-
-
-Check equiv_path.
-
-
+  apply isequiv_biinv_record.
+  snrapply Build_EquivBiInv.
+    - exact IntHITtoIntIT.
+    - snrapply pair.
+      -- snrapply exist.
+        --- exact IntITtoIntHIT.
+        --- exact IntITtoIntHIT_is_linv.
+      -- snrapply exist.
+        --- exact IntITtoIntHIT.
+        --- exact IntITtoIntHIT_is_rinv.
+Defined.
 
 
 
@@ -997,7 +422,7 @@ Proof.
 
 Abort. *)
 
-
+(* 
 (*we can define some basic arithmetic stuff*)
 Definition int_HIT_add 
   (x y : IntegersHIT) 
@@ -1026,7 +451,7 @@ Compute IntHITtoIntIT (int_HIT_add (succ zero_i) (succ (succ (succ (pred1 zero_i
 
 
 
-
+ *)
 
 
 
@@ -1179,14 +604,14 @@ Record pr_Bi (A B A' B' : Type)
 }.  *)
 
 
-
+(* 
 
 
 Context (y : IntegersHIT).
 
-Compute int_HIT_add zero_i y.
+(* Compute int_HIT_add zero_i y.
 
-Compute int_HIT_add (succ zero_i) y.
+Compute int_HIT_add (succ zero_i) y. *) *)
 
 
 
@@ -1204,7 +629,7 @@ Proof.
   snrapply (IntegersHIT_ind  *)
 
 
-
+(* 
 
 
 Compute (IntITtoIntHIT o IntHITtoIntIT) zero_i.
@@ -1276,7 +701,7 @@ Proof.
 
     
 
-
+ *)
 
 
 (* Fixpoint IntITtoIntHIT 
