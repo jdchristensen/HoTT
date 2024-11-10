@@ -58,8 +58,8 @@ End IntegersHIT.
 Section IntegersHITLemmas.
 
   Definition IntegersHIT_ind_simp
-  (P : IntegersHIT -> Type)
-  {h: forall (x : IntegersHIT), IsHProp (P x)}
+  `{P : IntegersHIT -> Type}
+  `{h: forall (x : IntegersHIT), IsHProp (P x)}
   (t0 : P zero_i) 
   (f : forall z : IntegersHIT, P z -> P (succ z))
   (g1 : forall z : IntegersHIT, P z -> P (pred1 z))
@@ -420,9 +420,12 @@ Proof.
         --- exact IntITtoIntHIT_is_rinv.
 Defined.
 
-
-
-
+Global Instance ishset_IntegersHIT
+  : IsHSet IntegersHIT.
+  Proof.
+    snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
+    exact ishset_int.
+  Defined.
 
 Section ResultsIntegers.
 
@@ -456,12 +459,7 @@ Local Open Scope IntegersHIT_scope.
 
   Check equiv_inverse isequiv_IntHIT_Int.
 
-  Definition ishset_IntegersHIT
-  : IsHSet IntegersHIT.
-  Proof.
-    snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
-    exact ishset_int.
-  Defined.
+  
 
   (** The following function reduces an expression succ(pred1(succ( ... )))*)
   Definition IntegersHIT_reduce 
@@ -624,7 +622,7 @@ Admitted.
 Definition IntegersHIT_neg_neg (x : IntegersHIT) : - - x = x.  
 Proof.
   revert x.
-  snrapply IntegersHIT_ind.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     reflexivity.
   - simpl.
@@ -640,16 +638,6 @@ Proof.
     apply (ap pred2) in H.
     rewrite (pred1_is_pred2 _).
     exact H.
-  - simpl. 
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl. 
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.
 
 (* * Negation is an equivalence.
@@ -668,7 +656,7 @@ Definition isinj_int_neg@{} (x y : Int) : - x = - y -> x = y
 Definition IntegersHIT_neg_succ (x : IntegersHIT) :  - (succ x) = pred1 (- x).
 Proof.
   revert x.
-  snrapply IntegersHIT_ind.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     unfold IntegersHIT_neg.
     simpl.
@@ -685,22 +673,6 @@ Proof.
     intros z H.
     unfold IntegersHIT_neg.
     reflexivity.
-  -
-    simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    rewrite concat_p1.
-    rewrite concat_Vp.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  -
-    simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    rewrite concat_p1.
-    rewrite concat_Vp.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.
 
 
@@ -747,7 +719,7 @@ Proof.
 Definition IntegersHIT_add_0_r (x : IntegersHIT) : x + zero_i = x.
 Proof.
   revert x.
-  snrapply IntegersHIT_ind.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     reflexivity.
   - simpl.
@@ -762,16 +734,6 @@ Proof.
     intros z H.
     apply (ap pred2) in H.
     exact H.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.  
 
 (* To avoid using isSet Property maybe use   
@@ -787,7 +749,7 @@ Defined.
 Definition IntegersHIT_add_succ_l (x y : IntegersHIT) : (succ x) + y = succ (x + y).
 Proof.
   revert x.
-  snrapply IntegersHIT_ind.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     reflexivity.
   - simpl.
@@ -799,55 +761,13 @@ Proof.
   - simpl.
     intros z H.
     reflexivity.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.
 
 (** Adding a predecessor on the left is the predecessor of the sum. *)
 Definition IntegersHIT_add_pred_l (x y : IntegersHIT) : (pred1 x) + y = pred1 (x + y).
 Proof.
   revert y.
-  snrapply IntegersHIT_ind.
-  - simpl.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.  
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-Defined.
-
-
-(** Adding a predecessor on the left is the predecessor of the sum. *)
-Definition IntegersHIT_add_pred_l' (x y : IntegersHIT) : (pred1 x) + y = pred1 (x + y).
-Proof.
-  revert y.
-  snrapply IntegersHIT_ind_simp.
-  - simpl.
-    intro z.
-    snrapply ishset_IntegersHIT.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     reflexivity.
   - simpl.
@@ -860,12 +780,13 @@ Proof.
     intros z H.
     reflexivity.  
 Defined.
+
 
 (** Adding a successor on the right is the successor of the sum. *)
 Definition IntegersHIT_add_succ_r (x y : IntegersHIT) : x + (succ y) = succ (x + y).
 Proof.
   revert x.
-  snrapply IntegersHIT_ind.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     reflexivity.
   - simpl.
@@ -884,23 +805,13 @@ Proof.
     rewrite sec_pred2 in H.
     rewrite ret.
     exact H.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.
 
 (** Adding a predecessor on the right is the predecessor of the sum. *)
 Definition IntegersHIT_add_pred_r (x y : IntegersHIT) : x + (pred1 y) = pred1 (x + y).
 Proof.
   revert x.
-  snrapply IntegersHIT_ind.
+  srapply IntegersHIT_ind_simp.
   - simpl.
     reflexivity.
   - simpl.
@@ -921,16 +832,6 @@ Proof.
     rewrite pred1_is_pred2 in H.
     rewrite pred1_is_pred2 in H.
     exact H.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.
 
 Definition IntegersHIT_lemma''
@@ -938,7 +839,7 @@ Definition IntegersHIT_lemma''
     :(x - x) = zero_i.
   Proof.
     revert x.
-    snrapply IntegersHIT_ind.
+    srapply IntegersHIT_ind_simp.
     - simpl.
       reflexivity.
     -
@@ -959,16 +860,6 @@ Definition IntegersHIT_lemma''
       rewrite IntegersHIT_add_succ_r.
       rewrite sec_pred2.
       exact H.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
-  - simpl.
-    intros z H.
-    rewrite transport_paths_FlFr.
-    snrapply path_ishprop.
-    snrapply ishset_IntegersHIT.
 Defined.
 
 
