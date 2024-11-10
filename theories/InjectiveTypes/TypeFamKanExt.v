@@ -48,7 +48,7 @@ Section UniverseStructure.
 End UniverseStructure.
 
 (*Keep/Move?*)
-Definition isempty_empty_indexed_sig (A : Type) (P : A -> Type) (na : A -> Empty)
+Definition isempty_empty_indexed_sigma (A : Type) (P : A -> Type) (na : A -> Empty)
   : { a | P a } <~> Empty
   := equiv_to_empty (fun ap => na ap.1).
 
@@ -64,7 +64,7 @@ Defined.
 Definition isempty_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
   : LeftKanTypeFamily f j y <~> Empty
-  := isempty_empty_indexed_sig _ _ (fun w => ynin w.1 w.2).
+  := isempty_empty_indexed_sigma _ _ (fun w => ynin w.1 w.2).
 
 Definition isunit_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
@@ -73,11 +73,11 @@ Definition isunit_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
 
 Definition equiv_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y)
-  : (sig f) <~> sig (LeftKanTypeFamily f j). (*Can I rewrite these [sig]'s with better notation?*)
+  : {x | f x} <~> {x | LeftKanTypeFamily f j x}.
 Proof.
   snrapply equiv_adjointify.
-  - apply (fun w : (sig f) => (j w.1; (w.1; idpath); w.2)).
-  - apply (fun '((y; ((x; p); y')) : sig (LeftKanTypeFamily f j)) => (x; y')).
+  - apply (fun w : {x | f x} => (j w.1; (w.1; idpath); w.2)).
+  - apply (fun '((y; ((x; p); y')) : {x | LeftKanTypeFamily f j x}) => (x; y')).
   - intros [y [[x []] y']]. reflexivity.
   - intros [x y]. reflexivity.
 Defined.
@@ -110,7 +110,7 @@ Definition comp_transformation {X} {f g h : X -> Type} (b : g =< h) (a : f =< g)
   : f =< h
   := fun x A => (b x) (a x A).
 
-Definition whisker_transformation {X Y} (j : X -> Y) {f g : Y -> Type} (a : f =< g)
+Definition whisker_transformation {X Y} {f g : Y -> Type} (a : f =< g) (j : X -> Y)
   : f o j =< g o j
   := fun x A => (a (j x) A).
 
@@ -135,7 +135,7 @@ Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
 (** Universal property of the Kan extensions. *)
 Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
   {f : X -> Type} {g : Y -> Type} (a : f =< g o j)
-  : { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation j b) (unit_leftkantypefam f j) == a}.
+  : { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation b j) (unit_leftkantypefam f j) == a}.
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. apply (p # a x A).
@@ -144,7 +144,7 @@ Defined.
 
 Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
   {f : X -> Type} {g : Y -> Type} {a : f =< g o j}
-  : Contr { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation j b) (unit_leftkantypefam f j) == a}.
+  : Contr { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation b j) (unit_leftkantypefam f j) == a}.
 Proof.
   apply (Build_Contr _ (univ_property_LeftKanTypeFam a)).
   intros [b F]. srapply path_sigma.
