@@ -102,11 +102,6 @@ Section IntegersHITLemmas.
       refine ((transport_const (ret z) (f (g2 t))) @ (r t)).
   Defined.
 
-      (* - exact (fun _ => f).
-    - exact (fun _ => g1).
-    - exact (fun _ => g2).
-    - exact (fun z t => (transport_const (sec z) (g1 (f t))) @ (s t)). 
-    - exact (fun z t => (transport_const (ret z) (f (g2 t))) @ (r t)). *)
 
 
   Definition IntegersHIT_rec_beta_sec
@@ -457,11 +452,16 @@ Local Open Scope IntegersHIT_scope.
 
   Check istrunc_equiv_istrunc.
 
+  Check isequiv_IntHIT_Int.
+
+  Check equiv_inverse isequiv_IntHIT_Int.
+
   Definition ishset_IntegersHIT
   : IsHSet IntegersHIT.
   Proof.
-    apply (istrunc_equiv_istrunc _ _ isequiv_IntHIT_Int).
-  Admitted.
+    snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
+    exact ishset_int.
+  Defined.
 
   (** The following function reduces an expression succ(pred1(succ( ... )))*)
   Definition IntegersHIT_reduce 
@@ -837,6 +837,28 @@ Proof.
     rewrite transport_paths_FlFr.
     snrapply path_ishprop.
     snrapply ishset_IntegersHIT.
+Defined.
+
+
+(** Adding a predecessor on the left is the predecessor of the sum. *)
+Definition IntegersHIT_add_pred_l' (x y : IntegersHIT) : (pred1 x) + y = pred1 (x + y).
+Proof.
+  revert y.
+  snrapply IntegersHIT_ind_simp.
+  - simpl.
+    intro z.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.  
 Defined.
 
 (** Adding a successor on the right is the successor of the sum. *)
