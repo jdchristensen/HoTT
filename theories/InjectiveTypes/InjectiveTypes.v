@@ -2,20 +2,22 @@
 
 (** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo. *)
 
-(* MAKE NOTE OF CONVENTIONS FOR UNIVERSE NOTATION IN COMMENTS - also check spelling *)
+(* MAKE NOTE OF CONVENTIONS FOR UNIVERSE NOTATION IN COMMENTS *)
 
 Require Import Basics.
 Require Import PropResizing.
 Require Import Truncations.
-Require Import Types.Universe Types.Unit.
+Require Import Types.Universe Types.Unit Types.Prod Types.Empty.
 Require Import HFiber.
 Require Import HProp.
 Require Import PropResizing.
+Require Import TruncType.
+Require Import ReflectiveSubuniverse.
 
 Require Import YonedaPaths.
 Require Import TypeFamKanExt.
 
-Unset Printing Universes.
+Set Printing Universes.
 
 Section UniverseStructure.
   Universes u v w uv uw vw uvw.
@@ -38,6 +40,15 @@ Section UniverseStructure.
     srefine (const (center D); _).
     intros x.
     apply (contr _).
+  Defined.
+
+  (** [Empty] is not algebraically injective. *)
+  Definition not_alginj_empty@{}
+    : IsAlgebraicInjectiveType@{} Empty -> Empty.
+  Proof.
+    intros Eai.
+    snrefine ((Eai Empty Unit (Empty_rec@{v}) _ idmap).1 tt).
+    rapply _; rapply mapinO_between_inO@{uv u v uv}.
   Defined.
 
 End UniverseStructure.
@@ -263,4 +274,36 @@ Proof.
   intros x.
   rhs_V apply (retr (f x)).
   apply (ap r (mD.2 x)).
+Defined.
+
+(** The power of an injective type is injective. *)
+Definition inj_arrow
+  `{Funext} {A : Type@{t}} (D : Type@{w})
+  (Di : IsInjectiveType@{ut vt w uvt utw vtw utvw} D)
+  : IsInjectiveType@{u v tw uv utw vtw utvw} (A -> D).
+Proof.
+  intros X Y j isem f.
+  assert (IsEmbedding (fun a : A => a)).
+  - rapply _. rapply _.
+  - pose proof (mD := Di (X * A) (Y * A) (functor_prod j idmap) (istruncmap_functor_prod _ _ _) (uncurry f)).
+    strip_truncations; apply tr.
+    refine (fun y a => mD.1 (y, a); _).
+    intros x. apply path_forall. intros a.
+    apply (mD.2 (x, a)).
+Defined.
+
+(** Any u,u^+-injective type [X : Type@{u}], is a retract of [X -> Type@{u}] in an unspecified way. *)
+Definition merely_retract_power_universe_usuinj `{Univalence}
+  (D : Type@{u}) (Di : IsInjectiveType@{u su u su u su su} D)
+  : merely { r : (D -> Type@{u}) -> D | r o (@paths D) == idmap }
+  := merely_retract_inj_embedding D (@paths D) isembedding_paths Di.
+
+(** Inverse of [inj_merely_alg_inj] modulo universes. *)
+Definition merely_alg_uuinj_usuinj `{Univalence}
+  (D : Type@{u}) (Di : IsInjectiveType@{u su u su u su su} D)
+  : merely (IsAlgebraicInjectiveType@{u u u u u u u} D).
+Proof.
+  srefine (Trunc_functor (-1) _ (merely_retract_power_universe_usuinj D Di)).
+  intros [r retr].
+  apply (alg_inj_retract_power_universe D r retr). (*Why is this working without Prop Resizing?*)
 Defined.
