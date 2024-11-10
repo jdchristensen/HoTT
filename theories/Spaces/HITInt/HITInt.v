@@ -57,6 +57,27 @@ End IntegersHIT.
 
 Section IntegersHITLemmas.
 
+  Definition IntegersHIT_ind_simp
+  (P : IntegersHIT -> Type)
+  {h: forall (x : IntegersHIT), IsHProp (P x)}
+  (t0 : P zero_i) 
+  (f : forall z : IntegersHIT, P z -> P (succ z))
+  (g1 : forall z : IntegersHIT, P z -> P (pred1 z))
+  (g2 : forall z : IntegersHIT, P z -> P (pred2 z))
+  (x: IntegersHIT)
+  : P x.
+  Proof.
+    srapply IntegersHIT_ind.
+    - exact t0.
+    - exact f.
+    - exact g1.
+    - exact g2.
+    - intros z t.
+      rapply path_ishprop.
+    - intros z t.
+      rapply path_ishprop.
+  Defined.
+
   Definition IntegersHIT_rec
     (P: Type)
     (t0 : P)
@@ -69,12 +90,23 @@ Section IntegersHITLemmas.
   Proof.
     srapply IntegersHIT_ind.
     - exact t0.
-    - exact (fun _ => f).
+    - intro z.
+      exact f.
+    - intro z.
+      exact g1.
+    - intro z.
+      exact g2.
+    - intros z t.
+      refine ((transport_const (sec z) (g1 (f t))) @ (s t)).
+    - intros z t.
+      refine ((transport_const (ret z) (f (g2 t))) @ (r t)).
+  Defined.
+
+      (* - exact (fun _ => f).
     - exact (fun _ => g1).
     - exact (fun _ => g2).
     - exact (fun z t => (transport_const (sec z) (g1 (f t))) @ (s t)). 
-    - exact (fun z t => (transport_const (ret z) (f (g2 t))) @ (r t)).
-  Defined.
+    - exact (fun z t => (transport_const (ret z) (f (g2 t))) @ (r t)). *)
 
 
   Definition IntegersHIT_rec_beta_sec
@@ -128,6 +160,15 @@ Section IntegersHITLemmas.
   Proof.
     intros.
     exact ((ap succ (pred1_is_pred2 z)) @ (ret z)).
+  Defined.
+
+    Definition sec_pred2
+      (z: IntegersHIT)
+      : (pred2 (succ z)) = z.
+  Proof.
+    intros.
+    rewrite (pred1_is_pred2 _)^.
+    exact (sec z).
   Defined.
 
 
@@ -387,6 +428,588 @@ Defined.
 
 
 
+
+Section ResultsIntegers.
+
+Declare Scope IntegersHIT_scope.
+Delimit Scope IntegersHIT_scope with IntegersHIT.
+Local Open Scope IntegersHIT_scope.
+
+
+  (** Printing *)
+  (* Definition int_to_number_int (n : IntegersHIT) : Numeral.int :=
+    match n with
+    | posS n => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S n)))
+    | zero => Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))
+    | negS n => Numeral.IntDec (Decimal.Neg (Nat.to_uint (S n)))
+    end. *)
+
+  (** Parsing *)
+  Definition int_of_number_int (d : Numeral.int) :=
+    match d with
+    | Numeral.IntDec (Decimal.Pos d) => int_of_nat (Nat.of_uint d)
+    | Numeral.IntDec (Decimal.Neg d) => negS (nat_pred (Nat.of_uint d))
+    | Numeral.IntHex (Hexadecimal.Pos u) => int_of_nat (Nat.of_hex_uint u)
+    | Numeral.IntHex (Hexadecimal.Neg u) => negS (nat_pred (Nat.of_hex_uint u))
+    end.
+
+  Number Notation Int int_of_number_int int_to_number_int : IntegersHIT_scope.
+
+  Check istrunc_equiv_istrunc.
+
+  Definition ishset_IntegersHIT
+  : IsHSet IntegersHIT.
+  Proof.
+    apply (istrunc_equiv_istrunc _ _ isequiv_IntHIT_Int).
+  Admitted.
+
+  (** The following function reduces an expression succ(pred1(succ( ... )))*)
+  Definition IntegersHIT_reduce 
+    := IntITtoIntHIT o IntHITtoIntIT.
+
+  Definition IntegersHIT_neg (x : IntegersHIT) 
+    : IntegersHIT.
+    Proof.
+      revert x.
+      snrapply IntegersHIT_rec.
+      - exact zero_i.
+      - exact pred1.
+      - exact succ. 
+      - exact succ.
+      - simpl.
+        intro z.
+        rewrite ret_pred1.
+        reflexivity.
+      - simpl.
+        intro z.
+        rewrite sec.
+        reflexivity. 
+  Defined.
+
+  Notation "- x" := (IntegersHIT_neg x) : IntegersHIT_scope.
+
+  (* Notation "z .+1" := (succ z) : IntegersHIT_scope.
+  Notation "z .-1" := (pred1 z) : IntegersHIT_scope. *)
+
+
+
+  Compute   IntegersHIT_neg(zero_i).
+
+  Compute   IntegersHIT_neg(succ(zero_i)).
+
+  Compute   IntegersHIT_neg(succ(succ zero_i)).
+    
+  Compute   IntegersHIT_neg(pred1 (pred2 zero_i)).
+
+
+  Compute   IntegersHIT_reduce (IntegersHIT_neg(pred1 (pred1 zero_i))).
+
+  (** we define addition by recursion on the first argument*)
+  Definition IntegersHIT_add 
+  (x y : IntegersHIT) 
+  : IntegersHIT.
+  Proof.
+    revert x.
+    snrapply IntegersHIT_rec.
+    - exact y.
+    - exact succ.
+    - exact pred1.
+    - exact pred2.
+    - exact sec.
+    - exact ret.
+  Defined.
+
+  Infix "+" := IntegersHIT_add : IntegersHIT_scope.
+  Infix "-" := (fun x y => x + -y) : IntegersHIT_scope.
+
+(* Context {x: IntegersHIT}. *)
+
+  (* Compute succ((succ (succ x))) + (pred1 x)). *)
+
+(* Definition IntegersHIT_lemma_r
+  (x: IntegersHIT)
+  : - (succ x) = pred1 (- x).
+Proof.
+    revert x.
+    snrapply IntegersHIT_ind.
+    - simpl.
+    reflexivity. *)
+
+
+(* Definition IntegersHIT_lemma_o
+  (x: IntegersHIT)
+  : x + - (succ x) = pred1 x.
+   *)
+
+
+  Definition IntegersHIT_lemma
+    (x y : IntegersHIT)
+    :(x + y) - y = x.
+  Proof.
+    revert x.
+    snrapply IntegersHIT_ind.
+    - simpl.
+      admit.
+    - simpl.
+      intros z H.
+      apply (ap succ) in H.
+      exact H.
+    - simpl.
+      intros z H.
+      apply (ap pred1) in H.
+      exact H.
+    - simpl.
+      intros z H.
+      apply (ap pred2) in H.
+      exact H.
+    - simpl. 
+      intros z H.
+      rewrite transport_paths_FlFr.
+      snrapply path_ishprop.
+      snrapply ishset_IntegersHIT.
+    - simpl. 
+      intros z H.
+      rewrite transport_paths_FlFr.
+      snrapply path_ishprop.
+      snrapply ishset_IntegersHIT.
+Admitted.
+
+
+      (* (* unfold IntegersHIT_add.
+      unfold IntegersHIT_rec.
+      unfold IntegersHIT_ind.
+      simpl.
+      reflexivity. *)
+  Admitted. *)
+
+  Definition IntegersHIT_lemma2
+    (x y : IntegersHIT)
+    :(x - y) + y = x.
+  Proof.
+    revert x.
+    snrapply IntegersHIT_ind.
+    - simpl.
+  Admitted.
+
+  Definition IntegersHIT_mul 
+  (x y : IntegersHIT) 
+  : IntegersHIT.
+  Proof.
+    revert x.
+    snrapply IntegersHIT_rec.
+    - exact zero_i.
+    - exact (fun z => (IntegersHIT_add) z y).
+    - exact (fun z => (IntegersHIT_add) z (-y)).
+    - exact (fun z => (IntegersHIT_add) z (-y)).
+    -
+      simpl.
+      intro t.
+      exact (IntegersHIT_lemma t y).
+    -
+      simpl.
+      intro t.
+      exact (IntegersHIT_lemma2 t y).
+  Defined.
+
+  Infix "*" := int_mul : int_scope.
+
+  Compute IntegersHIT_mul zero_i zero_i.
+  Compute IntegersHIT_mul (succ zero_i) zero_i.
+  Compute IntegersHIT_mul (succ zero_i) (succ zero_i).
+  Compute IntegersHIT_mul (succ (succ zero_i)) (succ (succ zero_i)).
+  Compute IntegersHIT_mul (succ (succ (succ zero_i))) (succ (succ zero_i)).
+
+
+(** Negation is involutive. *)
+Definition IntegersHIT_neg_neg (x : IntegersHIT) : - - x = x.  
+Proof.
+  revert x.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    apply (ap succ) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred1) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred2) in H.
+    rewrite (pred1_is_pred2 _).
+    exact H.
+  - simpl. 
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl. 
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+(* * Negation is an equivalence.
+Global Instance isequiv_int_neg@{} : IsEquiv int_neg.
+Proof.
+  snrapply (isequiv_adjointify int_neg int_neg).
+  1,2: nrapply int_neg_neg.
+Defined.
+
+(** Negation is injective. *)
+Definition isinj_int_neg@{} (x y : Int) : - x = - y -> x = y
+  := equiv_inj int_neg. *)
+
+(** The negation of a successor is the predecessor of the negation. *)
+
+Definition IntegersHIT_neg_succ (x : IntegersHIT) :  - (succ x) = pred1 (- x).
+Proof.
+  revert x.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    unfold IntegersHIT_neg.
+    simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    unfold IntegersHIT_neg.
+    reflexivity.
+  -
+    intros z H.
+    unfold IntegersHIT_neg.
+    reflexivity.
+  -
+    intros z H.
+    unfold IntegersHIT_neg.
+    reflexivity.
+  -
+    simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    rewrite concat_p1.
+    rewrite concat_Vp.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  -
+    simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    rewrite concat_p1.
+    rewrite concat_Vp.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+
+
+(** The negation of a predecessor is the successor of the negation. *)
+(* Definition int_neg_pred (x : Int) : - x.-1 = (- x).+1.
+Proof.
+  by destruct x as [ | | []].
+Defined. *)
+
+(** The successor of a predecessor is the identity. *)
+(* Definition int_pred_succ@{} (x : Int) : x.-1.+1 = x.
+Proof.
+  by destruct x as [ | | []].
+Defined.  *)
+
+(* * The predecessor of a successor is the identity.
+Definition int_succ_pred@{} (x : Int) : x.+1.-1 = x.
+Proof.
+  by destruct x as [[] | | ].
+Defined. *)
+
+(* * The successor is an equivalence on [Int] *)
+Global Instance isequiv_IntegersHIT_succ : IsEquiv succ
+  := isequiv_biinv integershit_to_biinv (equiv_isequiv_binv IntegersHIT IntegersHIT integershit_to_biinv).
+
+(** The predecessor is an equivalence on [Int] *)
+Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
+  := isequiv_inverse succ.
+
+(* Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred2
+  := isequiv_inverse succ. *)
+
+(** *** Addition *)
+
+
+(** Integer addition with zero on the left is the identity by definition. *)
+Definition IntegersHIT_add_0_l (x : IntegersHIT) : zero_i + x = x.
+Proof.
+  simpl.
+  reflexivity.
+
+(** Integer addition with zero on the right is the identity. *)
+Definition IntegersHIT_add_0_r (x : IntegersHIT) : x + zero_i = x.
+Proof.
+  revert x.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    apply (ap succ) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred1) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred2) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.  
+
+(* To avoid using isSet Property maybe use   
+    rewrite concat_pp_p.
+    apply moveR_Vp.
+    rewrite (ap_compose _ _ _)^.
+    rewrite ap_idmap.
+    simpl.
+    apply (concat_A1p (f := pred1 o succ)). *)
+
+
+(** Adding a successor on the left is the successor of the sum. *)
+Definition IntegersHIT_add_succ_l (x y : IntegersHIT) : (succ x) + y = succ (x + y).
+Proof.
+  revert x.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+(** Adding a predecessor on the left is the predecessor of the sum. *)
+Definition IntegersHIT_add_pred_l (x y : IntegersHIT) : (pred1 x) + y = pred1 (x + y).
+Proof.
+  revert y.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.
+  - simpl.
+    intros z H.
+    reflexivity.  
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+(** Adding a successor on the right is the successor of the sum. *)
+Definition IntegersHIT_add_succ_r (x y : IntegersHIT) : x + (succ y) = succ (x + y).
+Proof.
+  revert x.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    apply (ap succ) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred1) in H.
+    rewrite sec in H.
+    rewrite ret_pred1.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred2) in H.
+    rewrite sec_pred2 in H.
+    rewrite ret.
+    exact H.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+(** Adding a predecessor on the right is the predecessor of the sum. *)
+Definition IntegersHIT_add_pred_r (x y : IntegersHIT) : x + (pred1 y) = pred1 (x + y).
+Proof.
+  revert x.
+  snrapply IntegersHIT_ind.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    apply (ap succ) in H.
+    rewrite ret_pred1 in H.
+    rewrite sec.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred1) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred2) in H.
+    rewrite pred1_is_pred2.
+    rewrite pred1_is_pred2.
+    rewrite pred1_is_pred2 in H.
+    rewrite pred1_is_pred2 in H.
+    exact H.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+Definition IntegersHIT_lemma''
+    (x : IntegersHIT)
+    :(x - x) = zero_i.
+  Proof.
+    revert x.
+    snrapply IntegersHIT_ind.
+    - simpl.
+      reflexivity.
+    -
+      simpl.
+      intros z H.
+      apply (ap (succ o pred1)) in H.
+      simpl in H.
+      rewrite IntegersHIT_add_pred_r.
+      rewrite (ret_pred1 zero_i)^.
+      exact H.
+    - simpl.
+      intros z H.
+      rewrite IntegersHIT_add_succ_r.
+      rewrite sec.
+      exact H.
+    - simpl.
+      intros z H.
+      rewrite IntegersHIT_add_succ_r.
+      rewrite sec_pred2.
+      exact H.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+  - simpl.
+    intros z H.
+    rewrite transport_paths_FlFr.
+    snrapply path_ishprop.
+    snrapply ishset_IntegersHIT.
+Defined.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*     
+    rewrite IntegersHIT_reduce. *)
+
+
+(*   
+  - exact (fun z => (IntegersHIT_add) z (IntegersHIT_mul z y)).
+  - exact (fun z => (IntegersHIT_add) z (IntegersHIT_mul z y)).
+  - exact (fun z => (IntegersHIT_add) z (IntegersHIT_mul z y)).
+  -
+   simpl.
+   intros.
+  - exact (fun z => (IntegersHIT_add) (pred1 z) y).
+  - exact (fun z => (IntegersHIT_add) (pred1 z) y).
+  - simpl.
+    intro z.
+    rewrite sec.
+    reflexivity. *)
+    (* apply IntegersHIT_reduce. *)
+
+
+
+
+  (* induction x as [|x IHx|x IHx] in y |- *.
+  (** [0 * y = 0] *)
+  - exact 0.
+  (** [x.+1 * y = y + x * y] *)
+  - exact (y + IHx y).
+  (** [x.-1 * y = -y + x * y] *)
+  - exact (-y + IHx y). *)
+Defined.
+
+
+
+End ResultsIntegers.
 
 
 (*Lemma 12 is just equivalence induction*)
