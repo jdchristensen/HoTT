@@ -31,7 +31,7 @@ Section UniverseStructure.
       (f : X -> D), sig@{vw uw} (fun f' => f' o j == f).
 
   (** Contractible types are algebraically injective. *)
-  Definition is_alginj_contr@{} (D : Type@{w}) (cD : Contr D)
+  Definition alginj_contr@{} (D : Type@{w}) (cD : Contr D)
     : IsAlgebraicInjectiveType@{} D.
   Proof.
     intros X Y j isem f.
@@ -49,7 +49,8 @@ Proof.
   intros X Y j isem f.
   snrefine (_; _).
   - exact (LeftKanTypeFamily f j).
-  - intros x. apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
+  - intros x.
+    apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
 Defined.
 
 Definition alg_inj_Type'@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
@@ -62,9 +63,7 @@ Proof.
     apply (path_universe_uncurried (isext_rightkantypefamily _ _ isem _)).
 Defined.
 
-
 (** ** Constructions with algebraically injective types. *)
-
 
 (** Retracts of algebraically injective types are algebraically injective. *)
 Definition alg_inj_retract@{u v w w' uv uw vw uw' vw' uvw uvw' | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw,
@@ -127,7 +126,7 @@ Definition alg_uuinj_alg_usu_inj@{u su | u < su}
   : IsAlgebraicInjectiveType@{u u u u u u u} D
   := Dai.
 
-Definition IsAlgebraicallyFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
+Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
     { d : D | forall p : P, d = f p}.
 (** We can think of algebraic flabbiness as algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
@@ -135,7 +134,7 @@ Definition IsAlgebraicallyFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
 (** Algebraically u,v-injective types are algebraically uv-flabby. *)
 Definition alg_flab_alg_inj@{u v w uv uw vw uvw | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw}
   {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D)
-  : IsAlgebraicallyFlabbyType@{u w uw} D.
+  : IsAlgebraicFlabbyType@{u w uw} D.
 Proof.
   intros P PropP f.
   snrefine (_; _).
@@ -145,7 +144,7 @@ Defined.
 
 (** Algebraically u-flabby types are algebraically u,v-injective. *)
 Definition alg_inj_alg_flab@{u v w uv uw vw uvw | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw}
-  {D : Type@{w}} (Daf : IsAlgebraicallyFlabbyType@{uv w uvw} D)
+  {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{uv w uvw} D)
   : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D.
 Proof.
   intros X Y j isem f.
@@ -171,8 +170,8 @@ Section AssumePropResizing.
 
   (** Algebraic flabbiness is independent of universes under propositional resizing. *)
   Definition universe_independent_alg_flab@{v u w vw uw | w <= vw, v <= vw, u <= uw, w <= uw}
-    {D : Type@{w}} (Daf : IsAlgebraicallyFlabbyType@{v w vw} D)
-    : IsAlgebraicallyFlabbyType@{u w uw} D.
+    {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{v w vw} D)
+    : IsAlgebraicFlabbyType@{u w uw} D.
   Proof.
     intros P PropP f.
     pose (e := (equiv_resize_hprop@{u v} P)^-1).
@@ -234,8 +233,8 @@ Definition ishprop_injectivity
   `{Funext} (D : Type@{w})
   : IsHProp@{t} (IsInjectiveType@{u v w uv uw vw uvw} D) := _.
 
-(*Fix Universes*)
-Definition inj_is_tr_alginj
+(** The propositional truncation of algebraic injectivity implies injectivity. *)
+Definition inj_merely_alginj (*Fix Universes*)
   `{Funext} {D : Type@{w}}
   (mDai : merely (IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D))
   : (IsInjectiveType@{u v w uv uw vw uvw} D).
@@ -245,11 +244,11 @@ Proof.
 Defined.
 
 (** Injective types are retracts of any type that they embed into, in an unspecified way. *)
-Definition retract_inj_embedding@{v w vw | v <= vw, w <= vw}
+Definition merely_retract_inj_embedding
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
-  (Dai : IsAlgebraicInjectiveType@{w v w vw w vw vw} D)
+  (Di : IsInjectiveType@{w v w vw w vw vw} D)
   : merely { r | r o j == idmap }
-  := tr (Dai _ _ _ _ idmap).
+  := (Di _ _ _ _ idmap).
 
 (** The retract of an injective type is injective. *)
 Definition inj_retract
