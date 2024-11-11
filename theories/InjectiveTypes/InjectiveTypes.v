@@ -7,7 +7,7 @@
 Require Import Basics.
 Require Import PropResizing.
 Require Import Truncations.
-Require Import Types.Universe Types.Unit Types.Prod Types.Empty.
+Require Import Types.Universe Types.Unit Types.Prod Types.Empty Types.Forall Types.Sigma.
 Require Import HFiber.
 Require Import HProp.
 Require Import PropResizing.
@@ -54,7 +54,7 @@ Section UniverseStructure.
 End UniverseStructure.
 
 (** [Type@{uv}] is algebraically u,v-injective in at least two ways *)
-Definition alg_inj_Type@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
+Definition alg_inj_Type_sigma@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv suv} Type@{uv}.
 Proof.
   intros X Y j isem f.
@@ -64,7 +64,7 @@ Proof.
     apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
 Defined.
 
-Definition alg_inj_Type'@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
+Definition alg_inj_Type_forall@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv suv} Type@{uv}.
 Proof.
   intros X Y j isem f.
@@ -142,6 +142,31 @@ Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
     { d : D | forall p : P, d = f p}.
 (** We can think of algebraic flabbiness as algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 
+(** We include two direct proofs of the algebraic flabbiness of [Type], instead of combining [alg_inj_alg_flab] with the previous proofs of algebraic injectivity, for better computations later. *)
+Definition alg_flab_Type_sigma@{u su | u < su} `{Univalence}
+  : IsAlgebraicFlabbyType@{u su su} Type@{u}.
+Proof.
+  intros P PropP A.
+  srefine (sig@{u u} (fun p => A p); _).
+  intros p.
+  transparent assert (C : (Contr P)).
+    - srapply contr_inhabited_hprop. exact p.
+    - apply path_universe_uncurried.
+      apply (@equiv_contr_sigma _ _ C).
+Defined.
+
+Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
+  : IsAlgebraicFlabbyType@{u su su} Type@{u}.
+Proof.
+  intros P PropP A.
+  srefine (forall p : P, A p; _).
+  intros p.
+  transparent assert (C : (Contr P)).
+    - srapply contr_inhabited_hprop. exact p.
+    - apply path_universe_uncurried.
+      snrapply (@equiv_contr_forall _ _ C).
+Defined.
+
 (** Algebraically u,v-injective types are algebraically uv-flabby. *)
 Definition alg_flab_alg_inj@{u v w uv uw vw uvw | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw}
   {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D)
@@ -214,6 +239,8 @@ Section AssumePropResizing.
     apply (universe_independent_alg_inj@{u u u u su u u u su u su u su} Dai).
   Defined.
 
+End AssumePropResizing.
+
   (** Any retract of a type family [X -> Type@{u}] is algebraically injective. *)
   Definition alg_inj_retract_power_universe@{u su | u < su}
     `{Univalence} (D : Type@{u}) {X : Type@{u}} {s : D -> (X -> Type@{u})}
@@ -222,10 +249,8 @@ Section AssumePropResizing.
   Proof.
     apply (alg_inj_retract r retr).
     apply alg_inj_arrow.
-    apply alg_inj_Type.
+  apply alg_inj_Type_sigma.
   Defined.
-
-End AssumePropResizing.
 
 (** ** Injectivity in terms of algebraic injectivity in the absence of resizing. *)
 
@@ -238,11 +263,6 @@ Proof.
   apply tr.
   srapply Dai.
 Defined.
-
-(*Remove?*)
-Definition ishprop_injectivity
-  `{Funext} (D : Type@{w})
-  : IsHProp@{t} (IsInjectiveType@{u v w uv uw vw uvw} D) := _.
 
 (** The propositional truncation of algebraic injectivity implies injectivity. *)
 Definition inj_merely_alginj (*Fix Universes*)
