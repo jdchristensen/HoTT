@@ -241,16 +241,16 @@ Section AssumePropResizing.
 
 End AssumePropResizing.
 
-  (** Any retract of a type family [X -> Type@{u}] is algebraically injective. *)
-  Definition alg_inj_retract_power_universe@{u su | u < su}
-    `{Univalence} (D : Type@{u}) {X : Type@{u}} {s : D -> (X -> Type@{u})}
-    (r : (X -> Type@{u}) -> D) (retr : r o s == idmap)
-    : IsAlgebraicInjectiveType@{u u u u u u u} D.
-  Proof.
-    apply (alg_inj_retract r retr).
-    apply alg_inj_arrow.
+(** Any retract of a type family [X -> Type@{u}] is algebraically injective. *)
+Definition alg_inj_retract_power_universe@{u su | u < su}
+  `{Univalence} (D : Type@{u}) {X : Type@{u}} {s : D -> (X -> Type@{u})}
+  (r : (X -> Type@{u}) -> D) (retr : r o s == idmap)
+  : IsAlgebraicInjectiveType@{u u u u u u u} D.
+Proof.
+  apply (alg_inj_retract r retr).
+  apply alg_inj_arrow.
   apply alg_inj_Type_sigma.
-  Defined.
+Defined.
 
 (** ** Injectivity in terms of algebraic injectivity in the absence of resizing. *)
 
@@ -265,65 +265,80 @@ Proof.
 Defined.
 
 (** The propositional truncation of algebraic injectivity implies injectivity. *)
-Definition inj_merely_alginj (*Fix Universes*)
+Definition inj_merely_alg_inj@{u v w uv uw vw uvw t | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw, uvw < t}
   `{Funext} {D : Type@{w}}
-  (mDai : merely (IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D))
-  : (IsInjectiveType@{u v w uv uw vw uvw} D).
+  (mDai : merely@{t} (IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D))
+  : ((IsInjectiveType@{u v w uv uw vw uvw} D) : Type@{t}).
 Proof.
-  strip_truncations.
-  apply (inj_alg_inj D mDai).
+  revert mDai.
+  nrapply Trunc_rec@{t t}. (* Manually stripping truncations so as to control universe variables. *)
+  - repeat (nrapply istrunc_forall@{t t t}; intro).
+    apply istrunc_truncation.
+  - intro Dai.
+    apply (inj_alg_inj@{u v w uv uw vw uvw} D Dai).
 Defined.
 
 (** Injective types are retracts of any type that they embed into, in an unspecified way. *)
-Definition merely_retract_inj_embedding
+Definition merely_retract_inj_embedding@{v w vw svw | v <= vw, w <= vw, vw < svw}
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
   (Di : IsInjectiveType@{w v w vw w vw vw} D)
-  : merely { r | r o j == idmap }
+  : merely@{svw} { r | r o j == idmap }
   := (Di _ _ _ _ idmap).
 
 (** The retract of an injective type is injective. *)
-Definition inj_retract
+Definition inj_retract@{u v w w' uv uw vw uw' vw' uvw uvw' t | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw,
+                              u <= uw', v <= vw', w' <= uw', w' <= vw', uv <= uvw', uw' <= uvw', vw' <= uvw', uvw < t, uvw' < t}
   `{Funext} {D' : Type@{w'}} {D : Type@{w}} (r : D -> D') {s : D' -> D}
   (retr : r o s == idmap) (Di : IsInjectiveType@{u v w uv uw vw uvw} D)
   : IsInjectiveType@{u v w' uv uw' vw' uvw'} D'.
 Proof.
   intros X Y j isem f.
   pose proof (mD := Di X Y j isem (s o f)).
-  strip_truncations; apply tr.
-  snrefine (r o mD.1; _).
-  intros x.
-  rhs_V apply (retr (f x)).
-  apply (ap r (mD.2 x)).
+  revert mD.
+  nrapply Trunc_rec@{t t}.
+  - apply istrunc_truncation.
+  - intros [g e].
+    apply tr.
+    snrefine (r o g; _).
+    intros x.
+    rhs_V apply (retr (f x)).
+    apply (ap r (e x)).
 Defined.
 
 (** The power of an injective type is injective. *)
-Definition inj_arrow
+Definition inj_arrow@{u v w t uv ut vt tw uvt utw vtw utvw | u <= uv, v <= uv, u <= ut, t <= ut, v <= vt, t <= vt, t <= tw, w <= tw,
+                        uv <= uvt, ut <= uvt, vt <= uvt, ut <= utw, tw <= utw, vt <= vtw, tw <= vtw, uvt <= utvw, utw <= utvw, vtw <= utvw}
   `{Funext} {A : Type@{t}} (D : Type@{w})
   (Di : IsInjectiveType@{ut vt w uvt utw vtw utvw} D)
   : IsInjectiveType@{u v tw uv utw vtw utvw} (A -> D).
 Proof.
   intros X Y j isem f.
-  assert (IsEmbedding (fun a : A => a)).
-  - rapply _. rapply _.
-  - pose proof (mD := Di (X * A) (Y * A) (functor_prod j idmap) (istruncmap_functor_prod _ _ _) (uncurry f)).
-    strip_truncations; apply tr.
-    refine (fun y a => mD.1 (y, a); _).
-    intros x. apply path_forall. intros a.
-    apply (mD.2 (x, a)).
+  assert (embId : IsEmbedding (fun a : A => a)).
+  - nrapply istruncmap_mapinO_tr. rapply _.
+  - pose proof (mD := Di (X * A) (Y * A) (functor_prod j idmap)
+      (istruncmap_functor_prod@{u v t t ut vt uvt uvt uv t} _ _ _) (uncurry f)).
+    revert mD.
+    nrapply Trunc_rec@{utvw utvw}.
+    * apply istrunc_truncation.
+    * intros [g e].
+      apply tr.
+      refine (fun y a => g (y, a); _).
+      intros x. apply path_forall. intros a.
+      apply (e (x, a)).
 Defined.
 
 (** Any u,u^+-injective type [X : Type@{u}], is a retract of [X -> Type@{u}] in an unspecified way. *)
-Definition merely_retract_power_universe_usuinj `{Univalence}
-  (D : Type@{u}) (Di : IsInjectiveType@{u su u su u su su} D)
-  : merely { r : (D -> Type@{u}) -> D | r o (@paths D) == idmap }
+Definition merely_retract_power_universe_usuinj@{u su ssu | u < su, su < ssu}
+  `{Univalence} (D : Type@{u}) (Di : IsInjectiveType@{u su u su u su su} D)
+  : merely@{su} (sig@{su su} (fun r => r o (@paths D) == idmap))
   := merely_retract_inj_embedding D (@paths D) isembedding_paths Di.
 
 (** Inverse of [inj_merely_alg_inj] modulo universes. *)
-Definition merely_alg_uuinj_usuinj `{Univalence}
+Definition merely_alg_uuinj_usuinj@{u su ssu | u < su, su < ssu} `{Univalence}
   (D : Type@{u}) (Di : IsInjectiveType@{u su u su u su su} D)
-  : merely (IsAlgebraicInjectiveType@{u u u u u u u} D).
+  : merely@{su} (IsAlgebraicInjectiveType@{u u u u u u u} D).
 Proof.
   srefine (Trunc_functor (-1) _ (merely_retract_power_universe_usuinj D Di)).
   intros [r retr].
-  apply (alg_inj_retract_power_universe D r retr). (*Why is this working without Prop Resizing?*)
+  apply (alg_inj_retract_power_universe D r retr).
 Defined.
