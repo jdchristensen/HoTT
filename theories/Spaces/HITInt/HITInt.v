@@ -57,7 +57,29 @@ End IntegersHIT.
 
 Section IntegersHITLemmas.
 
-  Definition IntegersHIT_ind_simp
+  Definition pred1_is_pred2
+    (z : IntegersHIT)
+    : pred1 z = pred2 z
+    := (ap pred1 ((ret z) ^)) @ sec (pred2 z).
+
+  Definition ret_pred1
+      (z: IntegersHIT)
+      : (succ (pred1 z)) = z.
+  Proof.
+    intros.
+    exact ((ap succ (pred1_is_pred2 z)) @ (ret z)).
+  Defined.
+
+    Definition sec_pred2
+      (z: IntegersHIT)
+      : (pred2 (succ z)) = z.
+  Proof.
+    intros.
+    rewrite (pred1_is_pred2 _)^.
+    exact (sec z).
+  Defined.
+
+  Definition IntegersHIT_ind_hprop
   `{P : IntegersHIT -> Type}
   `{h: forall (x : IntegersHIT), IsHProp (P x)}
   (t0 : P zero_i) 
@@ -72,6 +94,27 @@ Section IntegersHITLemmas.
     - exact f.
     - exact g1.
     - exact g2.
+    - intros z t.
+      rapply path_ishprop.
+    - intros z t.
+      rapply path_ishprop.
+  Defined.
+
+  Definition IntegersHIT_ind_hprop_pred
+  `{P : IntegersHIT -> Type}
+  `{h: forall (x : IntegersHIT), IsHProp (P x)}
+  (t0 : P zero_i) 
+  (f : forall z : IntegersHIT, P z -> P (succ z))
+  (g : forall z : IntegersHIT, P z -> P (pred1 z))
+  (x: IntegersHIT)
+  : P x.
+  Proof.
+    srapply IntegersHIT_ind.
+    - exact t0.
+    - exact f.
+    - exact g.
+    - intros z t.
+      exact ((pred1_is_pred2 z) #  (g z) t).
     - intros z t.
       rapply path_ishprop.
     - intros z t.
@@ -102,6 +145,28 @@ Section IntegersHITLemmas.
       refine ((transport_const (ret z) (f (g2 t))) @ (r t)).
   Defined.
 
+  Definition IntegersHIT_rec_pred
+    (P: Type)
+    (t0 : P)
+    (f :  P -> P)
+    (g :  P -> P)
+    (s : forall  (t : P ), (g (f t)= t))
+    (r : forall  (t : P ), (f (g t)= t))
+    : IntegersHIT -> P.
+  Proof.
+    srapply IntegersHIT_ind.
+    - exact t0.
+    - intro z.
+      exact f.
+    - intro z.
+      exact g.
+    - intro z.
+      exact g.
+    - intros z t.
+      refine ((transport_const (sec z) (g (f t))) @ (s t)).
+    - intros z t.
+      refine ((transport_const (ret z) (f (g t))) @ (r t)).
+  Defined.
 
 
   Definition IntegersHIT_rec_beta_sec
@@ -141,31 +206,6 @@ Section IntegersHITLemmas.
     refine ((apD_const _ _)^ @ _).
     rapply IntegersHIT_ind_beta_ret.
   Defined.
-
-
-  Definition pred1_is_pred2
-    (z : IntegersHIT)
-    : pred1 z = pred2 z
-    := (ap pred1 ((ret z) ^)) @ sec (pred2 z).
-
-
-  Definition ret_pred1
-      (z: IntegersHIT)
-      : (succ (pred1 z)) = z.
-  Proof.
-    intros.
-    exact ((ap succ (pred1_is_pred2 z)) @ (ret z)).
-  Defined.
-
-    Definition sec_pred2
-      (z: IntegersHIT)
-      : (pred2 (succ z)) = z.
-  Proof.
-    intros.
-    rewrite (pred1_is_pred2 _)^.
-    exact (sec z).
-  Defined.
-
 
   Definition integershit_to_biinv
       : EquivBiInv IntegersHIT IntegersHIT.
@@ -434,195 +474,85 @@ Delimit Scope IntegersHIT_scope with IntegersHIT.
 Local Open Scope IntegersHIT_scope.
 
 
-  (** Printing *)
-  (* Definition int_to_number_int (n : IntegersHIT) : Numeral.int :=
-    match n with
-    | posS n => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S n)))
-    | zero => Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))
-    | negS n => Numeral.IntDec (Decimal.Neg (Nat.to_uint (S n)))
-    end. *)
+  About int.
+(** Printing *)
+Definition IntegersHIT_to_number_int (z : IntegersHIT) : Numeral.int := int_to_number_int (IntHITtoIntIT z).
 
-  (** Parsing *)
-  Definition int_of_number_int (d : Numeral.int) :=
-    match d with
-    | Numeral.IntDec (Decimal.Pos d) => int_of_nat (Nat.of_uint d)
-    | Numeral.IntDec (Decimal.Neg d) => negS (nat_pred (Nat.of_uint d))
-    | Numeral.IntHex (Hexadecimal.Pos u) => int_of_nat (Nat.of_hex_uint u)
-    | Numeral.IntHex (Hexadecimal.Neg u) => negS (nat_pred (Nat.of_hex_uint u))
-    end.
+(** Parsing *)
+Definition IntegersHIT_of_number_int (d : Numeral.int) := IntITtoIntHIT (int_of_number_int  d).
 
-  Number Notation Int int_of_number_int int_to_number_int : IntegersHIT_scope.
+  (* Number Notation Int int_of_number_int int_to_number_int : IntegersHIT_scope. *)
 
-  Check istrunc_equiv_istrunc.
+Number Notation IntegersHIT IntegersHIT_of_number_int IntegersHIT_to_number_int  : IntegersHIT_scope.
 
-  Check isequiv_IntHIT_Int.
+(** The following function reduces an expression succ(pred1(succ( ... )))*)
+Definition IntegersHIT_reduce 
+  := IntITtoIntHIT o IntHITtoIntIT.
 
-  Check equiv_inverse isequiv_IntHIT_Int.
-
-  
-
-  (** The following function reduces an expression succ(pred1(succ( ... )))*)
-  Definition IntegersHIT_reduce 
-    := IntITtoIntHIT o IntHITtoIntIT.
-
-  Definition IntegersHIT_neg (x : IntegersHIT) 
-    : IntegersHIT.
-    Proof.
-      revert x.
-      snrapply IntegersHIT_rec.
-      - exact zero_i.
-      - exact pred1.
-      - exact succ. 
-      - exact succ.
-      - simpl.
-        intro z.
-        rewrite ret_pred1.
-        reflexivity.
-      - simpl.
-        intro z.
-        rewrite sec.
-        reflexivity. 
-  Defined.
-
-  Notation "- x" := (IntegersHIT_neg x) : IntegersHIT_scope.
-
-  (* Notation "z .+1" := (succ z) : IntegersHIT_scope.
-  Notation "z .-1" := (pred1 z) : IntegersHIT_scope. *)
-
-
-
-  Compute   IntegersHIT_neg(zero_i).
-
-  Compute   IntegersHIT_neg(succ(zero_i)).
-
-  Compute   IntegersHIT_neg(succ(succ zero_i)).
-    
-  Compute   IntegersHIT_neg(pred1 (pred2 zero_i)).
-
-
-  Compute   IntegersHIT_reduce (IntegersHIT_neg(pred1 (pred1 zero_i))).
-
-  (** we define addition by recursion on the first argument*)
-  Definition IntegersHIT_add 
-  (x y : IntegersHIT) 
-  : IntegersHIT.
-  Proof.
-    revert x.
-    snrapply IntegersHIT_rec.
-    - exact y.
-    - exact succ.
-    - exact pred1.
-    - exact pred2.
-    - exact sec.
-    - exact ret.
-  Defined.
-
-  Infix "+" := IntegersHIT_add : IntegersHIT_scope.
-  Infix "-" := (fun x y => x + -y) : IntegersHIT_scope.
-
-(* Context {x: IntegersHIT}. *)
-
-  (* Compute succ((succ (succ x))) + (pred1 x)). *)
-
-(* Definition IntegersHIT_lemma_r
-  (x: IntegersHIT)
-  : - (succ x) = pred1 (- x).
-Proof.
-    revert x.
-    snrapply IntegersHIT_ind.
-    - simpl.
-    reflexivity. *)
-
-
-(* Definition IntegersHIT_lemma_o
-  (x: IntegersHIT)
-  : x + - (succ x) = pred1 x.
-   *)
-
-
-  Definition IntegersHIT_lemma
-    (x y : IntegersHIT)
-    :(x + y) - y = x.
-  Proof.
-    revert x.
-    snrapply IntegersHIT_ind.
-    - simpl.
-      admit.
-    - simpl.
-      intros z H.
-      apply (ap succ) in H.
-      exact H.
-    - simpl.
-      intros z H.
-      apply (ap pred1) in H.
-      exact H.
-    - simpl.
-      intros z H.
-      apply (ap pred2) in H.
-      exact H.
-    - simpl. 
-      intros z H.
-      rewrite transport_paths_FlFr.
-      snrapply path_ishprop.
-      snrapply ishset_IntegersHIT.
-    - simpl. 
-      intros z H.
-      rewrite transport_paths_FlFr.
-      snrapply path_ishprop.
-      snrapply ishset_IntegersHIT.
-Admitted.
-
-
-      (* (* unfold IntegersHIT_add.
-      unfold IntegersHIT_rec.
-      unfold IntegersHIT_ind.
-      simpl.
-      reflexivity. *)
-  Admitted. *)
-
-  Definition IntegersHIT_lemma2
-    (x y : IntegersHIT)
-    :(x - y) + y = x.
-  Proof.
-    revert x.
-    snrapply IntegersHIT_ind.
-    - simpl.
-  Admitted.
-
-  Definition IntegersHIT_mul 
-  (x y : IntegersHIT) 
+Definition IntegersHIT_neg (x : IntegersHIT) 
   : IntegersHIT.
   Proof.
     revert x.
     snrapply IntegersHIT_rec.
     - exact zero_i.
-    - exact (fun z => (IntegersHIT_add) z y).
-    - exact (fun z => (IntegersHIT_add) z (-y)).
-    - exact (fun z => (IntegersHIT_add) z (-y)).
-    -
-      simpl.
-      intro t.
-      exact (IntegersHIT_lemma t y).
-    -
-      simpl.
-      intro t.
-      exact (IntegersHIT_lemma2 t y).
-  Defined.
+    - exact pred1.
+    - exact succ. 
+    - exact succ.
+    - simpl.
+      intro z.
+      rewrite ret_pred1.
+      reflexivity.
+    - simpl.
+      intro z.
+      rewrite sec.
+      reflexivity. 
+Defined.
 
-  Infix "*" := int_mul : int_scope.
+Notation "- x" := (IntegersHIT_neg x) : IntegersHIT_scope.
 
-  Compute IntegersHIT_mul zero_i zero_i.
-  Compute IntegersHIT_mul (succ zero_i) zero_i.
-  Compute IntegersHIT_mul (succ zero_i) (succ zero_i).
-  Compute IntegersHIT_mul (succ (succ zero_i)) (succ (succ zero_i)).
-  Compute IntegersHIT_mul (succ (succ (succ zero_i))) (succ (succ zero_i)).
+(* Notation "z .+1" := (succ z) : IntegersHIT_scope.
+Notation "z .-1" := (pred1 z) : IntegersHIT_scope. *)
+
+
+Compute (-5).
+
+Compute   IntegersHIT_neg(zero_i).
+
+Compute   IntegersHIT_neg(succ(zero_i)).
+
+Compute   IntegersHIT_neg(succ(succ zero_i)).
+  
+Compute   IntegersHIT_neg(pred1 (pred2 zero_i)).
+
+Compute   IntegersHIT_reduce (IntegersHIT_neg(pred1 (pred1 zero_i))).
+
+(** we define addition by recursion on the first argument*)
+Definition IntegersHIT_add 
+(x y : IntegersHIT) 
+: IntegersHIT.
+Proof.
+  revert x.
+  snrapply IntegersHIT_rec.
+  - exact y.
+  - exact succ.
+  - exact pred1.
+  - exact pred2.
+  - exact sec.
+  - exact ret.
+Defined.
+
+Infix "+" := IntegersHIT_add : IntegersHIT_scope.
+Infix "-" := (fun x y => x + -y) : IntegersHIT_scope.
+
+Compute 5 + 6 -7.
+
 
 
 (** Negation is involutive. *)
 Definition IntegersHIT_neg_neg (x : IntegersHIT) : - - x = x.  
 Proof.
   revert x.
-  srapply IntegersHIT_ind_simp.
+  srapply IntegersHIT_ind_hprop_pred.
   - simpl.
     reflexivity.
   - simpl.
@@ -633,67 +563,31 @@ Proof.
     intros z H.
     apply (ap pred1) in H.
     exact H.
-  - simpl.
-    intros z H.
-    apply (ap pred2) in H.
-    rewrite (pred1_is_pred2 _).
-    exact H.
 Defined.
 
-(* * Negation is an equivalence.
-Global Instance isequiv_int_neg@{} : IsEquiv int_neg.
+(* * Negation is an equivalence. *)
+Global Instance isequiv_int_neg : IsEquiv IntegersHIT_neg.
 Proof.
-  snrapply (isequiv_adjointify int_neg int_neg).
-  1,2: nrapply int_neg_neg.
+  snrapply (isequiv_adjointify IntegersHIT_neg IntegersHIT_neg).
+  1,2: nrapply IntegersHIT_neg_neg.
 Defined.
 
 (** Negation is injective. *)
-Definition isinj_int_neg@{} (x y : Int) : - x = - y -> x = y
-  := equiv_inj int_neg. *)
+Definition isinj_IntegersHIT_neg (x y : IntegersHIT) : - x = - y -> x = y
+  := equiv_inj IntegersHIT_neg.
 
 (** The negation of a successor is the predecessor of the negation. *)
-
-Definition IntegersHIT_neg_succ (x : IntegersHIT) :  - (succ x) = pred1 (- x).
+Definition IntegersHIT_neg_succ (x : IntegersHIT) :  - succ x = pred1 (-x).
 Proof.
-  revert x.
-  srapply IntegersHIT_ind_simp.
-  - simpl.
-    unfold IntegersHIT_neg.
-    simpl.
-    reflexivity.
-  - simpl.
-    intros z H.
-    unfold IntegersHIT_neg.
-    reflexivity.
-  -
-    intros z H.
-    unfold IntegersHIT_neg.
-    reflexivity.
-  -
-    intros z H.
-    unfold IntegersHIT_neg.
-    reflexivity.
+  reflexivity.
 Defined.
 
-
-
 (** The negation of a predecessor is the successor of the negation. *)
-(* Definition int_neg_pred (x : Int) : - x.-1 = (- x).+1.
+Definition IntegersHIT_neg_pred (x : IntegersHIT) : - pred1 x = succ (- x).
 Proof.
-  by destruct x as [ | | []].
-Defined. *)
+  reflexivity.
+Defined.
 
-(** The successor of a predecessor is the identity. *)
-(* Definition int_pred_succ@{} (x : Int) : x.-1.+1 = x.
-Proof.
-  by destruct x as [ | | []].
-Defined.  *)
-
-(* * The predecessor of a successor is the identity.
-Definition int_succ_pred@{} (x : Int) : x.+1.-1 = x.
-Proof.
-  by destruct x as [[] | | ].
-Defined. *)
 
 (* * The successor is an equivalence on [Int] *)
 Global Instance isequiv_IntegersHIT_succ : IsEquiv succ
@@ -710,16 +604,16 @@ Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
 
 
 (** Integer addition with zero on the left is the identity by definition. *)
-Definition IntegersHIT_add_0_l (x : IntegersHIT) : zero_i + x = x.
+Definition IntegersHIT_add_0_l (x : IntegersHIT) : 0 + x = x.
 Proof.
-  simpl.
   reflexivity.
+Defined.
 
 (** Integer addition with zero on the right is the identity. *)
-Definition IntegersHIT_add_0_r (x : IntegersHIT) : x + zero_i = x.
+Definition IntegersHIT_add_0_r (x : IntegersHIT) : x + 0 = x.
 Proof.
   revert x.
-  srapply IntegersHIT_ind_simp.
+  srapply IntegersHIT_ind_hprop_pred.
   - simpl.
     reflexivity.
   - simpl.
@@ -730,55 +624,18 @@ Proof.
     intros z H.
     apply (ap pred1) in H.
     exact H.
-  - simpl.
-    intros z H.
-    apply (ap pred2) in H.
-    exact H.
 Defined.  
-
-(* To avoid using isSet Property maybe use   
-    rewrite concat_pp_p.
-    apply moveR_Vp.
-    rewrite (ap_compose _ _ _)^.
-    rewrite ap_idmap.
-    simpl.
-    apply (concat_A1p (f := pred1 o succ)). *)
-
 
 (** Adding a successor on the left is the successor of the sum. *)
 Definition IntegersHIT_add_succ_l (x y : IntegersHIT) : (succ x) + y = succ (x + y).
 Proof.
-  revert x.
-  srapply IntegersHIT_ind_simp.
-  - simpl.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
+  reflexivity.
 Defined.
 
 (** Adding a predecessor on the left is the predecessor of the sum. *)
 Definition IntegersHIT_add_pred_l (x y : IntegersHIT) : (pred1 x) + y = pred1 (x + y).
 Proof.
-  revert y.
-  srapply IntegersHIT_ind_simp.
-  - simpl.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.
-  - simpl.
-    intros z H.
-    reflexivity.  
+  reflexivity.
 Defined.
 
 
@@ -786,7 +643,7 @@ Defined.
 Definition IntegersHIT_add_succ_r (x y : IntegersHIT) : x + (succ y) = succ (x + y).
 Proof.
   revert x.
-  srapply IntegersHIT_ind_simp.
+  srapply IntegersHIT_ind_hprop_pred.
   - simpl.
     reflexivity.
   - simpl.
@@ -799,19 +656,13 @@ Proof.
     rewrite sec in H.
     rewrite ret_pred1.
     exact H.
-  - simpl.
-    intros z H.
-    apply (ap pred2) in H.
-    rewrite sec_pred2 in H.
-    rewrite ret.
-    exact H.
 Defined.
 
 (** Adding a predecessor on the right is the predecessor of the sum. *)
 Definition IntegersHIT_add_pred_r (x y : IntegersHIT) : x + (pred1 y) = pred1 (x + y).
 Proof.
   revert x.
-  srapply IntegersHIT_ind_simp.
+  srapply IntegersHIT_ind_hprop_pred.
   - simpl.
     reflexivity.
   - simpl.
@@ -824,50 +675,311 @@ Proof.
     intros z H.
     apply (ap pred1) in H.
     exact H.
+Defined.
+
+
+
+(** Integer addition is commutative. *)
+Definition IntegersHIT_add_comm (x y : IntegersHIT) : x + y = y + x.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred.
+  - simpl.
+    apply (IntegersHIT_add_0_r _)^.
   - simpl.
     intros z H.
-    apply (ap pred2) in H.
-    rewrite pred1_is_pred2.
-    rewrite pred1_is_pred2.
-    rewrite pred1_is_pred2 in H.
-    rewrite pred1_is_pred2 in H.
+    apply (ap succ) in H.
+    rewrite IntegersHIT_add_succ_r.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap pred1) in H.
+    rewrite IntegersHIT_add_pred_r.
+    exact H.
+Defined. 
+
+(** Integer addition is associative. *)
+Definition IntegersHIT_add_assoc (x y z : IntegersHIT) : x + (y + z) = x + y + z.
+Proof.
+  revert x. 
+  srapply IntegersHIT_ind_hprop_pred.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros x H.
+    apply (ap succ) in H.
+    exact H.
+  - simpl.
+    intros x H.
+    apply (ap pred1) in H.
+    exact H. 
+Defined.
+
+(** Negation is a left inverse with respect to integer addition. *)
+Definition IntegersHIT_add_neg_l (x : IntegersHIT) : - x + x = 0.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred.
+  - simpl.
+    reflexivity.
+  - simpl.
+    intros z H.
+    rewrite IntegersHIT_add_succ_r.
+    rewrite sec.
+    exact H.
+  - simpl.
+    intros z H.
+    rewrite IntegersHIT_add_pred_r.
+    rewrite ret_pred1.
+    exact H.
+Defined. 
+
+(** Negation is a right inverse with respect to integer addition. *)
+Definition IntegersHIT_add_neg_r (x : IntegersHIT) : x - x = 0.
+Proof.
+  unfold "-"; by rewrite IntegersHIT_add_comm, IntegersHIT_add_neg_l.
+Defined.
+
+(** Negation distributes over addition. *)
+Definition IntegersHIT_neg_add (x y : IntegersHIT) : - (x + y) = - x - y.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred.
+  - reflexivity.
+  - simpl.
+    intros z H.
+    apply (ap pred1) in H.
+    exact H.
+  - simpl.
+    intros z H.
+    apply (ap succ) in H.
     exact H.
 Defined.
 
-Definition IntegersHIT_lemma''
-    (x : IntegersHIT)
-    :(x - x) = zero_i.
+
+(** *** Multiplication *)
+
+
+  Definition IntegersHIT_mul 
+  (x y : IntegersHIT) 
+  : IntegersHIT.
   Proof.
     revert x.
-    srapply IntegersHIT_ind_simp.
+    snrapply IntegersHIT_rec.
+    - exact zero_i.
+    - exact (fun z => (IntegersHIT_add) z y).
+    - exact (fun z => (IntegersHIT_add) z (-y)).
+    - exact (fun z => (IntegersHIT_add) z (-y)).
     - simpl.
-      reflexivity.
-    -
-      simpl.
-      intros z H.
-      apply (ap (succ o pred1)) in H.
-      simpl in H.
-      rewrite IntegersHIT_add_pred_r.
-      rewrite (ret_pred1 zero_i)^.
-      exact H.
+      intro t.
+      rewrite (IntegersHIT_add_assoc _ _ _)^.
+      rewrite IntegersHIT_add_neg_r.
+      exact (IntegersHIT_add_0_r _).
     - simpl.
-      intros z H.
-      rewrite IntegersHIT_add_succ_r.
-      rewrite sec.
-      exact H.
-    - simpl.
-      intros z H.
-      rewrite IntegersHIT_add_succ_r.
-      rewrite sec_pred2.
-      exact H.
+      intro t.
+      rewrite (IntegersHIT_add_assoc _ _ _)^.
+      rewrite IntegersHIT_add_neg_l.
+      exact (IntegersHIT_add_0_r _).
+  Defined.
+
+  Infix "*" := IntegersHIT_mul : IntegersHIT_scope.
+
+
+Compute (5*4) - 1.
+
+Compute (7*0) + 3.
+
+Compute (6*1).
+
+Compute (0*5).
+
+
+(** The following is a simplification*)
+
+(** Multiplication with a successor on the left is the sum of the multplication without the sucesseor and the multiplicand which was not a successor. *)
+Definition IntegersHIT_mul_succ_l (x y : IntegersHIT) : (succ x) * y =  x * y + y.
+Proof.
+  reflexivity.
+Defined.
+
+(** The following is a simplification*)
+
+(** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
+Definition IntegersHIT_mul_pred_l (x y : IntegersHIT) : (pred1 x) * y = x * y  - y.
+Proof.
+  reflexivity.
+Defined.
+
+(** Integer multiplication with zero on the left is zero by definition. *)
+Definition IntegersHIT_mul_0_l (x : IntegersHIT) : 0 * x = 0 := 1.
+
+(** Integer multiplication with zero on the right is zero. *)
+Definition IntegersHIT_mul_0_r (x : IntegersHIT) : x * 0 = 0.
+Proof.
+  revert x.
+  rapply IntegersHIT_ind_hprop_pred.
+  - reflexivity.
+  - simpl.
+    intros x H.
+    by rewrite IntegersHIT_add_0_r.
+  - simpl.
+    intros x H.
+    by rewrite IntegersHIT_add_0_r.
+Defined.
+
+
+(** The following is shorter*)
+
+(** Integer multiplication with one on the left is the identity. *)
+Definition IntegersHIT_mul_1_l (x : IntegersHIT) : 1 * x = x.
+Proof.
+  reflexivity.
+Defined.
+
+(** Integer multiplication with one on the right is the identity. *)
+Definition IntegersHIT_mul_1_r (x : IntegersHIT) : x * 1 = x.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred.
+  - reflexivity.
+  - simpl.
+    intros x H.
+    apply (ap (fun z => IntegersHIT_add z (succ zero_i))) in H.
+    rewrite (IntegersHIT_add_succ_r x zero_i)in H.
+    rewrite IntegersHIT_add_0_r in H.
+    exact H.
+  - intros x H.
+    apply (ap (fun z => IntegersHIT_add z (pred1 zero_i))) in H.
+    rewrite (IntegersHIT_add_pred_r x zero_i)in H.
+    rewrite IntegersHIT_add_0_r in H.
+    exact H.
+Defined.
+
+(** Multiplying with a negation on the left is the same as negating the product. *)
+Definition IntegersHIT_mul_neg_l (x y : IntegersHIT) : - x * y = - (x * y).
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred.
+  - reflexivity.
+  - simpl.
+    intros x H.
+    rewrite IntegersHIT_neg_add.
+    by apply (ap (fun z => IntegersHIT_add z (- y))) in H.
+  - simpl.
+    intros x H.
+    rewrite IntegersHIT_neg_add.
+    rewrite IntegersHIT_neg_neg.
+    by apply (ap (fun z => IntegersHIT_add z y)) in H.
+Defined.
+
+(** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
+Definition IntegersHIT_mul_succ_r (x y : IntegersHIT) : x * (succ y) = x + x * y.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred.
+  - reflexivity.
+  - simpl.
+    intros x H.
+    apply (ap (fun z => IntegersHIT_add z (succ y))) in H.
+    rewrite (IntegersHIT_add_succ_r x _ )^.
+    rewrite (IntegersHIT_add_succ_r _ y )^.
+    by rewrite (IntegersHIT_add_assoc).
+  - simpl.
+    intros x H.
+    rewrite IntegersHIT_add_assoc.
+    rewrite (IntegersHIT_add_pred_r _ (-y))^.
+    by apply (ap (fun z => IntegersHIT_add z (pred1 (-y)))) in H.
 Defined.
 
 
 
+(** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
+Definition IntegersHIT_mul_pred_r (x y : IntegersHIT) : x * (pred1 y) = -x + x * y.
+Proof.
+  revert x.
+  rapply IntegersHIT_ind_hprop_pred.
+  - reflexivity.
+  - intros x H.
+    apply (ap (fun z => IntegersHIT_add z  (pred1 y))) in H.
+    rewrite (IntegersHIT_mul_succ_l _ _)^ in H.
+    rewrite IntegersHIT_neg_succ.
+    rewrite (IntegersHIT_mul_succ_l _ y).
+    rewrite (IntegersHIT_add_comm _ y).
+    rewrite IntegersHIT_add_assoc.
+    rewrite IntegersHIT_add_pred_l.
+    rewrite (IntegersHIT_add_comm _ y).
+    rewrite (IntegersHIT_add_pred_l y _)^.
+    rewrite (IntegersHIT_add_assoc _ _ _)^.
+    by rewrite IntegersHIT_add_comm.
+  - intros x H.
+    apply (ap (fun z => IntegersHIT_add z  (-(pred1 y)))) in H.
+    rewrite IntegersHIT_mul_pred_l.
+    rewrite IntegersHIT_mul_pred_l.
+    rewrite IntegersHIT_neg_pred. 
+    rewrite IntegersHIT_neg_pred in H. 
+    rewrite IntegersHIT_neg_pred.
+    rewrite IntegersHIT_add_succ_l.
+    rewrite (IntegersHIT_add_succ_r (- x + x * y) (-y)) in H.
+    by rewrite (IntegersHIT_add_assoc _ _ _)^ in H.
+Defined.
 
+(** Integer multiplication is commutative. *)
+(* Definition int_mul_comm@{} (x y : Int) : x * y = y * x.
+Proof.
+  induction y as [|y IHy|y IHy] in x |- *.
+  - apply int_mul_0_r.
+  - rewrite int_mul_succ_l.
+    rewrite int_mul_succ_r.
+    by rewrite IHy.
+  - rewrite int_mul_pred_l.
+    rewrite int_mul_pred_r.
+    by rewrite IHy.
+Defined. *)
 
+(** Multiplying with a negation on the right is the same as negating the product. *)
+(* Definition int_mul_neg_r@{} (x y : Int) : x * - y = - (x * y).
+Proof.
+  rewrite !(int_mul_comm x).
+  apply int_mul_neg_l.
+Defined. *)
 
+(** Multiplication distributes over addition on the left. *)
+(* Definition int_dist_l@{} (x y z : Int) : x * (y + z) = x * y + x * z.
+Proof.
+  induction x as [|x IHx|x IHx] in y, z |- *.
+  - reflexivity.
+  - rewrite 3 int_mul_succ_l.
+    rewrite IHx.
+    rewrite !int_add_assoc; f_ap.
+    rewrite <- !int_add_assoc; f_ap.
+    by rewrite int_add_comm.
+  - rewrite 3 int_mul_pred_l.
+    rewrite IHx.
+    rewrite !int_add_assoc; f_ap.
+    rewrite int_neg_add.
+    rewrite <- !int_add_assoc; f_ap.
+    by rewrite int_add_comm.
+Defined. *)
 
+(** Multiplication distributes over addition on the right. *)
+(* Definition int_dist_r@{} (x y z : Int) : (x + y) * z = x * z + y * z.
+Proof.
+  by rewrite int_mul_comm, int_dist_l, !(int_mul_comm z).
+Defined. *)
+
+(** Multiplication is associative. *)
+(* Definition int_mul_assoc@{} (x y z : Int) : x * (y * z) = x * y * z.
+Proof.
+  induction x as [|x IHx|x IHx] in y, z |- *.
+  - reflexivity.
+  - rewrite 2 int_mul_succ_l.
+    rewrite int_dist_r.
+    by rewrite IHx.
+  - rewrite 2 int_mul_pred_l.
+    rewrite int_dist_r.
+    rewrite <- int_mul_neg_l.
+    by rewrite IHx.
+Defined. *)
 
 
 
