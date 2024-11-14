@@ -248,11 +248,48 @@ Section EmbedProofRight.
   Let s := (fun f => RightKanTypeFamily f j).
   Let r := (fun g : Y -> Type => g o j).
 
-  (*
+  Local Definition k' : forall g, g =< s (r g).
+  Proof. intros g y C [x p]. apply (transport g p^ C). Defined.
+
+  Let M := {g | forall y, IsEquiv (k' g y)}.
+
+  Local Definition F' : (X -> Type) -> M.
+  Proof.
+    intros f.
+    srefine (s f; _).
+    intros y.
+    snrapply isequiv_adjointify.
+    - intros C [x p]. apply (C (x; p) (x; idpath)).
+    - intros C. apply path_forall. intros [x p]. destruct p.
+      apply path_forall. intros w.
+      rapply (@transport _ (fun t => C t (t.1; idpath) = C (x; idpath) t) _ w (center _ (isem (j x) (x; idpath) w)) idpath).
+    - intros a. apply path_forall. intros [x p].
+      destruct p. reflexivity.
+  Defined.
+      
+  Local Definition isequiv_F' : IsEquiv F'.
+  Proof.
+    snrapply isequiv_adjointify.
+    - intros [g e]. apply (r g).
+    - intros [g e]. srapply path_sigma.
+      * apply path_forall. intros y. 
+        apply (@path_universe_uncurried H (s (r g) y) (g y)).
+        symmetry. apply (Build_Equiv _ _ (k' g y) (e y)).
+      * snrefine (path_ishprop _ _).
+        refine istrunc_forall.
+    - intros f. apply path_forall. intros x.
+      apply (path_universe_uncurried (isext_rightkantypefamily _ _ _ _)).
+  Defined.
+
+  (** The map [_ |> j] is an embedding if [j] is an embedding. *)
   Definition isembed_rightkantypefam_ext
     : IsEmbedding (fun f => RightKanTypeFamily f j).
   Proof.
-  Admitted.
-  *)
+    snrapply (istruncmap_compose (-1) F' (@pr1 (Y -> Type) (fun g => forall y, IsEquiv (k' g y)))).
+    - rapply istruncmap_mapinO_tr.
+    - rapply istruncmap_mapinO_tr.
+      rapply mapinO_isequiv.
+      apply isequiv_F'.
+  Defined.
 
 End EmbedProofRight.
