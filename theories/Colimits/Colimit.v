@@ -210,9 +210,6 @@ Proof.
   (* The proof is very similar to the proof of [functor_coeq_homotopy], but it's not clear if we can easily reuse that here. We'd have to redefine [functor_Colimit] using [functor_coeq], and that is more awkward. *)
   snrapply Colimit_ind.
   - intros i x; simpl.
-    unfold functor_Colimit_half.
-    unfold cocone_postcompose_inv.
-    simpl.
     apply ap, h_obj.
   - intros i j g x; simpl.
     Open Scope long_path_scope.
@@ -222,11 +219,10 @@ Proof.
     lhs nrapply concat_pp_p.
     apply moveR_Vp.
     rewrite ! concat_p_pp.
-    rewrite <- 2 (ap_pp (HQ j)).
+    rewrite <- 2 ap_pp.
     rewrite h_comm.
     rewrite concat_pp_V.
     rewrite <- ap_compose.
-    simpl.
     exact (concat_Ap (legs_comm HQ i j g) (h_obj i x))^.
     Close Scope long_path_scope.
 Defined.
