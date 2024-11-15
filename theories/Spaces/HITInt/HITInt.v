@@ -320,7 +320,44 @@ Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
       rapply path_ishprop.
   Defined.
 
+    (** uniqueness principle to compare two functions*)
+
+    
+
 End IntegersHITEquiv.
+ 
+Definition uniquenessZset_two_fun
+  {P : Type} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
+  {s : forall  (t : P ), g1 (f t)= t} {r : forall  (t : P ), f (g2 t)= t}
+  (v : IsHSet P)
+  (k1: IntegersHIT -> P)
+  (k2: IntegersHIT -> P)
+  (p0 : k1 zero_i = k2 zero_i)
+  (pf1 : forall (z : IntegersHIT), (f o k1) z = (k1 o succ) z)
+  (pf2 : forall (z : IntegersHIT), (f o k2) z = (k2 o succ) z)
+  : forall (z : IntegersHIT), k1 z = k2 z.
+  Proof.
+  intro z.
+  exact ((uniquenessZset (t0 := (k2 zero_i)) (f := f)  (g1 := g1) (g2 := g2) (s := s) (r := r) v k1 p0 pf1 z) 
+  @ (uniquenessZset (t0 := (k2 zero_i)) v k2 idpath pf2 z)^).
+Defined.
+
+
+Definition uniquenessZset_two_fun_eq
+  {P : Type} 
+  {e: EquivBiInv P P}
+  (v : IsHSet P)
+  (k1: IntegersHIT -> P)
+  (k2: IntegersHIT -> P)
+  (p0 : k1 zero_i = k2 zero_i)
+  (pf1 : forall (z : IntegersHIT), (e o k1) z = (k1 o succ) z)
+  (pf2 : forall (z : IntegersHIT), (e o k2) z = (k2 o succ) z)
+  : forall (z : IntegersHIT), k1 z = k2 z.
+  Proof.
+  exact (uniquenessZset_two_fun (f := e)  (g1 := (ret_binv e (equiv_isequiv_binv P P e))) 
+  (g2 := (sec_binv e (equiv_isequiv_binv P P e))) (s := (issec_binv e (equiv_isequiv_binv P P e))) 
+  (r := (isret_binv e (equiv_isequiv_binv P P e))) _ _ _ p0 pf1 pf2).
+Defined.
 
 
 Section Uniqueness.
@@ -389,6 +426,7 @@ Definition uniquenessZ
     apply (concat_A1p (f := f o g2)).
 Defined.  
 End Uniqueness.
+
 
 Definition IntITtoIntHIT_comp_succ
   (z: Int)
@@ -470,15 +508,22 @@ Declare Scope IntegersHIT_scope.
 Delimit Scope IntegersHIT_scope with IntegersHIT.
 Local Open Scope IntegersHIT_scope.
 
+(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [succ n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
+Definition IntegersHIT_of_nat (n : nat) : IntegersHIT.
+Proof.
+  induction n.
+  - exact zero_i.
+  - exact (succ IHn).
+Defined.
 
-  About int.
+(* Compute (IntegersHIT_of_nat 5). *)
+
+
 (** Printing *)
-Definition IntegersHIT_to_number_int (z : IntegersHIT) : Numeral.int := int_to_number_int (IntHITtoIntIT z).
+Definition IntegersHIT_to_number_int  :IntegersHIT ->  Numeral.int := int_to_number_int o IntHITtoIntIT.
 
 (** Parsing *)
 Definition IntegersHIT_of_number_int (d : Numeral.int) := IntITtoIntHIT (int_of_number_int  d).
-
-  (* Number Notation Int int_of_number_int int_to_number_int : IntegersHIT_scope. *)
 
 Number Notation IntegersHIT IntegersHIT_of_number_int IntegersHIT_to_number_int  : IntegersHIT_scope.
 
@@ -486,12 +531,19 @@ Number Notation IntegersHIT IntegersHIT_of_number_int IntegersHIT_to_number_int 
 Definition IntegersHIT_reduce 
   := IntITtoIntHIT o IntHITtoIntIT.
 
+Compute IntegersHIT_reduce (succ(pred2(succ(pred1(succ(succ 0)))))).
+
+Compute (succ(pred2(succ(pred1(succ(succ 0)))))).
+
+
+Compute pred2(0).
+
 Definition IntegersHIT_neg (x : IntegersHIT) 
   : IntegersHIT.
   Proof.
     revert x.
     snrapply IntegersHIT_rec.
-    - exact zero_i.
+    - exact 0.
     - exact pred1.
     - exact succ. 
     - exact succ.
@@ -507,13 +559,13 @@ Defined.
 
 Notation "- x" := (IntegersHIT_neg x) : IntegersHIT_scope.
 
-(* Notation "z .+1" := (succ z) : IntegersHIT_scope.
-Notation "z .-1" := (pred1 z) : IntegersHIT_scope. *)
+Notation "z .+1" := (succ z) : IntegersHIT_scope.
+Notation "z .-1" := (pred1 z) : IntegersHIT_scope.
 
 
 Compute (-5).
 
-Compute   IntegersHIT_neg(zero_i).
+Compute   IntegersHIT_neg(0).
 
 Compute   IntegersHIT_neg(succ(zero_i)).
 
@@ -596,7 +648,6 @@ Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
   := isequiv_inverse succ. *)
 
 (** *** Addition *)
-
 
 (** Integer addition with zero on the left is the identity by definition. *)
 Definition IntegersHIT_add_0_l (x : IntegersHIT) : 0 + x = x.
@@ -759,18 +810,18 @@ Definition IntegersHIT_mul
 Proof.
   revert x.
   snrapply IntegersHIT_rec.
-  - exact zero_i.
+  - exact 0.
   - exact (fun z => (IntegersHIT_add) z y).
   - exact (fun z => (IntegersHIT_add) z (-y)).
   - exact (fun z => (IntegersHIT_add) z (-y)).
   - simpl.
     intro t.
-    rewrite (IntegersHIT_add_assoc _ _ _)^.
+    rewrite <- IntegersHIT_add_assoc.
     rewrite IntegersHIT_add_neg_r.
     exact (IntegersHIT_add_0_r _).
   - simpl.
     intro t.
-    rewrite (IntegersHIT_add_assoc _ _ _)^.
+    rewrite <- IntegersHIT_add_assoc.
     rewrite IntegersHIT_add_neg_l.
     exact (IntegersHIT_add_0_r _).
 Defined.
@@ -856,12 +907,12 @@ Proof.
   - simpl.
     intros x H.
     rewrite IntegersHIT_neg_add.
-    by apply (ap (fun z => IntegersHIT_add z (- y))) in H.
+    by rewrite H.
   - simpl.
     intros x H.
     rewrite IntegersHIT_neg_add.
     rewrite IntegersHIT_neg_neg.
-    by apply (ap (fun z => IntegersHIT_add z y)) in H.
+    by rewrite H.
 Defined.
 
 (** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
@@ -950,7 +1001,6 @@ Proof.
     rewrite 2 (IntegersHIT_add_assoc (x * y) _ _).
     rewrite <- IntegersHIT_add_assoc.
     rewrite (IntegersHIT_add_comm z y).
-  
     by rewrite H.
   - simpl.
     intros x H.
