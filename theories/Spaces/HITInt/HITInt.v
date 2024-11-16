@@ -1076,11 +1076,9 @@ Proof.
   revert x.
   srapply uniquenessZset_two_fun_eq.
   - apply biinv_isequiv_record.
-    apply (Build_Equiv _ _ _ (isequiv_int_add_r (y * z))).
+    apply (Build_Equiv _ _ _ (isequiv_int_add_l (y * z))).
   - reflexivity.
-  - intro x.
-    simpl.
-    by rewrite IntegersHIT_add_comm.
+  - reflexivity.
   - simpl.
     intro x.
     rewrite IntegersHIT_dist_r.
