@@ -326,6 +326,7 @@ Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
 
 End IntegersHITEquiv.
  
+
 Definition uniquenessZset_two_fun
   {P : Type} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
   {s : forall  (t : P ), g1 (f t)= t} {r : forall  (t : P ), f (g2 t)= t}
@@ -801,6 +802,37 @@ Proof.
     exact H.
 Defined.
 
+(** addition is an equivalence with one argument fixed*)
+
+Global Instance isequiv_int_add_r (x : IntegersHIT): IsEquiv (fun y => IntegersHIT_add x y).
+Proof.
+  snrapply (isequiv_adjointify (fun y => IntegersHIT_add x y) (fun y => IntegersHIT_add (-x) y)).
+  - simpl.
+    intro y.
+    rewrite IntegersHIT_add_assoc.
+    by rewrite  IntegersHIT_add_neg_r.
+  - simpl.
+    intro y.
+    rewrite IntegersHIT_add_assoc.
+    by rewrite  IntegersHIT_add_neg_l.
+Defined.
+
+
+Global Instance isequiv_int_add_l (y : IntegersHIT): IsEquiv (fun x => IntegersHIT_add x y).
+Proof.
+  snrapply (isequiv_adjointify (fun x => IntegersHIT_add x y) (fun x => IntegersHIT_add x (-y))).
+  - simpl.
+    intro x.
+    rewrite <- IntegersHIT_add_assoc.
+    rewrite  IntegersHIT_add_neg_l.
+    by rewrite IntegersHIT_add_0_r.
+  - simpl.
+    intro x.
+    rewrite <- IntegersHIT_add_assoc.
+    rewrite  IntegersHIT_add_neg_r.
+    by rewrite IntegersHIT_add_0_r.
+Defined.
+
 
 (** *** Multiplication *)
 
@@ -1036,6 +1068,28 @@ Proof.
     rewrite IntegersHIT_dist_r.
     rewrite IntegersHIT_mul_neg_l.
     by rewrite H. 
+Defined.
+
+
+Definition int_mul_assoc' (x y z : IntegersHIT) : x * (y * z) = x * y * z.
+Proof.
+  revert x.
+  srapply uniquenessZset_two_fun_eq.
+  - apply biinv_isequiv_record.
+    apply (Build_Equiv _ _ _ (isequiv_int_add_r (y * z))).
+  - reflexivity.
+  - intro x.
+    simpl.
+    by rewrite IntegersHIT_add_comm.
+  - simpl.
+    intro x.
+    rewrite IntegersHIT_dist_r.
+    by rewrite IntegersHIT_add_comm.
+Defined.
+
+
+
+  (* rapply (uniquenessZset_two_fun_eq (fun a => a * (y * z) )  (fun a => (a * y) * z ) ). *)
 Defined.
 
 
