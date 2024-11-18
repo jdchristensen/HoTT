@@ -12,8 +12,7 @@ Require Import Types.Universe Types.Unit Types.Prod Types.Empty Types.Forall Typ
 Require Import HFiber.
 Require Import HProp.
 Require Import PropResizing.
-Require Import TruncType.
-Require Import ReflectiveSubuniverse.
+Require Import Constant.
 
 Require Import YonedaPaths.
 Require Import TypeFamKanExt.
@@ -142,6 +141,27 @@ Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
     { d : D | forall p : P, d = f p}.
 (** We can think of algebraic flabbiness as algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
+
+(** Algebraic flabbiness of a type [D] is equivalent to the statment that all conditionally constant functions [X -> D] are constant. *)
+Definition alg_flab_cconst_is_const@{u w uw | u <= uw, w <= uw}
+  (D : Type@{w}) (cond : forall (X : Type@{u}) (f : X -> D), ConditionallyConstant f -> {d | forall x, d = f x}) (*Split this into two conditions?*)
+  : IsAlgebraicFlabbyType@{u w uw} D.
+Proof.
+  intros P PropP f.
+  apply (cond P f).
+  apply (cconst_factors_hprop _ _ idmap f).
+  reflexivity.
+Defined.
+
+Definition cconst_is_const_alg_flab@{u w uw | u <= uw, w <= uw}
+  (D : Type@{w}) (Daf : IsAlgebraicFlabbyType@{u w uw} D) 
+  : forall (X : Type@{u}) (f : X -> D), ConditionallyConstant f -> {d | forall x, d = f x}. (*Move to hypotheses?*)
+Proof.
+  intros X f [f' e].
+  srefine ((Daf _ _ f').1; _).
+  intros x.
+  apply ((Daf _ _ f').2 (tr x) @ (e x)).
+Defined.
 
 (** We include two direct proofs of the algebraic flabbiness of [Type], instead of combining [alg_inj_alg_flab] with the previous proofs of algebraic injectivity, for better computations later. *)
 Definition alg_flab_Type_sigma@{u su | u < su} `{Univalence}
