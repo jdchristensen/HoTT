@@ -14,7 +14,6 @@ Require Import HProp.
 Require Import PropResizing.
 Require Import Constant.
 
-Require Import YonedaPaths.
 Require Import TypeFamKanExt.
 
 Set Printing Universes.
@@ -290,11 +289,13 @@ Section AssumePropResizing.
     : IsAlgebraicFlabbyType@{u w uw} D.
   Proof.
     intros P PropP f.
-    pose (e := (equiv_resize_hprop@{u v} P)^-1).
-    destruct (Daf _ _ (f o e)) as [d af].
-    exists d.
-    intros p. lhs apply (af (e^-1 p)).
-    apply ap. apply eisretr.
+    pose (e := (equiv_smalltype@{v u} P)).
+    assert (PropQ : IsHProp (smalltype P)).
+    - apply (istrunc_equiv_istrunc _ e^-1).
+    - destruct (Daf _ _ (f o e)) as [d af].
+      exists d.
+      intros p. lhs apply (af (e^-1 p)).
+      apply ap. apply eisretr.
   Defined.
 
   (** Algebraic injectivity is independent of universes under propositional resizing. *)
