@@ -1,3 +1,4 @@
+(* -*- mode: coq; mode: visual-line -*- *)
 (** * Kan extensions of type families *)
 
 (** ** Part of the formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo. *)
@@ -31,18 +32,18 @@ Section UniverseStructure.
     (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} ((LeftKanTypeFamily@{} f j) (j x)) (f x).
   Proof.
-    transparent assert (C : (Contr (hfiber@{u v} j (j x)))).
-    - srapply contr_inhabited_hprop@{uv}. exact (x; idpath (j x)).
-    - snrapply (@equiv_contr_sigma@{uv w uvw} _ _ C).
+    transparent assert (C : (Contr (hfiber j (j x)))).
+    - srapply contr_inhabited_hprop. exact (x; idpath (j x)).
+    - snrapply (@equiv_contr_sigma _ _ C).
   Defined.
 
   Definition isext_rightkantypefamily@{} `{Funext} {X : Type@{u}} {Y : Type@{v}}
     (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} ((RightKanTypeFamily@{} f j) (j x)) (f x).
   Proof.
-    transparent assert (C : (Contr (hfiber@{u v} j (j x)))).
-    - srapply contr_inhabited_hprop@{uv}. exact (x; idpath (j x)).
-    - snrapply (@equiv_contr_forall@{uv w uvw} _ _ C).
+    transparent assert (C : (Contr (hfiber j (j x)))).
+    - srapply contr_inhabited_hprop. exact (x; idpath (j x)).
+    - snrapply (@equiv_contr_forall _ _ C).
   Defined.
 
 End UniverseStructure.
@@ -150,7 +151,7 @@ Proof.
   intros [b F]. srapply path_sigma.
   - apply path_forall. intros y. apply path_forall.
     intros [[w []] c]. srefine (ap10 (F w) c)^.
-  - apply path_forall. intros x. cbn. Search (transport _ (path_forall _)).
+  - apply path_forall. intros x.
 Admitted.
 
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
