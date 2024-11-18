@@ -1,12 +1,42 @@
-(** * Setup for a class of examples of Injective types. *)
+(* -*- mode: coq; mode: visual-line -*- *)
+(** * Injectivity for Sigma types and examples of Injective Types which use this setup. *)
 
-(** Many proofs guided by original Agda formalization in the Type Topology Library which can be found at: https://martinescardo.github.io/TypeTopology/InjectiveTypes.MathematicalStructures. *)
+(** Many proofs guided by original Agda formalization in the Type Topology Library which can be found at: https://martinescardo.github.io/TypeTopology/InjectiveTypes.Sigma and InjectiveTypes.MathematicalStructuresMoreGeneral. *)
 
 Require Import Basics.
 Require Import Types.Forall Types.Sigma Types.Universe.
 
 Require Import InjectiveTypes.
 Require Import TypeFamKanExt.
+
+
+Context {X : Type@{u}} (A : X -> Type@{v}) (Xaf : IsAlgebraicFlabbyType X).
+
+Definition rho_map (P : Type@{w}) (PropP : IsHProp P) (f : P -> X)
+  : (A (Xaf _ _ f).1) -> (forall h, A (f h))
+  := fun a h => (Xaf _ _ f).2 h # a.
+
+Definition alg_flab_sigma_condition
+  : Type@{uvsw}
+  := forall P PropP f, {s | (rho_map P PropP f) o s == idmap}.
+
+Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
+  : IsAlgebraicFlabbyType {x | A x}.
+Proof.
+  intros P PropP f.
+  pose (s := (cond P PropP (pr1 o f)).1).
+  pose (e := (cond P PropP (pr1 o f)).2).
+  srefine (((Xaf _ _ (pr1 o f)).1; s (pr2 o f)); _).
+  intros h.
+  srapply path_sigma.
+  - apply ((Xaf _ _ (pr1 o f)).2 h).
+  - apply (apD10 (e (pr2 o f)) h).
+Defined.
+
+Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
+  : IsAlgebraicInjectiveType {x | A x}
+  := (alg_inj_alg_flab (alg_flab_sigma cond)).
+
 
 
 Context (S : Type@{u} -> Type@{v}).
