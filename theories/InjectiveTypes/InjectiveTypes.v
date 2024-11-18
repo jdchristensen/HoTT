@@ -1,3 +1,4 @@
+(* -*- mode: coq; mode: visual-line -*- *)
 (** * Injective Types *)
 
 (** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo. *)
@@ -33,7 +34,7 @@ Section UniverseStructure.
       (f : X -> D), sig@{vw uw} (fun f' => f' o j == f).
 
   (** Contractible types are algebraically injective. *)
-  Definition alginj_contr@{} (D : Type@{w}) (cD : Contr D)
+  Definition alg_inj_contr@{} (D : Type@{w}) (cD : Contr D)
     : IsAlgebraicInjectiveType@{} D.
   Proof.
     intros X Y j isem f.
@@ -43,7 +44,7 @@ Section UniverseStructure.
   Defined.
 
   (** [Empty] is not algebraically injective. *)
-  Definition not_alginj_empty@{}
+  Definition not_alg_inj_empty@{}
     : IsAlgebraicInjectiveType@{} Empty -> Empty.
   Proof.
     intros Eai.
@@ -167,7 +168,7 @@ Proof.
       snrapply (@equiv_contr_forall _ _ C).
 Defined.
 
-(** Algebraically u,v-injective types are algebraically uv-flabby. *)
+(** Algebraically u,v-injective types are algebraically u-flabby. *)
 Definition alg_flab_alg_inj@{u v w uv uw vw uvw | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw}
   {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D)
   : IsAlgebraicFlabbyType@{u w uw} D.
@@ -178,7 +179,7 @@ Proof.
   - intros p. apply (Dai _ _ (const_tt P) _ f).2.
 Defined.
 
-(** Algebraically u-flabby types are algebraically u,v-injective. *)
+(** Algebraically uv-flabby types are algebraically u,v-injective. *)
 Definition alg_inj_alg_flab@{u v w uv uw vw uvw | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, uv <= uvw, uw <= uvw, vw <= uvw}
   {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{uv w uvw} D)
   : IsAlgebraicInjectiveType@{u v w uv uw vw uvw} D.
