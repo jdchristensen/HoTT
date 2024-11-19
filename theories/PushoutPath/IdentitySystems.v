@@ -38,13 +38,11 @@ Definition transportDD_path_universe' `{Univalence} {A : Type} (B : A -> Type)
   (C : forall a : A, B a -> Type) {a1 a2 : A} (p : a1 = a2) 
   (b1 : B a1) (b2 : B a2) (q : transport B p b1 = b2) 
   (f : C a1 b1 <~> C a2 b2) 
-  (r : ((dpath_arrow B (fun _ => Type) p (C a1) (C a2))^-1 (apD C p) b1) @ (ap (fun x => C a2 x) q) = (transport_const p (C a1 b1)) @ path_universe f) 
+  (r : ((dpath_arrow B (fun _ => Type) p (C a1) (C a2))^-1 (apD C p) b1) @ (ap (fun x => C a2 x) q) = (transport_const p (C a1 b1)) @ path_universe_uncurried f)
   (c1 : C a1 b1)
   : transportDD B C p q c1 = f c1.
 Proof.
   apply moveR_Vp in r.
-  (* If the statement is changed to use [path_universe_uncurried], then the next line isn't needed. *)
-  change (path_universe f) with (path_universe_uncurried f) in r.
   apply moveR_equiv_V in r.
   destruct r.
   by destruct p, q.
@@ -70,9 +68,7 @@ Section DescentGQ.
     snrapply GraphQuotient_rec.
     - exact P_A.
     - intros a b r.
-      snrapply path_universe.
-      + exact (e_P r).
-      + exact (equiv_isequiv (e_P r)).
+      exact (path_universe_uncurried (e_P r)).
   Defined.
 
   (** [transport] over this bundle is given by [e_P]*)
@@ -96,9 +92,7 @@ Section DescentGQ.
       intro pa.
       lhs snrapply transport_const.
       rhs snrapply (ap (fun x => Q_A b x) (transport_gqglue_bundle _ _)).
-      snrapply path_universe.
-      + exact (e_Q r).
-      + exact (equiv_isequiv (e_Q r)).
+      exact (path_universe_uncurried (e_Q r)).
     Defined.
 
     (** We can bundle up the descent data to a type family indexed over the graph quotient *)
