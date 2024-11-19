@@ -14,14 +14,12 @@ Proof.
   - reflexivity.
 Defined.
 
-(** The true transport over dependent type families *)
+(** Transport over dependent type families that depends on identifications in both [A] and [B] *)
 Definition transportDD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
-  (c1 : C a1 b1) : C a2 b2.
-Proof.
-  by destruct pB, pA.
-Defined.
+  (c1 : C a1 b1) : C a2 b2
+  := transport (C a2) pB (transportD B C pA b1 c1).
 
 (** Lemma 6.12.1 for transportDD *)
 Definition transportDD_path_universe' `{Univalence} {A : Type} (B : A -> Type) 
@@ -32,10 +30,9 @@ Definition transportDD_path_universe' `{Univalence} {A : Type} (B : A -> Type)
   (c1 : C a1 b1)
   : transportDD B C p q c1 = f c1.
 Proof.
-  apply moveR_Vp in r.
-  apply moveR_equiv_V in r.
-  destruct r.
-  by destruct p, q.
+  destruct p; cbn in *.
+  apply cancelL in r.
+  by apply transport_path_universe'.
 Defined.
 
 (** We first prove Theorem 5.8.2. (i) => (iii) *)
@@ -93,8 +90,9 @@ Section DescentGQ.
     Definition transportDD_gqglue_bundle {a b : A} (r : R a b) (pa : P_A a) (qa : Q_A a pa) 
       : transportDD bundle_descent uncurry_bundle_dep_descent (gqglue r) (transport_gqglue_bundle r pa) qa = e_Q r qa.
     Proof.
-      snrapply transportDD_path_universe'. cbn.
-      lhs nrapply (apD10 (ap (dpath_arrow _ _ (gqglue r) _ _)^-1 (GraphQuotient_ind_beta_gqglue _ _ glue_uncurry_bundle_dep_descent _ _ r)) _ @@ idpath).
+      snrapply transportDD_path_universe'; cbn.
+      lhs nrapply (apD10 (ap (dpath_arrow _ _ (gqglue r) _ _)^-1 
+        (GraphQuotient_ind_beta_gqglue _ _ glue_uncurry_bundle_dep_descent _ _ r)) _ @@ idpath).
       lhs nrapply (apD10 (eissect (dpath_arrow _ _ (gqglue r) _ _) _) _ @@ idpath).
       lhs nrapply concat_pp_p.
       nrapply whiskerL.
@@ -109,18 +107,25 @@ Section DescentGQ.
 
     Arguments e_f {_ _} _ _.
 
-    Definition bundle_section : forall x : GraphQuotient R, forall px : bundle_descent x, uncurry_bundle_dep_descent x px.
+    Definition glue_bundle_section (a b : A) (r : R a b) : transport (fun x : GraphQuotient R => forall px : bundle_descent x, uncurry_bundle_dep_descent x px) (gqglue r) (f_A a) = f_A b.
     Proof.
-      snrapply GraphQuotient_ind.
-      - exact f_A.
-      - intros a b r.
-        apply dpath_forall.
-        intro pa.
-        apply (equiv_inj (transport (Q_A b) (transport_gqglue_bundle r pa))).
-        lhs nrapply transportDD_gqglue_bundle.
-        rhs nrapply (apD (f_A b) (transport_gqglue_bundle r pa)).
-        exact (e_f r pa).
+      apply dpath_forall.
+      intro pa.
+      apply (equiv_inj (transport (Q_A b) (transport_gqglue_bundle r pa))).
+      lhs nrapply transportDD_gqglue_bundle.
+      rhs nrapply (apD (f_A b) (transport_gqglue_bundle r pa)).
+      exact (e_f r pa).
     Defined.
+
+    Definition bundle_section : forall x : GraphQuotient R, forall px : bundle_descent x, uncurry_bundle_dep_descent x px
+      := GraphQuotient_ind _ f_A glue_bundle_section.
+
+    Definition bundle_section_beta_ap (a b : A) (r :  R a b) 
+      := GraphQuotient_ind_beta_gqglue _ f_A glue_bundle_section a b r.
+
+    Definition bundle_section_beta (a1 a2 : A) (r : R a1 a2) (p1 : P_A a1) 
+      : bundle_section (gq a2) (e_P r p1) = e_Q r (bundle_section (gq a1) p1) 
+      := (e_f r p1)^.
 
   End DependentDescentGQ.
 End DescentGQ.
