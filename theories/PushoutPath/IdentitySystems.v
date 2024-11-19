@@ -99,8 +99,6 @@ Section DescentGQ.
     Definition uncurry_bundle_dep_descent : forall x : GraphQuotient R, bundle_descent x -> Type 
     := GraphQuotient_ind _ Q_A glue_uncurry_bundle_dep_descent.
 
-    Check (GraphQuotient_ind_beta_gqglue _ Q_A glue_uncurry_bundle_dep_descent).
-
     (** [transportDD] over this bundle is given på [e_Q]*)
     Definition transportDD_gqglue_bundle {a b : A} (r : R a b) (pa : P_A a) (qa : Q_A a pa) 
       : transportDD bundle_descent uncurry_bundle_dep_descent (gqglue r) (transport_gqglue_bundle r pa) qa = e_Q r qa.
