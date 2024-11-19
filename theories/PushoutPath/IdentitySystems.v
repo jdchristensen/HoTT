@@ -23,16 +23,6 @@ Proof.
   by destruct pB, pA.
 Defined.
 
-(** [transport] and [transportD] is enough to do [transportDD] *)
-(** TODO: Because this is definitional, the conclusion here should be taken to be the *definition* of transportDD. *)
-Definition transport_transportD_transportDD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
-  {a1 a2 : A} (pA : a1 = a2)
-  {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
-  (c1 : C a1 b1) : transport (C a2) pB (transportD B C pA b1 c1) = transportDD B C pA pB c1.
-Proof.
-  reflexivity.
-Defined.
-
 (** Lemma 6.12.1 for transportDD *)
 Definition transportDD_path_universe' `{Univalence} {A : Type} (B : A -> Type) 
   (C : forall a : A, B a -> Type) {a1 a2 : A} (p : a1 = a2) 
@@ -104,9 +94,8 @@ Section DescentGQ.
       : transportDD bundle_descent uncurry_bundle_dep_descent (gqglue r) (transport_gqglue_bundle r pa) qa = e_Q r qa.
     Proof.
       snrapply transportDD_path_universe'. cbn.
-      rewrite (GraphQuotient_ind_beta_gqglue _ Q_A glue_uncurry_bundle_dep_descent _ _ r).
-      unfold glue_uncurry_bundle_dep_descent.
-      rewrite (eissect (dpath_arrow bundle_descent (fun _ => Type) (gqglue r) (Q_A a) (Q_A b)) _).
+      lhs nrapply (apD10 (ap (dpath_arrow _ _ (gqglue r) _ _)^-1 (GraphQuotient_ind_beta_gqglue _ _ glue_uncurry_bundle_dep_descent _ _ r)) _ @@ idpath).
+      lhs nrapply (apD10 (eissect (dpath_arrow _ _ (gqglue r) _ _) _) _ @@ idpath).
       lhs nrapply concat_pp_p.
       nrapply whiskerL.
       lhs nrapply concat_pp_p.
@@ -127,10 +116,9 @@ Section DescentGQ.
       - intros a b r.
         apply dpath_forall.
         intro pa.
-        rapply (equiv_inj (transport (Q_A b) (transport_gqglue_bundle r pa))).
-        rewrite (transport_transportD_transportDD bundle_descent uncurry_bundle_dep_descent (gqglue r)).
-        rewrite transportDD_gqglue_bundle.
-        rewrite (apD (f_A b) (transport_gqglue_bundle r pa)).
+        apply (equiv_inj (transport (Q_A b) (transport_gqglue_bundle r pa))).
+        lhs nrapply transportDD_gqglue_bundle.
+        rhs nrapply (apD (f_A b) (transport_gqglue_bundle r pa)).
         exact (e_f r pa).
     Defined.
 
