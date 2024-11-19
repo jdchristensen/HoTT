@@ -42,8 +42,13 @@ Definition transportDD_path_universe' `{Univalence} {A : Type} (B : A -> Type)
   (c1 : C a1 b1)
   : transportDD B C p q c1 = f c1.
 Proof.
-Admitted.
-
+  apply moveR_Vp in r.
+  (* If the statement is changed to use [path_universe_uncurried], then the next line isn't needed. *)
+  change (path_universe f) with (path_universe_uncurried f) in r.
+  apply moveR_equiv_V in r.
+  destruct r.
+  by destruct p, q.
+Defined.
 
 (** We first prove Theorem 5.8.2. (i) => (iii) *)
 Context {A : Type} (a0 : A).
