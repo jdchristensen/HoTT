@@ -20,16 +20,17 @@ Definition transportDD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
   (c1 : C a1 b1) : C a2 b2.
 Proof.
-  by destruct pA, pB.
+  by destruct pB, pA.
 Defined.
 
 (** [transport] and [transportD] is enough to do [transportDD] *)
+(** TODO: Because this is definitional, the conclusion here should be taken to be the *definition* of transportDD. *)
 Definition transport_transportD_transportDD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
   (c1 : C a1 b1) : transport (C a2) pB (transportD B C pA b1 c1) = transportDD B C pA pB c1.
 Proof.
-  by destruct pA, pB.
+  reflexivity.
 Defined.
 
 (** Lemma 6.12.1 for transportDD *)
@@ -38,8 +39,8 @@ Definition transportDD_path_universe' `{Univalence} {A : Type} (B : A -> Type)
   (b1 : B a1) (b2 : B a2) (q : transport B p b1 = b2) 
   (f : C a1 b1 <~> C a2 b2) 
   (r : ((dpath_arrow B (fun _ => Type) p (C a1) (C a2))^-1 (apD C p) b1) @ (ap (fun x => C a2 x) q) = (transport_const p (C a1 b1)) @ path_universe f) 
-  (u : C a1 b1)
-  : transportDD B C p q u = f u.
+  (c1 : C a1 b1)
+  : transportDD B C p q c1 = f c1.
 Proof.
 Admitted.
 
