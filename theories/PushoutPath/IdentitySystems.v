@@ -14,7 +14,7 @@ Section IdSys.
     }.
 
   (** Theorem 5.8.2. (i) => (iii) *)
-  Definition isequiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} 
+  Global Instance isequiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} 
     (a : A) : IsEquiv (fun p => transport R (y:=a) p r0).
   Proof.
     pose (f := indIdSys (fun a _ => a0 = a) (idpath _)).
@@ -29,12 +29,8 @@ Section IdSys.
     - by intros [].
   Defined.
 
-  Definition equiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} (a : A) : (a0 = a) <~> R a.
-  Proof.
-    snrapply Build_Equiv.
-    - exact (fun p => transport R (y:=a) p r0).
-    - exact (isequiv_transport_IsIdSys _ _ _).
-  Defined.
+  Definition equiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} (a : A) 
+    : (a0 = a) <~> R a := Build_Equiv _ _ (fun p => transport R (y:=a) p r0) _.
 
 End IdSys.
 
@@ -56,6 +52,7 @@ Proof.
   by destruct pB2, pB1, pA2, pA1.
 Defined.
 
+(** This needs a new name *)
 Definition lemma1 {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
@@ -66,14 +63,16 @@ Proof.
 Defined.
 
 (** [transportDD] is an equivalence *)
-Definition isequiv_transportDD 
+Global Instance isequiv_transportDD 
   {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
   : IsEquiv (transportDD B C pA pB).
 Proof.
   snrapply isequiv_adjointify.
-  1: exact (transportDD B C pA^ (moveL_transport_V B pA b1 b2 pB)^).
+  1: {
+    apply (transportDD B C pA^). 
+    exact (moveL_transport_V B pA b1 b2 pB)^. }
   all: by destruct pB, pA. (* This will be very hairy to untangle. It is probably smart to control the homotopies better, but I don't know the pay-off if every function I use will be defined using destruct. *)
 Defined.
 
@@ -81,17 +80,19 @@ Definition equiv_transportDD
   {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
-  : C a1 b1 <~> C a2 b2.
-Proof.
-  snrapply Build_Equiv.
-  - exact (transportDD B C pA pB).
-  - exact (isequiv_transportDD B C pA pB).
-Defined.
+  : C a1 b1 <~> C a2 b2
+  := Build_Equiv _ _ (transportDD B C pA pB) _.
 
-(** Since [transportD B C _] is definitionally [transportDD B C _ 1], we get this as a special case. *)
-Definition isequiv_transportD {A : Type} (B : A -> Type) 
+(** Since [transportD B C p] is definitionally [transportDD B C p 1], we get this as a special case. *)
+Global Instance isequiv_transportD {A : Type} (B : A -> Type) 
   (C : forall a : A, B a -> Type) {x1 x2 : A} (p : x1 = x2) (y : B x1) 
-  : IsEquiv (transportD B C p y) := isequiv_transportDD B C p 1.
+  : IsEquiv (transportD B C p y).
+Proof.
+  snrapply Build_IsEquiv.
+  { refine (_ o transportD B C p^ (transport B p y)).
+    exact (transport (C x1) (transport_Vp _ p y)). }
+  all: by destruct p.
+Defined.
 
 Definition equiv_transportD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
@@ -139,6 +140,7 @@ Proof.
 Defined.
 
 (** Considering a graph [A] with arrows given by [R], we will define sections of dependent descent data of the graph quotient. *)
+(** Possible clean-ups. We can define type families with descent, and prove that for fixed descent data, the type of all type families with descent is contractible. This should be straight forward from the flattening lemma. *)
 Section DescentGQ.
   Context `{Univalence} {A : Type} (R : A -> A -> Type).
 
@@ -200,6 +202,7 @@ Section DescentGQ.
       lhs nrapply (idpath _ @@ concat_Vp (ap _ _)).
       snrapply concat_p1.
     Defined.
+
 
     Section DescentSection.
       (** A dependent section of [Q] is given by a section [f_A] indexed over the total space of [P_A] and coherences [e_f]. *)
@@ -276,12 +279,7 @@ Section DescentGQ.
     (** Assume [A] and [P_A] are pointed types. *)
     Context {a0 : A} {p0 : P_A a0}. 
 
-    (** Assume some arbitrary pointed dependent descent data [Q_A], [e_Q], and [q0 : Q_A a0 p0] over [P_A], [e_P] and [p0]. *)
-    (* Context (Q_A : forall a : A, P_A a -> Type) 
-      (e_Q : forall a b : A, forall r : R a b, forall pa : P_A a, Q_A a pa <~> Q_A b (e_P r pa))
-      (q0 : Q_A a0 p0). *)
-
-    (** Assume for any [Q_A], [e_Q], and [q0] that [P_A], [e_P], and [p0] has sections. *)
+    (** Assume for any pointed dependent descent data [Q_A], [e_Q], and [q0] that there are sections from the pointed descent data [P_A], [e_P], and [p0]. *)
     Context (desc_id_sys_ind : forall Q_A : forall a : A, P_A a -> Type, 
         forall e_Q : forall a b : A, forall r : R a b, forall pa : P_A a, Q_A a pa <~> Q_A b (e_P r pa),
         forall q0 : Q_A a0 p0, 
@@ -295,25 +293,21 @@ Section DescentGQ.
         forall q0 : Q_A a0 p0, 
         desc_id_sys_ind Q_A e_Q q0 a0 p0 = q0).
 
+
+    (** Kraus-von Raumer induction can now be phrased as the pointed descent data [P_A], [e_P], and [p0] inducing an identity system structure on bundle_descent. *)
     Local Instance IsIdSys_bundle_descent : @IsIdSys _ (gq a0) bundle_descent p0.
     Proof.
       snrapply Build_IsIdSys.
       - intros Q q0 x p.
-        pose (f_A := desc_id_sys_ind 
-          (descent_family_A Q) 
-          (@descent_family_e Q)
-          q0).
-        pose (e_f := e_desc_id_sys_ind
-          (descent_family_A Q) 
-          (@descent_family_e Q)
-          q0).
-        pose (f := descent_family_section Q f_A e_f).
-        exact (f x p).
+        pose (f_A := desc_id_sys_ind (descent_family_A Q) (@descent_family_e Q) q0).
+        pose (e_f := e_desc_id_sys_ind (descent_family_A Q) (@descent_family_e Q) q0).
+        exact (descent_family_section Q f_A e_f x p).
       - intros Q q0; cbn.
         exact (desc_id_sys_ind_beta (descent_family_A Q) (@descent_family_e Q) q0).
     Defined.
 
-    Definition the_equivalence_that_will_save_my_life (x : GraphQuotient R) : (gq a0) = x <~> bundle_descent x
+    Definition the_equivalence_that_will_save_my_life (x : GraphQuotient R) 
+      : (gq a0) = x <~> bundle_descent x
       := @equiv_transport_IsIdSys (GraphQuotient R) (gq a0) bundle_descent p0 _ x.
 
   End DescentIdSys.
