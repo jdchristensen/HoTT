@@ -38,17 +38,6 @@ Section IdSys.
 
 End IdSys.
 
-(** [transportD] is an equivalence *)
-Definition isequiv_transportD {A : Type} (B : A -> Type) 
-  (C : forall a : A, B a -> Type) {x1 x2 : A} (p : x1 = x2) (y : B x1) 
-  : IsEquiv (transportD B C p y).
-Proof.
-  snrapply isequiv_adjointify; destruct p.
-  - exact idmap.
-  - reflexivity.
-  - reflexivity.
-Defined.
-
 (** Transport over dependent type families that depends on identifications in both [A] and [B] *)
 Definition transportDD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
@@ -56,16 +45,36 @@ Definition transportDD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type
   (c1 : C a1 b1) : C a2 b2
   := transport (C a2) pB (transportD B C pA b1 c1).
 
+(** Lemmata that will be useful to specify homotopies for the inverse. *)
+Definition transportDD_concat {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
+  {a1 a2 a3 : A} (pA1 : a1 = a2) (pA2 : a2 = a3)
+  {b1 : B a1} {b2 : B a2} {b3 : B a3} (pB1 : transport B pA1 b1 = b2) (pB2 : transport B pA2 b2 = b3)
+  (c1 : C a1 b1) 
+  : transportDD B C (pA1 @ pA2) (transport_pp B pA1 pA2 b1 @ ap (transport B pA2) pB1 @ pB2) c1
+  =  transportDD B C pA2 pB2 (transportDD B C pA1 pB1 c1).
+Proof.
+  by destruct pB2, pB1, pA2, pA1.
+Defined.
+
+Definition lemma1 {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
+  {a1 a2 : A} (pA : a1 = a2)
+  {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
+  : transport_pp B pA^ pA b2 @ ap (transport B pA) (moveL_transport_V B pA b1 b2 pB)^ 
+  = ap (fun x => transport B x b2) (concat_Vp pA) @ pB^.
+Proof.
+  by destruct pB, pA.
+Defined.
+
+(** [transportDD] is an equivalence *)
 Definition isequiv_transportDD 
   {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
   {a1 a2 : A} (pA : a1 = a2)
   {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
   : IsEquiv (transportDD B C pA pB).
 Proof.
-  snrapply isequiv_adjointify; destruct pB, pA; cbn.
-  - exact idmap.
-  - reflexivity.
-  - reflexivity.
+  snrapply isequiv_adjointify.
+  1: exact (transportDD B C pA^ (moveL_transport_V B pA b1 b2 pB)^).
+  all: by destruct pB, pA. (* This will be very hairy to untangle. It is probably smart to control the homotopies better, but I don't know the pay-off if every function I use will be defined using destruct. *)
 Defined.
 
 Definition equiv_transportDD
@@ -79,6 +88,16 @@ Proof.
   - exact (isequiv_transportDD B C pA pB).
 Defined.
 
+(** Since [transportD B C _] is definitionally [transportDD B C _ 1], we get this as a special case. *)
+Definition isequiv_transportD {A : Type} (B : A -> Type) 
+  (C : forall a : A, B a -> Type) {x1 x2 : A} (p : x1 = x2) (y : B x1) 
+  : IsEquiv (transportD B C p y) := isequiv_transportDD B C p 1.
+
+Definition equiv_transportD {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
+  {a1 a2 : A} (pA : a1 = a2)
+  {b1 : B a1} : C a1 b1 <~> C a2 (transport B pA b1)
+  := equiv_transportDD B C pA 1.
+
 (** Dependent application of two variables. We write [apDDKNM], where K is the application of a K-path between functions, to N- and M-paths between elements.  *)
 Definition apDD011 {A : Type} (B : A -> Type) (C : forall a, B a -> Type)
   (f : forall a : A, forall ba : B a, C a ba)
@@ -86,7 +105,7 @@ Definition apDD011 {A : Type} (B : A -> Type) (C : forall a, B a -> Type)
   {ba1 : B a1} {ba2 : B a2} (pB : transport B pA ba1 = ba2)
   : transportDD B C pA pB (f a1 ba1) = f a2 ba2.
 Proof.
-  by destruct pA, pB.
+  by destruct pB, pA.
 Defined.
 
 Definition apDD010 {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type) 
