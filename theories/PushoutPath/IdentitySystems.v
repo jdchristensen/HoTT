@@ -3,6 +3,41 @@ Require Import Types.
 Require Import Pointed.Core.
 Require Import Colimits.GraphQuotient.
 
+Section IdSys.
+  Context {A : Type} {a0 : A}.
+
+  (** A pointed type family is an identity system if there is an instance of the following class. *)
+  Class IsIdSys (R : A -> Type) (r0 : R a0)
+    := {
+      indIdSys (D : forall a : A, R a -> Type) (d : D a0 r0) (a : A) (r : R a) : D a r;
+      beta_indIdSys (D : forall a : A, R a -> Type) (d : D a0 r0) : indIdSys D d a0 r0 = d
+    }.
+
+  (** Theorem 5.8.2. (i) => (iii) *)
+  Definition isequiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} 
+    (a : A) : IsEquiv (fun p => transport R (y:=a) p r0).
+  Proof.
+    pose (f := indIdSys (fun a _ => a0 = a) (idpath _)).
+    pose (b := beta_indIdSys (fun a _ => a0 = a) (idpath _)).
+    srapply isequiv_adjointify.
+    - exact (f a).
+    - intro r.
+      exact ((indIdSys 
+        (fun (a' : A) (r' : R a') => transport R (f a' r') r0 = r') 
+        (ap (fun x => transport R x r0) b)) 
+        a r).
+    - by intros [].
+  Defined.
+
+  Definition equiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} (a : A) : (a0 = a) <~> R a.
+  Proof.
+    snrapply Build_Equiv.
+    - exact (fun p => transport R (y:=a) p r0).
+    - exact (isequiv_transport_IsIdSys _ _ _).
+  Defined.
+
+End IdSys.
+
 (** [transportD] is an equivalence *)
 Definition isequiv_transportD {A : Type} (B : A -> Type) 
   (C : forall a : A, B a -> Type) {x1 x2 : A} (p : x1 = x2) (y : B x1) 
