@@ -299,11 +299,11 @@ Section DescentGQ.
     Proof.
       snrapply Build_IsIdSys.
       - intros Q q0 x p.
-        pose (f_A := desc_id_sys_ind (descent_family_A Q) (@descent_family_e Q) q0).
-        pose (e_f := e_desc_id_sys_ind (descent_family_A Q) (@descent_family_e Q) q0).
-        exact (descent_family_section Q f_A e_f x p).
+        snrapply descent_family_section.
+        + exact (desc_id_sys_ind (descent_family_A Q) (@descent_family_e Q) q0).
+        + apply e_desc_id_sys_ind.
       - intros Q q0; cbn.
-        exact (desc_id_sys_ind_beta (descent_family_A Q) (@descent_family_e Q) q0).
+        nrapply desc_id_sys_ind_beta.
     Defined.
 
     Definition the_equivalence_that_will_save_my_life (x : GraphQuotient R) 
