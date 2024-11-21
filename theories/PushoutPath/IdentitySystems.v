@@ -71,7 +71,7 @@ Global Instance isequiv_transportDD
   : IsEquiv (transportDD B C pA pB).
 Proof.
   snrapply isequiv_adjointify.
-  1: {
+  {
     apply (transportDD B C pA^). 
     exact (moveL_transport_V B pA b1 b2 pB)^. }
   all: by destruct pB, pA. (* This will be very hairy to untangle. It is probably smart to control the homotopies better, but I don't know the pay-off if every function I use will be defined using destruct. *)
