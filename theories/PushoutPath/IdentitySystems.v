@@ -15,7 +15,8 @@ Section IdSys.
 
   (** Theorem 5.8.2. (i) => (iii) *)
   Global Instance isequiv_transport_IsIdSys (R : A -> Type) (r0 : R a0) `{IsIdSys _ r0} 
-    (a : A) : IsEquiv (fun p => transport R (y:=a) p r0).
+    (a : A)
+    : IsEquiv (fun p : a0 = a => transport R p r0).
   Proof.
     pose (f := indIdSys (fun a _ => a0 = a) (idpath _)).
     pose (b := beta_indIdSys (fun a _ => a0 = a) (idpath _)).
