@@ -121,6 +121,32 @@ Section IntegersHITLemmas.
       rapply path_ishprop.
   Defined.
 
+
+    Definition IntegersHIT_ind_hprop_succ
+  `{P : IntegersHIT -> Type}
+  `{h: forall (x : IntegersHIT), IsHProp (P x)}
+  (t0 : P zero_i) 
+  (f : forall z : IntegersHIT, P z <-> P (succ z))
+  (x: IntegersHIT)
+  : P x.
+  Proof.
+    srapply IntegersHIT_ind.
+    - exact t0.
+    - intro z.
+      destruct (f z).
+      exact fst.
+    - intros z t.
+      destruct (f (pred1 z)).
+      exact (snd ((ret_pred1 z)^ # t)).
+    - intros z t.
+      destruct (f (pred1 z)).
+      exact ((pred1_is_pred2 z) #  (snd ((ret_pred1 z)^ # t))).
+    - intros z t.
+      rapply path_ishprop.
+    - intros z t.
+      rapply path_ishprop.
+  Defined.
+
   Definition IntegersHIT_rec
     (P: Type)
     (t0 : P)
@@ -320,13 +346,9 @@ Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
       rapply path_ishprop.
   Defined.
 
-    (** uniqueness principle to compare two functions*)
-
-    
-
 End IntegersHITEquiv.
  
-
+    (** uniqueness principle to compare two functions*)
 Definition uniquenessZset_two_fun
   {P : Type} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
   {s : forall  (t : P ), g1 (f t)= t} {r : forall  (t : P ), f (g2 t)= t}
@@ -344,7 +366,7 @@ Definition uniquenessZset_two_fun
 Defined.
 
 
-Definition uniquenessZset_two_fun_eq
+Definition uniquenessZset_two_fun_binv
   {P : Type} 
   {e: EquivBiInv P P}
   (v : IsHSet P)
@@ -358,6 +380,21 @@ Definition uniquenessZset_two_fun_eq
   exact (uniquenessZset_two_fun (f := e)  (g1 := (ret_binv e (equiv_isequiv_binv P P e))) 
   (g2 := (sec_binv e (equiv_isequiv_binv P P e))) (s := (issec_binv e (equiv_isequiv_binv P P e))) 
   (r := (isret_binv e (equiv_isequiv_binv P P e))) _ _ _ p0 pf1 pf2).
+Defined.
+
+Definition uniquenessZset_two_fun_equiv 
+  {P : Type} 
+  (f : P -> P)
+  `{e: IsEquiv P P f}
+  (v : IsHSet P)
+  (k1: IntegersHIT -> P)
+  (k2: IntegersHIT -> P)
+  (p0 : k1 zero_i = k2 zero_i)
+  (pf1 : forall (z : IntegersHIT), (f o k1) z = (k1 o succ) z)
+  (pf2 : forall (z : IntegersHIT), (f o k2) z = (k2 o succ) z)
+  : forall (z : IntegersHIT), k1 z = k2 z.
+  Proof.
+  exact (uniquenessZset_two_fun_binv (e := Build_EquivBiInv P P _ (biinv_isequiv f e)) v k1 k2 p0 pf1 pf2).
 Defined.
 
 
@@ -453,32 +490,14 @@ Definition IntITtoIntHIT_comp_succ'
   exact ((IntITtoIntHIT_comp_succ o IntHITtoIntIT) z).
 Defined.
 
-Definition IntITtoIntHIT_is_linv_lemma_zero :
-  IntITtoIntHIT (IntHITtoIntIT zero_i) = zero_i.
-  Proof.
-    reflexivity.
-Defined.
 
-
-Definition IntITtoIntHIT_is_linv_comp_idmap
-  (z: IntegersHIT)
-  : succ (idmap z) = idmap  ( succ z).
-  Proof.
-    reflexivity.
-Defined.
-
-Definition IntITtoIntHIT_is_linv_lemma_idmap':
-  idmap zero_i = zero_i.
-  Proof.
-    reflexivity.
-Defined.
 
 Definition IntITtoIntHIT_is_linv
  (z : IntegersHIT )
  : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
 Proof.
-  exact (((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i (IntITtoIntHIT o IntHITtoIntIT)  IntITtoIntHIT_is_linv_lemma_zero IntITtoIntHIT_comp_succ') z) 
-  @ ((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i idmap IntITtoIntHIT_is_linv_lemma_idmap' IntITtoIntHIT_is_linv_comp_idmap) z)^).
+  exact (((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i (IntITtoIntHIT o IntHITtoIntIT)  idpath IntITtoIntHIT_comp_succ') z) 
+  @ ((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i idmap idpath (fun x => idpath)) z)^).
 Defined.
 
 Definition isequiv_IntHIT_Int
@@ -543,11 +562,10 @@ Definition IntegersHIT_neg (x : IntegersHIT)
   : IntegersHIT.
   Proof.
     revert x.
-    snrapply IntegersHIT_rec.
+    snrapply IntegersHIT_rec_pred.
     - exact 0.
     - exact pred1.
     - exact succ. 
-    - exact succ.
     - simpl.
       intro z.
       rewrite ret_pred1.
@@ -582,13 +600,12 @@ Definition IntegersHIT_add
 : IntegersHIT.
 Proof.
   revert x.
-  snrapply IntegersHIT_rec.
+  snrapply IntegersHIT_rec_pred.
   - exact y.
   - exact succ.
   - exact pred1.
-  - exact pred2.
   - exact sec.
-  - exact ret.
+  - exact ret_pred1.
 Defined.
 
 Infix "+" := IntegersHIT_add : IntegersHIT_scope.
@@ -673,17 +690,43 @@ Proof.
     exact H.
 Defined.  
 
+(** show*)
+
+(** This is a simplification*)
 (** Adding a successor on the left is the successor of the sum. *)
 Definition IntegersHIT_add_succ_l (x y : IntegersHIT) : (succ x) + y = succ (x + y).
 Proof.
   reflexivity.
 Defined.
 
+
+(** The lemma currently in the library.*)
+(** Adding a successor on the left is the successor of the sum. *)
+  (* Definition int_add_succ_l@{} (x y : Int) : x.+1 + y = (x + y).+1.
+  Proof.
+    induction x as [|[|x] IHx|[|x] IHx] in y |- *.
+    1-3: reflexivity.
+    all: symmetry; apply int_pred_succ.
+  Defined. *)
+
+
+(** This is a simplification*)
 (** Adding a predecessor on the left is the predecessor of the sum. *)
 Definition IntegersHIT_add_pred_l (x y : IntegersHIT) : (pred1 x) + y = pred1 (x + y).
 Proof.
   reflexivity.
 Defined.
+
+
+
+(** The lemma currently in the library.*)
+(** Adding a predecessor on the left is the predecessor of the sum. *)
+(* Definition int_add_pred_l@{} (x y : Int) : x.-1 + y = (x + y).-1.
+Proof.
+  induction x as [|[|x] IHx|[|x] IHx] in y |- *.
+  1,4,5: reflexivity.
+  all: symmetry; apply int_succ_pred.
+Defined. *)
 
 
 (** Adding a successor on the right is the successor of the sum. *)
@@ -804,7 +847,7 @@ Defined.
 
 (** addition is an equivalence with one argument fixed*)
 
-Global Instance isequiv_int_add_r (x : IntegersHIT): IsEquiv (fun y => IntegersHIT_add x y).
+Global Instance isequiv_IntegersHIT_add_l (x : IntegersHIT): IsEquiv (fun y => IntegersHIT_add x y).
 Proof.
   snrapply (isequiv_adjointify (fun y => IntegersHIT_add x y) (fun y => IntegersHIT_add (-x) y)).
   - simpl.
@@ -818,7 +861,7 @@ Proof.
 Defined.
 
 
-Global Instance isequiv_int_add_l (y : IntegersHIT): IsEquiv (fun x => IntegersHIT_add x y).
+Global Instance isequiv_IntegersHIT_add_r (y : IntegersHIT): IsEquiv (fun x => IntegersHIT_add x y).
 Proof.
   snrapply (isequiv_adjointify (fun x => IntegersHIT_add x y) (fun x => IntegersHIT_add x (-y))).
   - simpl.
@@ -833,6 +876,16 @@ Proof.
     by rewrite IntegersHIT_add_0_r.
 Defined.
 
+(** Integer addition is commutative. *)
+Definition IntegersHIT_add_comm' (x y : IntegersHIT) : x + y = y + x.
+Proof.
+  revert x.
+  srapply (uniquenessZset_two_fun_equiv succ); cbn beta.
+  - by rewrite IntegersHIT_add_0_r.
+  - reflexivity.
+  - intro z.
+    by rewrite IntegersHIT_add_succ_r.
+Defined. 
 
 (** *** Multiplication *)
 
@@ -841,10 +894,9 @@ Definition IntegersHIT_mul
 : IntegersHIT.
 Proof.
   revert x.
-  snrapply IntegersHIT_rec.
+  srapply IntegersHIT_rec_pred.
   - exact 0.
   - exact (fun z => (IntegersHIT_add) z y).
-  - exact (fun z => (IntegersHIT_add) z (-y)).
   - exact (fun z => (IntegersHIT_add) z (-y)).
   - simpl.
     intro t.
@@ -870,12 +922,34 @@ Compute (0*5).
 
 
 (** The following is a simplification*)
+(** show*)
 
 (** Multiplication with a successor on the left is the sum of the multplication without the sucesseor and the multiplicand which was not a successor. *)
 Definition IntegersHIT_mul_succ_l (x y : IntegersHIT) : (succ x) * y =  x * y + y.
 Proof.
   reflexivity.
 Defined.
+
+(** the original lemma for the current integer type*)
+
+(** Multiplication with a successor on the left is the sum of the multplication without the sucesseor and the multiplicand which was not a successor. *)
+(* Definition int_mul_succ_l'@{} (x y : Int) : x.+1 * y = y + x * y.
+Proof.
+  induction x as [|[|x] IHx|[] IHx] in y |- *.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - cbn.
+    rewrite int_add_0_r.
+    by rewrite int_add_neg_r.
+  - rewrite int_pred_succ.
+    cbn.
+    rewrite int_add_assoc.
+    rewrite int_add_neg_r.
+    by rewrite int_add_0_l.
+Defined. *)
+
+
 
 (** The following is a simplification*)
 
@@ -884,6 +958,20 @@ Definition IntegersHIT_mul_pred_l (x y : IntegersHIT) : (pred1 x) * y = x * y  -
 Proof.
   reflexivity.
 Defined.
+
+(** the original lemma*)
+(** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
+(* Definition int_mul_pred_l'@{} (x y : Int) : x.-1 * y = -y + x * y.
+Proof.
+  induction x as [|x IHx|[] IHx] in y |- *.
+  - reflexivity.
+  - rewrite int_mul_succ_l.
+    rewrite int_succ_pred.
+    rewrite int_add_assoc.
+    by rewrite int_add_neg_l.
+  - reflexivity.
+  - reflexivity.
+Defined. *)
 
 (** Integer multiplication with zero on the left is zero by definition. *)
 Definition IntegersHIT_mul_0_l (x : IntegersHIT) : 0 * x = 0 := 1.
@@ -902,14 +990,22 @@ Proof.
     by rewrite IntegersHIT_add_0_r.
 Defined.
 
+(** show*)
 
-(** The following is shorter*)
+(** The following is a simplification*)
 
 (** Integer multiplication with one on the left is the identity. *)
 Definition IntegersHIT_mul_1_l (x : IntegersHIT) : 1 * x = x.
 Proof.
   reflexivity.
 Defined.
+
+(** the original lemma*)
+(** Integer multiplication with one on the left is the identity. *)
+  (* Definition int_mul_1_l@{} (x : Int) : 1 * x = x.
+  Proof.
+    apply int_add_0_r.
+  Defined. *)
 
 (** Integer multiplication with one on the right is the identity. *)
 Definition IntegersHIT_mul_1_r (x : IntegersHIT) : x * 1 = x.
@@ -966,6 +1062,46 @@ Proof.
 Defined.
 
 
+(** Testing the IntegersHIT_ind_hprop_succ that only uses successor. *)
+Definition IntegersHIT_mul_succ_r'' (x y : IntegersHIT) : x * (succ y) = x + x * y.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_succ; cbn beta.
+  - reflexivity.
+  - simpl.
+    intro x.
+    split.
+    -- intro H.
+       admit.
+    -- intro H.
+    (** It seems that this does not simplify a lot*)
+Admitted.
+
+Definition IntegersHIT_mul_succ_r' (x y : IntegersHIT) : x * (succ y) = x * y + x.
+Proof.
+  revert x.
+  srapply IntegersHIT_ind_hprop_pred; cbn beta.
+  - reflexivity.
+  - simpl.
+    intros x H.
+    rewrite <- IntegersHIT_add_assoc.
+    rewrite (IntegersHIT_add_comm  y _).
+    rewrite  (IntegersHIT_add_succ_l _ y).
+    rewrite <- (IntegersHIT_add_succ_r x y).
+    rewrite IntegersHIT_add_assoc.
+    by rewrite H.
+  - simpl.
+    intros x H.
+    rewrite <- IntegersHIT_add_assoc.
+    rewrite (IntegersHIT_add_comm  (-y) _).
+    rewrite  (IntegersHIT_add_pred_l _ (-y)).
+    rewrite <- (IntegersHIT_add_pred_r x (-y)).
+    rewrite IntegersHIT_add_assoc.
+    by rewrite H.
+Defined.
+
+
+(** TODO change this to -x on right*)
 (** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
 Definition IntegersHIT_mul_pred_r (x y : IntegersHIT) : x * (pred1 y) = -x + x * y.
 Proof.
@@ -999,8 +1135,7 @@ Definition IntegersHIT_mul_comm (x y : IntegersHIT) : x * y = y * x.
 Proof.
   revert x.
   rapply IntegersHIT_ind_hprop_pred.
-  - rewrite IntegersHIT_mul_0_r.
-    by rewrite IntegersHIT_mul_0_l.
+  - by rewrite IntegersHIT_mul_0_r.
   - intros x H.
     rewrite IntegersHIT_mul_succ_l.
     rewrite IntegersHIT_mul_succ_r.
@@ -1011,6 +1146,17 @@ Proof.
     rewrite IntegersHIT_mul_pred_r.
     rewrite IntegersHIT_add_comm.
     by rewrite H.
+Defined.
+
+(** Integer multiplication is commutative. *)
+Definition IntegersHIT_mul_comm' (x y : IntegersHIT) : x * y = y * x.
+Proof.
+  revert x.
+  srapply (uniquenessZset_two_fun_equiv (fun x => IntegersHIT_add x y)); cbn beta.
+  - by rewrite IntegersHIT_mul_0_r.
+  - reflexivity.
+  - intro z.
+    by rewrite IntegersHIT_mul_succ_r'.
 Defined.
 
 (** Multiplying with a negation on the right is the same as negating the product. *)
@@ -1045,16 +1191,34 @@ Proof.
     by rewrite H.
 Defined.
 
+
+(** Multiplication distributes over addition on the left. *)
+Definition IntegersHIT_dist_l' (x y z : IntegersHIT) : x * (y + z) = x * y + x * z.
+Proof.
+  revert x.
+  srapply (uniquenessZset_two_fun_equiv (fun x => IntegersHIT_add x (y + z))); cbn beta.
+  - reflexivity.
+  - reflexivity.
+  - intro x.
+    simpl.
+    rewrite <- (IntegersHIT_add_assoc (x*y) y).
+    rewrite (IntegersHIT_add_comm y (x*z + z)).
+    rewrite <- (IntegersHIT_add_assoc _ z y).
+    rewrite (IntegersHIT_add_comm z y).
+    by rewrite 3 IntegersHIT_add_assoc.
+Defined.
+
 (** Multiplication distributes over addition on the right. *)
 Definition IntegersHIT_dist_r (x y z : IntegersHIT) : (x + y) * z = x * z + y * z.
 Proof.
   by rewrite IntegersHIT_mul_comm, IntegersHIT_dist_l, !(IntegersHIT_mul_comm z).
 Defined.
 
-(** This proof is exactly the same*)
+(** show *)
+(** This proof is exactly the same as for the original integers type in the library*)
 
 (** Multiplication is associative. *)
-Definition int_mul_assoc (x y z : IntegersHIT) : x * (y * z) = x * y * z.
+Definition IntegersHIT_mul_assoc (x y z : IntegersHIT) : x * (y * z) = x * y * z.
 Proof.
   revert x.
   rapply IntegersHIT_ind_hprop_pred.
@@ -1070,77 +1234,138 @@ Proof.
     by rewrite H. 
 Defined.
 
-
-Definition int_mul_assoc' (x y z : IntegersHIT) : x * (y * z) = x * y * z.
+(** however we can simplify it using the uniqueness principle*)
+(** here srapply figures out k1 and k2 on its own given the goal! so we only need to provide a function Z -> Z*)
+Definition IntegersHIT_mul_assoc' (x y z : IntegersHIT) : x * (y * z) = x * y * z.
 Proof.
   revert x.
-  srapply uniquenessZset_two_fun_eq.
-  - apply biinv_isequiv_record.
-    apply (Build_Equiv _ _ _ (isequiv_int_add_l (y * z))).
+  srapply (uniquenessZset_two_fun_equiv (fun x => IntegersHIT_add x (y * z))); cbn beta.
   - reflexivity.
   - reflexivity.
   - simpl.
     intro x.
-    rewrite IntegersHIT_dist_r.
-    by rewrite IntegersHIT_add_comm.
+    by rewrite IntegersHIT_dist_r.
 Defined.
 
 
-
-  (* rapply (uniquenessZset_two_fun_eq (fun a => a * (y * z) )  (fun a => (a * y) * z ) ). *)
-Defined.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(*     
-    rewrite IntegersHIT_reduce. *)
-
-
-(*   
-  - exact (fun z => (IntegersHIT_add) z (IntegersHIT_mul z y)).
-  - exact (fun z => (IntegersHIT_add) z (IntegersHIT_mul z y)).
-  - exact (fun z => (IntegersHIT_add) z (IntegersHIT_mul z y)).
-  -
-   simpl.
-   intros.
-  - exact (fun z => (IntegersHIT_add) (pred1 z) y).
-  - exact (fun z => (IntegersHIT_add) (pred1 z) y).
+(** here is a shorter proof of linv, but it requires that we already know that IntegersHIT is as set*)
+Definition IntITtoIntHIT_is_linv'
+ (z : IntegersHIT )
+ : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
+Proof.
+  srapply (uniquenessZset_two_fun_equiv succ).
+  - reflexivity.
   - simpl.
-    intro z.
-    rewrite sec.
-    reflexivity. *)
-    (* apply IntegersHIT_reduce. *)
+    exact IntITtoIntHIT_comp_succ'.
+  - reflexivity. 
+Defined.
+
+(* End ResultsIntegers.
 
 
+Section IntegersIteration. *)
+
+(**this here uses funext??*)
+
+Definition IntegersHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) : A -> A.
+Proof.
+  srapply IntegersHIT_rec_pred.
+  - exact idmap.
+  - intro g.
+    exact (f o g).
+  - intro g.
+    exact (f^-1 o g).
+  - simpl.
+    intro g.
+    simpl.
+    apply path_forall.
+    intro x.
+    exact ((eissect f) _).
+  - intro g.
+    simpl.
+    apply path_forall.
+    intro x.
+    exact ((eisretr f) _).
+  - exact n.
+Defined.
 
 
-  (* induction x as [|x IHx|x IHx] in y |- *.
-  (** [0 * y = 0] *)
-  - exact 0.
-  (** [x.+1 * y = y + x * y] *)
-  - exact (y + IHx y).
-  (** [x.-1 * y = -y + x * y] *)
-  - exact (-y + IHx y). *)
+(* Definition IntegersHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  : IntegersHIT_iter f (- n) a = IntegersHIT_iter f^-1 n a.
+Proof.
+  (* reflexivity. *)
 Defined.
 
 
 
-End ResultsIntegers.
+
+    (* exact (fun x : A => (eissect f x)).
+
+  := match n with
+      | negS n => fun x => nat_iter n.+1%nat f^-1 x
+      | zero => idmap
+      | posS n => fun x => nat_iter n.+1%nat f x
+     end. *)
+
+
+ End ResultsIntegers.
+(* End IntegersIteration. *)
+
+ *)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* Definition IntegersHIT_mul_assoc' (x y z : IntegersHIT) : x * (y * z) = x * y * z.
+Proof.
+  revert x.
+  srapply uniquenessZset_two_fun_binv.
+  - apply biinv_isequiv_record.
+    apply (Build_Equiv _ _ _ (isequiv_IntegersHIT_add_r (y * z))).
+  - reflexivity.
+  - reflexivity.
+  - simpl.
+    intro x.
+    by rewrite IntegersHIT_dist_r.
+Defined. *)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 (*Lemma 12 is just equivalence induction*)
@@ -1149,7 +1374,7 @@ End ResultsIntegers.
 (*Basics/Equivalence.v Lemma equiv_ind. Tyoe family over B and equivalence f A to B and with substitution the original. and apply it to univalence which is an equivalence. Look at 'equiv_induction' in Universe.v Redo this for for biinvertible maps*)
 (* Univalence is in the context Context `{Univalence}`*)
 
-(* One other idea is to show its a set show it has decideable equality then there is lemma*)
+(* One other idea is to make sure  its a set make sure it has decideable equality then there is lemma*)
 (* for every two elements either they are equal or a proof that they are equal*)
 (*nat uses encode decode*)
 (* check out integers how its done there*)
