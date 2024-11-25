@@ -23,7 +23,6 @@ Section UniverseStructure.
   Definition RightKanTypeFamily@{} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
     := (fun y => forall w : (hfiber j y), f (w.1)).
 
-  (*FIX*)
   Notation "f <| j" := (LeftKanTypeFamily f j) (at level 40).
   Notation "f |> j" := (RightKanTypeFamily f j) (at level 40).
 
@@ -48,29 +47,20 @@ Section UniverseStructure.
 
 End UniverseStructure.
 
-(*Keep/Move?*)
-Definition isempty_empty_indexed_sigma (A : Type) (P : A -> Type) (na : A -> Empty)
-  : { a | P a } <~> Empty
-  := equiv_to_empty (fun ap => na ap.1).
-
-Definition isunit_empty_indexed_forall `{Funext} (A : Type) (P : A -> Type) (na : A -> Empty)
-  : (forall a, P a) <~> Unit.
-Proof.
-  snrapply equiv_contr_unit.
-  snrapply contr_forall.
-  apply (fun a => Empty_rec (na a)).
-Defined.
-
-(** For [y : Y] not in the image of [j], [(f <| j)y <~> Empty] and [(f |> j)y <~> Unit]. *)
+(** For [y : Y] not in the image of [j], [(f <| j)y] is empty and [(f |> j)y] is. *)
 Definition isempty_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
-  : LeftKanTypeFamily f j y <~> Empty
-  := isempty_empty_indexed_sigma _ _ (fun w => ynin w.1 w.2).
+  : LeftKanTypeFamily f j y -> Empty
+  := fun '((x; p); _) => ynin x p.
 
-Definition isunit_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
+Definition contr_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
-  : RightKanTypeFamily f j y <~> Unit
-  := isunit_empty_indexed_forall _ _ (fun w => ynin w.1 w.2).
+  : Contr (RightKanTypeFamily f j y).
+Proof.
+  snrapply contr_forall.
+  intros [x p].
+  apply (Empty_rec (ynin x p)).
+Defined.
 
 Definition equiv_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y)
@@ -79,8 +69,8 @@ Proof.
   snrapply equiv_adjointify.
   - apply (fun w : {x | f x} => (j w.1; (w.1; idpath); w.2)).
   - apply (fun '((y; ((x; p); y')) : {x | LeftKanTypeFamily f j x}) => (x; y')).
-  - intros [y [[x []] y']]. reflexivity.
-  - intros [x y]. reflexivity.
+  - intros [y [[x []] y']]; cbn. reflexivity.
+  - intros [x y]; cbn. reflexivity.
 Defined.
 
 Definition equiv_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
@@ -91,7 +81,7 @@ Proof.
   - intros g y w. apply (g w.1).
   - apply (fun h x => h (j x) (x; idpath)).
   - intros h. apply path_forall. intros y. apply path_forall.
-    intros [x []]. reflexivity.
+    intros [x []]; cbn. reflexivity.
   - intros g. apply path_forall. intros y. reflexivity.
 Defined.
 (** Note that these equivalences tell us that [sig (f <| j)] and [forall (f |> j)] can be thought of as just different notation for the sum and product of a type family. *)
@@ -128,18 +118,26 @@ Defined.
 (** Under this interpretation, we can think of the maps [f <| j] and [f |> j] as left and right Kan extentions of [f : X -> Type] along [j : X -> Y]. *)
 (** To see this we can construct the (co)unit transformations of our extensions. *)
 Definition unit_leftkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
-  : f =< (LeftKanTypeFamily f j o j) := (fun x A => ((x; idpath); A)).
+  : f =< (LeftKanTypeFamily f j o j)
+  := (fun x A => ((x; idpath); A)).
   
 Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
-  : (RightKanTypeFamily f j o j) =< f := (fun x A => A (x; idpath)).
+  : (RightKanTypeFamily f j o j) =< f
+  := (fun x A => A (x; idpath)).
 
 Definition counit_leftkantypefam {X Y : Type} (g : Y -> Type) (j : X -> Y)
   : LeftKanTypeFamily (g o j) j =< g.
-Proof. intros y [[x p] C]; apply (transport g p C). Defined.
+Proof.
+  intros y [[x p] C].
+  apply (transport g p C).
+Defined.
 
 Definition unit_rightkantypefam {X Y : Type} (g : Y -> Type) (j : X -> Y)
   : g =< RightKanTypeFamily (g o j) j.
-Proof. intros y C [x p]. apply (transport g p^ C). Defined.
+Proof.
+  intros y C [x p].
+  apply (transport g p^ C).
+Defined.
 
 (** Universal property of the Kan extensions. *)
 Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
@@ -151,7 +149,8 @@ Proof.
   - intros x. apply path_forall. intros y. reflexivity.
 Defined.
 
-Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
+(** TODO: Prove uniqueness of the universal property. *)
+(*Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
   {f : X -> Type} {g : Y -> Type} {a : f =< g o j}
   : Contr { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation b j) (unit_leftkantypefam f j) == a}.
 Proof.
@@ -160,7 +159,16 @@ Proof.
   - apply path_forall. intros y. apply path_forall.
     intros [[w []] c]. srefine (ap10 (F w) c)^.
   - apply path_forall. intros x.
-Admitted.
+Abort.*)
+
+Definition univ_property_RightKanTypeFam `{Funext} {X Y} {j : X -> Y}
+  {f : X -> Type} {g : Y -> Type} (a : g o j =< f)
+  : { b : g =< RightKanTypeFamily f j | comp_transformation (counit_rightkantypefam f j) (whisker_transformation b j) == a}.
+Proof.
+  snrefine (_; _).
+  - intros y A [x p]. apply (a x (p^ # A)).
+  - intros x. apply path_forall. intros y. reflexivity.
+Defined.
 
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkantypefamily `{Funext} {X Y : Type} (f : X -> Type)
@@ -171,9 +179,9 @@ Proof.
   - intros a x B. apply (a (j x) ((x; idpath); B)).
   - intros b y [[x p] C]. apply (p # (b x C)).
   - intros b. apply path_forall. intros x.
-    apply path_forall. intros B. reflexivity.
+    apply path_forall. intros B; cbn. reflexivity.
   - intros a. apply path_forall. intros y.
-    apply path_forall. intros [[x []] C]. reflexivity.
+    apply path_forall. intros [[x []] C]; cbn. reflexivity.
 Defined.
 
 Definition rightadjoint_rightkantypefamily `{Funext} {X Y : Type} (f : X -> Type)
@@ -183,9 +191,9 @@ Proof.
   snrapply equiv_adjointify.
   - intros a x C. apply (a (j x) C (x; idpath)).
   - intros a y C [x p]. apply (a x). apply (p^ # C).
-  - intros a. apply path_forall. intros x. apply path_forall. intros C. reflexivity.
+  - intros a. apply path_forall. intros x. apply path_forall. intros C; cbn. reflexivity.
   - intros b. apply path_forall. intros y. apply path_forall. intros C.
-    apply path_forall. intros [x p]. destruct p. reflexivity.
+    apply path_forall. intros [x p]. destruct p; cbn. reflexivity.
 Defined.
 
 (** This section is all set up for the proof that the left Kan extension of an embedding is an embedding of type families. *)
