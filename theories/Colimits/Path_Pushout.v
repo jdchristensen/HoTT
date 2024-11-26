@@ -3,12 +3,15 @@ Require Import Types.Universe Types.Paths Types.Arrow Types.Forall Types.Sigma C
 Require Import Homotopy.IdentitySystems.
 Require Import Colimits.Pushout.
 
+(** Characterization of identity types of pushouts *)
+
+(** Pointed type families over pushouts has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022.  *)
 Section DescentPO.
 
   (** Assume there's a span diagram [A] <- [R] -> [B]. *)
   Context `{Univalence} {A B R : Type} (f : R -> A) (g : R -> B).
 
-  (** Descent data over a pushout are type families over [A] and [B], together with a relation corresponding to [R]. *)
+  (** Descent data over [A], [B], and [R], are type families [P_A : A -> Type] and [P_B : B -> Type], such that the fibers over [r : R] are equivalent, i.e. [P_A (f r) <~> P_B (g r)]. *)
   Context (P_A : A -> Type) (P_B : B -> Type) 
     (e_P : forall r : R, P_A (f r) <~> P_B (g r)).
 
@@ -24,6 +27,7 @@ Section DescentPO.
       + by rapply equiv_isequiv.
   Defined.
 
+  (** [transport] of [pglue r] over [po_bundle_descent] is given by [e_P]. *)
   Definition transport_pglue_bundle (r : R) (pa : P_A (f r)) 
     : transport po_bundle_descent (pglue r) pa = e_P r pa.
   Proof.
@@ -32,9 +36,11 @@ Section DescentPO.
   Defined.
 
   Section DepDescentWFamily.
+
+    (** Consider a dependent type family over [Pushout f g] and [po_bundle_descent]. *)
     Context (Q : forall x : Pushout f g, po_bundle_descent x -> Type).
 
-    (** We can recover dependent descent data for this type family. *)
+    (** The associated dependent descent data of [Q] is given by the maps: *)
     Definition po_descentfam_A (a : A) (pa : P_A a) : Type
       := Q (pushl a) pa.
 
@@ -46,12 +52,13 @@ Section DescentPO.
       := equiv_transportDD po_bundle_descent Q (pglue r) 
         (transport_pglue_bundle r pa).
       
-    (** A section of the descent data is a section on the individual components, with coherence *)
+    (** A section of the dependent descent data are sections [f_A] and [f_B], with coherences [e_f]. *)
     Context (f_A : forall a : A, forall pa : P_A a, po_descentfam_A a pa)
       (f_B : forall b : B, forall pb : P_B b, po_descentfam_B b pb)
       (e_f : forall r : R, forall pa : P_A (f r), 
         po_descentfam_e r (f_A (f r) pa) = f_B (g r) (e_P r pa)).
 
+    (** transporting in [Q] along [pglue] maps [f_A] to [f_B]. *)
     Definition pglue_descentfam_sect (r : R) 
       : transport (fun x => forall px : po_bundle_descent x, Q x px) 
         (pglue r) (f_A (f r)) = f_B (g r).
@@ -63,6 +70,7 @@ Section DescentPO.
       nrapply e_f.
     Defined.
 
+    (** The section of dependent descent data bundles to a genuine section on the total space. *)
     Definition po_descentfam_sect
       := Pushout_ind _ f_A f_B pglue_descentfam_sect.
 
@@ -77,7 +85,8 @@ Section DescentPO.
   End DepDescentWFamily.
 
   Section DescentIdSys.
-    (** We make a single base pointed *)
+
+    (** Assume only [A] and [P_A] are pointed. There is an analogous statement where [B] and [P_B] is pointed. *)
     Context (a0 : A) (pa0 : P_A a0).
 
     (** Assume that the descent data ([P_A, P_B, e_P]) satisfies Kraus-von Raumer induction. *)

@@ -51,7 +51,7 @@ Section DescentGQ.
     (** The first two arguments of [e_f] are taken to be implicit. *)
     Arguments e_f {_ _} _ _.
 
-    (** Transporting along [gqglue] only changes the point of evaluation. *)
+    (** Transporting over [Q] along [gqglue] is evaluation at the other endpoint on an edge. *)
     Definition gqglue_descentfam_sect (a b : A) (r : R a b) 
       : transport (fun x : GraphQuotient R => forall px : gq_bundle_descent x, Q x px) 
         (gqglue r) (f_A a) = f_A b.
