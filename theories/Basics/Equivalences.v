@@ -96,7 +96,7 @@ End EquivTransport.
 (** Doubly dependent transport is an equivalence *)
 Section EquivTransportD.
 
-    Context {A : Type} (P : A -> Type) (Q : forall a : A, P a -> Type) 
+    Context {A : Type} (P : A -> Type) (Q : forall a : A, P a -> Type)
       {x y : A} (p : x = y) {px : P x}.
 
     Global Instance isequiv_transportD : IsEquiv (transportD P Q p px).
@@ -658,7 +658,7 @@ Goal forall (A : Type) (B : A -> Type) (C : forall a:A, B a -> Type) (D : forall
     intros b; cbn in b.
     intros x; cbn in x.
     elim x; clear x.
-    intros c; cbn in c. 
+    intros c; cbn in c.
     intros d; cbn in d.
     (** Here begins [build_record] *)
     cbn; unshelve econstructor.
@@ -674,7 +674,7 @@ Goal forall (A : Type) (B : A -> Type) (C : forall a:A, B a -> Type) (D : forall
     intros x; cbn in x.
     elim x; clear x.
     intros x; cbn in x.
-    elim x; clear x. 
+    elim x; clear x.
     intros b; cbn in b.
     intros c; cbn in c.
     intros d; cbn in d.
@@ -691,7 +691,7 @@ Goal forall (A : Type) (B : A -> Type) (C : forall a:A, B a -> Type) (D : forall
     intros x; cbn in x.
     elim x; clear x.
     intros x; cbn in x.
-    elim x; clear x. 
+    elim x; clear x.
     intros b; cbn in b.
     intros c; cbn in c.
     intros d; cbn in d.
@@ -704,7 +704,7 @@ Goal forall (A : Type) (B : A -> Type) (C : forall a:A, B a -> Type) (D : forall
     intros b; cbn in b.
     intros x; cbn in x.
     elim x; clear x.
-    intros c; cbn in c. 
+    intros c; cbn in c.
     intros d; cbn in d.
     cbn; exact idpath.
 Defined.
@@ -728,7 +728,7 @@ Goal forall (A:Type) (R:A->A->Type),
     intros a2; cbn in a2.
     intros r; cbn in r.
     cbn; unshelve econstructor.
-    { cbn; unshelve econstructor. 
+    { cbn; unshelve econstructor.
       { (** [build_record] can't guess at this point that it needs to use [a1] instead of [a2], and in fact it tries [a2] first; but later on, [exact r] fails in that case, causing backtracking to this point and a re-try with [a1].  *)
         cbn; exact a1. }
       { cbn; exact a2. } }
@@ -829,7 +829,7 @@ Section Examples.
       intros x; cbn in x.
       elim x; clear x.
       intros a; cbn in a.
-      intros x; cbn in x. 
+      intros x; cbn in x.
       elim x; clear x.
       intros b; cbn in b.
       intros p; cbn in p.
@@ -855,7 +855,7 @@ Section Examples.
     - intros x; cbn in x.
       elim x; clear x.
       intros a; cbn in a.
-      intros x; cbn in x. 
+      intros x; cbn in x.
       elim x; clear x.
       intros b; cbn in b.
       intros p; cbn in p.

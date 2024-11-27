@@ -42,7 +42,7 @@ Section DescentGQ.
     Definition gq_descentfam_A (a : A) (pa : P_A a) : Type := Q (gq a) pa.
 
     Definition gq_descentfam_e {a b : A} (r : R a b) {pa : P_A a} : gq_descentfam_A a pa <~> gq_descentfam_A b (e_P r pa)
-    := equiv_transportDD gq_bundle_descent Q (gqglue r) (transport_gqglue_bundle r pa). 
+    := equiv_transportDD gq_bundle_descent Q (gqglue r) (transport_gqglue_bundle r pa).
 
     (** A section of the dependent descent data is given by a section [f_A], together with coherences [e_f]. *)
     Context (f_A : forall a : A, forall pa : P_A a, gq_descentfam_A a pa)
@@ -52,8 +52,8 @@ Section DescentGQ.
     Arguments e_f {_ _} _ _.
 
     (** Transporting over [Q] along [gqglue] is evaluation at the other endpoint on an edge. *)
-    Definition gqglue_descentfam_sect (a b : A) (r : R a b) 
-      : transport (fun x : GraphQuotient R => forall px : gq_bundle_descent x, Q x px) 
+    Definition gqglue_descentfam_sect (a b : A) (r : R a b)
+      : transport (fun x : GraphQuotient R => forall px : gq_bundle_descent x, Q x px)
         (gqglue r) (f_A a) = f_A b.
     Proof.
       apply dpath_forall.
@@ -67,32 +67,29 @@ Section DescentGQ.
     Definition gq_descentfam_sect : forall x : GraphQuotient R, forall px : gq_bundle_descent x, Q x px
       := GraphQuotient_ind _ f_A gqglue_descentfam_sect.
 
-    Definition gq_descentfam_sect_beta (a1 a2 : A) (r : R a1 a2) (p1 : P_A a1)
-      : gq_descentfam_sect (gq a2) (e_P r p1) = gq_descentfam_e r (gq_descentfam_sect (gq a1) p1)
-      := (e_f r p1)^.
-
-    Definition gq_descentfam_sect_beta_ap (a1 a2 : A) (r : R a1 a2) 
-      := GraphQuotient_ind_beta_gqglue _ f_A gqglue_descentfam_sect a1 a2 r. 
+    Definition gq_descentfam_sect_beta_gqglue (a b : A) (r : R a b)
+      : apD gq_descentfam_sect (gqglue r) = gqglue_descentfam_sect a b r
+      := GraphQuotient_ind_beta_gqglue _ f_A gqglue_descentfam_sect a b r.
 
   End DependentDescentWithFamily.
 
   Section DescentIdSys.
 
     (** Assume [A] and [P_A] are pointed types. *)
-    Context {a0 : A} {p0 : P_A a0}. 
+    Context {a0 : A} {p0 : P_A a0}.
 
     (** Assume for any pointed dependent descent data [Q_A], [e_Q], and [q0] that there are sections from the pointed descent data [P_A], [e_P], and [p0]. This is the Kraus-von Raumer induction principle. *)
-    Context (gq_desc_idsys_ind : forall Q_A : forall a : A, P_A a -> Type, 
+    Context (gq_desc_idsys_ind : forall Q_A : forall a : A, P_A a -> Type,
         forall e_Q : forall a b : A, forall r : R a b, forall pa : P_A a, Q_A a pa <~> Q_A b (e_P r pa),
-        forall q0 : Q_A a0 p0, 
+        forall q0 : Q_A a0 p0,
         forall a : A, forall pa : P_A a, Q_A a pa)
-      (gqglue_desc_idsys_ind : forall Q_A : forall a : A, P_A a -> Type, 
+      (gqglue_desc_idsys_ind : forall Q_A : forall a : A, P_A a -> Type,
         forall e_Q : forall a b : A, forall r : R a b, forall pa : P_A a, Q_A a pa <~> Q_A b (e_P r pa),
-        forall q0 : Q_A a0 p0, forall a b : A, forall r :  R a b, forall pa : P_A a, 
+        forall q0 : Q_A a0 p0, forall a b : A, forall r :  R a b, forall pa : P_A a,
         e_Q a b r pa (gq_desc_idsys_ind Q_A e_Q q0 a pa) = gq_desc_idsys_ind Q_A e_Q q0 b (e_P r pa))
-      (gq_desc_idsys_ind_beta : forall Q_A : forall a : A, P_A a -> Type, 
+      (gq_desc_idsys_ind_beta : forall Q_A : forall a : A, P_A a -> Type,
         forall e_Q : forall a b : A, forall r : R a b, forall pa : P_A a, Q_A a pa <~> Q_A b (e_P r pa),
-        forall q0 : Q_A a0 p0, 
+        forall q0 : Q_A a0 p0,
         gq_desc_idsys_ind Q_A e_Q q0 a0 p0 = q0).
 
 
@@ -108,7 +105,7 @@ Section DescentGQ.
         nrapply gq_desc_idsys_ind_beta.
     Defined.
 
-    Definition gq_bundle_descent_equiv_path (x : GraphQuotient R) 
+    Definition gq_bundle_descent_equiv_path (x : GraphQuotient R)
       : (gq a0) = x <~> gq_bundle_descent x
       := @equiv_transport_identitysystem (GraphQuotient R) (gq a0) gq_bundle_descent p0 _ x.
 
