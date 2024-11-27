@@ -18,13 +18,9 @@ Section DescentPO.
   (** The descent data bundles up to a type family over the pushout. *)
   Definition po_bundle_descent : forall (x : Pushout f g), Type.
   Proof.
-    snrapply (Pushout_rec).
-    - exact P_A.
-    - exact P_B.
-    - intro r.
-      snrapply path_universe.
-      + exact (e_P r).
-      + by rapply equiv_isequiv.
+    snrapply (Pushout_rec _ P_A P_B).
+    intro r.
+    by apply path_universe_uncurried.
   Defined.
 
   (** [transport] of [pglue r] over [po_bundle_descent] is given by [e_P]. *)
@@ -58,7 +54,7 @@ Section DescentPO.
       (e_f : forall r : R, forall pa : P_A (f r),
         po_descentfam_e r (f_A (f r) pa) = f_B (g r) (e_P r pa)).
 
-    (** transporting in [Q] along [pglue] maps [f_A] to [f_B]. *)
+    (** Transporting in [Q] along [pglue] maps [f_A] to [f_B]. *)
     Definition pglue_descentfam_sect (r : R)
       : transport (fun x => forall px : po_bundle_descent x, Q x px)
         (pglue r) (f_A (f r)) = f_B (g r).
@@ -114,7 +110,7 @@ Section DescentPO.
         forall q0 : Q_A a0 pa0,
           po_desc_A_idsys_ind Q_A Q_B e_Q q0 a0 pa0 = q0).
 
-    (** Kraus-von Raumer induction on descent data induces an identity system structure on the total space*)
+    (** Kraus-von Raumer induction on descent data induces an identity system structure on the total space. *)
     Local Instance isidsys_po_bundle_descent : @IsIdentitySystem _ (pushl a0) po_bundle_descent pa0.
     Proof.
       snrapply Build_IsIdentitySystem.
