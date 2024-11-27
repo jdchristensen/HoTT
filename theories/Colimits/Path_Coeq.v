@@ -3,10 +3,10 @@ Require Import Types.Universe Types.Paths Types.Forall.
 Require Import Homotopy.IdentitySystems.
 Require Import Colimits.Coeq.
 
-(** Characterization of identity types of coequalizers *)
+(** * Characterization of identity types of coequalizers *)
 
-(** Pointed type families over coequalizers has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022.  *)
-Section DescentGQ.
+(** A pointed type family over a coequalizer has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022.  *)
+Section DescentCoeq.
 
   (** Consider a double arrow. *)
   Context `{Univalence} {A B : Type} (f g : B -> A).
@@ -17,10 +17,9 @@ Section DescentGQ.
   (** The descent data bundles up to a type family of [GraphQuotient R]. *)
   Definition c_bundle_descent : Coeq f g -> Type.
   Proof.
-    snrapply Coeq_rec.
-    - exact P_A.
-    - intro b.
-      exact (path_universe_uncurried (e_P b)).
+    snrapply (Coeq_rec _ P_A).
+    intro b.
+    exact (path_universe_uncurried (e_P b)).
   Defined.
 
   (** [transport] of [cglue r] over [c_bundle_descent] is given by [e_P]. *)
@@ -45,7 +44,7 @@ Section DescentGQ.
     Context (f_A : forall a : A, forall pa : P_A a, c_descentfam_A a pa)
       (e_f : forall b : B, forall pa : P_A (f b), c_descentfam_e b (f_A (f b) pa) = f_A (g b) (e_P b pa)).
 
-    (** Transporting over [Q] along [gqglue] is evaluation at the other endpoint on an edge. *)
+    (** Transporting over [Q] along [cglue] is evaluation at the other endpoint on an edge. *)
     Definition cglue_descentfam_sect (b : B)
       : transport (fun x : Coeq f g => forall px : c_bundle_descent x, Q x px)
         (cglue b) (f_A (f b)) = f_A (g b).
@@ -87,9 +86,8 @@ Section DescentGQ.
         forall q0 : Q_A a0 p0,
         c_desc_idsys_ind Q_A e_Q q0 a0 p0 = q0).
 
-
-    (** Kraus-von Raumer induction induces an identity system structure on gq_bundle_descent. *)
-    Local Instance identitysystem_gq_bundle_descent : @IsIdentitySystem _ (coeq a0) c_bundle_descent p0.
+    (** Kraus-von Raumer induction induces an identity system structure on [c_bundle_descent]. *)
+    Local Instance identitysystem_c_bundle_descent : @IsIdentitySystem _ (coeq a0) c_bundle_descent p0.
     Proof.
       snrapply Build_IsIdentitySystem.
       - intros Q q0 x p.
@@ -100,9 +98,9 @@ Section DescentGQ.
         nrapply c_desc_idsys_ind_beta.
     Defined.
 
-    Definition gq_bundle_descent_equiv_path (x : Coeq f g)
+    Definition c_bundle_descent_equiv_path (x : Coeq f g)
       : (coeq a0) = x <~> c_bundle_descent x
       := @equiv_transport_identitysystem (Coeq f g) (coeq a0) c_bundle_descent p0 _ x.
 
   End DescentIdSys.
-End DescentGQ.
+End DescentCoeq.

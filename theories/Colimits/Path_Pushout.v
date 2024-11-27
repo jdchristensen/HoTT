@@ -3,9 +3,9 @@ Require Import Types.Universe Types.Paths Types.Arrow Types.Forall Types.Sigma C
 Require Import Homotopy.IdentitySystems.
 Require Import Colimits.Pushout.
 
-(** Characterization of identity types of pushouts *)
+(** * Characterization of identity types of pushouts *)
 
-(** Pointed type families over pushouts has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022.  *)
+(** A pointed type family over a pushout has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022.  *)
 Section DescentPO.
 
   (** Assume there's a span diagram [A] <- [R] -> [B]. *)

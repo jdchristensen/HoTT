@@ -3,9 +3,9 @@ Require Import Types.Universe Types.Paths Types.Forall.
 Require Import Homotopy.IdentitySystems.
 Require Import Colimits.GraphQuotient.
 
-(** Characterization of identity types of graph quotients *)
+(** * Characterization of identity types of graph quotients *)
 
-(** Pointed type families over the graph quotient has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022.  *)
+(** A pointed type family over a graph quotient has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022. *)
 Section DescentGQ.
 
   (** Consider a graph [A] with arrows [R]. *)
@@ -20,10 +20,9 @@ Section DescentGQ.
   (** The descent data bundles up to a type family of [GraphQuotient R]. *)
   Definition gq_bundle_descent : GraphQuotient R -> Type.
   Proof.
-    snrapply GraphQuotient_rec.
-    - exact P_A.
-    - intros a b r.
-      exact (path_universe_uncurried (e_P r)).
+    snrapply (GraphQuotient_rec P_A).
+    intros a b r.
+    exact (path_universe_uncurried (e_P r)).
   Defined.
 
   (** [transport] of [gqglue r] over [gq_bundle_descent] is given by [e_P]. *)
@@ -92,8 +91,7 @@ Section DescentGQ.
         forall q0 : Q_A a0 p0,
         gq_desc_idsys_ind Q_A e_Q q0 a0 p0 = q0).
 
-
-    (** Kraus-von Raumer induction induces an identity system structure on gq_bundle_descent. *)
+    (** Kraus-von Raumer induction induces an identity system structure on [gq_bundle_descent]. *)
     Local Instance identitysystem_gq_bundle_descent : @IsIdentitySystem _ (gq a0) gq_bundle_descent p0.
     Proof.
       snrapply Build_IsIdentitySystem.
