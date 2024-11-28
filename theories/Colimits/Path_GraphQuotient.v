@@ -1,7 +1,34 @@
 Require Import Basics.Overture Basics.Tactics Basics.PathGroupoids Basics.Equivalences.
-Require Import Types.Universe Types.Paths Types.Forall.
+Require Import Types.Universe Types.Paths Types.Forall Types.Sigma.
 Require Import Homotopy.IdentitySystems.
 Require Import Colimits.GraphQuotient.
+
+(** TODO: Move to PathGroupoids.v *)
+Definition transportD_const {A : Type} (B : A -> Type) (C : Type)
+  {x1 x2 : A} (p : x1 = x2) (y : B x1) (z : C)
+  : transportD B (fun _ _ => C) p y z = z.
+Proof.
+  by destruct p.
+Defined.
+
+Definition transportDD_const {A : Type} (B : A -> Type) (C : Type)
+  {a1 a2 : A} (pA : a1 = a2)
+  {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
+  (c1 : C)
+  : transportDD B (fun _ _ => C) pA pB c1 = c1.
+Proof.
+  by destruct pB, pA.
+Defined.
+
+(** TODO: put in Sigma.v, after transportD_is_transport. *)
+Definition transportDD_is_transport {A : Type} (B : A -> Type) (C : forall a : A, B a -> Type)
+  {a1 a2 : A} (pA : a1 = a2)
+  {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
+  (c1 : C a1 b1)
+  : transportDD B C pA pB c1 = transport (fun (ab : sig B) => C ab.1 ab.2) (path_sigma' _ pA pB) c1.
+Proof.
+  by destruct pB, pA.
+Defined.
 
 (** * Characterization of identity types of graph quotients *)
 
@@ -81,6 +108,95 @@ Section DescentGQ.
       := GraphQuotient_ind_beta_gqglue _ f_A gqglue_descentfam_ind a b r.
 
   End DependentDescentWithFamily.
+
+  Section Flattening.
+
+    (** The total space [sig gq_bundle_descent] is itself a graph quotient, with these constructors. *)
+
+    Definition gq_descentfam {a : A} (pa : P_A a) : sig gq_bundle_descent
+      := (gq a; pa).
+
+    Definition gqglue_descentfam {a b : A} {pa : P_A a} {pb : P_A b}
+      (r : R a b) (pr : e_P r pa = pb)
+      : (gq a; pa) = (gq b; pb) :> sig gq_bundle_descent.
+    Proof.
+      snrapply (path_sigma' _ (gqglue r)).
+      lhs nrapply transport_gqglue_bundle.
+      exact pr.
+    Defined.
+
+    (** It will be convenient to state the recursion principle that the total space [sig gq_bundle_descent x] satsifies. *)
+    Definition gq_descentfam_rec (Q : Type) (f_A : forall (a : A), P_A a -> Q)
+      (e_f : forall (a b : A) (r : R a b) (pa : P_A a), f_A a pa = f_A b (e_P r pa))
+      : sig gq_bundle_descent -> Q.
+    Proof.
+      intros [x px]; revert x px.
+      snrapply (gq_descentfam_ind _ f_A).
+      simpl.
+      intros a b r pa.
+      lhs nrapply transportDD_const.
+      apply e_f.
+    Defined.
+
+    (** And the corresponding computation rule. *)
+    Definition gq_descentfam_rec_beta_gqglue (Q : Type) (f_A : forall (a : A), P_A a -> Q)
+      (e_f : forall (a b : A) (r : R a b) (pa : P_A a), f_A a pa = f_A b (e_P r pa))
+      {a b : A} {pa : P_A a} {pb : P_A b} (r : R a b) (pr : e_P r pa = pb)
+      : ap (gq_descentfam_rec Q f_A e_f) (gqglue_descentfam r pr)
+        = e_f a b r pa @ ap (f_A b) pr.
+    Proof.
+      destruct pr.
+      cbn.
+      unfold gqglue_descentfam.
+      unfold gq_descentfam_rec.
+      rewrite 2 concat_p1.
+      lhs nrapply (ap_path_sigma _ _ (gqglue r) _).
+      rewrite gq_descentfam_ind_beta_gqglue.
+      cbn.
+      unfold gqglue_descentfam_ind.
+      (* This is a bit trickier than the situation for the original proof of flattening,
+         since we defined gq_descentfam_rec using gq_descentfam_ind rather than using
+         GraphQuotient_rec.  I wonder if we can prove a better computation rule for
+         gq_descentfam_ind which we could use here instead of using ap_path_sigma?
+         Or maybe there is another approach. *)
+    Admitted.
+
+    (* This is essentially the same as the existing proof. *)
+    Definition equiv_gq_flatten
+      : { x : GraphQuotient R & gq_bundle_descent x }
+          <~> GraphQuotient (fun a b => {r : R a.1 b.1 & e_P r a.2 = b.2}).
+    Proof.
+      snrapply equiv_adjointify.
+      - snrapply gq_descentfam_rec.
+        + exact (fun a pa => gq (a; pa)).
+        + intros a b r pa; cbn beta.
+          apply gqglue; exact (r; 1).
+      - snrapply GraphQuotient_rec.
+        + intros [a pa]. exact (gq a; pa).
+        + intros [a pa] [b pb] [r pr]; cbn in r, pr.
+          exact (gqglue_descentfam r pr).
+      - snrapply GraphQuotient_ind.
+        + reflexivity.
+        + simpl.
+          intros [a pa] [b pb] [r pr]; cbn in r, pr.
+          nrapply transport_paths_FFlr'; apply equiv_p1_1q.
+          rewrite GraphQuotient_rec_beta_gqglue.
+          lhs nrapply gq_descentfam_rec_beta_gqglue.
+          destruct pr.
+          apply concat_p1.
+      - intros [x px]; revert x px.
+        snrapply gq_descentfam_ind; cbn.
+        + reflexivity.
+        + intros a b r pa; cbn beta.
+          rewrite transportDD_is_transport.
+          nrapply transport_paths_FFlr'; apply equiv_p1_1q.
+          rewrite (concat_p1 (transport_gqglue_bundle r pa))^.
+          rewrite gq_descentfam_rec_beta_gqglue.
+          rewrite concat_p1.
+          exact (GraphQuotient_rec_beta_gqglue _ _ (a; pa) (b; _) (r; 1)).
+    Defined.
+
+  End Flattening.
 
   Section DescentIdSys.
 
