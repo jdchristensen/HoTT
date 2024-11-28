@@ -202,26 +202,19 @@ Section Flattening.
     - snrapply flatten_rec.
       + exact (fun a x => gq (a; x)).
       + intros a b r x.
-        apply gqglue.
-        exists r.
-        reflexivity.
+        apply gqglue; exact (r; 1).
     - snrapply GraphQuotient_rec.
       + exact (fun '(a; x) => (gq a; x)).
-      + intros [a x] [b y] [r p].
-        simpl in p, r.
+      + intros [a x] [b y] [r p]; cbn in r, p.
         destruct p.
         apply flatten_gqglue.
     - snrapply GraphQuotient_ind.
       1: reflexivity.
-      intros [a x] [b y] [r p].
-      simpl in p, r.
+      intros [a x] [b y] [r p]; cbn in r, p.
       destruct p.
       simpl.
-      lhs nrapply transport_paths_FFlr.
+      nrapply transport_paths_FFlr'; apply equiv_p1_1q.
       rewrite GraphQuotient_rec_beta_gqglue.
-      refine ((_ @@ 1) @ concat_Vp _).
-      lhs nrapply concat_p1.
-      apply inverse2.
       nrapply flatten_rec_beta_gqglue.
     - snrapply flatten_ind.
       1: reflexivity.
