@@ -17,7 +17,7 @@ Section DescentGQ.
   (** The first two arguments of [e_P] are taken to be implicit. *)
   Arguments e_P {_ _} _.
 
-  (** The descent data bundles up to a type family of [GraphQuotient R]. *)
+  (** The descent data bundles up to a type family over [GraphQuotient R]. *)
   Definition gq_bundle_descent : GraphQuotient R -> Type.
   Proof.
     snrapply (GraphQuotient_rec P_A).
@@ -26,7 +26,8 @@ Section DescentGQ.
   Defined.
 
   (** [transport] of [gqglue r] over [gq_bundle_descent] is given by [e_P]. *)
-  Definition transport_gqglue_bundle {a b : A} (r : R a b) (pa : P_A a) : transport gq_bundle_descent (gqglue r) pa = e_P r pa.
+  Definition transport_gqglue_bundle {a b : A} (r : R a b) (pa : P_A a)
+    : transport gq_bundle_descent (gqglue r) pa = e_P r pa.
   Proof.
     nrapply transport_path_universe'.
     nrapply GraphQuotient_rec_beta_gqglue.
@@ -34,41 +35,50 @@ Section DescentGQ.
 
   Section DependentDescentWithFamily.
 
-    (** Consider a dependent type family over [GraphQuotient R] and [gq_bundle_descent]. *)
+    (* TODO: replace the material in GraphQuotient.v with this version. But maybe switch to the terminology used there? *)
+
+    (** In this Section, we prove the analog of Lemma 6.12.4 from the book, which states that the total space [sig gq_bundle_descent] has the expected dependent induction principle.  The proof here is simpler than in the book. *)
+
+    (** Consider a dependent type family over [GraphQuotient R] and [gq_bundle_descent]. This is a curried form of a type family over [sig gq_bundle_descent]. *)
     Context (Q : forall x : GraphQuotient R, gq_bundle_descent x -> Type).
 
     (** The dependent descent data is given by the following maps. *)
     Definition gq_descentfam_A (a : A) (pa : P_A a) : Type := Q (gq a) pa.
 
-    Definition gq_descentfam_e {a b : A} (r : R a b) {pa : P_A a} : gq_descentfam_A a pa <~> gq_descentfam_A b (e_P r pa)
-    := equiv_transportDD gq_bundle_descent Q (gqglue r) (transport_gqglue_bundle r pa).
+    Definition gq_descentfam_e {a b : A} (r : R a b) {pa : P_A a}
+      : gq_descentfam_A a pa <~> gq_descentfam_A b (e_P r pa)
+      := equiv_transportDD gq_bundle_descent Q (gqglue r) (transport_gqglue_bundle r pa).
 
     (** A section of the dependent descent data is given by a section [f_A], together with coherences [e_f]. *)
     Context (f_A : forall a : A, forall pa : P_A a, gq_descentfam_A a pa)
-      (e_f : forall a b : A, forall r :  R a b, forall pa : P_A a, gq_descentfam_e r (f_A a pa) = f_A b (e_P r pa)).
+      (e_f : forall a b : A, forall r :  R a b, forall pa : P_A a,
+          gq_descentfam_e r (f_A a pa) = f_A b (e_P r pa)).
 
     (** The first two arguments of [e_f] are taken to be implicit. *)
     Arguments e_f {_ _} _ _.
 
     (** Transporting over [Q] along [gqglue] is evaluation at the other endpoint on an edge. *)
-    Definition gqglue_descentfam_sect (a b : A) (r : R a b)
+    Definition gqglue_descentfam_ind (a b : A) (r : R a b)
       : transport (fun x : GraphQuotient R => forall px : gq_bundle_descent x, Q x px)
-        (gqglue r) (f_A a) = f_A b.
+          (gqglue r) (f_A a) = f_A b.
     Proof.
       apply dpath_forall.
       intro pa.
+      (* Apply a transport to both sides of the equation: *)
       apply (equiv_inj (transport (gq_descentfam_A b) (transport_gqglue_bundle r pa))).
-      rhs nrapply (apD (f_A b) (transport_gqglue_bundle r pa)).
-      exact (e_f r pa).
+      (* The LHS is now the unfolded form of [transportDD], so [e_f] applies to it: *)
+      lhs nrapply e_f.
+      symmetry; apply apD.
     Defined.
 
     (** The section of dependent descent data bundles to a genuine section on the total space. *)
-    Definition gq_descentfam_sect : forall x : GraphQuotient R, forall px : gq_bundle_descent x, Q x px
-      := GraphQuotient_ind _ f_A gqglue_descentfam_sect.
+    Definition gq_descentfam_ind : forall x : GraphQuotient R, forall px : gq_bundle_descent x, Q x px
+      := GraphQuotient_ind _ f_A gqglue_descentfam_ind.
 
-    Definition gq_descentfam_sect_beta_gqglue (a b : A) (r : R a b)
-      : apD gq_descentfam_sect (gqglue r) = gqglue_descentfam_sect a b r
-      := GraphQuotient_ind_beta_gqglue _ f_A gqglue_descentfam_sect a b r.
+    (** This is a partial computation rule, which only handles paths in the base. *)
+    Definition gq_descentfam_ind_beta_gqglue (a b : A) (r : R a b)
+      : apD gq_descentfam_ind (gqglue r) = gqglue_descentfam_ind a b r
+      := GraphQuotient_ind_beta_gqglue _ f_A gqglue_descentfam_ind a b r.
 
   End DependentDescentWithFamily.
 
@@ -96,7 +106,7 @@ Section DescentGQ.
     Proof.
       snrapply Build_IsIdentitySystem.
       - intros Q q0 x p.
-        snrapply gq_descentfam_sect.
+        snrapply gq_descentfam_ind.
         + exact (gq_desc_idsys_ind (gq_descentfam_A Q) (@gq_descentfam_e Q) q0).
         + apply gqglue_desc_idsys_ind.
       - intros Q q0; cbn.
