@@ -9,81 +9,116 @@ Require Import Types.Forall Types.Sigma Types.Universe.
 Require Import InjectiveTypes.
 Require Import TypeFamKanExt.
 
+Section AlgFlabSigma.
+  Context {X : Type} (A : X -> Type) (Xaf : IsAlgebraicFlabbyType X).
 
-Context {X : Type@{u}} (A : X -> Type@{v}) (Xaf : IsAlgebraicFlabbyType X).
+  Definition alg_flab_map
+    (P : Type) (PropP : IsHProp P) (f : P -> X)
+    : (A (Xaf _ _ f).1) -> (forall h, A (f h))
+    := fun a h => (Xaf _ _ f).2 h # a.
 
-Definition rho_map (P : Type@{w}) (PropP : IsHProp P) (f : P -> X)
-  : (A (Xaf _ _ f).1) -> (forall h, A (f h))
-  := fun a h => (Xaf _ _ f).2 h # a.
+  (** The condition for a sigma type over an algebraically flabby type can be described as the existence of a section to the preceding map. *)
+  Definition alg_flab_sigma_condition : Type
+    := forall P PropP f, {s | ((alg_flab_map P PropP f) o s) == idmap}.
 
-Definition alg_flab_sigma_condition
-  : Type@{uvsw}
-  := forall P PropP f, {s | (rho_map P PropP f) o s == idmap}.
-
-Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
-  : IsAlgebraicFlabbyType {x | A x}.
-Proof.
-  intros P PropP f.
-  pose (s := (cond P PropP (pr1 o f)).1).
-  pose (e := (cond P PropP (pr1 o f)).2).
-  srefine (((Xaf _ _ (pr1 o f)).1; s (pr2 o f)); _).
-  intros h.
-  srapply path_sigma.
-  - apply ((Xaf _ _ (pr1 o f)).2 h).
-  - apply (apD10 (e (pr2 o f)) h).
-Defined.
-
-Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
-  : IsAlgebraicInjectiveType {x | A x}
-  := (alg_inj_alg_flab (alg_flab_sigma cond)).
-
-
-
-Context (S : Type@{u} -> Type@{v}).
-
-(*unneccesary?*)
-Definition transport_eq `{Univalence} {X Y} (e : X <~> Y) (s : S X)
-  : S Y
-  := (path_universe_uncurried e) # s.
-
-Section CannonicalMaps.
-  Context (P : Type@{u}) (HProp_P : IsHProp P) (A : P -> Type@{u}).
-
-  Local Definition pi_map `{Funext} (h : P)
-    : (forall p, A p) <~> (A h).
+  (** A sigma type over an algebraically flabby type is also algebraically flabby, and thus algebraically injective, when the above condition holds. *)
+  Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
+    : IsAlgebraicFlabbyType {x | A x}.
   Proof.
+    intros P PropP f.
+    pose (s := (cond P PropP (pr1 o f)).1).
+    pose (e := (cond P PropP (pr1 o f)).2).
+    srefine (((Xaf _ _ (pr1 o f)).1; s (pr2 o f)); _).
+    intros h.
+    srapply path_sigma.
+    - apply ((Xaf _ _ (pr1 o f)).2 h).
+    - apply (apD10 (e (pr2 o f)) h).
+  Defined.
+
+  Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
+    : IsAlgebraicInjectiveType {x | A x}
+    := (alg_inj_alg_flab (alg_flab_sigma cond)).
+
+End AlgFlabSigma.
+
+(** Taking our algebraically flabby type [X] to be [Type], this introduces our primary examples (the type of pointed types, monoids, etc.), and introduces a few simplifying lemmas. *)
+Section AlgFlabUniverse.
+  Context (S : Type -> Type) (T : forall {X Y}, X <~> Y -> S X -> S Y) (Trefl : forall {X}, (T (equiv_idmap X) == idmap)).
+
+  (*MOVE ELSEWHERE*)
+  Definition transport_eq `{Univalence} {X Y} (e : X <~> Y) (s : S X)
+    : S Y
+    := (path_universe e) # s.
+
+  Definition transport_eq_idequiv `{Univalence} {X}
+    : @transport_eq _ X X 1 == idmap.
+  Proof.
+    intros s.
+    lhs apply (ap10 (ap (transport S) (@path_universe_1 _ X))).
+    reflexivity. (*I'm guessing there's a better way to do this*)
+  Defined.
+
+  (** Any two functions that act like transport along an equivalence are homotopic. *)
+  Definition homotopic_trequiv `{Univalence} {X Y}
+    (T' : forall {X Y}, X <~> Y -> S X -> S Y)
+    (T'refl : forall {X}, (T' (equiv_idmap X) == idmap))
+    (e : X <~> Y) 
+    : T _ _ e == T' e.
+  Proof.
+    revert Y e.
+    apply equiv_induction.
+    apply (pointwise_paths_concat (Trefl _)).
+    symmetry; apply T'refl.
+  Defined.
+
+  (** For a sigma type over [Type], the map [alg_flab_map] can be exchanged for this simpler map for which an equivalent condition for algebraic injectivity can be defined. *)
+  Definition alg_flab_map_forall `{Funext}
+    (P : Type) (PropP : IsHProp P) (A : P -> Type)
+    : S (forall h, A h) -> (forall h, S (A h)).
+  Proof.
+    intros s h.
+    srefine (T (forall h, A h) _ _ s).
     transparent assert (C : (Contr P)).
     - srapply contr_inhabited_hprop. apply h.
     - apply (@equiv_contr_forall _ _ C).
   Defined.
 
-  Local Definition phi_map `{Univalence} (h : P)
-    : (forall p, A p) = (A h)
-    := (path_universe_uncurried (pi_map h)).
+  Definition alg_flab_sigma_condition_forall `{Funext} : Type
+    := forall P PropP A, {s | ((alg_flab_map_forall P PropP A) o s) == idmap}.
 
-  Definition prop_forall_map `{Univalence} (s : S (forall p, A p))
-    : forall h, S (A h)
-    := fun h => path_universe_uncurried (pi_map h) # s.
+  Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
+    (P : Type) (PropP : IsHProp P) (A : P -> Type)
+    : alg_flab_map_forall P PropP A == alg_flab_map S alg_flab_Type_forall P PropP A.
+  Proof.
+    intros s. apply path_forall. intros h.
+    srefine (homotopic_trequiv (@transport_eq _) _ _ s).
+    intros X.
+    apply transport_eq_idequiv.
+  Defined.
 
-End CannonicalMaps.
+  Definition sigma_condition_sigma_condition_forall `{Univalence}
+    (condf : alg_flab_sigma_condition_forall)
+    : alg_flab_sigma_condition S alg_flab_Type_forall.
+  Proof.
+    intros P PropP A.
+    pose (s := (condf _ _ A).1).
+    pose (J := (condf _ _ A).2).
+    srefine (s; _).
+    srefine (pointwise_paths_concat _ J).
+    apply ap10. apply path_forall. intros x.
+    symmetry; apply (homotopic_alg_flab_map_alg_flab_map_forall P PropP A (s x)).
+  Defined.
 
-Definition closed_under_prop_forall `{Univalence}
-  : Type@{suv}
-  := forall P HProp_P A, IsEquiv (prop_forall_map P HProp_P A).
+End AlgFlabUniverse.
 
-Definition alg_flabby_sigma_closed_under_prop `{Univalence} (cls : closed_under_prop_forall)
-  : IsAlgebraicFlabbyType {X | S X}.
+(** The type of pointed types is algebraically flabby. *)
+Definition alg_flab_pType `{Univalence}
+  : IsAlgebraicFlabbyType {X : Type | X}.
 Proof.
-  intros P HProp_P f.
-  pose (e := Build_Equiv _ _ (prop_forall_map _ _ (pr1 o f)) (cls _ _ (pr1 o f))).
-  pose (s := e^-1 (pr2 o f)).
-  srefine ((forall p, (f p).1; s); _).
-  intros p.
-  srapply path_sigma.
-  - apply (phi_map _ _ (pr1 o f) p).
-  - apply (apD10 (eisretr e (pr2 o f)) p).
+  apply (alg_flab_sigma _ alg_flab_Type_forall).
+  apply (sigma_condition_sigma_condition_forall _ (@equiv_fun)).
+  - intros X. reflexivity.
+  - intros P PropP A.
+    srefine (idmap; _).
+    intros f. apply path_forall. intros h; cbn. reflexivity.
 Defined.
-
-Definition alg_inj_sigma_closed_under_prop `{Univalence} (cls : closed_under_prop_forall)
-  : IsAlgebraicInjectiveType {X | S X}
-  := (alg_inj_alg_flab (alg_flabby_sigma_closed_under_prop cls)).
