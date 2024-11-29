@@ -8,11 +8,12 @@
 Require Import Basics.
 Require Import PropResizing.
 Require Import Truncations.
-Require Import Types.Universe Types.Unit Types.Prod Types.Empty Types.Forall Types.Sigma.
+Require Import Types.Universe Types.Unit Types.Prod Types.Empty Types.Forall Types.Sigma Types.Sum.
 Require Import HFiber.
 Require Import HProp.
 Require Import PropResizing.
 Require Import Constant.
+Require Import ExcludedMiddle.
 
 Require Import TypeFamKanExt.
 
@@ -52,7 +53,7 @@ Section UniverseStructure.
 End UniverseStructure.
 
 (** [Type@{uv}] is algebraically u,v-injective in at least two ways. *)
-Definition alg_inj_Type_sigma@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
+Definition alg_inj_Type_sigma@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv} Type@{uv}.
 Proof.
   intros X Y j isem f.
@@ -62,7 +63,7 @@ Proof.
     apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
 Defined.
 
-Definition alg_inj_Type_forall@{u v suv uv | u <= uv, v <= uv, uv < suv} `{Univalence}
+Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv} Type@{uv}.
 Proof.
   intros X Y j isem f.
@@ -447,4 +448,60 @@ Proof.
   srefine (Trunc_functor (-1) _ (merely_retract_power_universe_inj D Di)).
   intros [r retr].
   apply (alg_inj_retract_power_universe D r retr).
+Defined.
+
+(** ** The equivalence of excluded middle with the (algebraic) injectivity of pointed types. *)
+
+(** Assuming excluded middle, all pointed types are algebraically flabby (and thus algebraically injective). *)
+Definition alg_flab_pted_lem@{u w uw | u <= uw, w <= uw}
+  `{ExcludedMiddle} {D : Type@{w}} (d : D)
+  : IsAlgebraicFlabbyType@{u w uw} D.
+Proof.
+  intros P PropP f.
+  case (LEM P _).
+  - intros p. srefine (f p; _).
+    intros q. apply (ap _ (path_ishprop _ _)).
+  - intros np. srefine (d; _).
+    intros p. apply (Empty_rec (np p)).
+Defined.
+
+(*MOVE ELSEWHERE*)
+(** The decidablility of a proposition is a proposition. *)
+Definition hprop_decidibility_prop `{Funext} P (PropP : IsHProp P)
+  : IsHProp (Decidable P).
+Proof.
+  rapply ishprop_sum.
+  intros p np.
+  apply (Empty_rec (np p)).
+Defined.
+
+(** If the type [P + ~P + Unit] is algebraically flabby for P a proposition, then P is decidable. *)
+Definition decidable_alg_flab_hprop@{w} `{Funext} (P : Type@{w}) (PropP : IsHProp P)
+  (Paf : IsAlgebraicFlabbyType@{w w w} ((P + ~P) + (Unit : Type@{w})))
+  : Decidable P.
+Proof.
+  transparent assert (f : (P + ~P -> ((P + ~P) + Unit))).
+  { intros p; destruct p.
+    - apply (inl (inl p)).
+    - apply (inl (inr n)). }
+  assert (l : {d | forall z, d = f z}).
+  { apply Paf. rapply hprop_decidibility_prop@{w w w w}. }
+  assert (delta : (forall d', l.1 = d' -> (Decidable P))).
+  { intros d' r; destruct d'.
+    - apply s.
+    - assert (np := fun p => (inl_ne_inr _ _ ((l.2 (inl p))^ @ r))).
+      assert (nnp := fun np' => (inl_ne_inr _ _ ((l.2 (inr np'))^ @ r))).
+      apply (Empty_rec (nnp np)). }
+  apply (delta l.1 idpath).
+Defined.
+
+(** If all pointed types are algebraically flabby, then excluded middle holds. *)
+Definition lem_pted_types_alg_flab@{w} `{Funext}
+  (ptaf: forall (D : Type@{w}), D -> IsAlgebraicFlabbyType@{w w w} D)
+  : ExcludedMiddle_type@{w}.
+Proof.
+  intros P PropP.
+  rapply decidable_alg_flab_hprop.
+  apply ptaf.
+  apply (inr tt).
 Defined.
