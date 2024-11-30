@@ -54,27 +54,27 @@ Defined.
 
 
 (** These are some projections *)
-Definition ret_binv `(f : A -> B)
+Definition ret_binv `{f : A -> B}
   : BiInv f ->  (B -> A).
-  intro.
+  intro X.
   exact (pr1 (fst X)).
 Defined.
 
-Definition sec_binv `(f : A -> B)
+Definition sec_binv `{f : A -> B}
   : BiInv f ->  (B -> A).
-  intro.
+  intro X.
   exact (pr1 (snd X)).
 Defined.
 
-Definition isret_binv `(f : A -> B)
-  : forall (e: BiInv f), f o (sec_binv f e)   == idmap.
+Definition isret_binv `{f : A -> B}
+  : forall (e: BiInv f), f o (sec_binv e)   == idmap.
   intro.
   simpl.
   exact (pr2 (snd e)).
 Defined.
 
-Definition issec_binv `(f : A -> B)
-  : forall (e: BiInv f), (ret_binv f e) o f   == idmap.
+Definition issec_binv `{f : A -> B}
+  : forall (e: BiInv f), (ret_binv e) o f   == idmap.
   intro.
   simpl.
   exact (pr2 (fst e)).
@@ -84,7 +84,7 @@ Defined.
 
 Record EquivBiInv A B := {
   equiv_fun_binv :> A -> B ;
-  equiv_isequiv_binv : BiInv equiv_fun_binv
+  equiv_isequiv_binv :> BiInv equiv_fun_binv
 }.
 
 Definition issig_equivbiinv (A B : Type)
@@ -157,33 +157,67 @@ Record EquivBiInv A B := {
 }. *)
 
 
+(* Generalizable Variables C D. *)
 
-Definition equiv_ind_binv `(e: BiInv (f : A -> B))  (P : B -> Type)
-  : (forall x:A, P (f x)) -> forall y:B, P y
-  := fun g y => transport P ((proj2 (snd e)) y) (g (proj1 (snd e) y)).
+Record prBiInv A B C D (e: EquivBiInv A B) (e' : EquivBiInv C D) (a: A -> C) (b: B -> D)
+  := {
+  pe : forall (x : A), (e' o a) x = (b o e) x;
+  pg : forall (y : B), ((ret_binv e') o b) y = (a o (ret_binv e)) y;
+  ph : forall (y : B), ((sec_binv e') o b) y = (a o (sec_binv e )) y;
+  ps : forall (x: A), (issec_binv e' (a x)) = ((ap (ret_binv e') (pe x)) @ (pg (e x)) @ (ap a (issec_binv e x) ));
+  pr : forall (y: B), (isret_binv e'(b y)) = ((ap e' (ph y)) @ (pe (sec_binv e y)) @ (ap b (isret_binv e y) ));
+}.
 
-Arguments equiv_ind_binv {A B} f {_} P _ _.
+
+Definition compat_implies_prBiInv'
+  (A B C D: Type)
+  (e: EquivBiInv A B)
+  (e':  EquivBiInv C D)
+  (a: A -> C)
+  (b : B -> D)
+  (s := issec_binv e)
+  (r := isret_binv e)
+  (p1 := ret_binv e)
+  (p2 := sec_binv e)
+  (g1 := ret_binv e')
+  (g2 := sec_binv e')
+  (s' := issec_binv e')
+  (r' := isret_binv e')
+  (* (p2_is_p1 z := ( (s (p2 z))^ @ (ap p1 (r z)))) *)
+  (* (g2_is_g1 z := ( (s' (g2 z))^ @ (ap g1 (r z)))) *)
+  : (forall (x : A), (e' o a) x = (b o e) x) -> prBiInv A B C D e e' a b.
+Proof.
+  intro pf.
+  srapply Build_prBiInv.
+  - exact pf.
+  - intro z.
+    exact ((ap (g1 o b) (r z))^ @ (ap g1 (pf (p2 z)))^ @ (s' (a (p2 z)))
+          @ (ap a ((s (p2 z))^ @ (ap p1 (r z))))).
+  - intro z. 
+    exact (((s' (g2 (b z)))^ @ (ap g1 (r' (b z)))) @ (ap (g1 o b) (r z))^ 
+          @ (ap g1 (pf (p2 z)))^ @ (s' (a (p2 z)))).
+  - intro x.
+    simpl.
+Admitted.
 
 
+
+Section BiInvCompatUnivalence.
 Context `{Univalence}.
 
-Definition equiv_path_binv (A B : Type@{u}) (p : A = B) : EquivBiInv A B 
-  := (((equiv_fun (equiv_biinv_isequiv_record A B)^-1) o (equiv_path A B)) p).
+(* Definition equiv_path_binv (A B : Type@{u}) (p : A = B) : EquivBiInv A B 
+  := (((equiv_fun (equiv_biinv_isequiv_record A B)^-1) o (equiv_path A B)) p). *)
 
-(** TODO: The following should be derivable from equiv_path being an equivalence using univalence. It should NOT be an extra axiom.*)
-Axiom isequiv_equiv_path_binv : forall `{Univalence} (A B : Type@{u}), IsEquiv (equiv_path_binv A B).
-Global Existing Instance isequiv_equiv_path_binv.
+Definition equiv_path_binv (A B : Type@{u}) : (A = B) <~> EquivBiInv A B
+  := (equiv_biinv_isequiv_record A B)^-1 oE equiv_equiv_path A B. 
 
-(** The equivalence induction principle for bi-invertible maps*)
 
 (** Paulin-Mohring style *)
 Theorem equiv_induction_binv {U : Type} (P : forall V, EquivBiInv U V -> Type)
   : (P U (equiv_idmap_binv U)) -> (forall V (w :  EquivBiInv U V), P V w).
 Proof.
   intros H0 V w.
-  snrapply (equiv_ind_binv (equiv_path_binv U V)).
-  - apply equiv_biinv_isequiv.
-    apply isequiv_equiv_path_binv.
+  srapply (equiv_ind (equiv_path_binv U V)).
   - intro p.
     induction p.
     exact H0.
@@ -195,9 +229,7 @@ Theorem equiv_induction_binv'
   : (forall T, P T T (equiv_idmap_binv T)) -> (forall U V (w : (EquivBiInv U V)), P U V w).
 Proof.
   intros H0 U V w.
-  snrapply (equiv_ind_binv (equiv_path_binv U V)). 
-  - apply equiv_biinv_isequiv.
-    apply isequiv_equiv_path_binv.
+  srapply (equiv_ind (equiv_path_binv U V)).
   - intro p.
     induction p.
     apply H0.
@@ -205,17 +237,6 @@ Defined.
 
 
 (** Bi-Invertible maps*)
-
-Generalizable Variables C D.
-
-Record prBiInv A B C D (e: EquivBiInv A B) (e' : EquivBiInv C D) (a: A -> C) (b: B -> D)
-  := {
-  pe : forall (x : A), (e' o a) x = (b o e) x;
-  pg : forall (y : B), ((ret_binv e' (equiv_isequiv_binv C D e')) o b) y = (a o (ret_binv e (equiv_isequiv_binv A B e))) y;
-  ph : forall (y : B), ((sec_binv e' (equiv_isequiv_binv C D e')) o b) y = (a o (sec_binv e (equiv_isequiv_binv A B e))) y;
-  ps : forall (x: A), (issec_binv e' (equiv_isequiv_binv C D e') (a x)) = ((ap (ret_binv e' (equiv_isequiv_binv C D e')) (pe x)) @ (pg (e x)) @ (ap a (issec_binv e (equiv_isequiv_binv A B e) x) ));
-  pr : forall (y: B), (isret_binv e' (equiv_isequiv_binv C D e') (b y)) = ((ap e' (ph y)) @ (pe (sec_binv e (equiv_isequiv_binv A B e) y)) @ (ap b (isret_binv e (equiv_isequiv_binv A B e) y) ));
-}.
 
 Definition compat_implies_prBiInv
   (A B C D: Type)
@@ -234,16 +255,16 @@ Proof.
   revert D.
   snrapply equiv_induction_binv.
   simpl.
-  intros b H.
+  intros b K.
   snrapply Build_prBiInv.
   - simpl.
-    exact H.
+    exact K.
   - intro y.
     simpl.
-    exact (H y)^.
+    exact (K y)^.
   - intro y.
     simpl. 
-    exact (H y)^.
+    exact (K y)^.
   - simpl.
     intro x.
     rewrite ap_idmap.
@@ -255,3 +276,20 @@ Proof.
     rewrite concat_Vp.
     reflexivity.
 Defined.
+
+Definition compat_iff_prBiInv
+  (A B C D: Type)
+  (e: EquivBiInv A B)
+  (e':  EquivBiInv C D)
+  (a: A -> C)
+  (b : B -> D)
+  :
+    (forall (x : A), (e' o a) x = (b o e) x) <-> prBiInv A B C D e e' a b.
+Proof.
+  split.
+    - exact (compat_implies_prBiInv _ _ _ _ _ _ _ _).
+    - intro K.
+      exact (pe _ _ _ _ _ _ _ _ K).
+Defined.
+
+

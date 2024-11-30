@@ -140,7 +140,7 @@ Section IntegersHITLemmas.
       exact (snd ((ret_pred1 z)^ # t)).
     - intros z t.
       destruct (f (pred1 z)).
-      exact ((pred1_is_pred2 z) #  (snd ((ret_pred1 z)^ # t))).
+      exact ((pred1_is_pred2 z) # (snd ((ret_pred1 z)^ # t))).
     - intros z t.
       rapply path_ishprop.
     - intros z t.
@@ -194,6 +194,27 @@ Section IntegersHITLemmas.
       refine ((transport_const (ret z) (f (g t))) @ (r t)).
   Defined.
 
+
+  Definition IntegersHIT_rec_pred_equiv
+    (P: Type)
+    (t0 : P)
+    (f : P -> P)
+   `{e: IsEquiv P P f}
+    : IntegersHIT -> P.
+  Proof.
+    srapply IntegersHIT_ind; cbn beta.
+    - exact t0.
+    - intro z.
+      exact f.
+    - intro z.
+      exact f^-1.
+    - intro z.
+      exact f^-1.
+    - intros z t.
+      refine ((transport_const (sec z) (f^-1 (f t))) @ ((eissect f) t)).
+    - intros z t.
+      refine ((transport_const (ret z) (f (f^-1 t))) @ ((eisretr f) t)).
+  Defined.
 
   Definition IntegersHIT_rec_beta_sec
     (P: Type)
@@ -298,7 +319,7 @@ Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
     (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
       : forall  (z : IntegersHIT), (g1 o k) z = (k o pred1) z.
   Proof.
-    intros.
+    intro z.
     exact ((s (k(pred1 z)))^ @ (ap g1 (pf (pred1 z))) 
           @ (ap (g1 o k) (ret_pred1 z)))^ .
   Defined.
@@ -309,7 +330,7 @@ Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
     (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
       : forall  (z : IntegersHIT), (g2 o k) z = (k o pred2) z.
   Proof.
-    intros.
+    intro z.
     exact (((s (g2 (k z)))^ @ (ap g1 (r (k z)))) @ ((s (k (pred2 z)))^ 
           @ (ap g1 (pf (pred2  z))) @ (ap (g1 o k) (ret z)))^).
   Defined.
@@ -345,6 +366,7 @@ Context {P : Type} {t0 : P} {f :  P -> P} {g1 :  P -> P} {g2 :  P -> P}
       intros.
       rapply path_ishprop.
   Defined.
+
 
 End IntegersHITEquiv.
  
@@ -1267,7 +1289,7 @@ Section IntegersIteration. *)
 
 (**this here uses funext??*)
 
-Definition IntegersHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) : A -> A.
+(* Definition IntegersHIT_iter' {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) : A -> A.
 Proof.
   srapply IntegersHIT_rec_pred.
   - exact idmap.
@@ -1287,14 +1309,138 @@ Proof.
     intro x.
     exact ((eisretr f) _).
   - exact n.
+Defined. *)
+
+
+(** this uses funext since we need isequiv_postcompose*)
+
+(* Definition IntegersHIT_iter' {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) : A -> A.
+Proof.
+  srapply IntegersHIT_rec_pred_equiv.
+  - exact idmap.
+  - intro g.
+    exact (f o g).
+  - exact (isequiv_postcompose f).
+  - exact n.
+Defined. *)
+
+
+
+(* Definition IntegersHIT_iter'' {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) (a: A) : A.
+Proof.
+  srapply IntegersHIT_rec_pred_equiv.
+  - exact a.
+  - intro g.
+    exact (f o g).
+  - exact (isequiv_postcompose f).
+  - exact n.
+Defined. *)
+
+Definition IntegersHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) (a0: A) : A.
+Proof.
+  srapply IntegersHIT_rec_pred_equiv.
+  - exact a0.
+  - exact f.
+  - exact _.
+  - exact n.
 Defined.
+
+Definition IntegersHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  : IntegersHIT_iter f (- n) a = IntegersHIT_iter f^-1 n a.
+Proof.
+  simpl.
+  cbn beta.
+  (* reflexivity. *)
+  (* reflexivity. *)
+Admitted.
+
+
+Definition IntegersHIT_iter_succ_l {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  : IntegersHIT_iter f (succ n) a = f (IntegersHIT_iter f n a).
+Proof.
+  reflexivity.
+Defined.
+
+Definition IntegersHIT_iter_succ_r {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  : IntegersHIT_iter f (succ n) a = IntegersHIT_iter f n (f a).
+Proof.
+  (* reflexivity. *)
+Admitted.
+
+
+Definition IntegersHIT_iter_pred_l {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  : IntegersHIT_iter f (pred1 n) a = f^-1 (IntegersHIT_iter f n a).
+Proof.
+  reflexivity.
+Defined.
+
+Definition IntegersHIT_iter_pred_r {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  : IntegersHIT_iter f (pred1 n) a = IntegersHIT_iter f n (f^-1 a).
+Proof.
+  (* reflexivity *)
+Admitted.
+
+
+Definition IntegersHIT_iter_add {A} (f : A -> A) `{IsEquiv _ _ f} (m n : IntegersHIT)
+  : IntegersHIT_iter f (m + n) == IntegersHIT_iter f m o IntegersHIT_iter f n.
+Proof.
+  (* reflexivity. *)
+Admitted.
+
+(** If [g : A -> A'] commutes with automorphisms of [A] and [A'], then it commutes with iteration. *)
+Definition IntegersHIT_iter_commute_map {A A'} (f : A -> A) `{!IsEquiv f}
+  (f' : A' -> A') `{!IsEquiv f'}
+  (g : A -> A') (p : g o f == f' o g) (n : IntegersHIT) (a : A)
+  : g (IntegersHIT_iter f n a) = IntegersHIT_iter f' n (g a).
+Proof.
+  (* reflexivity. *)
+Admitted.
+
+(** In particular, homotopic maps have homotopic iterations. *)
+Definition IntegersHIT_iter_homotopic (n : IntegersHIT) {A} (f f' : A -> A) `{!IsEquiv f} `{!IsEquiv f'}
+  (h : f == f')
+  : IntegersHIT_iter f n == IntegersHIT_iter f' n.
+Proof.
+  (* reflexivity. *)
+Admitted.
+
+(** [int_iter f n x] doesn't depend on the proof that [f] is an equivalence. *)
+Definition IntegersHIT_iter_agree (n : IntegersHIT) {A} (f : A -> A) {ief ief' : IsEquiv f}
+  : forall x, @IntegersHIT_iter A f ief n x = @IntegersHIT_iter A f ief' n x.
+Proof.
+  (* reflexivity. *)
+Admitted.
+
+Definition int_iter_invariant (n : IntegersHIT) {A} (f : A -> A) `{!IsEquiv f}
+  (P : A -> Type)
+  (Psucc : forall x, P x -> P (f x))
+  (Ppred : forall x, P x -> P (f^-1 x))
+  : forall x, P x -> P (IntegersHIT_iter f n x).
+Proof.
+  (* reflexivity. *)
+Admitted.
+
+
+
+Context {A} (a : A)(f : A -> A) `{!IsEquiv f} (n : IntegersHIT).
+
+Compute IntegersHIT_iter' f (-5) a.
+
+Compute IntegersHIT_iter' f^-1 5 a.
+
+Compute IntegersHIT_iter''' f (-5) a.
+Compute IntegersHIT_iter''' f^-1 5 a.
+
 
 
 (* Definition IntegersHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
-  : IntegersHIT_iter f (- n) a = IntegersHIT_iter f^-1 n a.
+  : IntegersHIT_iter' f (- n) a = IntegersHIT_iter' f^-1 n a.
 Proof.
+  reflexivity.
   (* reflexivity. *)
-Defined.
+  (* reflexivity. *)
+Defined. *)
+
 
 
 
@@ -1309,9 +1455,10 @@ Defined.
 
 
  End ResultsIntegers.
+
 (* End IntegersIteration. *)
 
- *)
+
 
 
 
