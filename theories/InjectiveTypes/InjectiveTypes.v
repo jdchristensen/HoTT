@@ -17,8 +17,6 @@ Require Import ExcludedMiddle.
 
 Require Import TypeFamKanExt.
 
-Set Printing Universes.
-
 Section UniverseStructure.
   Universes u v w uv uw vw.
   Constraint u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw.
@@ -122,13 +120,13 @@ End UniverseStructure.
 Definition retract_alg_inj_embedding@{v w vw | v <= vw, w <= vw}
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
   (Dai : IsAlgebraicInjectiveType@{w v w vw w vw} D)
-  : { r | r o j == idmap }
+  : { r : Y -> D & r o j == idmap }
   := Dai _ _ _ _ idmap.
 
 (** Any algebraically u,u^+-injective type [X : Type@{u}], is a retract of [X -> Type@{u}]. *)
 Definition retract_power_universe_alg_usuinj@{u su | u < su} `{Univalence}
   (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su} D)
-  : { r : (D -> Type@{u}) -> D | r o (@paths D) == idmap }
+  : { r : (D -> Type@{u}) -> D & r o (@paths D) == idmap }
   := retract_alg_inj_embedding D (@paths D) isembedding_paths Dai.
 
 (** ** Algebraic flabbiness and resizing constructions. *)
@@ -142,7 +140,7 @@ Definition alg_uuinj_alg_usu_inj@{u su | u < su}
 
 Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
-    { d : D | forall p : P, d = f p}.
+    { d : D & forall p : P, d = f p}.
 (** We can think of algebraic flabbiness as algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 
 (** Algebraic flabbiness of a type [D] is equivalent to the statment that all conditionally constant functions [X -> D] are constant. *)
@@ -409,7 +407,7 @@ End UniverseStructure.
 Definition merely_retract_inj_embedding@{v w vw svw | v <= vw, w <= vw, vw < svw}
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
   (Di : IsInjectiveType@{w v w vw w vw vw} D)
-  : merely@{svw} { r | r o j == idmap }
+  : merely@{svw} { r : Y -> D & r o j == idmap }
   := (Di _ _ _ _ idmap).
 
 (** The power of an injective type is injective. *)
@@ -465,7 +463,7 @@ Proof.
     intros p. apply (Empty_rec (np p)).
 Defined.
 
-(*MOVE ELSEWHERE*)
+(*MOVE TO Types.Sum*)
 (** The decidablility of a proposition is a proposition. *)
 Definition hprop_decidibility_prop `{Funext} P (PropP : IsHProp P)
   : IsHProp (Decidable P).
@@ -484,7 +482,7 @@ Proof.
   { intros p; destruct p.
     - apply (inl (inl p)).
     - apply (inl (inr n)). }
-  assert (l : {d | forall z, d = f z}).
+  assert (l : {d : (P + ~P) + Unit & forall z, d = f z}).
   { apply Paf. rapply hprop_decidibility_prop@{w w w w}. }
   assert (delta : (forall d', l.1 = d' -> (Decidable P))).
   { intros d' r; destruct d'.

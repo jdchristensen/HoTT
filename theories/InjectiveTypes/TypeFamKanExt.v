@@ -64,11 +64,11 @@ Defined.
 
 Definition equiv_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
   (f : X -> Type@{w}) (j : X -> Y)
-  : {x | f x} <~> {x | LeftKanTypeFamily f j x}.
+  : {x : X & f x} <~> {y : Y & LeftKanTypeFamily f j y}.
 Proof.
   snrapply equiv_adjointify.
-  - apply (fun w : {x | f x} => (j w.1; (w.1; idpath); w.2)).
-  - apply (fun '((y; ((x; p); y')) : {x | LeftKanTypeFamily f j x}) => (x; y')).
+  - apply (fun w : {x : X & f x} => (j w.1; (w.1; idpath); w.2)).
+  - apply (fun '((y; ((x; p); y')) : {y : Y & LeftKanTypeFamily f j y}) => (x; y')).
   - intros [y [[x []] y']]; cbn. reflexivity.
   - intros [x y]; cbn. reflexivity.
 Defined.
@@ -142,7 +142,7 @@ Defined.
 (** Universal property of the Kan extensions. *)
 Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
   {f : X -> Type} {g : Y -> Type} (a : f =< g o j)
-  : { b : LeftKanTypeFamily f j =< g | comp_transformation (whisker_transformation b j) (unit_leftkantypefam f j) == a}.
+  : { b : LeftKanTypeFamily f j =< g & comp_transformation (whisker_transformation b j) (unit_leftkantypefam f j) == a}.
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. apply (p # a x A).
@@ -163,7 +163,7 @@ Abort.*)
 
 Definition univ_property_RightKanTypeFam `{Funext} {X Y} {j : X -> Y}
   {f : X -> Type} {g : Y -> Type} (a : g o j =< f)
-  : { b : g =< RightKanTypeFamily f j | comp_transformation (counit_rightkantypefam f j) (whisker_transformation b j) == a}.
+  : { b : g =< RightKanTypeFamily f j & comp_transformation (counit_rightkantypefam f j) (whisker_transformation b j) == a}.
 Proof.
   snrefine (_; _).
   - intros y A [x p]. apply (a x (p^ # A)).
@@ -202,7 +202,7 @@ Section EmbedProofLeft.
 
   Let s := (fun f => LeftKanTypeFamily f j).
   Let r := (fun g : Y -> Type => g o j).
-  Let M := { g | forall y, IsEquiv (counit_leftkantypefam g j y) }.
+  Let M := { g : Y -> Type & forall y, IsEquiv (counit_leftkantypefam g j y) }.
 
   (** Helper functions for the proof of [isptwiseequiv_leftkancounit]. *)
   Local Definition t : forall (f : X -> Type) (x x' : X) (u : x' = x) (p : j x' = j x) (C : f x'), (ap j u = p)
@@ -262,7 +262,7 @@ Section EmbedProofRight.
 
   Let s := (fun f => RightKanTypeFamily f j).
   Let r := (fun g : Y -> Type => g o j).
-  Let M := {g | forall y, IsEquiv (unit_rightkantypefam g j y)}.
+  Let M := {g :Y -> Type & forall y, IsEquiv (unit_rightkantypefam g j y)}.
 
   Definition isptwiseequiv_rightkanunit : (X -> Type) -> M.
   Proof.

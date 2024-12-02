@@ -19,11 +19,11 @@ Section AlgFlabSigma.
 
   (** The condition for a sigma type over an algebraically flabby type can be described as the existence of a section to the preceding map. *)
   Definition alg_flab_sigma_condition : Type
-    := forall P PropP f, {s | ((alg_flab_map P PropP f) o s) == idmap}.
+    := forall P PropP f, {s : _ & ((alg_flab_map P PropP f) o s) == idmap}.
 
   (** A sigma type over an algebraically flabby type is also algebraically flabby, and thus algebraically injective, when the above condition holds. *)
   Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
-    : IsAlgebraicFlabbyType {x | A x}.
+    : IsAlgebraicFlabbyType {x : X & A x}.
   Proof.
     intros P PropP f.
     pose (s := (cond P PropP (pr1 o f)).1).
@@ -36,7 +36,7 @@ Section AlgFlabSigma.
   Defined.
 
   Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
-    : IsAlgebraicInjectiveType {x | A x}
+    : IsAlgebraicInjectiveType {x : X & A x}
     := (alg_inj_alg_flab (alg_flab_sigma cond)).
 
 End AlgFlabSigma.
@@ -45,7 +45,7 @@ End AlgFlabSigma.
 Section AlgFlabUniverse.
   Context (S : Type -> Type) (T : forall {X Y}, X <~> Y -> S X -> S Y) (Trefl : forall {X}, (T (equiv_idmap X) == idmap)).
 
-  (*MOVE ELSEWHERE*)
+  (*MOVE TO Types.Universe*)
   Definition transport_eq `{Univalence} {X Y} (e : X <~> Y) (s : S X)
     : S Y
     := (path_universe e) # s.
@@ -53,9 +53,8 @@ Section AlgFlabUniverse.
   Definition transport_eq_idequiv `{Univalence} {X}
     : @transport_eq _ X X 1 == idmap.
   Proof.
-    intros s.
-    lhs apply (ap10 (ap (transport S) (@path_universe_1 _ X))).
-    reflexivity. (*I'm guessing there's a better way to do this*)
+    intros s. unfold transport_eq.
+    apply (transport2 S path_universe_1).
   Defined.
 
   (** Any two functions that act like transport along an equivalence are homotopic. *)
@@ -84,7 +83,8 @@ Section AlgFlabUniverse.
   Defined.
 
   Definition alg_flab_sigma_condition_forall `{Funext} : Type
-    := forall P PropP A, {s | ((alg_flab_map_forall P PropP A) o s) == idmap}.
+    := forall P PropP A, {s : _ & ((alg_flab_map_forall P PropP A) o s) == idmap}.
+  (** This can be though of as a closure condition under pi types for the type family [S]. *)
 
   Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
@@ -113,7 +113,7 @@ End AlgFlabUniverse.
 
 (** The type of pointed types is algebraically flabby. *)
 Definition alg_flab_pType `{Univalence}
-  : IsAlgebraicFlabbyType {X : Type | X}.
+  : IsAlgebraicFlabbyType {X : Type & X}.
 Proof.
   apply (alg_flab_sigma _ alg_flab_Type_forall).
   apply (sigma_condition_sigma_condition_forall _ (@equiv_fun)).
