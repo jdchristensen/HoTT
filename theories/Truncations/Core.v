@@ -170,6 +170,19 @@ Defined.
 #[export]
 Hint Immediate istruncmap_mapinO_tr : typeclass_instances.
 
+(** ** A few special things about the (-2)-truncation *)
+
+(** The type of contractible types is contractible. *)
+Definition contr_tr_minus_2@{u su | u < su} `{Univalence}
+  : Contr (Type_@{u su} (Tr (-2))).
+Proof.
+  apply (Build_Contr _ (exist@{su su} _ (Unit : Type@{u}) (inO_tr_istrunc _))).
+  intros [C ContrC].
+  apply equiv_path_sigma_hprop.
+  apply path_universe_uncurried.
+  symmetry; apply equiv_contr_unit.
+Defined.
+
 (** ** A few special things about the (-1)-truncation *)
 
 Local Open Scope trunc_scope.

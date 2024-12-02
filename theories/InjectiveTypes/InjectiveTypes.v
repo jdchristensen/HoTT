@@ -273,18 +273,6 @@ Proof.
   - apply path_ishprop.
 Defined.
 
-(* MOVE TO Truncations.Core BEFORE "A few special things about the (-1)-truncation" *)
-(** The type of contractible types is contractible. *)
-Definition contr_tr_minus_2@{u su | u < su} `{Univalence}
-  : Contr (Type_@{u su} (Tr (-2))).
-Proof.
-  apply (Build_Contr _ (exist@{su su} _ (Unit : Type@{u}) (inO_tr_istrunc _))).
-  intros [C ContrC].
-  apply equiv_path_sigma_hprop.
-  apply path_universe_uncurried.
-  symmetry; apply equiv_contr_unit.
-Defined.
-
 (** The type of n-truncated types is algebraically injective for all n. *)
 Definition alg_inj_ntrunc@{u su | u < su} `{Univalence} (n : trunc_index)
   : IsAlgebraicFlabbyType@{u su su} (Type_@{u su} (Tr n)).
@@ -463,16 +451,6 @@ Proof.
     intros p. apply (Empty_rec (np p)).
 Defined.
 
-(*MOVE TO Types.Sum*)
-(** The decidablility of a proposition is a proposition. *)
-Definition hprop_decidibility_prop `{Funext} P (PropP : IsHProp P)
-  : IsHProp (Decidable P).
-Proof.
-  rapply ishprop_sum.
-  intros p np.
-  apply (Empty_rec (np p)).
-Defined.
-
 (** If the type [P + ~P + Unit] is algebraically flabby for P a proposition, then P is decidable. *)
 Definition decidable_alg_flab_hprop@{w} `{Funext} (P : Type@{w}) (PropP : IsHProp P)
   (Paf : IsAlgebraicFlabbyType@{w w w} ((P + ~P) + (Unit : Type@{w})))
@@ -483,7 +461,7 @@ Proof.
     - apply (inl (inl p)).
     - apply (inl (inr n)). }
   assert (l : {d : (P + ~P) + Unit & forall z, d = f z}).
-  { apply Paf. rapply hprop_decidibility_prop@{w w w w}. }
+  { apply Paf. rapply ishprop_decidable_hprop@{w w}. }
   assert (delta : (forall d', l.1 = d' -> (Decidable P))).
   { intros d' r; destruct d'.
     - apply s.
