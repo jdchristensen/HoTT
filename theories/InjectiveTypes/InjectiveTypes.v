@@ -232,60 +232,6 @@ Proof.
   apply (alg_flab_alg_inj Dai).
 Defined.
 
-(** ** Injectivity of subuniverses. *)
-
-(** A subuniverse which contains all propositions, and is closed under Sigma or Pi types, as formulated below, is algebraically flabby, and hence algebraically injective. *)
-Definition alg_flab_subuniverse_sigma@{u su | u < su} `{Univalence}
-  (O : Subuniverse@{u}) (cHProp : forall (P : Type@{u}) (PropP : IsHProp P), In O P)
-  (cSig : forall (X : Type@{u}) (Y : X -> Type@{u}) (YxinO : forall x : X, In O (Y x)),
-    In O (sig@{u u} (fun x : X => Y x)))
-  : IsAlgebraicFlabbyType@{u su su} (Type_@{u su} O).
-Proof.
-  intros Q PropQ f.
-  transparent assert (d : (Type_ O)).
-  { apply (sig@{u u} (pr1 o f); cSig _ _ _). }
-  srefine (d; _).
-  intros q.
-  srapply path_sigma.
-  - apply path_universe_uncurried.
-    transparent assert (C : (Contr Q)).
-    * srapply contr_inhabited_hprop; exact q.
-    * snrapply (@equiv_contr_sigma _ _ C).
-  - apply path_ishprop.
-Defined.
-
-Definition alg_flab_subuniverse_forall@{u su | u < su} `{Univalence}
-  (O : Subuniverse@{u}) (cHProp : forall (P : Type@{u}) (PropP : IsHProp P), In O P)
-  (cForall : forall (X : Type@{u}) (Y : X -> Type@{u}) (YxinO : forall x, In O (Y x)),
-    In O (forall x, Y x))
-  : IsAlgebraicFlabbyType@{u su su} (Type_@{u su} O).
-Proof.
-  intros Q PropQ f.
-  transparent assert (d : (Type_ O)).
-  { apply (forall q : Q, (f q).1; cForall _ _ _). }
-  srefine (d; _).
-  intros q.
-  srapply path_sigma.
-  - apply path_universe_uncurried.
-    transparent assert (C : (Contr Q)).
-    * srapply contr_inhabited_hprop; exact q.
-    * snrapply (@equiv_contr_forall _ _ C).
-  - apply path_ishprop.
-Defined.
-
-(** The type of n-truncated types is algebraically injective for all n. *)
-Definition alg_inj_ntrunc@{u su | u < su} `{Univalence} (n : trunc_index)
-  : IsAlgebraicFlabbyType@{u su su} (Type_@{u su} (Tr n)).
-Proof.
-  destruct n.
-  - apply alg_flab_alg_inj@{u u su u su su}.
-    apply alg_inj_contr.
-    apply contr_tr_minus_2@{u su}.
-  - apply alg_flab_subuniverse_forall.
-    * intros P PropP. apply (@istrunc_leq (-1) n.+1 tt _ _).
-    * apply _.
-Defined.
-
 (** ** Algebraic flabbiness with resizing axioms. *)
 
 Section AssumePropResizing.

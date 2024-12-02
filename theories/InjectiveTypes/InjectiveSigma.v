@@ -5,6 +5,8 @@
 
 Require Import Basics.
 Require Import Types.Forall Types.Sigma Types.Universe.
+Require Import Modalities.ReflectiveSubuniverse.
+Require Import Truncations.
 
 Require Import InjectiveTypes.
 Require Import TypeFamKanExt.
@@ -53,7 +55,7 @@ Section AlgFlabUniverse.
   Definition transport_eq_idequiv `{Univalence} {X}
     : @transport_eq _ X X 1 == idmap.
   Proof.
-    intros s. unfold transport_eq.
+    intros s.
     apply (transport2 S path_universe_1).
   Defined.
 
@@ -122,3 +124,21 @@ Proof.
     srefine (idmap; _).
     intros f. apply path_forall. intros h; cbn. reflexivity.
 Defined.
+
+(** For a subuniverse, the flabbiness condition is equivalent to closure under proposition indexed pi types (or sigma types, but ), so using this we can state a simpler theorem for proving flabbiness of subuniverses. *)
+Definition alg_flab_subuniverse `{Univalence} (O : Subuniverse)
+  (forall_cls : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O (forall h : P, A h))
+  : IsAlgebraicFlabbyType@{u su su} (Type_ O).
+Proof.
+  apply (alg_flab_sigma _ alg_flab_Type_forall).
+  apply (sigma_condition_sigma_condition_forall _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
+  - intros X A. apply path_ishprop.
+  - intros P PropP A.
+    srefine(_; _).
+    intros s. apply path_ishprop.
+Defined.
+
+(** As an immediate correlary, we get that reflective subuniverses are algebraically flabby. *)
+Definition alg_flab_reflective_subuniverse `{Univalence} (O : ReflectiveSubuniverse)
+  : IsAlgebraicFlabbyType@{u su su} (Type_ O)
+  := alg_flab_subuniverse _ _.
