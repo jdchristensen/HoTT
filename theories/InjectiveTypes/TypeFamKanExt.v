@@ -26,7 +26,7 @@ Section UniverseStructure.
   Notation "f <| j" := (LeftKanTypeFamily f j) (at level 40).
   Notation "f |> j" := (RightKanTypeFamily f j) (at level 40).
 
-  (** If [j] is an embedding, then [f <| j] and [f |> j] are extensions in the following sense: [(f <| j o j)x <~> fx <~> (f |> j o j)]. *)
+  (** If [j] is an embedding, then [f <| j] and [f |> j] are extensions in the following sense: [(f <| j o j)x <~> fx <~> (f |> j o j)x]. *)
   Definition isext_leftkantypefamily@{} {X : Type@{u}} {Y : Type@{v}}
     (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} ((LeftKanTypeFamily@{} f j) (j x)) (f x).
@@ -84,7 +84,7 @@ Proof.
     intros [x []]; cbn. reflexivity.
   - intros g. apply path_forall. intros y. reflexivity.
 Defined.
-(** Note that these equivalences tell us that [sig (f <| j)] and [forall (f |> j)] can be thought of as just different notation for the sum and product of a type family. *)
+(** Note that these equivalences tell us that [{ y : Y & (f <| j) y}] and [forall y : Y, (f |> j) y] can be thought of as just different notation for the sum and product of a type family. *)
 
 (** Here we are taking the perspective of a type family [f : X -> Type] being a sort of oo-presheaf, considering the interpretation of [X] as an oo-ggroupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets. *)
 (** It is easy to see that a type family [f] is functorial if we define its action on paths with [transport]. Functoriality then reduces to known lemmas about the [transport] function. *)
@@ -115,8 +115,7 @@ Proof.
   srapply path_ishprop.
 Defined.
 
-(** Under this interpretation, we can think of the maps [f <| j] and [f |> j] as left and right Kan extentions of [f : X -> Type] along [j : X -> Y]. *)
-(** To see this we can construct the (co)unit transformations of our extensions. *)
+(** Under this interpretation, we can think of the maps [f <| j] and [f |> j] as left and right Kan extentions of [f : X -> Type] along [j : X -> Y]. To see this we can construct the (co)unit transformations of our extensions. *)
 Definition unit_leftkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
   : f =< (LeftKanTypeFamily f j o j)
   := (fun x A => ((x; idpath); A)).

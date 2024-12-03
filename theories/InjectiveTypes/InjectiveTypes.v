@@ -1,7 +1,7 @@
 (* -*- mode: coq; mode: visual-line -*- *)
 (** * Injective Types *)
 
-(** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo. *)
+(** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo (with some extra results). *)
 (** Since the universe levels are important to many of the results here, we keep track of them explicitly as much as possible. Due to our inability to use the max and succesor operations within proofs, we instead construct these universes and thier associated posetal relations in the arguments of the functions. *)
 (** In universe declarations, we use u, v, w, etc. as our typical universe variables. Our convention for the max of two universes u and v is uv, and the succesor of a universe u is su. Occasionally we write T for a top universe which is strictly larger than all other provided universes. We hope that later versions of Coq will allow us access to the max and successor operations and many of the cumbersome universe handing here can be greatly reduced. *)
 
@@ -132,11 +132,11 @@ Definition retract_power_universe_alg_usuinj@{u su | u < su} `{Univalence}
 (** ** Algebraic flabbiness and resizing constructions. *)
 
 (** If [D : Type@{u}] is algebraically u,u^+-injective, then it is algebraically u,u-injective. *)
-(** Note that this proof is made trivial by the library's handeling of universes. *)
 Definition alg_uuinj_alg_usu_inj@{u su | u < su}
   (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su} D)
   : IsAlgebraicInjectiveType@{u u u u u u} D
   := Dai.
+(** Note that this proof is made trivial by cumulativity (which is not assumed in the original paper). *)
 
 Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
