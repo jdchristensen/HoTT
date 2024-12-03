@@ -72,7 +72,7 @@ Section AlgFlabUniverse.
     symmetry; apply T'refl.
   Defined.
 
-  (** For a sigma type over [Type], the map [alg_flab_map] can be exchanged for this simpler map for which an equivalent condition for algebraic injectivity can be defined. *)
+  (** For a sigma type over [Type], the map [alg_flab_map] can be exchanged for either of these simpler maps for which an equivalent condition for algebraic injectivity can be defined. *)
   Definition alg_flab_map_forall `{Funext}
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
     : S (forall h, A h) -> (forall h, S (A h)).
@@ -84,13 +84,37 @@ Section AlgFlabUniverse.
     - apply (@equiv_contr_forall _ _ C).
   Defined.
 
+  Definition alg_flab_map_sigma
+    (P : Type) (PropP : IsHProp P) (A : P -> Type)
+    : S {h : P & A h} -> (forall h, S (A h)).
+  Proof.
+    intros s h.
+    srefine (T _ _ _ s).
+    transparent assert (C : (Contr P)).
+    - srapply contr_inhabited_hprop. apply h.
+    - apply (@equiv_contr_sigma _ _ C).
+  Defined.
+
   Definition alg_flab_sigma_condition_forall `{Funext} : Type
     := forall P PropP A, {s : _ & ((alg_flab_map_forall P PropP A) o s) == idmap}.
-  (** This can be though of as a closure condition under pi types for the type family [S]. *)
+
+  Definition alg_flab_sigma_condition_sigma : Type
+    := forall P PropP A, {s : _ & ((alg_flab_map_sigma P PropP A) o s) == idmap}.
+  (** These can be though of as a closure condition under pi or sigma types for the type family [S]. *)
 
   Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
     : alg_flab_map_forall P PropP A == alg_flab_map S alg_flab_Type_forall P PropP A.
+  Proof.
+    intros s. apply path_forall. intros h.
+    srefine (homotopic_trequiv (@transport_eq _) _ _ s).
+    intros X.
+    apply transport_eq_idequiv.
+  Defined.
+
+  Definition homotopic_alg_flab_map_alg_flab_map_sigma `{Univalence}
+    (P : Type) (PropP : IsHProp P) (A : P -> Type)
+    : alg_flab_map_sigma P PropP A == alg_flab_map S alg_flab_Type_sigma P PropP A.
   Proof.
     intros s. apply path_forall. intros h.
     srefine (homotopic_trequiv (@transport_eq _) _ _ s).
@@ -111,6 +135,19 @@ Section AlgFlabUniverse.
     symmetry; apply (homotopic_alg_flab_map_alg_flab_map_forall P PropP A (s x)).
   Defined.
 
+  Definition sigma_condition_sigma_condition_sigma `{Univalence}
+    (condf : alg_flab_sigma_condition_sigma)
+    : alg_flab_sigma_condition S alg_flab_Type_sigma.
+  Proof.
+    intros P PropP A.
+    pose (s := (condf _ _ A).1).
+    pose (J := (condf _ _ A).2).
+    srefine (s; _).
+    srefine (pointwise_paths_concat _ J).
+    apply ap10. apply path_forall. intros x.
+    symmetry; apply (homotopic_alg_flab_map_alg_flab_map_sigma P PropP A (s x)).
+  Defined.
+
 End AlgFlabUniverse.
 
 (** The type of pointed types is algebraically flabby. *)
@@ -125,9 +162,9 @@ Proof.
     intros f. apply path_forall. intros h; cbn. reflexivity.
 Defined.
 
-(** For a subuniverse, the flabbiness condition is equivalent to closure under proposition indexed pi types (or sigma types, but ), so using this we can state a simpler theorem for proving flabbiness of subuniverses. *)
-Definition alg_flab_subuniverse `{Univalence} (O : Subuniverse)
-  (forall_cls : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O (forall h : P, A h))
+(** For a subuniverse, the flabbiness condition is equivalent to closure under proposition indexed pi types (or sigma types), so using this we can state a simpler theorem for proving flabbiness of subuniverses. *)
+Definition alg_flab_subuniverse_forall `{Univalence} (O : Subuniverse)
+  (condForall : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O (forall h : P, A h))
   : IsAlgebraicFlabbyType@{u su su} (Type_ O).
 Proof.
   apply (alg_flab_sigma _ alg_flab_Type_forall).
@@ -138,7 +175,19 @@ Proof.
     intros s. apply path_ishprop.
 Defined.
 
+Definition alg_flab_subuniverse_sigma `{Univalence} (O : Subuniverse)
+  (condSigma : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O {h : P & A h})
+  : IsAlgebraicFlabbyType@{u su su} (Type_ O).
+Proof.
+  apply (alg_flab_sigma _ alg_flab_Type_sigma).
+  apply (sigma_condition_sigma_condition_sigma _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
+  - intros X A. apply path_ishprop.
+  - intros P PropP A.
+    srefine(_; _).
+    intros s. apply path_ishprop.
+Defined.
+
 (** As an immediate correlary, we get that reflective subuniverses are algebraically flabby. *)
 Definition alg_flab_reflective_subuniverse `{Univalence} (O : ReflectiveSubuniverse)
   : IsAlgebraicFlabbyType@{u su su} (Type_ O)
-  := alg_flab_subuniverse _ _.
+  := alg_flab_subuniverse_forall _ _.
