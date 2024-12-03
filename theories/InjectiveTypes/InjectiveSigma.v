@@ -47,31 +47,6 @@ End AlgFlabSigma.
 Section AlgFlabUniverse.
   Context (S : Type -> Type) (T : forall {X Y}, X <~> Y -> S X -> S Y) (Trefl : forall {X}, (T (equiv_idmap X) == idmap)).
 
-  (*MOVE TO Types.Universe*)
-  Definition transport_eq `{Univalence} {X Y} (e : X <~> Y) (s : S X)
-    : S Y
-    := (path_universe e) # s.
-
-  Definition transport_eq_idequiv `{Univalence} {X}
-    : @transport_eq _ X X 1 == idmap.
-  Proof.
-    intros s.
-    apply (transport2 S path_universe_1).
-  Defined.
-
-  (** Any two functions that act like transport along an equivalence are homotopic. *)
-  Definition homotopic_trequiv `{Univalence} {X Y}
-    (T' : forall {X Y}, X <~> Y -> S X -> S Y)
-    (T'refl : forall {X}, (T' (equiv_idmap X) == idmap))
-    (e : X <~> Y) 
-    : T _ _ e == T' e.
-  Proof.
-    revert Y e.
-    apply equiv_induction.
-    apply (pointwise_paths_concat (Trefl _)).
-    symmetry; apply T'refl.
-  Defined.
-
   (** For a sigma type over [Type], the map [alg_flab_map] can be exchanged for either of these simpler maps for which an equivalent condition for algebraic injectivity can be defined. *)
   Definition alg_flab_map_forall `{Funext}
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
@@ -107,9 +82,9 @@ Section AlgFlabUniverse.
     : alg_flab_map_forall P PropP A == alg_flab_map S alg_flab_Type_forall P PropP A.
   Proof.
     intros s. apply path_forall. intros h.
-    srefine (homotopic_trequiv (@transport_eq _) _ _ s).
+    srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
     intros X.
-    apply transport_eq_idequiv.
+    apply univalent_transport_idequiv.
   Defined.
 
   Definition homotopic_alg_flab_map_alg_flab_map_sigma `{Univalence}
@@ -117,9 +92,9 @@ Section AlgFlabUniverse.
     : alg_flab_map_sigma P PropP A == alg_flab_map S alg_flab_Type_sigma P PropP A.
   Proof.
     intros s. apply path_forall. intros h.
-    srefine (homotopic_trequiv (@transport_eq _) _ _ s).
+    srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
     intros X.
-    apply transport_eq_idequiv.
+    apply univalent_transport_idequiv.
   Defined.
 
   Definition sigma_condition_sigma_condition_forall `{Univalence}
