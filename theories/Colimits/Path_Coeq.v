@@ -87,7 +87,7 @@ Section DescentCoeq.
         c_desc_idsys_ind Q_A e_Q q0 a0 p0 = q0).
 
     (** Kraus-von Raumer induction induces an identity system structure on [c_bundle_descent]. *)
-    Local Instance identitysystem_c_bundle_descent : @IsIdentitySystem _ (coeq a0) c_bundle_descent p0.
+    Local Instance idsys_c_bundle_descent : @IsIdentitySystem _ (coeq a0) c_bundle_descent p0.
     Proof.
       snrapply Build_IsIdentitySystem.
       - intros Q q0 x p.

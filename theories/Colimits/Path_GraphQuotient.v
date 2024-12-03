@@ -1,5 +1,5 @@
 Require Import Basics.Overture Basics.Tactics Basics.PathGroupoids Basics.Equivalences.
-Require Import Types.Universe Types.Paths Types.Forall Types.Sigma.
+Require Import Types.Universe Types.Paths Types.Forall Types.Arrow Types.Sigma.
 Require Import Homotopy.IdentitySystems.
 Require Import Colimits.GraphQuotient.
 
@@ -218,7 +218,7 @@ Section DescentGQ.
         gq_desc_idsys_ind Q_A e_Q q0 a0 p0 = q0).
 
     (** Kraus-von Raumer induction induces an identity system structure on [gq_bundle_descent]. *)
-    Local Instance identitysystem_gq_bundle_descent : @IsIdentitySystem _ (gq a0) gq_bundle_descent p0.
+    Local Instance idsys_gq_bundle_descent : @IsIdentitySystem _ (gq a0) gq_bundle_descent p0.
     Proof.
       snrapply Build_IsIdentitySystem.
       - intros Q q0 x p.

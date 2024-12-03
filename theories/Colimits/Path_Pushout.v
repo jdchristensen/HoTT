@@ -111,7 +111,7 @@ Section DescentPO.
           po_desc_A_idsys_ind Q_A Q_B e_Q q0 a0 pa0 = q0).
 
     (** Kraus-von Raumer induction on descent data induces an identity system structure on the total space. *)
-    Local Instance isidsys_po_bundle_descent : @IsIdentitySystem _ (pushl a0) po_bundle_descent pa0.
+    Local Instance idsys_po_bundle_descent : @IsIdentitySystem _ (pushl a0) po_bundle_descent pa0.
     Proof.
       snrapply Build_IsIdentitySystem.
       - intros Q q0 x px.
