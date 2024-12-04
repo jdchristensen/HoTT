@@ -414,7 +414,7 @@ Definition uniquenessZset_two_fun_equiv
   (pf2 : forall (z : IntegersHIT), (f o k2) z = (k2 o succ) z)
   : forall (z : IntegersHIT), k1 z = k2 z.
   Proof.
-  exact (uniquenessZset_two_fun_binv (e := Build_EquivBiInv P P _ (biinv_isequiv f e)) v k1 k2 p0 pf1 pf2).
+  exact (uniquenessZset_two_fun_binv (e := Build_EquivBiInv P P _ (biinv_isequiv' f e)) v k1 k2 p0 pf1 pf2).
 Defined.
 
 
@@ -674,14 +674,14 @@ Defined.
 
 (* * The successor is an equivalence on [Int] *)
 Global Instance isequiv_IntegersHIT_succ : IsEquiv succ
-  := isequiv_biinv integershit_to_biinv.
+  := isequiv_biinv' integershit_to_biinv.
 
 (** The predecessor is an equivalence on [Int] *)
-Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
+Global Instance isequiv_IntegersHI_pred2 : IsEquiv pred2
   := isequiv_inverse succ.
 
-(* Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred2
-  := isequiv_inverse succ. *)
+Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
+  := (isequiv_homotopic _ ( fun x => (pred1_is_pred2 x)^)).
 
 (** *** Addition *)
 
@@ -1236,7 +1236,7 @@ Defined.
 (** lets use uniqueness check that they both dothe smae on succ, see picture, on the left (neg o iter f) = iter f^-1 *)
 
 Definition IntegersHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
-  (s := Build_EquivBiInv A A f (biinv_isequiv _ _))
+  (s := Build_EquivBiInv A A f (biinv_isequiv' _ _))
   : IntegersHIT_iter f (- n) a = IntegersHIT_iter f^-1 n a.
 Proof.
   (* srapply (uniquenessZset_two_fun ). *)

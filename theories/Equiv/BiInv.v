@@ -52,7 +52,7 @@ Proof.
 Defined.
 
 (** From a bi-invertible map, we can construct a half-adjoint equivalence in two ways. Here we take the inverse to be the retraction. *)
-Global Instance isequiv_biinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f} : IsEquiv f.
+Global Instance isequiv_biinv'' {A B : Type} (f : A -> B) `{bi : !IsBiInv f} : IsEquiv f.
 Proof.
   revert bi.
   intros [h g r s].
@@ -72,38 +72,33 @@ Proof.
     apply eissect_biinv.
 Defined.
 
-Definition biinv_isequiv `(f : A -> B)
+Definition biinv_isequiv' `(f : A -> B)
   : IsEquiv f -> IsBiInv f.
 Proof.
   intros [g s r adj].
   exact (Build_IsBiInv _ _ f g g s r).
 Defined.
 
-Definition iff_biinv_isequiv `(f : A -> B)
+Definition iff_biinv_isequiv' `(f : A -> B)
   : IsBiInv f <-> IsEquiv f.
 Proof.
   split.
-  - apply isequiv_biinv.
-  - apply biinv_isequiv.
+  - apply isequiv_biinv''.
+  - apply biinv_isequiv'.
 Defined.
 
-Global Instance ishprop_biinv `{Funext} `(f : A -> B) : IsHProp (IsBiInv f) | 0.
+(** This here uses implicitly that the product of contractible types is contractible*)
+Global Instance ishprop_biinv' `{Funext} `(f : A -> B) : IsHProp (IsBiInv f) | 0.
 Proof.
   apply hprop_inhabited_contr.
   intros bif.
-  srapply contr_equiv'.
-  - exact ({g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap}).
-  - exact (prod_isbiinv A B).
-  - apply @contr_prod.
-  (* For this, we've done all the work already. *)
-    + rapply contr_retr_equiv.
-    + rapply contr_sect_equiv.
+  srapply (contr_equiv' _ (prod_isbiinv A B)).
 Defined.
 
-Definition equiv_biinv_isequiv `{Funext} `(f : A -> B)
+Definition equiv_biinv_isequiv' `{Funext} `(f : A -> B)
   : IsBiInv f <~> IsEquiv f.
 Proof.
-  apply equiv_iff_hprop_uncurried, iff_biinv_isequiv.
+  apply equiv_iff_hprop_uncurried, iff_biinv_isequiv'.
 Defined.
 
 (* Some lemmas to send equivalences and biinvertible maps back and forth.*)
@@ -116,14 +111,14 @@ Definition biinv_equiv A B
   :  A <~> B -> EquivBiInv A B.
 Proof.
   intros [f e].
-  exact (Build_EquivBiInv A B f (biinv_isequiv f e)).
+  exact (Build_EquivBiInv A B f (biinv_isequiv' f e)).
 Defined.
 
 Definition equiv_biinv_equiv `{Funext} A B
   : EquivBiInv A B <~> (A <~> B) .
 Proof.
   refine ((issig_equiv A B) oE _ oE (issig_equivbiinv A B)^-1).
-  rapply (equiv_functor_sigma_id equiv_biinv_isequiv).
+  rapply (equiv_functor_sigma_id equiv_biinv_isequiv').
 Defined.
 
 Definition equiv_idmap_binv (A : Type) 
@@ -216,7 +211,7 @@ Existing Class BiInv.
 (** It seems that the easiest way to show that bi-invertibility is equivalent to being an equivalence is also to show that both are h-props and that they are logically equivalent. *)
 
 (** From a bi-invertible map, we can construct a half-adjoint equivalence in two ways. Here we take the inverse to be the retraction. *)
-Global Instance isequiv_biinv'' {A B : Type} (f : A -> B) `{bi : !BiInv f} : IsEquiv f.
+Global Instance isequiv_biinv {A B : Type} (f : A -> B) `{bi : !BiInv f} : IsEquiv f.
 Proof.
   destruct bi as [[g s] [h r]].
   exact (isequiv_adjointify f g
@@ -225,22 +220,22 @@ Proof.
 Defined.
 
 
-Definition biinv_isequiv' `(f : A -> B)
+Definition biinv_isequiv `(f : A -> B)
   : IsEquiv f -> BiInv f.
 Proof.
   intros [g s r adj].
   exact ((g; r), (g; s)).
 Defined.
 
-Definition iff_biinv_isequiv' `(f : A -> B)
+Definition iff_biinv_isequiv `(f : A -> B)
   : BiInv f <-> IsEquiv f.
 Proof.
   split.
-  - apply isequiv_biinv''.
-  - apply biinv_isequiv'.
+  - apply isequiv_biinv.
+  - apply biinv_isequiv.
 Defined.
 
-Global Instance ishprop_biinv' `{Funext} `(f : A -> B) : IsHProp (BiInv f) | 0.
+Global Instance ishprop_biinv `{Funext} `(f : A -> B) : IsHProp (BiInv f) | 0.
 Proof.
   apply hprop_inhabited_contr.
   intros bif.
@@ -250,8 +245,8 @@ Proof.
   - rapply contr_sect_equiv.
 Defined.
 
-Definition equiv_biinv_isequiv' `{Funext} `(f : A -> B)
+Definition equiv_biinv_isequiv `{Funext} `(f : A -> B)
   : BiInv f <~> IsEquiv f.
 Proof.
-  apply equiv_iff_hprop_uncurried, iff_biinv_isequiv'.
+  apply equiv_iff_hprop_uncurried, iff_biinv_isequiv.
 Defined.
