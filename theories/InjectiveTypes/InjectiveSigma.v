@@ -1,5 +1,4 @@
-(* -*- mode: coq; mode: visual-line -*- *)
-(** * Injectivity for Sigma types and examples of Injective Types which use this setup. *)
+(** * Injectivity for Sigma types and examples of Injective Types which use this setup *)
 
 (** Many proofs guided by original Agda formalization in the Type Topology Library which can be found at: https://martinescardo.github.io/TypeTopology/InjectiveTypes.Sigma and InjectiveTypes.MathematicalStructuresMoreGeneral. *)
 
@@ -162,7 +161,7 @@ Proof.
     intros s. apply path_ishprop.
 Defined.
 
-(** As an immediate correlary, we get that reflective subuniverses are algebraically flabby. *)
+(** As an immediate corollary, we get that reflective subuniverses are algebraically flabby. *)
 Definition alg_flab_reflective_subuniverse `{Univalence} (O : ReflectiveSubuniverse)
   : IsAlgebraicFlabbyType@{u su su} (Type_ O)
   := alg_flab_subuniverse_forall _ _.

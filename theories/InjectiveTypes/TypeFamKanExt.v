@@ -1,7 +1,6 @@
-(* -*- mode: coq; mode: visual-line -*- *)
 (** * Kan extensions of type families *)
 
-(** ** Part of the formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo. *)
+(** ** Part of the formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
 (** Many proofs guided by Martin Escardo's original Agda formalization of this paper which can be found at: https://www.cs.bham.ac.uk/~mhe/TypeTopology/InjectiveTypes.Article.html. *)
 
 Require Import Basics.
@@ -86,7 +85,7 @@ Proof.
 Defined.
 (** Note that these equivalences tell us that [{ y : Y & (f <| j) y}] and [forall y : Y, (f |> j) y] can be thought of as just different notation for the sum and product of a type family. *)
 
-(** Here we are taking the perspective of a type family [f : X -> Type] being a sort of oo-presheaf, considering the interpretation of [X] as an oo-ggroupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets. *)
+(** Here we are taking the perspective of a type family [f : X -> Type] being a sort of oo-presheaf, considering the interpretation of [X] as an oo-groupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets. *)
 (** It is easy to see that a type family [f] is functorial if we define its action on paths with [transport]. Functoriality then reduces to known lemmas about the [transport] function. *)
 
 (** We can now define the type of transformations between two type families. *)
@@ -115,7 +114,7 @@ Proof.
   srapply path_ishprop.
 Defined.
 
-(** Under this interpretation, we can think of the maps [f <| j] and [f |> j] as left and right Kan extentions of [f : X -> Type] along [j : X -> Y]. To see this we can construct the (co)unit transformations of our extensions. *)
+(** Under this interpretation, we can think of the maps [f <| j] and [f |> j] as left and right Kan extensions of [f : X -> Type] along [j : X -> Y]. To see this we can construct the (co)unit transformations of our extensions. *)
 Definition unit_leftkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
   : f =< (LeftKanTypeFamily f j o j)
   := (fun x A => ((x; idpath); A)).

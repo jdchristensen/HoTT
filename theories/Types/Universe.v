@@ -269,7 +269,7 @@ Definition univalent_transport (S : Type -> Type) {X Y} (e : X <~> Y) (s : S X)
   : S Y
   := (path_universe e) # s.
 
-(** Reflexivity term for [transport_equiv]. *)
+(** Transporting along the identity equivalence is the identity. *)
 Definition univalent_transport_idequiv (S : Type -> Type) {X}
   : @univalent_transport S X X equiv_idmap == idmap.
 Proof.
@@ -524,7 +524,7 @@ Proof.
     refine (equiv_induction_inv _ idpath).
 Defined.
 
-(** Any two functions that act like transport along an equivalence i.e. maps of the type [T : forall X Y, X <~> Y -> S X -> S Y], with a reflexivity term of type [Trefl : forall X, (T (equiv_idmap X) == idmap)] are homotopic. This can be useful for when we want to transport along an equivalence, but [transport_equiv] does not have the right computational properties that we are looking for. *)
+(** Any two functions that act like transport along an equivalence i.e. maps of the type [T : forall X Y, X <~> Y -> S X -> S Y], with a computation rule of type [Trefl : forall X, (T (equiv_idmap X) == idmap)] are homotopic. This can be useful for when we want to transport along an equivalence, but [univalent_transport] does not have the right computational properties that we are looking for. *)
 Definition homotopic_trequiv (S : Type -> Type) {X Y}
   (T T' : forall {X Y}, X <~> Y -> S X -> S Y)
   (Trefl : forall {X}, (T (equiv_idmap X) == idmap))

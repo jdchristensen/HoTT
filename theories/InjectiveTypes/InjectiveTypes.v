@@ -1,9 +1,8 @@
-(* -*- mode: coq; mode: visual-line -*- *)
 (** * Injective Types *)
 
-(** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo (with some extra results). *)
-(** Since the universe levels are important to many of the results here, we keep track of them explicitly as much as possible. Due to our inability to use the max and succesor operations within proofs, we instead construct these universes and thier associated posetal relations in the arguments of the functions. *)
-(** In universe declarations, we use u, v, w, etc. as our typical universe variables. Our convention for the max of two universes u and v is uv, and the succesor of a universe u is su. Occasionally we write T for a top universe which is strictly larger than all other provided universes. We hope that later versions of Coq will allow us access to the max and successor operations and many of the cumbersome universe handing here can be greatly reduced. *)
+(** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo (with some extra results) *)
+(** Since the universe levels are important to many of the results here, we keep track of them explicitly as much as possible. Due to our inability to use the max and successor operations within proofs, we instead construct these universes and their associated posetal relations in the arguments of the functions. *)
+(** In universe declarations, we use [u], [v], [w], etc. as our typical universe variables. Our convention for the max of two universes [u] and [v] is [uv], and the successor of a universe [u] is [su]. Occasionally we write [T] for a top universe which is strictly larger than all other provided universes. We hope that later versions of Coq will allow us access to the max and successor operations and much of the cumbersome universe handing here can be greatly reduced. *)
 
 Require Import Basics.
 Require Import PropResizing.
@@ -50,7 +49,7 @@ Section UniverseStructure.
 
 End UniverseStructure.
 
-(** [Type@{uv}] is algebraically u,v-injective in at least two ways. *)
+(** [Type@{uv}] is algebraically [u],[v]-injective in at least two ways. *)
 Definition alg_inj_Type_sigma@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv} Type@{uv}.
 Proof.
@@ -71,7 +70,7 @@ Proof.
     apply (path_universe_uncurried (isext_rightkantypefamily _ _ isem _)).
 Defined.
 
-(** ** Constructions with algebraically injective types. *)
+(** ** Constructions with algebraically injective types *)
 
 (** Retracts of algebraically injective types are algebraically injective. *)
 Definition alg_inj_retract@{u v w w' uv uw vw uw' vw' | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw, u <= uw', v <= vw', w' <= uw', w' <= vw'}
@@ -123,15 +122,15 @@ Definition retract_alg_inj_embedding@{v w vw | v <= vw, w <= vw}
   : { r : Y -> D & r o j == idmap }
   := Dai _ _ _ _ idmap.
 
-(** Any algebraically u,u^+-injective type [X : Type@{u}], is a retract of [X -> Type@{u}]. *)
+(** Any algebraically [u],[su]-injective type [X : Type@{u}], is a retract of [X -> Type@{u}]. *)
 Definition retract_power_universe_alg_usuinj@{u su | u < su} `{Univalence}
   (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su} D)
   : { r : (D -> Type@{u}) -> D & r o (@paths D) == idmap }
   := retract_alg_inj_embedding D (@paths D) isembedding_paths Dai.
 
-(** ** Algebraic flabbiness and resizing constructions. *)
+(** ** Algebraic flabbiness and resizing constructions *)
 
-(** If [D : Type@{u}] is algebraically u,u^+-injective, then it is algebraically u,u-injective. *)
+(** If [D : Type@{u}] is algebraically [u],[su]-injective, then it is algebraically [u],[u]-injective. *)
 Definition alg_uuinj_alg_usu_inj@{u su | u < su}
   (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su} D)
   : IsAlgebraicInjectiveType@{u u u u u u} D
@@ -143,7 +142,7 @@ Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
     { d : D & forall p : P, d = f p}.
 (** We can think of algebraic flabbiness as algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 
-(** Algebraic flabbiness of a type [D] is equivalent to the statment that all conditionally constant functions [X -> D] are constant. *)
+(** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. *)
 Definition cconst_is_const_cond@{u w uw suw | u <= uw, w <= uw, uw < suw}
   (D : Type@{w}) : Type@{suw}
   := forall (X : Type@{u}) (f : X -> D),
@@ -198,7 +197,7 @@ Section UniverseStructure.
   Universes u v w uv uw vw.
   Constraint u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw.
 
-  (** Algebraically u,v-injective types are algebraically u-flabby. *)
+  (** Algebraically [u],[v]-injective types are algebraically [u]-flabby. *)
   Definition alg_flab_alg_inj@{}
     {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
     : IsAlgebraicFlabbyType@{u w uw} D.
@@ -209,7 +208,7 @@ Section UniverseStructure.
     - intros p. apply (Dai _ _ (const_tt P) _ f).2.
   Defined.
 
-  (** Algebraically uv-flabby types are algebraically u,v-injective. *)
+  (** Algebraically [uv]-flabby types are algebraically [u],[v]-injective. *)
   Definition alg_inj_alg_flab@{uvw | uv <= uvw, uw <= uvw, vw <= uvw}
     {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{uv w uvw} D)
     : IsAlgebraicInjectiveType@{u v w uv uw vw} D.
@@ -222,7 +221,7 @@ Section UniverseStructure.
 
 End UniverseStructure.
 
-(** If D is algebraically ut,v-injective, then it is algebraically u,t-injective. *)
+(** If D is algebraically [ut],[v]-injective, then it is algebraically [u],[t]-injective. *)
 Definition resize_alg_inj@{u v w t ut uw vw tw uvt utw | u <= ut, u <= uw, v <= vw, v <= uvt, w <= uw, w <= vw, w <= tw, t <= ut, t <= tw,
                             ut <= uvt, ut <= utw, uw <= utw, tw <= utw}
   {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{ut v w uvt utw vw} D)
@@ -232,7 +231,7 @@ Proof.
   apply (alg_flab_alg_inj Dai).
 Defined.
 
-(** ** Algebraic flabbiness with resizing axioms. *)
+(** ** Algebraic flabbiness with resizing axioms *)
 
 Section AssumePropResizing.
   Context `{PropResizing}.
@@ -285,7 +284,7 @@ Proof.
   apply alg_inj_Type_sigma.
 Defined.
 
-(** ** Injectivity in terms of algebraic injectivity in the absence of resizing. *)
+(** ** Injectivity in terms of algebraic injectivity in the absence of resizing *)
 
 Section UniverseStructure.
   Universes u v w uv uw vw uvw.
@@ -342,7 +341,7 @@ Definition merely_retract_inj_embedding@{v w vw svw | v <= vw, w <= vw, vw < svw
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
   (Di : IsInjectiveType@{w v w vw w vw vw} D)
   : merely@{svw} { r : Y -> D & r o j == idmap }
-  := (Di _ _ _ _ idmap).
+  := Di _ _ _ _ idmap.
 
 (** The power of an injective type is injective. *)
 Definition inj_arrow@{u v w t uv ut vt tw uvt utw vtw utvw | u <= uv, v <= uv, u <= ut, t <= ut, v <= vt, t <= vt, t <= tw, w <= tw,
@@ -366,7 +365,7 @@ Proof.
       apply (e (x, a)).
 Defined.
 
-(** Any u,u^+-injective type [X : Type@{u}], is a retract of [X -> Type@{u}] in an unspecified way. *)
+(** Any [u],[su]-injective type [X : Type@{u}], is a retract of [X -> Type@{u}] in an unspecified way. *)
 Definition merely_retract_power_universe_inj@{u su ssu | u < su, su < ssu}
   `{Univalence} (D : Type@{u}) (Di : IsInjectiveType@{u su u su u su su} D)
   : merely@{su} (sig@{su su} (fun r => r o (@paths D) == idmap))
@@ -382,7 +381,7 @@ Proof.
   apply (alg_inj_retract_power_universe D r retr).
 Defined.
 
-(** ** The equivalence of excluded middle with the (algebraic) injectivity of pointed types. *)
+(** ** The equivalence of excluded middle with the (algebraic) injectivity of pointed types *)
 
 (** Assuming excluded middle, all pointed types are algebraically flabby (and thus algebraically injective). *)
 Definition alg_flab_pted_lem@{u w uw | u <= uw, w <= uw}
@@ -397,7 +396,7 @@ Proof.
     intros p. apply (Empty_rec (np p)).
 Defined.
 
-(** If the type [P + ~P + Unit] is algebraically flabby for P a proposition, then P is decidable. *)
+(** If the type [P + ~P + Unit] is algebraically flabby for [P] a proposition, then [P] is decidable. *)
 Definition decidable_alg_flab_hprop@{w} `{Funext} (P : Type@{w}) (PropP : IsHProp P)
   (Paf : IsAlgebraicFlabbyType@{w w w} ((P + ~P) + (Unit : Type@{w})))
   : Decidable P.
