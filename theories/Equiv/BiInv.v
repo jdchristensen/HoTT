@@ -16,8 +16,8 @@ Class IsBiInv {A B : Type} (f : A -> B) := {
 
 Arguments sect_biinv {A B}%_type_scope f%_function_scope {_} _.
 Arguments retr_biinv {A B}%_type_scope f%_function_scope {_} _.
-Arguments eisretr {A B}%_type_scope f%_function_scope {_} _.
-Arguments eissect {A B}%_type_scope f%_function_scope {_} _.
+Arguments eisretr_biinv {A B}%_type_scope f%_function_scope {_} _.
+Arguments eissect_biinv {A B}%_type_scope f%_function_scope {_} _.
 Arguments IsBiInv {A B}%_type_scope f%_function_scope.
 
 
@@ -148,12 +148,12 @@ Section EquivalenceCompatibility.
 
   Let s := sect_biinv e.
   Let r := retr_biinv e.
-  Let re := eissect_biinv : r o e == idmap.
-  Let es := eisretr_biinv : e o s == idmap.
+  Let re := eissect_biinv e : r o e == idmap.
+  Let es := eisretr_biinv e: e o s == idmap.
   Let s' := sect_biinv e'.
   Let r' := retr_biinv e'.
-  Let re' := eissect_biinv : r' o e' == idmap.
-  Let es' := eisretr_biinv : e' o s' == idmap.
+  Let re' := eissect_biinv e' : r' o e' == idmap.
+  Let es' := eisretr_biinv e' : e' o s' == idmap.
 
   Definition helper_r (pe : e' o f == g o e) : r' o g o e == f o r o e.
   Proof.

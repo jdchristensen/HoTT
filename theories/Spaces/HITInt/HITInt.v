@@ -259,13 +259,11 @@ Section IntegersHITLemmas.
   Proof.
     snrapply Build_EquivBiInv.
     - exact succ.
-    - snrapply pair.
-      + snrapply exist.
-        * exact pred1.
-        * exact sec.
-      + snrapply exist.
-        * exact pred2.
-        * exact ret.
+    - snrapply Build_IsBiInv.
+      + exact pred2.
+      + exact pred1.
+      + exact ret.
+      + exact sec.
   Defined.
 
 End IntegersHITLemmas.
@@ -399,9 +397,9 @@ Definition uniquenessZset_two_fun_binv
   (pf2 : forall (z : IntegersHIT), (e o k2) z = (k2 o succ) z)
   : forall (z : IntegersHIT), k1 z = k2 z.
   Proof.
-  exact (uniquenessZset_two_fun (f := e)  (g1 := (ret_binv e (equiv_isequiv_binv P P e))) 
-  (g2 := (sec_binv e (equiv_isequiv_binv P P e))) (s := (issec_binv e (equiv_isequiv_binv P P e))) 
-  (r := (isret_binv e (equiv_isequiv_binv P P e))) _ _ _ p0 pf1 pf2).
+  exact (uniquenessZset_two_fun (f := e)  (g1 := retr_biinv e) 
+  (g2 := sect_biinv e) (s := eissect_biinv e) 
+  (r := eisretr_biinv e) _ _ _ p0 pf1 pf2).
 Defined.
 
 Definition uniquenessZset_two_fun_equiv 
@@ -423,11 +421,11 @@ Defined.
 Section Uniqueness.
 Context {P : Type} {e: EquivBiInv P P}.
 
-Local Definition f := (equiv_fun_binv P P e).
-Local Definition g1 := (ret_binv f (equiv_isequiv_binv P P e)).
-Local Definition g2 := (sec_binv f (equiv_isequiv_binv P P e)).
-Local Definition s := (issec_binv f (equiv_isequiv_binv P P e) ).
-Local Definition r := (isret_binv f (equiv_isequiv_binv P P e) ).
+Local Definition f := e.
+Local Definition g1 := retr_biinv e.
+Local Definition g2 := sect_biinv e.
+Local Definition s := eissect_biinv e.
+Local Definition r := eisretr_biinv e.
 
 Definition uniquenessZ
   (t0 : P)
@@ -448,10 +446,10 @@ Definition uniquenessZ
   - simpl.
     intros z H.
     apply (ap g1) in H.
-    exact (((pg _ _ _ _ _ _ _ _ compat z)^) @ H).
+    exact (((pr _ _ _ _ _ _ _ _ compat z)^) @ H).
   - intros z H.
     apply (ap g2) in H.
-    exact (((ph _ _ _ _ _ _ _ _ compat z)^) @ H).
+    exact (((ps _ _ _ _ _ _ _ _ compat z)^) @ H).
   - simpl.
     intros z t.
     rewrite transport_paths_FlFr.
@@ -462,7 +460,7 @@ Definition uniquenessZ
     rewrite ap_V.
     rewrite (inv_pp _ _)^.
     rewrite concat_p_pp.
-    rewrite (ps _ _ _ _ _ _ _ _ compat z)^.
+    rewrite (pre _ _ _ _ _ _ _ _ compat z)^.
     rewrite (concat_p_pp _ _ _)^.
     apply moveR_Vp.
     rewrite (ap_compose _ _ _)^.
@@ -478,7 +476,7 @@ Definition uniquenessZ
     rewrite ap_V.
     rewrite (inv_pp _ _)^.
     rewrite concat_p_pp.
-    rewrite (pr _ _ _ _ _ _ _ _ compat z)^.
+    rewrite (pes _ _ _ _ _ _ _ _ compat z)^.
     rewrite (concat_p_pp _ _ _)^.
     apply moveR_Vp.
     rewrite (ap_compose _ _ _)^.
@@ -525,16 +523,14 @@ Defined.
 Definition isequiv_IntHIT_Int
   : IntegersHIT <~> Int.
 Proof.
-  apply isequiv_biinv_record.
+  apply equiv_biinv.
   snrapply Build_EquivBiInv.
     - exact IntHITtoIntIT.
-    - snrapply pair.
-      + snrapply exist.
-        * exact IntITtoIntHIT.
-        * exact IntITtoIntHIT_is_linv.
-      + snrapply exist.
-        * exact IntITtoIntHIT.
-        * exact IntITtoIntHIT_is_rinv.
+    - srapply Build_IsBiInv.
+      * exact IntITtoIntHIT.
+      * exact IntITtoIntHIT.
+      * exact IntITtoIntHIT_is_rinv.
+      * exact IntITtoIntHIT_is_linv.
 Defined.
 
 Global Instance ishset_IntegersHIT
@@ -678,7 +674,7 @@ Defined.
 
 (* * The successor is an equivalence on [Int] *)
 Global Instance isequiv_IntegersHIT_succ : IsEquiv succ
-  := isequiv_biinv integershit_to_biinv (equiv_isequiv_binv IntegersHIT IntegersHIT integershit_to_biinv).
+  := isequiv_biinv integershit_to_biinv.
 
 (** The predecessor is an equivalence on [Int] *)
 Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
@@ -1229,7 +1225,7 @@ Defined.
 
 Definition IntegersHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) (a0: A) : A.
 Proof.
-  srapply IntegersHIT_rec_pred_equiv.
+  snrapply IntegersHIT_rec_pred_equiv.
   - exact a0.
   - exact f.
   - exact _.
