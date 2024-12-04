@@ -7,19 +7,22 @@ Generalizable Variables A B f.
 
 (** A map is "bi-invertible" if it has both a section and a retraction, not necessarily the same.  This definition of equivalence was proposed by Andre Joyal. *)
 
-Definition BiInv `(f : A -> B) : Type
+Definition BiInv {A B : Type} (f : A -> B) : Type
   := {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap}.
+
+Existing Class BiInv.
 
 (** It seems that the easiest way to show that bi-invertibility is equivalent to being an equivalence is also to show that both are h-props and that they are logically equivalent. *)
 
-Definition isequiv_biinv `(f : A -> B)
-  : BiInv f -> IsEquiv f.
+(** From a bi-invertible map, we can construct a half-adjoint equivalence in two ways. Here we take the inverse to be the retraction. *)
+Global Instance isequiv_biinv {A B : Type} (f : A -> B) `{bi : !BiInv f} : IsEquiv f.
 Proof.
-  intros [[g s] [h r]].
+  destruct bi as [[g s] [h r]].
   exact (isequiv_adjointify f g
     (fun x => ap f (ap g (r x)^ @ s (h x)) @ r x)
     s).
 Defined.
+
 
 Definition biinv_isequiv `(f : A -> B)
   : IsEquiv f -> BiInv f.
@@ -39,11 +42,11 @@ Defined.
 Global Instance ishprop_biinv `{Funext} `(f : A -> B) : IsHProp (BiInv f) | 0.
 Proof.
   apply hprop_inhabited_contr.
-  intros bif; pose (fe := isequiv_biinv f bif).
+  intros bif.
   apply @contr_prod.
   (* For this, we've done all the work already. *)
-  - by apply contr_retr_equiv.
-  - by apply contr_sect_equiv.
+  - rapply contr_retr_equiv.
+  - rapply contr_sect_equiv.
 Defined.
 
 Definition equiv_biinv_isequiv `{Funext} `(f : A -> B)
@@ -54,31 +57,41 @@ Defined.
 
 
 (** These are some projections *)
+(* jTODO Eventually  make a Record with fields with appropriate names,
+trying to parallel Equiv and IsEquiv as much as possible.  E.g. instead of "issec_binv"
+use "eissect_biinv" with the "e" and the start and the "t" at the end.  And I think
+it should be "_biinv", not "_binv". *)
+(* TODO: The "BiInv f" parts should be moved to the left of the colon and be made implicit. "f" should be explicit. *)
 Definition ret_binv `{f : A -> B}
-  : BiInv f ->  (B -> A).
+  : BiInv f -> (B -> A).
+Proof.
   intro X.
   exact (pr1 (fst X)).
 Defined.
 
 Definition sec_binv `{f : A -> B}
-  : BiInv f ->  (B -> A).
+  : BiInv f -> (B -> A).
+Proof.
   intro X.
   exact (pr1 (snd X)).
 Defined.
 
 Definition isret_binv `{f : A -> B}
-  : forall (e: BiInv f), f o (sec_binv e)   == idmap.
+  : forall (e: BiInv f), f o (sec_binv e) == idmap.
+Proof.
   intro.
   simpl.
   exact (pr2 (snd e)).
 Defined.
 
 Definition issec_binv `{f : A -> B}
-  : forall (e: BiInv f), (ret_binv e) o f   == idmap.
+  : forall (e: BiInv f), (ret_binv e) o f == idmap.
+Proof.
   intro.
   simpl.
   exact (pr2 (fst e)).
 Defined.
+
 
 (** A record summing over all bi-invertible maps*)
 
@@ -86,6 +99,8 @@ Record EquivBiInv A B := {
   equiv_fun_binv :> A -> B ;
   equiv_isequiv_binv :> BiInv equiv_fun_binv
 }.
+
+Existing Instance equiv_isequiv_binv.
 
 Definition issig_equivbiinv (A B : Type)
   : {f : A -> B & BiInv f} <~> EquivBiInv A B.
@@ -95,13 +110,12 @@ Defined.
 
 (* Some lemmas to send equivalences and biinvertible maps back and forth.*)
 
-Definition isequiv_biinv_record A B
-  : EquivBiInv A B -> A <~> B.
-Proof.
-  intros [f e].
-  exact (Build_Equiv A B f (isequiv_biinv f e)).
-Defined.
+(* TODO: This should be called equiv_ not isequiv_ *)
+Definition isequiv_biinv_record A B (f : EquivBiInv A B)
+  : A <~> B
+  := Build_Equiv A B f _.
 
+(* TODO: change isequiv to equiv in name: *)
 Definition biinv_isequiv_record A B
   :  A <~> B -> EquivBiInv A B.
 Proof.
@@ -109,6 +123,7 @@ Proof.
   exact (Build_EquivBiInv A B f (biinv_isequiv f e)).
 Defined.
 
+(* TODO: Delete this.  "iff" is useful between hprops, but not in cases like this. *)
 Definition iff_biinv_isequiv_record A B
   : EquivBiInv A B <-> A <~> B.
 Proof.
@@ -127,18 +142,7 @@ Defined.
 Definition equiv_idmap_binv (A : Type) 
   : (EquivBiInv A A).
 Proof.
-  snrapply (Build_EquivBiInv A A).
-  - exact idmap.
-  -
-    snrapply pair.
-    -- snrapply exist.
-       --- exact idmap.
-       --- simpl.
-           reflexivity. 
-    -- snrapply exist.
-       --- exact idmap.
-       --- simpl.
-           reflexivity.
+  by nrefine (Build_EquivBiInv A A idmap ((idmap; _), (idmap; _))).
 Defined.
 
 
@@ -157,49 +161,99 @@ Record EquivBiInv A B := {
 }. *)
 
 
-(* Generalizable Variables C D. *)
+Section BiInvProperties.
 
-Record prBiInv A B C D (e: EquivBiInv A B) (e' : EquivBiInv C D) (a: A -> C) (b: B -> D)
-  := {
-  pe : forall (x : A), (e' o a) x = (b o e) x;
-  pg : forall (y : B), ((ret_binv e') o b) y = (a o (ret_binv e)) y;
-  ph : forall (y : B), ((sec_binv e') o b) y = (a o (sec_binv e )) y;
-  ps : forall (x: A), (issec_binv e' (a x)) = ((ap (ret_binv e') (pe x)) @ (pg (e x)) @ (ap a (issec_binv e x) ));
-  pr : forall (y: B), (isret_binv e'(b y)) = ((ap e' (ph y)) @ (pe (sec_binv e y)) @ (ap b (isret_binv e y) ));
-}.
+  (* TODO: The following things should go right after the definition of BiInv, but they are here so I can make use of the accessor functions.  They are no longer needed in the proof below, but should probably still be part of the general theory of bi-invertible maps.  In particular, it seems like it might be useful to have isequiv_biinv'. *)
 
+  (** If [e] is bi-invertible, then the retraction and the section of [e] are equal. *)
+  Definition sec_ret_homotopic_binv {A B : Type} (f : A -> B) `{bi : !BiInv f}
+    : sec_binv bi == ret_binv bi.
+  Proof.
+    destruct bi as [[g s] [h r]].
+    exact (fun y => (s (h y))^ @ ap g (r y)).
+  Defined.
 
-Definition compat_implies_prBiInv'
-  (A B C D: Type)
-  (e: EquivBiInv A B)
-  (e':  EquivBiInv C D)
-  (a: A -> C)
-  (b : B -> D)
-  (s := issec_binv e)
-  (r := isret_binv e)
-  (p1 := ret_binv e)
-  (p2 := sec_binv e)
-  (g1 := ret_binv e')
-  (g2 := sec_binv e')
-  (s' := issec_binv e')
-  (r' := isret_binv e')
-  (* (p2_is_p1 z := ( (s (p2 z))^ @ (ap p1 (r z)))) *)
-  (* (g2_is_g1 z := ( (s' (g2 z))^ @ (ap g1 (r z)))) *)
-  : (forall (x : A), (e' o a) x = (b o e) x) -> prBiInv A B C D e e' a b.
+(** TODO move up after definition*)
+(** Here we take the inverse to be the section. *)
+Definition isequiv_biinv' {A B : Type} (f : A -> B) `{bi : !BiInv f} : IsEquiv f.
 Proof.
-  intro pf.
-  srapply Build_prBiInv.
-  - exact pf.
-  - intro z.
-    exact ((ap (g1 o b) (r z))^ @ (ap g1 (pf (p2 z)))^ @ (s' (a (p2 z)))
-          @ (ap a ((s (p2 z))^ @ (ap p1 (r z))))).
-  - intro z. 
-    exact (((s' (g2 (b z)))^ @ (ap g1 (r' (b z)))) @ (ap (g1 o b) (r z))^ 
-          @ (ap g1 (pf (p2 z)))^ @ (s' (a (p2 z)))).
-  - intro x.
-    simpl.
-Admitted.
+  snrapply isequiv_adjointify.
+  - apply (sec_binv bi).
+  - apply isret_binv.  (* We provide proof of eissect, but it gets modified. *)
+  - intro a.
+    lhs nrapply sec_ret_homotopic_binv.
+    apply issec_binv.
+Defined.
 
+End BiInvProperties.
+
+(* TODO: move this to right after equiv_inj in PathGroupoids.v *)
+Definition equiv_inj_comp `(f : A -> B) `{IsEquiv A B f} {x y : A}
+  (p : f x = f y)
+  : ap f (equiv_inj f p) = p.
+Proof.
+  unfold equiv_inj.
+  apply eisretr.
+Defined.
+
+Section DansAttempt.
+
+  Context (A B C D : Type).
+  Context (e : EquivBiInv A B) (e' : EquivBiInv C D) (f : A -> C) (g : B -> D).
+
+  Let s := sec_binv e.
+  Let r := ret_binv e.
+  Let re := issec_binv e : r o e == idmap.
+  Let es := isret_binv e : e o s == idmap.
+  Let s' := sec_binv e'.
+  Let r' := ret_binv e'.
+  Let re' := issec_binv e' : r' o e' == idmap.
+  Let es' := isret_binv e' : e' o s' == idmap.
+
+  Definition helper_r (pe : e' o f == g o e) : r' o g o e == f o r o e.
+  Proof.
+    intro x.
+    exact ((ap r' (pe x))^ @ (re' (f x) @ (ap f (re x))^)).
+  Defined.
+
+  Definition helper_s (pe : e' o f == g o e) : e' o s' o g == e' o f o s.
+  Proof.
+    intro y.
+    exact (es' (g y) @ (ap g (es y))^ @ (pe (s y))^).
+  Defined.
+
+  Record prBiInv
+  := {
+    pe : forall (x : A), e' (f x) = g (e x);
+    pr : forall (y : B), r' (g y) = f (r y);
+    ps : forall (y : B), s' (g y) = f (s y);
+    pre : forall (x : A), re' (f x) = ap r' (pe x) @ pr (e x) @ ap f (re x);
+    pes : forall (y : B), es' (g y) = ap e' (ps y) @ pe (s y) @ ap g (es y);
+  }.
+
+  Definition compat_implies_prBiInv' (pe : forall (x : A), e' (f x) = g (e x))
+    : prBiInv.
+  Proof.
+    srapply Build_prBiInv.
+    - exact pe.
+    - apply (equiv_ind e).
+      apply (helper_r pe).
+    - intro y.
+      apply (equiv_inj e'); cbn.
+      apply (helper_s pe).
+    - intro x.
+      rewrite equiv_ind_comp.
+      apply moveL_pM.
+      apply moveL_Mp.
+      reflexivity.
+    - intro y; cbn beta.
+      rewrite equiv_inj_comp.
+      apply moveL_pM.
+      apply moveL_pM.
+      reflexivity.
+  Defined.
+
+End DansAttempt.
 
 
 Section BiInvCompatUnivalence.
@@ -237,7 +291,6 @@ Defined.
 
 
 (** Bi-Invertible maps*)
-
 Definition compat_implies_prBiInv
   (A B C D: Type)
   (e: EquivBiInv A B)

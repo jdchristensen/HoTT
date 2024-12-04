@@ -260,12 +260,12 @@ Section IntegersHITLemmas.
     snrapply Build_EquivBiInv.
     - exact succ.
     - snrapply pair.
-      -- snrapply exist.
-        --- exact pred1.
-        --- exact sec.
-      -- snrapply exist.
-        --- exact pred2.
-        --- exact ret.
+      + snrapply exist.
+        * exact pred1.
+        * exact sec.
+      + snrapply exist.
+        * exact pred2.
+        * exact ret.
   Defined.
 
 End IntegersHITLemmas.
@@ -512,8 +512,6 @@ Definition IntITtoIntHIT_comp_succ'
   exact ((IntITtoIntHIT_comp_succ o IntHITtoIntIT) z).
 Defined.
 
-
-
 Definition IntITtoIntHIT_is_linv
  (z : IntegersHIT )
  : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
@@ -522,6 +520,8 @@ Proof.
   @ ((uniquenessZ (P := IntegersHIT) (e := integershit_to_biinv) zero_i idmap idpath (fun x => idpath)) z)^).
 Defined.
 
+(** Proof that they are equivalent*)
+
 Definition isequiv_IntHIT_Int
   : IntegersHIT <~> Int.
 Proof.
@@ -529,12 +529,12 @@ Proof.
   snrapply Build_EquivBiInv.
     - exact IntHITtoIntIT.
     - snrapply pair.
-      -- snrapply exist.
-        --- exact IntITtoIntHIT.
-        --- exact IntITtoIntHIT_is_linv.
-      -- snrapply exist.
-        --- exact IntITtoIntHIT.
-        --- exact IntITtoIntHIT_is_rinv.
+      + snrapply exist.
+        * exact IntITtoIntHIT.
+        * exact IntITtoIntHIT_is_linv.
+      + snrapply exist.
+        * exact IntITtoIntHIT.
+        * exact IntITtoIntHIT_is_rinv.
 Defined.
 
 Global Instance ishset_IntegersHIT
@@ -934,17 +934,6 @@ Defined.
 
 Infix "*" := IntegersHIT_mul : IntegersHIT_scope.
 
-Compute (5*4) - 1.
-
-Compute (7*0) + 3.
-
-Compute (6*1).
-
-Compute (0*5).
-
-
-(** The following is a simplification*)
-(** show*)
 
 (** Multiplication with a successor on the left is the sum of the multplication without the sucesseor and the multiplicand which was not a successor. *)
 Definition IntegersHIT_mul_succ_l (x y : IntegersHIT) : (succ x) * y =  x * y + y.
@@ -952,48 +941,12 @@ Proof.
   reflexivity.
 Defined.
 
-(** the original lemma for the current integer type*)
-
-(** Multiplication with a successor on the left is the sum of the multplication without the sucesseor and the multiplicand which was not a successor. *)
-(* Definition int_mul_succ_l'@{} (x y : Int) : x.+1 * y = y + x * y.
-Proof.
-  induction x as [|[|x] IHx|[] IHx] in y |- *.
-  - reflexivity.
-  - reflexivity.
-  - reflexivity.
-  - cbn.
-    rewrite int_add_0_r.
-    by rewrite int_add_neg_r.
-  - rewrite int_pred_succ.
-    cbn.
-    rewrite int_add_assoc.
-    rewrite int_add_neg_r.
-    by rewrite int_add_0_l.
-Defined. *)
-
-
-
-(** The following is a simplification*)
-
 (** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
 Definition IntegersHIT_mul_pred_l (x y : IntegersHIT) : (pred1 x) * y = x * y  - y.
 Proof.
   reflexivity.
 Defined.
 
-(** the original lemma*)
-(** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
-(* Definition int_mul_pred_l'@{} (x y : Int) : x.-1 * y = -y + x * y.
-Proof.
-  induction x as [|x IHx|[] IHx] in y |- *.
-  - reflexivity.
-  - rewrite int_mul_succ_l.
-    rewrite int_succ_pred.
-    rewrite int_add_assoc.
-    by rewrite int_add_neg_l.
-  - reflexivity.
-  - reflexivity.
-Defined. *)
 
 (** Integer multiplication with zero on the left is zero by definition. *)
 Definition IntegersHIT_mul_0_l (x : IntegersHIT) : 0 * x = 0 := 1.
@@ -1012,22 +965,12 @@ Proof.
     by rewrite IntegersHIT_add_0_r.
 Defined.
 
-(** show*)
-
-(** The following is a simplification*)
-
 (** Integer multiplication with one on the left is the identity. *)
 Definition IntegersHIT_mul_1_l (x : IntegersHIT) : 1 * x = x.
 Proof.
   reflexivity.
 Defined.
 
-(** the original lemma*)
-(** Integer multiplication with one on the left is the identity. *)
-  (* Definition int_mul_1_l@{} (x : Int) : 1 * x = x.
-  Proof.
-    apply int_add_0_r.
-  Defined. *)
 
 (** Integer multiplication with one on the right is the identity. *)
 Definition IntegersHIT_mul_1_r (x : IntegersHIT) : x * 1 = x.
@@ -1093,9 +1036,9 @@ Proof.
   - simpl.
     intro x.
     split.
-    -- intro H.
+    + intro H.
        admit.
-    -- intro H.
+    + intro H.
     (** It seems that this does not simplify a lot*)
 Admitted.
 
@@ -1282,59 +1225,7 @@ Proof.
   - reflexivity. 
 Defined.
 
-(* End ResultsIntegers.
-
-
-Section IntegersIteration. *)
-
-(**this here uses funext??*)
-
-(* Definition IntegersHIT_iter' {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) : A -> A.
-Proof.
-  srapply IntegersHIT_rec_pred.
-  - exact idmap.
-  - intro g.
-    exact (f o g).
-  - intro g.
-    exact (f^-1 o g).
-  - simpl.
-    intro g.
-    simpl.
-    apply path_forall.
-    intro x.
-    exact ((eissect f) _).
-  - intro g.
-    simpl.
-    apply path_forall.
-    intro x.
-    exact ((eisretr f) _).
-  - exact n.
-Defined. *)
-
-
-(** this uses funext since we need isequiv_postcompose*)
-
-(* Definition IntegersHIT_iter' {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) : A -> A.
-Proof.
-  srapply IntegersHIT_rec_pred_equiv.
-  - exact idmap.
-  - intro g.
-    exact (f o g).
-  - exact (isequiv_postcompose f).
-  - exact n.
-Defined. *)
-
-
-
-(* Definition IntegersHIT_iter'' {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) (a: A) : A.
-Proof.
-  srapply IntegersHIT_rec_pred_equiv.
-  - exact a.
-  - intro g.
-    exact (f o g).
-  - exact (isequiv_postcompose f).
-  - exact n.
-Defined. *)
+(** Integers interation*)
 
 Definition IntegersHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) (a0: A) : A.
 Proof.
@@ -1345,13 +1236,37 @@ Proof.
   - exact n.
 Defined.
 
+(** lemma that if using recurison principle for some f, should work becaus eof back cylinder by uniqueness of iter f^-1*)
+(** lets use uniqueness check that they both dothe smae on succ, see picture, on the left (neg o iter f) = iter f^-1 *)
+
 Definition IntegersHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
+  (s := Build_EquivBiInv A A f (biinv_isequiv _ _))
   : IntegersHIT_iter f (- n) a = IntegersHIT_iter f^-1 n a.
 Proof.
+  (* srapply (uniquenessZset_two_fun ). *)
+  (* reflexivity.
   simpl.
+  unfold IntegersHIT_iter.
+  unfold IntegersHIT_rec_pred_equiv.
+  unfold IntegersHIT_ind.
+  reflexivity.
   cbn beta.
+  revert n.
+  srapply IntegersHIT_ind.
+  - reflexivity.
+  - simpl.
+    intros z K.
+    exact (ap f^-1 K).
+  - simpl.
+    intros z K.
+    exact (ap f K).
+  - simpl.
+    intros z K.
+    exact (ap f K).
+  - simpl.
+    intros z K.
   (* reflexivity. *)
-  (* reflexivity. *)
+  reflexivity. *)
 Admitted.
 
 
@@ -1424,451 +1339,14 @@ Admitted.
 
 Context {A} (a : A)(f : A -> A) `{!IsEquiv f} (n : IntegersHIT).
 
-Compute IntegersHIT_iter' f (-5) a.
+Compute IntegersHIT_iter f (-5) a.
 
-Compute IntegersHIT_iter' f^-1 5 a.
+Compute IntegersHIT_iter f^-1 5 a.
 
-Compute IntegersHIT_iter''' f (-5) a.
-Compute IntegersHIT_iter''' f^-1 5 a.
+Compute IntegersHIT_iter f (-5) a.
+Compute IntegersHIT_iter f^-1 5 a.
 
-
-
-(* Definition IntegersHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (n : IntegersHIT) (a : A)
-  : IntegersHIT_iter' f (- n) a = IntegersHIT_iter' f^-1 n a.
-Proof.
-  reflexivity.
-  (* reflexivity. *)
-  (* reflexivity. *)
-Defined. *)
-
-
-
-
-
-    (* exact (fun x : A => (eissect f x)).
-
-  := match n with
-      | negS n => fun x => nat_iter n.+1%nat f^-1 x
-      | zero => idmap
-      | posS n => fun x => nat_iter n.+1%nat f x
-     end. *)
 
 
  End ResultsIntegers.
-
-(* End IntegersIteration. *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(* Definition IntegersHIT_mul_assoc' (x y z : IntegersHIT) : x * (y * z) = x * y * z.
-Proof.
-  revert x.
-  srapply uniquenessZset_two_fun_binv.
-  - apply biinv_isequiv_record.
-    apply (Build_Equiv _ _ _ (isequiv_IntegersHIT_add_r (y * z))).
-  - reflexivity.
-  - reflexivity.
-  - simpl.
-    intro x.
-    by rewrite IntegersHIT_dist_r.
-Defined. *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(*Lemma 12 is just equivalence induction*)
-(* How to do equivalence induction*)
-(*EquivalenceInduction.v*)
-(*Basics/Equivalence.v Lemma equiv_ind. Tyoe family over B and equivalence f A to B and with substitution the original. and apply it to univalence which is an equivalence. Look at 'equiv_induction' in Universe.v Redo this for for biinvertible maps*)
-(* Univalence is in the context Context `{Univalence}`*)
-
-(* One other idea is to make sure  its a set make sure it has decideable equality then there is lemma*)
-(* for every two elements either they are equal or a proof that they are equal*)
-(*nat uses encode decode*)
-(* check out integers how its done there*)
-
-
-(* 
-Definition is_set_IntegersHIT
-  (x : IntegersHIT ) 
-  (y : IntegersHIT ) 
-  (p: x = y)
-  (q: x = y)
-  : p = q.
-  Proof.
-    intros.
-    snrapply IntegersHIT_ind.
-    (* snrapply IntegersHIT_ind (@...) *)
-Abort.     *)
-
-(* 
-Definition IntITtoIntHIT_is_linv
- (z : Int )
- : ((IntITtoIntHIT o IntHITtoIntIT ) z) = z.
-Proof.
-
-Abort. *)
-
-(* 
-(*we can define some basic arithmetic stuff*)
-Definition int_HIT_add 
-  (x y : IntegersHIT) 
-  : IntegersHIT.
-Proof.
-  revert x.
-  snrapply IntegersHIT_rec.
-  -
-    exact y.
-  - 
-    exact succ.
-  -
-    exact pred1.
-  - 
-    exact pred2.
-  -
-    exact sec.
-  -
-    exact ret.
-  
-Defined.
-
-Compute int_HIT_add (succ zero_i) (succ (succ (succ (pred1 zero_i)))).
-
-Compute IntHITtoIntIT (int_HIT_add (succ zero_i) (succ (succ (succ (pred1 zero_i))))).
-
-
-
- *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(*     
-    exact (l (k z) (IntegersHIT_rec P t0 f g1 g2 s r z) (transport (fun x : IntegersHIT => k x = IntegersHIT_rec P t0 f g1 g2 s r x)
-  (ret z) ((pf (pred2 z))^ @ ap f (((right_inverse_compatible P t0 f g1 g2 s r k p0 pf) z)^ @ ap g2 t))) t). *)
-(* exact (l (k z)  (IntegersHIT_rec P t0 f g1 g2 s r z) (transport (fun x : IntegersHIT => k x = IntegersHIT_rec P t0 f g1 g2 s r x)
-  (sec z) (((left_inverse_compatible P t0 f g1 g2 s r k p0 pf) (succ z))^ @ ap g1 ((pf z)^ @ ap f t))) t). *)
-
-
-
-(* Definition is_set_IntegersHIT
-  : forall (x : IntegersHIT) (p: x = x), p = idpath.
-  Proof.
-    intros.
-    revert p.
-    snrapply IntegersHIT_ind. *)
-
-
-(* first mapping to set*)
-(* 
-Definition uniquenessZset
-  (P: Type0)
-  (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), (g1 (f t)= t))
-  (r : forall  (t : P ), (f (g2 t)= t))
-  (k: IntegersHIT -> P)
-  (p0 : (k zero_i) = t0)
-  (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-  (pg1 : forall (z : IntegersHIT), (g1 o k) z = (k o pred1) z)
-  (pg2 : forall (z : IntegersHIT), (g2 o k) z = (k o pred2) z)
-  (l: forall (z : IntegersHIT) (t : P ) (r : P ) (p: t = r) (q: t = r), (p = q))
-  : forall (z : IntegersHIT), k z = (IntegersHIT_rec P t0 f g1 g2 s r) z.
-Proof.
-  snrapply IntegersHIT_ind.
-  -
-    simpl.
-    exact p0.
-  -
-    simpl.
-    intros.
-    apply (ap f) in X.
-    exact (((pf z)^) @ X).
-  -
-    simpl.
-    intros.
-    apply (ap g1) in X.
-    exact (((pg1 z)^) @ X).
-  - 
-    simpl.
-    intros.
-    apply (ap g2) in X.
-    exact (((pg2 z)^) @ X).
-  -
-    simpl.
-    intros.
-    exact (l z (k z)  (IntegersHIT_rec P t0 f g1 g2 s r z) (transport (fun x : IntegersHIT => k x = IntegersHIT_rec P t0 f g1 g2 s r x)
-(sec z) ((pg1 (succ z))^ @ ap g1 ((pf z)^ @ ap f t))) t).
-  -
-    simpl. 
-    intros.
-    exact (l z (k z) (IntegersHIT_rec P t0 f g1 g2 s r z) (transport (fun x : IntegersHIT => k x = IntegersHIT_rec P t0 f g1 g2 s r x)
-(ret z) ((pf (pred2 z))^ @ ap f ((pg2 z)^ @ ap g2 t))) t).
-Defined. *)
-
-
-(* 
-    exact (l z _ _ (transport_const (sec z) ((pg1 (succ z))^ @ ap g1 ((pf z)^ @ ap f t))) t).
-    exact (fun z t => l z _ _ (transport_const (sec z) ((pg1 (succ z))^ @ ap g1 ((pf z)^ @ ap f t))) t).
-    exact (fun z t => (transport_const (sec z) (l z _ _ (ap (sec z) t) (((pg1 (succ z))^ @ ap g1 ((pf z)^ @ ap f t)))))).
-
-    exact (l z (k z) (IntegersHIT_rec P t0 f g1 g2 s r z) (t) (transport_const (sec z)  ((pg1 (succ z))^ @ ap g1 ((pf z)^ @ ap f t)))).
-
- *)
-
-
-(* Definition uniquenessZ
-  (P: Type@{k})
-  (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), (g1 (f t)= t))
-  (r : forall  (t : P ), (f (g2 t)= t))
-  (k: IntegersHIT -> P)
-  (p0 : (k zero_i) = t0)
-  (pf : forall (z : IntegersHIT), (f o k) z = (k o succ) z)
-  (pg1 : forall (z : IntegersHIT), (g1 o k) z = (k o pred1) z)
-  (pg2 : forall (z : IntegersHIT), (g2 o k) z = (k o pred2) z)
-  : forall (z : IntegersHIT), k z = (IntegersHIT_rec P t0 f g1 g2 s r) z.
-Proof.
-  snrapply IntegersHIT_ind.
-  -
-    simpl.
-    exact p0.
-  -
-    simpl.
-    intros.
-    apply (ap f) in X.
-    exact (((pf z)^) @ X).
-  -
-    simpl.
-    intros.
-    apply (ap g1) in X.
-    exact (((pg1 z)^) @ X).
-  - 
-    simpl.
-    intros.
-    apply (ap g2) in X.
-    exact (((pg2 z)^) @ X).
-  -
-    simpl.
-    intros.
-     
-
-  
-
-
-Record pr_Bi (A B A' B' : Type) 
-(a: A -> A') (b: B -> B') (e: A -> B) (BIe : (BiInv e)) (e': A' -> B') (BIe' : (BiInv e'))  := {
-  p_e : forall (x: A), e'(a x) = b(e x);  
-  p_g : forall (y: B), (proj1 (fst BIe')) (b y)= a ((proj1 (fst BIe)) y);
-  p_h : forall (y: B), (proj1 (snd BIe')) (b y) = a ((proj1 (snd BIe)) y)
-  (* p_s : forall (x: A),  ((proj2 ((fst BIe'))) (a x) = (ap (proj1 (fst BIe')) (p_e x)) @  (p_g (e x)) @ (ap a ((proj1 (fst BIe) x))))  *)
-}.  *)
-
-
-(* 
-
-
-Context (y : IntegersHIT).
-
-(* Compute int_HIT_add zero_i y.
-
-Compute int_HIT_add (succ zero_i) y. *) *)
-
-
-
-(* 
-Definition int_HIT_add_commutative
-  {x y: IntegersHIT}
-  : (int_HIT_add x y) = (int_HIT_add y x).
-Proof.
-  revert x.
-  snrapply IntegersHIT_ind; cbn beta.
-  -
-      *)
-
-(* 
-  snrapply (IntegersHIT_ind  *)
-
-
-(* 
-
-
-Compute (IntITtoIntHIT o IntHITtoIntIT) zero_i.
-
-Compute (IntITtoIntHIT o IntHITtoIntIT) (succ zero_i).
-
-Compute (IntITtoIntHIT o IntHITtoIntIT) (pred2 zero_i).
-
-Compute (IntITtoIntHIT o IntHITtoIntIT) (pred1 zero_i).
-
-Compute (IntITtoIntHIT o IntHITtoIntIT) (succ (pred2 (pred1 (succ zero_i)))).
-
-
-Compute (succ ((IntITtoIntHIT o IntHITtoIntIT) (y))).
-
-Compute (succ ((IntITtoIntHIT o IntHITtoIntIT) (succ y))).
-
-
-Compute (((IntITtoIntHIT o IntHITtoIntIT) (succ y))).
-
-
-Compute (((IntITtoIntHIT o IntHITtoIntIT) (succ ((IntITtoIntHIT o IntHITtoIntIT) ( succ y))))).
-
-Context (z : Int).
-
-Compute (IntITtoIntHIT z).
-
-Compute (IntHITtoIntIT (succ y)).
-
-
-
-(* pred1 = pred2*)
-
-
-Definition suc_same
-  (z: IntegersHIT)
-  : succ ((IntITtoIntHIT o IntHITtoIntIT) z) = succ z.
-Proof.
-  revert z.
-  snrapply IntegersHIT_ind ; cbn beta.
-  -
-    simpl.
-    reflexivity.
-  -
-    simpl.
-    intros.
-    apply (ap succ) in X.
-    simpl in X.
-    (* reflexivity. *)
-Abort.
-
-Definition rinv
- (z : IntegersHIT )
- : ((IntITtoIntHIT o IntHITtoIntIT) z) = z.
-Proof.
-  revert z.
-  snrapply IntegersHIT_ind ; cbn beta.
-  -
-    simpl.
-    reflexivity.
-  -
-    simpl.
-    intros z H.
-    apply (ap succ) in H.
-    simpl in H.
-  -
-
-    
-
-    
-
- *)
-
-
-(* Fixpoint IntITtoIntHIT 
-  (z : Int)
-  : IntegersHIT
-  := match z  with
-  | zero => zero_i
-  | negS 0 => (pred1 zero_i)
-  | negS (S n) => (pred1 (IntITtoIntHIT (negS n)))
-  | posS 0 => (succ zero_i)
-  | posS (S n) => (succ (IntITtoIntHIT (posS n)))
-  end. *)
-
-    (* | negS (S n) => (pred1 (IntITtoIntHIT (negS n))) *)
-
-    (* | posS (S n) => (succ (IntITtoIntHIT (posS n))) *)
-
-
-  (* apply IntegersHIT_rec Int 0 
-   *)
-
-
-  
-
-  (*1: exact (fun _ => f). *)
-(* Abort. *)
-
-(* Definition IntegersHIT_rec *)
-
-
-(* 
-Definition IntegersHIT_rec {P} (c : A -> P) (g : forall a b, R a b -> c a = c b)
-  : GraphQuotient R -> P.
-Proof.
-  srapply GraphQuotient_ind.
-  1: exact c.
-  intros a b s.
-  refine (transport_const _ _ @ g a b s).
-Defined. *)
-
-
-
-
 
