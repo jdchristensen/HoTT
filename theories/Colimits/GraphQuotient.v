@@ -79,19 +79,20 @@ Section Descent.
 
   Context `{Univalence}.
 
-  (** Descent data over [A] and [R] is an "equifibrant" or "cartesian" type family [gqd_fam : A -> Type]. This means that if [a b : A] are related by [r : R a b], then the fibers [gqd_fam a] and [gqd_fam b] are equivalent, witnessed by [gqd_e]. *)
+  (** Descent data over a graph [A] and [R] is an "equifibrant" or "cartesian" type family [gqd_fam : A -> Type]. This means that if [a b : A] are related by [r : R a b], then the fibers [gqd_fam a] and [gqd_fam b] are equivalent, witnessed by [gqd_e]. *)
   Record gqDescent {A : Type} (R : A -> A -> Type) := {
     gqd_fam : A -> Type;
     gqd_e {a b : A} : R a b -> gqd_fam a <~> gqd_fam b
   }.
 
+  Global Arguments Build_gqDescent {A R} gqd_fam gqd_e.
   Global Arguments gqd_fam {A R} Pe a : rename.
   Global Arguments gqd_e {A R} Pe {a b} r : rename.
 
-  (** Let [A] be a graph, with edges indexed by [R].  *)
+  (** Let [A] and [R] be a graph.  *)
   Context {A : Type} {R : A -> A -> Type}.
 
-  (** Descent data defines a type family over [GraphQuotient R]. *)
+  (** Descent data decends to a type family over [GraphQuotient R]. *)
   Definition Dgqd (Pe : gqDescent R)
     : GraphQuotient R -> Type.
   Proof.
@@ -109,17 +110,18 @@ Section Descent.
     nrapply GraphQuotient_rec_beta_gqglue.
   Defined.
 
-  (** Dependent descent data over descent data [Pe : gqDescent R] over [A] and [R] consists of a type family [gqdd_fam : forall a : A, gqd_fam Pe a -> Type] together with coherences [gqdd_e r pa : gqdd_fam a pa <~> gqdd_fam b (gqd_e Pe r pa)]. *)
+  (** Dependent descent data over descent data [Pe : gqDescent R] consists of a type family [gqdd_fam : forall a : A, gqd_fam Pe a -> Type] together with coherences [gqdd_e r pa]. *)
   Record gqDepDescent (Pe : gqDescent R) := {
     gqdd_fam (a : A) : gqd_fam Pe a -> Type;
     gqdd_e {a b : A} (r :  R a b) (pa : gqd_fam Pe a)
       : gqdd_fam a pa <~> gqdd_fam b (gqd_e Pe r pa)
   }.
 
+  Global Arguments Build_gqDepDescent {Pe} gqdd_fam gqdd_e.
   Global Arguments gqdd_fam {Pe} Qe a pa : rename.
   Global Arguments gqdd_e {Pe} Qe {a b} r pa : rename.
 
-  (** A dependent type family over [Dgqd Pe], where [Pe] is descent data, induces dependent descent data over [Pe]. *)
+  (** A dependent type family over [Dgqd Pe] induces dependent descent data over [Pe]. *)
   Definition gqdepdescent_fam {Pe : gqDescent R}
     (Q : forall x : GraphQuotient R, (Dgqd Pe) x -> Type)
     : gqDepDescent Pe.
@@ -139,10 +141,11 @@ Section Descent.
       : gqdd_e Qe r pa (gqds_sect a pa) = gqds_sect b (gqd_e Pe r pa)
   }.
 
+  Global Arguments Build_gqDescentSection {Pe Qe} gqds_sect gqds_e.
   Global Arguments gqds_sect {Pe Qe} f a pa : rename.
   Global Arguments gqds_e {Pe Qe} f {a b} r pa : rename.
 
-  (** Transporting [gqds_sect f a] over [Q] along [gqglue r] is evaluation at the other endpoint [b] of the edge [r]. *)
+  (** Transporting [gqds_sect f a] over [Q] along [gqglue r] is [gqds_sect f b]. *)
   Definition transport_gqds_gqglue {Pe : gqDescent R}
     {Q : forall x : GraphQuotient R, (Dgqd Pe) x -> Type}
     (f : gqDescentSection (gqdepdescent_fam Q))
@@ -157,7 +160,7 @@ Section Descent.
     exact (gqds_e f r pa).
   Defined.
 
-  (** A dependent descent section induces a genuine section on the total space [Dgqd Pe]. *)
+  (** A dependent descent section induces a genuine section on the total space of [Dgqd Pe]. *)
   Definition gqdescent_ind {Pe : gqDescent R}
     {Q : forall x : GraphQuotient R, (Dgqd Pe) x -> Type}
     (f : gqDescentSection (gqdepdescent_fam Q))
@@ -179,10 +182,11 @@ Section Descent.
       : gqdcs_sect a pa = gqdcs_sect b (gqd_e Pe r pa)
   }.
 
+  Global Arguments Build_gqDescentConstSection {Pe Q} gqdcs_sect gqdcs_e.
   Global Arguments gqdcs_sect {Pe Q} f a pa : rename.
   Global Arguments gqdcs_e {Pe Q} f {a b} r pa : rename.
 
-  (** Transporting [gqdcs_sect f a] over [Q] along [gqglue r] is evaluation at the other endpoint [b] of the edge [r]. *)
+  (** Transporting [gqdcs_sect f a] over [Q] along [gqglue r] is [gdcs_sect f b]. *)
   Definition transport_gqdcs_gqglue {Pe : gqDescent R} {Q : Type}
     (f : gqDescentConstSection Pe Q)
     {a b : A} (r : R a b)
@@ -196,7 +200,7 @@ Section Descent.
     exact (gqdcs_e f r pa).
   Defined.
 
-  (** The data for a section of a constant family induces a section over the total space [Dgqd Pe]. *)
+  (** The data for a section of a constant family induces a section over the total space of [Dgqd Pe]. *)
   Definition gqdescent_rec {Pe : gqDescent R} {Q : Type}
     (f : gqDescentConstSection Pe Q)
     : forall (x : GraphQuotient R), Dgqd Pe x -> Q.
@@ -238,7 +242,7 @@ End Descent.
 
 (** ** The flattening lemma *)
 
-(** We saw above that given descent data [Pe] over a graph [A], [R] we obtained a type family [Dgqd Pe] over the graph quotient.  The flattening lemma describes the total space [sig (Dgqd Pe)] of this type family as a graph quotient of [sig (gqd_fam Pe)] by a certain relation.  This follows from the work above, which shows that [sig (Dgqd Pe)] has the same universal property as this graph quotient. *)
+(** We saw above that given descent data [Pe] over a graph [A] and [R] we obtained a type family [Dgqd Pe] over the graph quotient. The flattening lemma describes the total space [sig (Dgqd Pe)] of this type family as a graph quotient of [sig (gqd_fam Pe)] by a certain relation.  This follows from the work above, which shows that [sig (Dgqd Pe)] has the same universal property as this graph quotient. *)
 
 Section Flattening.
 
@@ -260,10 +264,8 @@ Section Flattening.
   Defined.
 
   (** Now that we've shown that [Dgqd Pe] acts like a [GraphQuotient] of [sig (gqd_fam Pe)] by an appropriate relation, we can use this to prove the flattening lemma. The maps back and forth are very easy so this could almost be a formal consequence of the induction principle. *)
-  Definition unflatten_gqd : Type
-    := GraphQuotient (fun a b => {r : R a.1 b.1 & gqd_e Pe r a.2 = b.2}).
-
-  Lemma equiv_gqd_flatten : sig (Dgqd Pe) <~> unflatten_gqd.
+  Lemma equiv_gqd_flatten : sig (Dgqd Pe) <~>
+    GraphQuotient (fun a b => {r : R a.1 b.1 & gqd_e Pe r a.2 = b.2}).
   Proof.
     snrapply equiv_adjointify.
     - snrapply sig_rec.
@@ -305,7 +307,7 @@ End Flattening.
 
 Section Paths.
 
-  (** Let [A] and [R] be a graph, with a distinguished point [a0 : A]. Let [Pe : gqDescent R] be descent data over [A], [R] with a distinguished point [p0 : gqd_fam Pe a0]. Assume that any dependent descent data [Qe : gqDepDescent Pe] with a distinguished point [q0 : gqdd_fam Qe a0 p0] has a section that respects the distinguished points. This is the Kraus-von Raumer induction principle. *)
+  (** Let [A] and [R] be a graph, with a distinguished point [a0 : A]. Let [Pe : gqDescent R] be descent data over [A] and [R] with a distinguished point [p0 : gqd_fam Pe a0]. Assume that any dependent descent data [Qe : gqDepDescent Pe] with a distinguished point [q0 : gqdd_fam Qe a0 p0] has a section that respects the distinguished points. This is the Kraus-von Raumer induction principle. *)
   Context `{Univalence} {A : Type} {R : A -> A -> Type} (a0 : A)
     (Pe : gqDescent R) (p0 : gqd_fam Pe a0)
     (based_gqdescent_ind : forall (Qe : gqDepDescent Pe) (q0 : gqdd_fam Qe a0 p0),

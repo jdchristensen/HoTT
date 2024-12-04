@@ -33,7 +33,7 @@ Definition pequiv_hopf_total_join `{Univalence} (X : pType)
 Proof.
   snrapply Build_pEquiv'.
   { refine (_ oE equiv_pod_flatten (f := const_tt X) (g := const_tt X)
-    (Build_poDescent _ _ _ (const_tt X) (const_tt X)
+    (@Build_poDescent _ _ _ (const_tt X) (const_tt X)
     (Unit_ind (pointed_type X)) (Unit_ind (pointed_type X))
     (fun x => Build_Equiv _ _ (x *.) (H1 x)))).
     snrapply equiv_pushout.

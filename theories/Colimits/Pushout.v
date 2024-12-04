@@ -541,7 +541,7 @@ Defined.
 
 (** ** Descent *)
 
-(** We study "equifibrant" type families over a span [f : A -> B], [g : A -> C]. By univalence, the descent property tells us that these type families correspond to type families over the pushout. We obtain induction and recursion principles for such type families, but only with a partial computation rule for the induction principle. *)
+(** We study "equifibrant" type families over a span [f : A -> B] and [g : A -> C]. By univalence, the descent property tells us that these type families correspond to type families over the pushout. We obtain induction and recursion principles for such type families, but only with a partial computation rule for the induction principle. *)
 
 Section Descent.
 
@@ -554,6 +554,7 @@ Section Descent.
     pod_e (a : A) : pod_faml (f a) <~> pod_famr (g a)
   }.
 
+  Global Arguments Build_poDescent {A B C f g} pod_faml pod_famr pod_e.
   Global Arguments pod_faml {A B C f g} Pe b : rename.
   Global Arguments pod_famr {A B C f g} Pe c : rename.
   Global Arguments pod_e {A B C f g} Pe a : rename.
@@ -561,7 +562,7 @@ Section Descent.
   (** Let [A], [B], and [C] be types, with a morphisms [f : A -> B] and [g : A -> C].  *)
   Context {A B C : Type} {f : A -> B} {g : A -> C}.
 
-  (** Descent data defines a type family over [Pushout f g]. *)
+  (** Descent data descends to a type family over [Pushout f g]. *)
   Definition Dpod (Pe : poDescent f g)
     : Pushout f g -> Type.
   Proof.
@@ -579,7 +580,7 @@ Section Descent.
     nrapply Pushout_rec_beta_pglue.
   Defined.
 
-  (** Dependent descent data over descent data [Pe : poDescent f g] over a span [f : A -> B] and [g : A -> C] consists of a type families [podd_faml : forall b : B, pod_faml Pe b -> Type] and [podd_famr : forall c : C, pod_famr Pe c -> Type] together with coherences [podd_e a pf : podd_faml (f a) pf <~> podd_famr (g a) (pod_e Pe a pf)]. *)
+  (** Dependent descent data over descent data [Pe : poDescent f g] consists of a type families [podd_faml : forall b : B, pod_faml Pe b -> Type] and [podd_famr : forall c : C, pod_famr Pe c -> Type] together with coherences [podd_e a pf]. *)
   Record poDepDescent (Pe : poDescent f g) := {
     podd_faml (b : B) : pod_faml Pe b -> Type;
     podd_famr (c : C) : pod_famr Pe c -> Type;
@@ -587,11 +588,12 @@ Section Descent.
       : podd_faml (f a) pf <~> podd_famr (g a) (pod_e Pe a pf)
   }.
 
+  Global Arguments Build_poDepDescent {Pe} podd_faml podd_famr podd_e.
   Global Arguments podd_faml {Pe} Qe b pb : rename.
   Global Arguments podd_famr {Pe} Qe c pc : rename.
   Global Arguments podd_e {Pe} Qe a pf : rename.
 
-  (** A dependent type family over [Dpod Pe], where [Pe] is descent data, induces dependent descent data over [Pe]. *)
+  (** A dependent type family over [Dpod Pe] induces dependent descent data over [Pe]. *)
   Definition podepdescent_fam {Pe : poDescent f g}
     (Q : forall x : Pushout f g, (Dpod Pe) x -> Type)
     : poDepDescent Pe.
@@ -614,6 +616,7 @@ Section Descent.
       : podd_e Qe a pf (pods_sectl (f a) pf) = pods_sectr (g a) (pod_e Pe a pf)
   }.
 
+  Global Arguments Build_poDescentSection {Pe Qe} pods_sectl pods_sectr pods_e.
   Global Arguments pods_sectl {Pe Qe} s b pb : rename.
   Global Arguments pods_sectr {Pe Qe} s c pc : rename.
   Global Arguments pods_e {Pe Qe} s a pf : rename.
@@ -656,6 +659,7 @@ Section Descent.
       : podcs_sectl (f a) pf = podcs_sectr (g a) (pod_e Pe a pf)
   }.
 
+  Global Arguments Build_poDescentConstSection {Pe Q} podcs_sectl podcs_sectr podcs_e.
   Global Arguments podcs_sectl {Pe Q} s b pb : rename.
   Global Arguments podcs_sectr {Pe Q} s c pc : rename.
   Global Arguments podcs_e {Pe Q} s a pf : rename.
@@ -723,7 +727,7 @@ Section Flattening.
 
   Context `{Univalence} {A B C : Type} {f : A -> B} {g : A -> C} (Pe : poDescent f g).
 
-  (** We mimic the constructors of [Coeq] for the total space. Here is the point constructor, in curried form. *)
+  (** We mimic the constructors of [Pushout] for the total space. Here are the point constructors, in curried form. *)
   Definition flatten_podl {b : B} (pb : pod_faml Pe b) : sig (Dpod Pe)
     := (pushl b; pb).
 
@@ -789,7 +793,7 @@ End Flattening.
 
 Section Paths.
 
-  (** Let [f : A -> B] and [g : A -> C] be a span, with a distinguished point [b0 : B]. There is a symmetric case where we let the distinguished point be in [C], but this can be handled by switching the role of [B] and [C]. Let [Pe : poDescent f g] be descent data over [f g] with a distinguished point [p0 : pod_faml Pe b0]. Assume that any dependent descent data [Qe : poDepDescent Pe] with a distinguished point [q0 : podd_faml Qe b0 p0] has a section that respects the distinguished points. This is the Kraus-von Raumer induction principle. *)
+  (** Let [f : A -> B] and [g : A -> C] be a span, with a distinguished point [b0 : B]. We could let the distinguished point be in [C], but this is symmetric by exchanging the roles of [f] and [g]. Let [Pe : poDescent f g] be descent data over [f g] with a distinguished point [p0 : pod_faml Pe b0]. Assume that any dependent descent data [Qe : poDepDescent Pe] with a distinguished point [q0 : podd_faml Qe b0 p0] has a section that respects the distinguished points. This is the Kraus-von Raumer induction principle. *)
   Context `{Univalence} {A B C : Type} {f : A -> B} {g : A -> C} (b0 : B)
     (Pe : poDescent f g) (p0 : pod_faml Pe b0)
     (based_podescent_ind : forall (Qe : poDepDescent Pe) (q0 : podd_faml Qe b0 p0),
@@ -809,7 +813,7 @@ Section Paths.
       nrapply (based_podescent_ind_beta (podepdescent_fam Q)).
   Defined.
 
-  (** It follows that the fibers [Dpod Pe x] are equivalent to path spaces [(coeq a0) = x]. *)
+  (** It follows that the fibers [Dpod Pe x] are equivalent to path spaces [(pushl a0) = x]. *)
   Definition Dpod_equiv_path (x : Pushout f g)
     : (pushl b0) = x <~> Dpod Pe x
     := @equiv_transport_identitysystem _ (pushl b0) (Dpod Pe) p0 _ x.

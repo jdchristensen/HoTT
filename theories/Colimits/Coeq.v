@@ -472,13 +472,14 @@ Section Descent.
     cd_e (b : B) : cd_fam (f b) <~> cd_fam (g b)
   }.
 
+  Global Arguments Build_cDescent {A B f g} cd_fam cd_e.
   Global Arguments cd_fam {A B f g} Pe a : rename.
   Global Arguments cd_e {A B f g} Pe b : rename.
 
   (** Let [A] and [B] be types, with a parallell pair [f g : B -> A].  *)
   Context {A B : Type} {f g : B -> A}.
 
-  (** Descent data defines a type family over [Coeq f g]. *)
+  (** Descent data decends to a type family over [Coeq f g]. *)
   Definition Dcd (Pe : cDescent f g)
     : Coeq f g -> Type.
   Proof.
@@ -496,17 +497,18 @@ Section Descent.
     nrapply Coeq_rec_beta_cglue.
   Defined.
 
-  (** Dependent descent data over descent data [Pe : cDescent f g] over a parallell pair [f g : B -> A] consists of a type family [cdd_fam : forall a : A, cd_fam Pe a -> Type] together with coherences [cdd_e b pf : cdd_fam (f b) pf <~> cdd_fam (g b) (cd_e Pe b pf)]. *)
+  (** Dependent descent data over descent data [Pe : cDescent f g] consists of a type family [cdd_fam : forall a : A, cd_fam Pe a -> Type] together with coherences [cdd_e b pf]. *)
   Record cDepDescent (Pe : cDescent f g) := {
     cdd_fam (a : A) : cd_fam Pe a -> Type;
     cdd_e (b : B) (pf : cd_fam Pe (f b))
       : cdd_fam (f b) pf <~> cdd_fam (g b) (cd_e Pe b pf)
   }.
 
+  Global Arguments Build_cDepDescent {Pe} cdd_fam cdd_e.
   Global Arguments cdd_fam {Pe} Qe a pa : rename.
   Global Arguments cdd_e {Pe} Qe b pf : rename.
 
-  (** A dependent type family over [Dcd Pe], where [Pe] is descent data, induces dependent descent data over [Pe]. *)
+  (** A dependent type family over [Dcd Pe] induces dependent descent data over [Pe]. *)
   Definition cdepdescent_fam {Pe : cDescent f g}
     (Q : forall x : Coeq f g, (Dcd Pe) x -> Type)
     : cDepDescent Pe.
@@ -526,10 +528,11 @@ Section Descent.
       : cdd_e Qe b pf (cds_sect (f b) pf) = cds_sect (g b) (cd_e Pe b pf)
   }.
 
+  Global Arguments Build_cDescentSection {Pe Qe} cds_sect cds_e.
   Global Arguments cds_sect {Pe Qe} s a pa : rename.
   Global Arguments cds_e {Pe Qe} s b pf : rename.
 
-  (** Transporting [cds_sect s (f b)] over [Q] along [cglue b] is evaluation at the other endpoint [g b]. *)
+  (** Transporting [cds_sect s (f b)] over [Q] along [cglue b] is [cds_sect s (g b)]. *)
   Definition transport_cds_cglue {Pe : cDescent f g}
     {Q : forall (x : Coeq f g), (Dcd Pe) x -> Type}
     (s : cDescentSection (cdepdescent_fam Q))
@@ -566,10 +569,11 @@ Section Descent.
       : cdcs_sect (f b) pf = cdcs_sect (g b) (cd_e Pe b pf)
   }.
 
+  Global Arguments Build_cDescentConstSection {Pe Q} cdcs_sect cdcs_e.
   Global Arguments cdcs_sect {Pe Q} s a pa : rename.
   Global Arguments cdcs_e {Pe Q} s b pf : rename.
 
-  (** Transporting [cdcs_sect s (f b)] over [Q] along [cglue b] is evaluation at the other endpoint [g b]. *)
+  (** Transporting [cdcs_sect s (f b)] over [Q] along [cglue b] is [cdcs_sect s (g b)]. *)
   Definition transport_cdcs_cglue {Pe : cDescent f g} {Q : Type}
     (s : cDescentConstSection Pe Q)
     (b : B)
@@ -583,7 +587,7 @@ Section Descent.
     exact (cdcs_e s b pf).
   Defined.
 
-  (** The data for a section of a constant family induces a section over the total space [Dcd Pe]. *)
+  (** The data for a section of a constant family induces a section over the total space of [Dcd Pe]. *)
   Definition cdescent_rec {Pe : cDescent f g} {Q : Type}
     (s : cDescentConstSection Pe Q)
     : forall (x : Coeq f g), Dcd Pe x -> Q.
