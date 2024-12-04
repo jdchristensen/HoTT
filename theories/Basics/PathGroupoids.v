@@ -994,13 +994,30 @@ Definition transport2_const {A B : Type} {x1 x2 : A} {p q : x1 = x2}
   : transport_const p y = transport2 (fun _ => B) r y @ transport_const q y
   := match r with idpath => (concat_1p _)^ end.
 
-Definition transportD_const {A B : Type} (C : A -> B -> Type) {x1 x2 : A}
+(** We need a better naming scheme for transportD_const, as there are several places where you can have a constant type family. *)
+Definition transportD_const' {A B : Type} (C : A -> B -> Type) {x1 x2 : A}
   (p : x1 = x2) {y : B} (z : C x1 y)
   : transportD (fun x => B) C p y z
     = transport (fun x => C x (transport (fun _ => B) p y)) p
       (transport (C x1) (transport_const p y)^ z).
 Proof.
   by destruct p.
+Defined.
+
+Definition transportD_const {A : Type} (B : A -> Type) (C : Type)
+  {x1 x2 : A} (p : x1 = x2) (y : B x1) (z : C)
+  : transportD B (fun _ _ => C) p y z = z.
+Proof.
+  by destruct p.
+Defined.
+
+Definition transportDD_const {A : Type} (B : A -> Type) (C : Type)
+  {a1 a2 : A} (pA : a1 = a2)
+  {b1 : B a1} {b2 : B a2} (pB : transport B pA b1 = b2)
+  (c1 : C)
+  : transportDD B (fun _ _ => C) pA pB c1 = c1.
+Proof.
+  by destruct pB, pA.
 Defined.
 
 (** Transporting in a pulled back fibration. *)
