@@ -1,7 +1,6 @@
 (** * Kan extensions of type families *)
 
-(** ** Part of the formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo *)
-(** Many proofs guided by Martin Escardo's original Agda formalization of this paper which can be found at: https://www.cs.bham.ac.uk/~mhe/TypeTopology/InjectiveTypes.Article.html. *)
+(** This is part of the formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo.  Many proofs are guided by Martin Escardo's original Agda formalization of this paper which can be found at: https://www.cs.bham.ac.uk/~mhe/TypeTopology/InjectiveTypes.Article.html. *)
 
 Require Import Basics.
 Require Import Types.Sigma Types.Unit Types.Forall Types.Empty Types.Universe Types.Equiv.
@@ -9,23 +8,26 @@ Require Import HFiber.
 Require Import Truncations.Core.
 Require Import ReflectiveSubuniverse.
 
+(** We are careful about universe variables for these first few definitions because they are used in the rest of the paper.  We use [u], [v], [w], etc. as our typical universe variables. Our convention for the max of two universes [u] and [v] is [uv]. *)
 
-(** Being careful about universe structure for these first few definitions because they are used in the rest of the paper. *)
 Section UniverseStructure.
   Universes u v w uv uw vw uvw.
   Constraint u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw,
     uv <= uvw, uw <= uvw, vw <= uvw.
 
   Definition LeftKanTypeFamily@{} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
-    := (fun y => sig@{uv w} (fun w : (hfiber j y) => f (w.1))).
+    := fun y => sig@{uv w} (fun (w : hfiber j y) => f (w.1)).
 
   Definition RightKanTypeFamily@{} {X : Type@{u}} {Y : Type@{v}} (f : X -> Type@{w}) (j : X -> Y)
-    := (fun y => forall w : (hfiber j y), f (w.1)).
+    := fun y => forall (w : hfiber j y), f (w.1).
 
-  (** If [j] is an embedding, then [f <| j] and [f |> j] are extensions in the following sense: [(f <| j o j)x <~> fx <~> (f |> j o j)x]. *)
+  (** Below we will introduce notations [f <| j] and [f |> j] for these Kan extensions. *)
+
+  (* If [j] is an embedding, then [f <| j] and [f |> j] are extensions in the following sense: [(f <| j o j) x <~> f x <~> (f |> j o j) x].  So, with univalence, we get that they are extensions. *)
+
   Definition isext_leftkantypefamily@{} {X : Type@{u}} {Y : Type@{v}}
     (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
-    : Equiv@{uvw w} ((LeftKanTypeFamily@{} f j) (j x)) (f x).
+    : Equiv@{uvw w} (LeftKanTypeFamily@{} f j (j x)) (f x).
   Proof.
     transparent assert (C : (Contr (hfiber j (j x)))).
     - srapply contr_inhabited_hprop. exact (x; idpath (j x)).
@@ -34,7 +36,7 @@ Section UniverseStructure.
 
   Definition isext_rightkantypefamily@{} `{Funext} {X : Type@{u}} {Y : Type@{v}}
     (f : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
-    : Equiv@{uvw w} ((RightKanTypeFamily@{} f j) (j x)) (f x).
+    : Equiv@{uvw w} (RightKanTypeFamily@{} f j (j x)) (f x).
   Proof.
     transparent assert (C : (Contr (hfiber j (j x)))).
     - srapply contr_inhabited_hprop. exact (x; idpath (j x)).
@@ -46,14 +48,14 @@ End UniverseStructure.
 Notation "f <| j" := (LeftKanTypeFamily f j) (at level 40).
 Notation "f |> j" := (RightKanTypeFamily f j) (at level 40).
 
-(** For [y : Y] not in the image of [j], [(f <| j)y] is empty and [(f |> j)y] is. *)
+(** For [y : Y] not in the image of [j], [(f <| j) y] is empty and [(f |> j) y] is contractible. *)
 Definition isempty_leftkantypefamily {X : Type@{u}} {Y : Type@{v}}
-  (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
+  (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x <> y)
   : (f <| j) y -> Empty
   := fun '((x; p); _) => ynin x p.
 
 Definition contr_rightkantypefamily `{Funext} {X : Type@{u}} {Y : Type@{v}}
-  (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x = y -> Empty)
+  (f : X -> Type@{w}) (j : X -> Y) (y : Y) (ynin : forall x : X, j x <> y)
   : Contr ((f |> j) y).
 Proof.
   snrapply contr_forall.
@@ -81,28 +83,27 @@ Proof.
   - apply (fun h x => h (j x) (x; idpath)).
   - intros h. apply path_forall. intros y. apply path_forall.
     intros [x []]; cbn. reflexivity.
-  - intros g. apply path_forall. intros y. reflexivity.
+  - intros g. apply path_forall. reflexivity.
 Defined.
 (** Note that these equivalences tell us that [{ y : Y & (f <| j) y}] and [forall y : Y, (f |> j) y] can be thought of as just different notation for the sum and product of a type family. *)
 
-(** Here we are taking the perspective of a type family [f : X -> Type] being a sort of oo-presheaf, considering the interpretation of [X] as an oo-groupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets. *)
-(** It is easy to see that a type family [f] is functorial if we define its action on paths with [transport]. Functoriality then reduces to known lemmas about the [transport] function. *)
+(** Here we are taking the perspective that a type family [f : X -> Type] is a sort of oo-presheaf, considering the interpretation of [X] as an oo-groupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets. It is easy to see that a type family [f] is functorial if we define its action on paths with [transport]. Functoriality then reduces to known lemmas about the [transport] function. *)
 
-(** We can now define the type of transformations between two type families. *)
-Definition ooPresheafTransforms {X : Type@{u}} (f : X -> Type@{w}) (f' : X -> Type@{w'})
-  := forall x, (f x) -> (f' x).
+(** With this in mind, we define the type of transformations between two type families. *)
+Definition ooPresheafTransforms {X : Type@{u}} (f : X -> Type@{w}) (g : X -> Type@{w'})
+  := forall x, f x -> g x.
 
 Notation "f =< g" := (ooPresheafTransforms f g) (at level 60).
 
-(** It is easy to see that these transformations are automatically natural by their definition. *)
+(** [concat_Ap] says that these transformations are automatically natural. *)
 
 Definition comp_transformation {X} {f g h : X -> Type} (b : g =< h) (a : f =< g)
   : f =< h
-  := fun x A => (b x) (a x A).
+  := fun x => (b x) o (a x).
 
 Definition whisker_transformation {X Y} {f g : Y -> Type} (a : f =< g) (j : X -> Y)
   : f o j =< g o j
-  := fun x A => (a (j x) A).
+  := a o j.
 
 (** If [j] is an embedding then [(f <| j) =< (f |> j)]. *)
 Definition transform_leftkantypefam_rightkantypefam {X Y : Type}
@@ -117,21 +118,21 @@ Defined.
 (** Under this interpretation, we can think of the maps [f <| j] and [f |> j] as left and right Kan extensions of [f : X -> Type] along [j : X -> Y]. To see this we can construct the (co)unit transformations of our extensions. *)
 Definition unit_leftkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
   : f =< ((f <| j) o j)
-  := (fun x A => ((x; idpath); A)).
+  := fun x A => ((x; idpath); A).
   
 Definition counit_rightkantypefam {X Y : Type} (f : X -> Type) (j : X -> Y)
-  : (f |> j o j) =< f
-  := (fun x A => A (x; idpath)).
+  : ((f |> j) o j) =< f
+  := fun x A => A (x; idpath).
 
 Definition counit_leftkantypefam {X Y : Type} (g : Y -> Type) (j : X -> Y)
-  : (g o j) <| j =< g.
+  : ((g o j) <| j) =< g.
 Proof.
   intros y [[x p] C].
   apply (transport g p C).
 Defined.
 
 Definition unit_rightkantypefam {X Y : Type} (g : Y -> Type) (j : X -> Y)
-  : g =< (g o j) |> j.
+  : g =< ((g o j) |> j).
 Proof.
   intros y C [x p].
   apply (transport g p^ C).
@@ -203,11 +204,6 @@ Section EmbedProofLeft.
   Let M := { g : Y -> Type & forall y, IsEquiv (counit_leftkantypefam g j y) }.
 
   (** Helper functions for the proof of [isptwiseequiv_leftkancounit]. *)
-  Local Definition t : forall (f : X -> Type) (x x' : X) (u : x' = x) (p : j x' = j x) (C : f x'), (ap j u = p)
-                    -> ((x'; p); ((x'; idpath); C))
-                    = (((x; idpath); ((x'; p); C)) : sig (fun '((x; _) : hfiber j (j x)) => r (s f) x)).
-  Proof. intros f x0 x0' [] p C0 []; reflexivity. Defined.
-
   Let q : (forall x x' : X, IsEquiv (@ap X Y j x x'))
     := fun x x' : X => isequiv_ap_isembedding j x x'.
   Let pa : (forall x x' : X, (j x = j x') -> (x = x'))
@@ -221,8 +217,9 @@ Section EmbedProofLeft.
     snrapply isequiv_adjointify.
     - apply (fun '(((x; p); C) : s f y) => ((x; p); ((x; idpath); C))).
     - intros [[x []] C]. reflexivity.
-    - intros [[x []] [[x' p'] C]].
-      apply (t f x x' (pa x' x p') p' C (appa x x' p')).
+    - intros [[x []] [[x' p'] C]]; cbn.
+      pose proof (p2 := appa x x' p' : ap j (pa x' x p') = p').
+      by destruct (pa x' x p'), p2.
   Defined.
 
   Definition isequiv_isptwiseequiv_leftkancounit : IsEquiv isptwiseequiv_leftkancounit.

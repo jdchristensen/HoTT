@@ -1,7 +1,9 @@
 (** * Injective Types *)
 
 (** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo (with some extra results) *)
+
 (** Since the universe levels are important to many of the results here, we keep track of them explicitly as much as possible. Due to our inability to use the max and successor operations within proofs, we instead construct these universes and their associated posetal relations in the arguments of the functions. *)
+
 (** In universe declarations, we use [u], [v], [w], etc. as our typical universe variables. Our convention for the max of two universes [u] and [v] is [uv], and the successor of a universe [u] is [su]. Occasionally we write [T] for a top universe which is strictly larger than all other provided universes. We hope that later versions of Coq will allow us access to the max and successor operations and much of the cumbersome universe handing here can be greatly reduced. *)
 
 Require Import Basics.
