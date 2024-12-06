@@ -202,23 +202,15 @@ Section EmbedProofLeft.
   Let r := (fun R : Y -> Type => R o j).
   Let M := { R : Y -> Type & forall y, IsEquiv (counit_leftkantypefam R j y) }.
 
-  (** Helper functions for the proof of [isptwiseequiv_leftkancounit]. *)
-  Let q : (forall x x' : X, IsEquiv (@ap X Y j x x'))
-    := fun x x' : X => isequiv_ap_isembedding j x x'.
-  Let pa : (forall x x' : X, (j x = j x') -> (x = x'))
-    := fun x x' : X => (@equiv_inv _ _ _ (q x x')).
-  Let appa : (forall x x' p', ap j (pa x' x p') = p')
-    := fun x x' : X => (eisretr (@ap X Y j x' x)).
-
   Definition isptwiseequiv_leftkancounit : (X -> Type) -> M.
   Proof.
     intros P. srefine (s P; _). intros y.
     snrapply isequiv_adjointify.
     - apply (fun '(((x; p); C) : s P y) => ((x; p); ((x; idpath); C))).
     - intros [[x []] C]. reflexivity.
-    - intros [[x []] [[x' p'] C]]; cbn.
-      pose proof (p2 := appa x x' p' : ap j (pa x' x p') = p').
-      by destruct (pa x' x p'), p2.
+    - intros [[x []] [[x' p'] C]]; cbn; cbn in C, p'.
+      revert p'; apply (equiv_ind (ap j)).
+      by intros [].
   Defined.
 
   Definition isequiv_isptwiseequiv_leftkancounit : IsEquiv isptwiseequiv_leftkancounit.
