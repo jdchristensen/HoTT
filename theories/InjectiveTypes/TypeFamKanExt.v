@@ -95,19 +95,19 @@ Defined.
 Definition MapFamily {X : Type} (P : X -> Type) (R : X -> Type)
   := forall x, P x -> R x.
 
-Notation "P =< R" := (MapFamily P R) (at level 60).
+Notation "P ==> R" := (MapFamily P R) (at level 60).
 
 (** [concat_Ap] says that these transformations are automatically natural. *)
 
 (** Composition of transformations. *)
-Definition compose_mapfamily {X} {P R Q : X -> Type} (b : R =< Q) (a : P =< R)
-  : P =< Q
+Definition compose_mapfamily {X} {P R Q : X -> Type} (b : R ==> Q) (a : P ==> R)
+  : P ==> Q
   := fun x => (b x) o (a x).
 
 (** If [j] is an embedding then [(P <| j) =< (P |> j)]. *)
 Definition transform_leftkantypefam_rightkantypefam {X Y : Type}
   (P : X -> Type) (j : X -> Y) (isem : IsEmbedding j)
-  : (P <| j) =< (P |> j).
+  : (P <| j) ==> (P |> j).
 Proof.
   intros y [w' z] w.
   snrapply (transport (fun a => P a.1) _ z).
@@ -116,22 +116,22 @@ Defined.
 
 (** Under this interpretation, we can think of the maps [P <| j] and [P |> j] as left and right Kan extensions of [P : X -> Type] along [j : X -> Y]. To see this we can construct the (co)unit transformations of our extensions. *)
 Definition unit_leftkantypefam {X Y : Type} (P : X -> Type) (j : X -> Y)
-  : P =< ((P <| j) o j)
+  : P ==> ((P <| j) o j)
   := fun x A => ((x; idpath); A).
   
 Definition counit_rightkantypefam {X Y : Type} (P : X -> Type) (j : X -> Y)
-  : ((P |> j) o j) =< P
+  : ((P |> j) o j) ==> P
   := fun x A => A (x; idpath).
 
 Definition counit_leftkantypefam {X Y : Type} (R : Y -> Type) (j : X -> Y)
-  : ((R o j) <| j) =< R.
+  : ((R o j) <| j) ==> R.
 Proof.
   intros y [[x p] C].
   apply (transport R p C).
 Defined.
 
 Definition unit_rightkantypefam {X Y : Type} (R : Y -> Type) (j : X -> Y)
-  : R =< ((R o j) |> j).
+  : R ==> ((R o j) |> j).
 Proof.
   intros y C [x p].
   apply (transport R p^ C).
@@ -139,8 +139,8 @@ Defined.
 
 (** Universal property of the Kan extensions. *)
 Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
-  {P : X -> Type} {R : Y -> Type} (a : P =< R o j)
-  : { b : P <| j =< R & compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
+  {P : X -> Type} {R : Y -> Type} (a : P ==> R o j)
+  : { b : P <| j ==> R & compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. apply (p # a x A).
@@ -160,8 +160,8 @@ Proof.
 Abort.*)
 
 Definition univ_property_RightKanTypeFam `{Funext} {X Y} {j : X -> Y}
-  {P : X -> Type} {R : Y -> Type} (a : R o j =< P)
-  : { b : R =< P |> j & compose_mapfamily (counit_rightkantypefam P j) (b o j) == a}.
+  {P : X -> Type} {R : Y -> Type} (a : R o j ==> P)
+  : { b : R ==> P |> j & compose_mapfamily (counit_rightkantypefam P j) (b o j) == a}.
 Proof.
   snrefine (_; _).
   - intros y A [x p]. apply (a x (p^ # A)).
@@ -171,7 +171,7 @@ Defined.
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkantypefamily `{Funext} {X Y : Type} (P : X -> Type)
   (R : Y -> Type) (j : X -> Y)
-  : ((P <| j) =< R) <~> (P =< R o j).
+  : ((P <| j) ==> R) <~> (P ==> R o j).
 Proof.
   snrapply equiv_adjointify.
   - intros a x B. apply (a (j x) ((x; idpath); B)).
@@ -184,7 +184,7 @@ Defined.
 
 Definition rightadjoint_rightkantypefamily `{Funext} {X Y : Type} (P : X -> Type)
   (R : Y -> Type) (j : X -> Y)
-  : (R =< (P |> j)) <~> (R o j =< P).
+  : (R ==> (P |> j)) <~> (R o j ==> P).
 Proof.
   snrapply equiv_adjointify.
   - intros a x C. apply (a (j x) C (x; idpath)).
@@ -198,15 +198,13 @@ Defined.
 Section EmbedProofLeft.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
 
-  Let s := (fun P => P <| j).
-  Let r := (fun R : Y -> Type => R o j).
-  Let M := { R : Y -> Type & forall y, IsEquiv (counit_leftkantypefam R j y) }.
-
-  Definition isptwiseequiv_leftkancounit : (X -> Type) -> M.
+  (** Given a type family over [X] and an embedding [j : X -> Y], we can construct a type family over [Y] such that evey map in [counit_leftkantypefam R j] is an equivalence i.e. the counit transformation is a natural isomorphism. *)
+  Definition isptwiseequiv_leftkancounit (P : X -> Type)
+    : { R : Y -> Type & forall y, IsEquiv (counit_leftkantypefam R j y) }.
   Proof.
-    intros P. srefine (s P; _). intros y.
+    srefine (P <| j; _). intros y.
     snrapply isequiv_adjointify.
-    - apply (fun '(((x; p); C) : s P y) => ((x; p); ((x; idpath); C))).
+    - apply (fun '(((x; p); C) : (P <| j) y) => ((x; p); ((x; idpath); C))).
     - intros [[x []] C]. reflexivity.
     - intros [[x []] [[x' p'] C]]; cbn; cbn in C, p'.
       revert p'; apply (equiv_ind (ap j)).
@@ -216,10 +214,10 @@ Section EmbedProofLeft.
   Definition isequiv_isptwiseequiv_leftkancounit : IsEquiv isptwiseequiv_leftkancounit.
   Proof.
     snrapply isequiv_adjointify.
-    - intros [R e]. apply (r R).
+    - intros [R e]. apply (R o j).
     - intros [R e]. srapply path_sigma.
       * apply path_forall. intros y. 
-        apply (@path_universe_uncurried H (s (r R) y) (R y)).
+        apply (@path_universe_uncurried H (((R o j) <| j) y) (R y)).
         apply issig_equiv.
         apply (counit_leftkantypefam R j y; e y).
       * snrefine (path_ishprop _ _).
@@ -246,13 +244,10 @@ End EmbedProofLeft.
 Section EmbedProofRight.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
 
-  Let s := (fun P => P |> j).
-  Let r := (fun R : Y -> Type => R o j).
-  Let M := {R :Y -> Type & forall y, IsEquiv (unit_rightkantypefam R j y)}.
-
-  Definition isptwiseequiv_rightkanunit : (X -> Type) -> M.
+  Definition isptwiseequiv_rightkanunit (P : X -> Type)
+    : {R :Y -> Type & forall y, IsEquiv (unit_rightkantypefam R j y)}.
   Proof.
-    intros P. srefine (s P; _). intros y.
+    srefine (P |> j; _). intros y.
     snrapply isequiv_adjointify.
     - intros C [x p]. apply (C (x; p) (x; idpath)).
     - intros C. apply path_forall. intros [x p]. destruct p.
@@ -266,10 +261,10 @@ Section EmbedProofRight.
   Definition isequiv_isptwiseequiv_rightkanunit : IsEquiv isptwiseequiv_rightkanunit.
   Proof.
     snrapply isequiv_adjointify.
-    - intros [R e]. apply (r R).
+    - intros [R e]. apply (R o j).
     - intros [R e]. srapply path_sigma.
       * apply path_forall. intros y.
-        apply (@path_universe_uncurried H (s (r R) y) (R y)).
+        apply (@path_universe_uncurried H (((R o j) |> j) y) (R y)).
         symmetry. apply (Build_Equiv _ _ (unit_rightkantypefam R j y) (e y)).
       * snrefine (path_ishprop _ _).
         refine istrunc_forall.
