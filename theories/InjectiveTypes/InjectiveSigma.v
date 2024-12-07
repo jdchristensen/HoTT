@@ -76,7 +76,7 @@ Section AlgFlabUniverse.
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
     : alg_flab_map_forall P PropP A == alg_flab_map S alg_flab_Type_forall P PropP A.
   Proof.
-    intros s. apply path_forall. intros h.
+    intros s. funext h.
     srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
     intros X.
     apply univalent_transport_idequiv.
@@ -86,7 +86,7 @@ Section AlgFlabUniverse.
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
     : alg_flab_map_sigma P PropP A == alg_flab_map S alg_flab_Type_sigma P PropP A.
   Proof.
-    intros s. apply path_forall. intros h.
+    intros s. funext h.
     srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
     intros X.
     apply univalent_transport_idequiv.
@@ -101,7 +101,7 @@ Section AlgFlabUniverse.
     pose (J := (condf _ _ A).2).
     srefine (s; _).
     srefine (pointwise_paths_concat _ J).
-    apply ap10. apply path_forall. intros x.
+    apply ap10. funext x.
     symmetry; apply (homotopic_alg_flab_map_alg_flab_map_forall P PropP A (s x)).
   Defined.
 
@@ -114,7 +114,7 @@ Section AlgFlabUniverse.
     pose (J := (condf _ _ A).2).
     srefine (s; _).
     srefine (pointwise_paths_concat _ J).
-    apply ap10. apply path_forall. intros x.
+    apply ap10. funext x.
     symmetry; apply (homotopic_alg_flab_map_alg_flab_map_sigma P PropP A (s x)).
   Defined.
 
@@ -129,7 +129,7 @@ Proof.
   - intros X. reflexivity.
   - intros P PropP A.
     srefine (idmap; _).
-    intros f. apply path_forall. intros h; cbn. reflexivity.
+    intros f. funext h; cbn. reflexivity.
 Defined.
 
 (** For a subuniverse, the flabbiness condition is equivalent to closure under proposition indexed pi types (or sigma types), so using this we can state a simpler theorem for proving flabbiness of subuniverses. *)

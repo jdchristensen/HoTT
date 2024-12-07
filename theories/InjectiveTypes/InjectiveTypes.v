@@ -101,7 +101,7 @@ Section UniverseStructure.
     intros X Y j isem f.
     snrefine (_; _). 
     - exact (fun y a => (Dai a _ _ _ _ (fun x => f x a)).1 y).
-    - intros x. apply path_forall. intros a.
+    - intros x. funext a.
       exact ((Dai a _ _ _ _ (fun x => f x a)).2 x).
   Defined.
 
@@ -359,7 +359,7 @@ Proof.
     * intros [g e].
       apply tr.
       refine (fun y a => g (y, a); _).
-      intros x. apply path_forall. intros a.
+      intros x. funext a.
       apply (e (x, a)).
 Defined.
 
