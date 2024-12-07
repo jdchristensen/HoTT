@@ -57,9 +57,9 @@ Definition alg_inj_Type_sigma@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Unival
 Proof.
   intros X Y j isem f.
   snrefine (_; _).
-  - exact (LeftKanTypeFamily f j).
+  - exact (f <| j).
   - intros x.
-    apply (path_universe_uncurried (isext_leftkantypefamily _ _ isem _)).
+    apply (path_universe_uncurried (isext_leftkanfam _ _ isem _)).
 Defined.
 
 Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
@@ -67,9 +67,9 @@ Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univa
 Proof.
   intros X Y j isem f.
   snrefine (_; _).
-  - exact (RightKanTypeFamily f j).
+  - exact (f |> j).
   - intros x. 
-    apply (path_universe_uncurried (isext_rightkantypefamily _ _ isem _)).
+    apply (path_universe_uncurried (isext_rightkanfam _ _ isem _)).
 Defined.
 
 (** ** Constructions with algebraically injective types *)
