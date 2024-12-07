@@ -53,9 +53,7 @@ Section AlgFlabUniverse.
   Proof.
     intros s h.
     srefine (T (forall h, A h) _ _ s).
-    transparent assert (C : (Contr P)).
-    - srapply contr_inhabited_hprop. apply h.
-    - apply (@equiv_contr_forall _ _ C).
+    apply (@equiv_contr_forall _ _ (contr_inhabited_hprop _ _)).
   Defined.
 
   Definition alg_flab_map_sigma
@@ -64,9 +62,7 @@ Section AlgFlabUniverse.
   Proof.
     intros s h.
     srefine (T _ _ _ s).
-    transparent assert (C : (Contr P)).
-    - srapply contr_inhabited_hprop. apply h.
-    - apply (@equiv_contr_sigma _ _ C).
+    apply (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
   Defined.
 
   Definition alg_flab_sigma_condition_forall `{Funext} : Type

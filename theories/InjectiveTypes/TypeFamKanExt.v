@@ -31,24 +31,20 @@ Section UniverseStructure.
     (P : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} (LeftKanTypeFamily@{} P j (j x)) (P x).
   Proof.
-    transparent assert (C : (Contr (hfiber j (j x)))).
-    - srapply contr_inhabited_hprop. exact (x; idpath (j x)).
-    - snrapply (@equiv_contr_sigma _ _ C).
+    rapply (@equiv_contr_sigma (hfiber j (j x)) _ _).
   Defined.
 
   Definition isext_rightkantypefamily@{} `{Funext} {X : Type@{u}} {Y : Type@{v}}
     (P : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} (RightKanTypeFamily@{} P j (j x)) (P x).
   Proof.
-    transparent assert (C : (Contr (hfiber j (j x)))).
-    - srapply contr_inhabited_hprop. exact (x; idpath (j x)).
-    - snrapply (@equiv_contr_forall _ _ C).
+    rapply (@equiv_contr_forall _ (hfiber j (j x)) _ _).
   Defined.
 
 End UniverseStructure.
 
-Notation "P <| j" := (LeftKanTypeFamily P j) (at level 40).
-Notation "P |> j" := (RightKanTypeFamily P j) (at level 40).
+Notation "P <| j" := (LeftKanTypeFamily P j) : function_scope.
+Notation "P |> j" := (RightKanTypeFamily P j) : function_scope.
 
 (** For [y : Y] not in the image of [j], [(P <| j) y] is empty and [(P |> j) y] is contractible. *)
 Definition isempty_leftkantypefamily {X : Type} {Y : Type}
@@ -95,19 +91,19 @@ Defined.
 Definition MapFamily {X : Type} (P : X -> Type) (R : X -> Type)
   := forall x, P x -> R x.
 
-Notation "P ==> R" := (MapFamily P R) (at level 60).
+Notation "P >=> R" := (MapFamily P R) : function_scope.
 
 (** [concat_Ap] says that these transformations are automatically natural. *)
 
 (** Composition of transformations. *)
-Definition compose_mapfamily {X} {P R Q : X -> Type} (b : R ==> Q) (a : P ==> R)
-  : P ==> Q
+Definition compose_mapfamily {X} {P R Q : X -> Type} (b : R >=> Q) (a : P >=> R)
+  : P >=> Q
   := fun x => (b x) o (a x).
 
 (** If [j] is an embedding then [(P <| j) =< (P |> j)]. *)
 Definition transform_leftkantypefam_rightkantypefam {X Y : Type}
   (P : X -> Type) (j : X -> Y) (isem : IsEmbedding j)
-  : (P <| j) ==> (P |> j).
+  : (P <| j) >=> (P |> j).
 Proof.
   intros y [w' z] w.
   snrapply (transport (fun a => P a.1) _ z).
@@ -116,22 +112,22 @@ Defined.
 
 (** Under this interpretation, we can think of the maps [P <| j] and [P |> j] as left and right Kan extensions of [P : X -> Type] along [j : X -> Y]. To see this we can construct the (co)unit transformations of our extensions. *)
 Definition unit_leftkantypefam {X Y : Type} (P : X -> Type) (j : X -> Y)
-  : P ==> ((P <| j) o j)
+  : P >=> ((P <| j) o j)
   := fun x A => ((x; idpath); A).
   
 Definition counit_rightkantypefam {X Y : Type} (P : X -> Type) (j : X -> Y)
-  : ((P |> j) o j) ==> P
+  : ((P |> j) o j) >=> P
   := fun x A => A (x; idpath).
 
 Definition counit_leftkantypefam {X Y : Type} (R : Y -> Type) (j : X -> Y)
-  : ((R o j) <| j) ==> R.
+  : ((R o j) <| j) >=> R.
 Proof.
   intros y [[x p] C].
   apply (transport R p C).
 Defined.
 
 Definition unit_rightkantypefam {X Y : Type} (R : Y -> Type) (j : X -> Y)
-  : R ==> ((R o j) |> j).
+  : R >=> ((R o j) |> j).
 Proof.
   intros y C [x p].
   apply (transport R p^ C).
@@ -139,8 +135,8 @@ Defined.
 
 (** Universal property of the Kan extensions. *)
 Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
-  {P : X -> Type} {R : Y -> Type} (a : P ==> R o j)
-  : { b : P <| j ==> R & compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
+  {P : X -> Type} {R : Y -> Type} (a : P >=> R o j)
+  : { b : P <| j >=> R & compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. apply (p # a x A).
@@ -160,8 +156,8 @@ Proof.
 Abort.*)
 
 Definition univ_property_RightKanTypeFam `{Funext} {X Y} {j : X -> Y}
-  {P : X -> Type} {R : Y -> Type} (a : R o j ==> P)
-  : { b : R ==> P |> j & compose_mapfamily (counit_rightkantypefam P j) (b o j) == a}.
+  {P : X -> Type} {R : Y -> Type} (a : R o j >=> P)
+  : { b : R >=> P |> j & compose_mapfamily (counit_rightkantypefam P j) (b o j) == a}.
 Proof.
   snrefine (_; _).
   - intros y A [x p]. apply (a x (p^ # A)).
@@ -171,7 +167,7 @@ Defined.
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkantypefamily `{Funext} {X Y : Type} (P : X -> Type)
   (R : Y -> Type) (j : X -> Y)
-  : ((P <| j) ==> R) <~> (P ==> R o j).
+  : ((P <| j) >=> R) <~> (P >=> R o j).
 Proof.
   snrapply equiv_adjointify.
   - intros a x B. apply (a (j x) ((x; idpath); B)).
@@ -184,7 +180,7 @@ Defined.
 
 Definition rightadjoint_rightkantypefamily `{Funext} {X Y : Type} (P : X -> Type)
   (R : Y -> Type) (j : X -> Y)
-  : (R ==> (P |> j)) <~> (R o j ==> P).
+  : (R >=> (P |> j)) <~> (R o j >=> P).
 Proof.
   snrapply equiv_adjointify.
   - intros a x C. apply (a (j x) C (x; idpath)).

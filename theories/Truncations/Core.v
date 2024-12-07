@@ -267,6 +267,14 @@ Defined.
 
 (** ** Embeddings *)
 
+(** For any point in the image of an embedding, the fibers are contractable. *)
+Global Instance contr_hfiber_emb {A B} (a : A) (f : A -> B)
+  `{IsEmbedding f}
+  : Contr (hfiber f (f a)).
+Proof.
+  srapply contr_inhabited_hprop. exact (a; idpath (f a)).
+Defined.
+
 (** Since embeddings are the (-1)-truncated maps, a map that is both a surjection and an embedding is an equivalence. *)
 Definition isequiv_surj_emb {A B} (f : A -> B)
   `{IsSurjection f} `{IsEmbedding f}

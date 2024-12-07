@@ -177,10 +177,8 @@ Proof.
   intros P PropP A.
   srefine (sig@{u u} (fun p => A p); _).
   intros p.
-  transparent assert (C : (Contr P)).
-    - srapply contr_inhabited_hprop. exact p.
-    - apply path_universe_uncurried.
-      apply (@equiv_contr_sigma _ _ C).
+  apply path_universe_uncurried.
+  apply (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
 Defined.
 
 Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
@@ -189,10 +187,8 @@ Proof.
   intros P PropP A.
   srefine (forall p : P, A p; _).
   intros p.
-  transparent assert (C : (Contr P)).
-    - srapply contr_inhabited_hprop. exact p.
-    - apply path_universe_uncurried.
-      snrapply (@equiv_contr_forall _ _ C).
+  apply path_universe_uncurried.
+  apply (@equiv_contr_forall _ _ (contr_inhabited_hprop _ _)).
 Defined.
 
 Section UniverseStructure.
