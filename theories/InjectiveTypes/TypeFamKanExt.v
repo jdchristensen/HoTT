@@ -6,7 +6,7 @@ Require Import Basics.
 Require Import Types.Sigma Types.Unit Types.Forall Types.Empty Types.Universe Types.Equiv.
 Require Import HFiber.
 Require Import Truncations.Core.
-Require Import ReflectiveSubuniverse.
+Require Import ReflectiveSubuniverse Modality.
 
 (** We are careful about universe variables for these first few definitions because they are used in the rest of the paper.  We use [u], [v], [w], etc. as our typical universe variables. Our convention for the max of two universes [u] and [v] is [uv]. *)
 
@@ -134,19 +134,19 @@ Proof.
 Defined.
 
 (** Universal property of the Kan extensions. *)
-Definition univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
+Definition univ_property_leftkantypefam {X Y} {j : X -> Y}
   {P : X -> Type} {R : Y -> Type} (a : P >=> R o j)
   : { b : P <| j >=> R & compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. apply (p # a x A).
-  - intros x. apply path_forall. intros y. reflexivity.
+  - intros x. reflexivity.
 Defined.
 
 (** TODO: Prove uniqueness of the universal property. *)
 (*Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
   {P : X -> Type} {R : Y -> Type} {a : P =< R o j}
-  : Contr { b : LeftKanTypeFamily P j =< R | compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
+  : Contr { b : P <| j =< R | compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
 Proof.
   apply (Build_Contr _ (univ_property_LeftKanTypeFam a)).
   intros [b F]. srapply path_sigma.
@@ -155,13 +155,13 @@ Proof.
   - apply path_forall. intros x.
 Abort.*)
 
-Definition univ_property_RightKanTypeFam `{Funext} {X Y} {j : X -> Y}
+Definition univ_property_rightkantypefam {X Y} {j : X -> Y}
   {P : X -> Type} {R : Y -> Type} (a : R o j >=> P)
   : { b : R >=> P |> j & compose_mapfamily (counit_rightkantypefam P j) (b o j) == a}.
 Proof.
   snrefine (_; _).
   - intros y A [x p]. apply (a x (p^ # A)).
-  - intros x. apply path_forall. intros y. reflexivity.
+  - intros x. reflexivity.
 Defined.
 
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
@@ -201,38 +201,28 @@ Section EmbedProofLeft.
     srefine (P <| j; _). intros y.
     snrapply isequiv_adjointify.
     - apply (fun '(((x; p); C) : (P <| j) y) => ((x; p); ((x; idpath); C))).
-    - intros [[x []] C]. reflexivity.
+    - cbn. intros [[x []] C]. reflexivity.
     - intros [[x []] [[x' p'] C]]; cbn; cbn in C, p'.
       revert p'; apply (equiv_ind (ap j)).
       by intros [].
   Defined.
 
-  Definition isequiv_isptwiseequiv_leftkancounit : IsEquiv isptwiseequiv_leftkancounit.
+  Global Instance isequiv_isptwiseequiv_leftkancounit : IsEquiv isptwiseequiv_leftkancounit.
   Proof.
     snrapply isequiv_adjointify.
-    - intros [R e]. apply (R o j).
-    - intros [R e]. srapply path_sigma.
-      * apply path_forall. intros y. 
-        apply (@path_universe_uncurried H (((R o j) <| j) y) (R y)).
-        apply issig_equiv.
-        apply (counit_leftkantypefam R j y; e y).
-      * snrefine (path_ishprop _ _).
-        refine istrunc_forall.
-    - intros P. apply path_forall. intros x.
-      apply (path_universe_uncurried (isext_leftkantypefamily _ _ _ _)).
+    - intros [R e]. exact (R o j).
+    - intros [R e]. srapply path_sigma_hprop; cbn.
+      funext y.
+      exact (path_universe _ (feq:=e y)).
+    - intros P.
+      funext x.
+      exact (path_universe_uncurried (isext_leftkantypefamily _ _ _ _)).
   Defined.
 
   (** Using these facts we can show that the map [_ <| j] is an embedding if [j] is an embedding. *)
   Definition isembed_leftkantypefam_ext
-    : IsEmbedding (fun P => P <| j).
-  Proof.
-    snrapply (istruncmap_compose (-1) isptwiseequiv_leftkancounit (@pr1 (Y -> Type)
-      (fun R => forall y, IsEquiv (counit_leftkantypefam R j y)))).
-    - rapply istruncmap_mapinO_tr.
-    - rapply istruncmap_mapinO_tr.
-      rapply mapinO_isequiv.
-      apply isequiv_isptwiseequiv_leftkancounit.
-  Defined.
+    : IsEmbedding (fun P => P <| j)
+    := mapinO_compose (O:=-1) isptwiseequiv_leftkancounit pr1.
 
 End EmbedProofLeft.
 
