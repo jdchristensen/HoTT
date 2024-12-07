@@ -3,7 +3,7 @@
 (** This is part of the formalization of section 4 of the paper: Injective Types in Univalent Mathematics by Martin Escardo.  Many proofs are guided by Martin Escardo's original Agda formalization of this paper which can be found at: https://www.cs.bham.ac.uk/~mhe/TypeTopology/InjectiveTypes.Article.html. *)
 
 Require Import Basics.
-Require Import Types.Sigma Types.Unit Types.Forall Types.Empty Types.Universe Types.Equiv.
+Require Import Types.Sigma Types.Unit Types.Forall Types.Empty Types.Universe Types.Equiv Types.Paths.
 Require Import HFiber.
 Require Import Truncations.Core.
 Require Import ReflectiveSubuniverse Modality.
@@ -143,17 +143,40 @@ Proof.
   - intros x. reflexivity.
 Defined.
 
-(** TODO: Prove uniqueness of the universal property. *)
-(*Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
-  {P : X -> Type} {R : Y -> Type} {a : P =< R o j}
-  : Contr { b : P <| j =< R | compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
+Definition ap_path_forall_helper `{Funext} {A B : Type} (P : A -> Type) (Q : A -> Type)
+  {f g : forall a, Q a -> P a} (h : f == g) (a : A) (i : B -> Q a)
+  : ap (fun (k : forall a, Q a -> P a) => (fun b => k a (i b))) (path_forall _ _ h)
+    = path_forall _ _ (fun b => ap10 (h a) (i b)).
 Proof.
-  apply (Build_Contr _ (univ_property_LeftKanTypeFam a)).
-  intros [b F]. srapply path_sigma.
+  revert h; rapply (equiv_ind apD10).
+  intros []; cbn.
+  unfold path_forall.
+  rewrite (eissect apD10); cbn.
+  symmetry; apply path_forall_1.
+Defined.
+
+Definition contr_univ_property_LeftKanTypeFam `{Funext} {X Y} {j : X -> Y}
+  {P : X -> Type} {R : Y -> Type} {a : P >=> R o j}
+  : Contr { b : P <| j >=> R | compose_mapfamily (b o j) (unit_leftkantypefam P j) == a}.
+Proof.
+  apply (Build_Contr _ (univ_property_leftkantypefam a)).
+  intros [b F].
+  symmetry. (* Do now to avoid inversion in the first subgoal. *)
+  srapply path_sigma.
   - apply path_forall. intros y. apply path_forall.
-    intros [[w []] c]. srefine (ap10 (F w) c)^.
-  - apply path_forall. intros x.
-Abort.*)
+    intros [[w []] c]. srefine (ap10 (F w) c).
+  - simpl.
+    funext x.
+    lhs nrapply transport_forall_constant.
+    lhs nrapply transport_paths_Fl.
+    apply moveR_Vp.
+    rhs nrapply concat_p1.
+    unfold compose_mapfamily, unit_leftkantypefam.
+    rhs nrapply (ap_path_forall_helper _ _ _ (j x)).
+    unfold path_forall, ap10.
+    rewrite (eisretr apD10).
+    symmetry; apply eissect.
+Defined.
 
 Definition univ_property_rightkantypefam {X Y} {j : X -> Y}
   {P : X -> Type} {R : Y -> Type} (a : R o j >=> P)
