@@ -256,7 +256,7 @@ Section EmbedProofRight.
   Proof.
     srefine (P |> j; _). intros y.
     snrapply isequiv_adjointify.
-    - intros C [x p]. apply (C (x; p) (x; idpath)).
+    - intros C [x p]. exact (C (x; p) (x; idpath)).
     - intros C. funext [x p]. destruct p. funext w.
       rapply (@transport _ (fun t => C t (t.1; idpath) = C (x; idpath) t) _ w
         (center _ (isem (j x) (x; idpath) w)) idpath).
@@ -273,7 +273,7 @@ Section EmbedProofRight.
       symmetry; exact (path_universe _ (feq:=e y)).
     - intros P.
       funext x.
-      apply (path_universe_uncurried (isext_rightkanfam _ _ _ _)).
+      exact (path_universe_uncurried (isext_rightkanfam _ _ _ _)).
   Defined.
 
   (** The map [_ |> j] is an embedding if [j] is an embedding. *)
