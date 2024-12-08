@@ -1,22 +1,21 @@
 (** * Injective Types *)
 
-(** ** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo (with some extra results) *)
-
-(** Since the universe levels are important to many of the results here, we keep track of them explicitly as much as possible. Due to our inability to use the max and successor operations within proofs, we instead construct these universes and their associated posetal relations in the arguments of the functions. *)
-
-(** In universe declarations, we use [u], [v], [w], etc. as our typical universe variables. Our convention for the max of two universes [u] and [v] is [uv], and the successor of a universe [u] is [su]. Occasionally we write [T] for a top universe which is strictly larger than all other provided universes. We hope that later versions of Coq will allow us access to the max and successor operations and much of the cumbersome universe handing here can be greatly reduced. *)
+(** Formalization of the paper: Injective Types in Univalent Mathematics by Martin Escardo (with some extra results). *)
 
 Require Import Basics.
-Require Import PropResizing.
-Require Import Truncations.
-Require Import Types.Universe Types.Unit Types.Prod Types.Empty Types.Forall Types.Sigma Types.Sum.
+Require Import Types.
+Require Import Truncations.Core.
+Require Import Modality.
 Require Import HFiber.
 Require Import HProp.
-Require Import PropResizing.
 Require Import Constant.
+Require Import PropResizing.
 Require Import ExcludedMiddle.
-
 Require Import TypeFamKanExt.
+
+(** ** Definitions of injectivity and first examples *)
+
+(** Since the universe levels are important to many of the results here, we keep track of them explicitly as much as possible. Due to our inability to use the max and successor operations within proofs, we instead construct these universes and their associated posetal relations in the arguments of the functions. In universe declarations, we use [u], [v], [w], etc. as our typical universe variables. Our convention for the max of two universes [u] and [v] is [uv], and the successor of a universe [u] is [su]. Occasionally we write [T] for a top universe which is strictly larger than all other provided universes. We hope that later versions of Coq will allow us access to the max and successor operations and much of the cumbersome universe handing here can be greatly reduced. *)
 
 Section UniverseStructure.
   Universes u v w uv uw vw.
@@ -37,7 +36,7 @@ Section UniverseStructure.
     intros X Y j isem f.
     srefine (const (center D); _).
     intros x.
-    apply (contr _).
+    exact (contr _).
   Defined.
 
   (** [Empty] is not algebraically injective. *)
@@ -46,7 +45,8 @@ Section UniverseStructure.
   Proof.
     intros Eai.
     snrefine ((Eai Empty Unit (Empty_rec@{v}) _ idmap).1 tt).
-    rapply _; rapply mapinO_between_inO@{uv u v uv}.
+    apply istruncmap_mapinO_tr@{v u uv}.
+    rapply mapinO_between_inO@{uv u v uv}.
   Defined.
 
 End UniverseStructure.
@@ -59,7 +59,7 @@ Proof.
   snrefine (_; _).
   - exact (f <| j).
   - intros x.
-    apply (path_universe_uncurried (isext_leftkanfam _ _ isem _)).
+    exact (path_universe_uncurried (isext_leftkanfam _ _ isem _)).
 Defined.
 
 Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
@@ -69,7 +69,7 @@ Proof.
   snrefine (_; _).
   - exact (f |> j).
   - intros x. 
-    apply (path_universe_uncurried (isext_rightkanfam _ _ isem _)).
+    exact (path_universe_uncurried (isext_rightkanfam _ _ isem _)).
 Defined.
 
 (** ** Constructions with algebraically injective types *)
@@ -84,7 +84,7 @@ Proof.
   snrefine (_; _).
   - exact (r o (Dai _ _ _ _ (s o f)).1).
   - intros x. rhs_V apply (retr (f x)).
-    apply (ap r ((Dai _ _ _ _ (s o f)).2 x)).
+    exact (ap r ((Dai _ _ _ _ (s o f)).2 x)).
 Defined.
 
 Section UniverseStructure.
@@ -105,6 +105,7 @@ Section UniverseStructure.
       exact ((Dai a _ _ _ _ (fun x => f x a)).2 x).
   Defined.
 
+  (** In particular, exponentials of algebraically injective types are algebraically injective. *)
   Definition alg_inj_arrow@{}
     `{Funext} {A : Type@{t}} {D : Type@{w}}
     (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
@@ -139,19 +140,19 @@ Definition alg_uuinj_alg_usu_inj@{u su | u < su}
   := Dai.
 (** Note that this proof is made trivial by cumulativity (which is not assumed in the original paper). *)
 
+(** Algebraic flabbiness is a variant of algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
   := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
     { d : D & forall p : P, d = f p}.
-(** We can think of algebraic flabbiness as algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 
-(** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. *)
-Definition cconst_is_const_cond@{u w uw suw | u <= uw, w <= uw, uw < suw}
-  (D : Type@{w}) : Type@{suw}
+(** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. First we give the condition, and then the two implications. *)
+Definition cconst_is_const_cond@{u w uw | u <= uw, w <= uw}
+  (D : Type@{w})
   := forall (X : Type@{u}) (f : X -> D),
     ConditionallyConstant@{u w uw} f -> sig@{uw uw} (fun d => forall x, d = f x).
 
-Definition alg_flab_cconst_is_const@{u w uw suw | u <= uw, w <= uw, uw < suw}
-  (D : Type@{w}) (ccond : cconst_is_const_cond@{u w uw suw} D)
+Definition alg_flab_cconst_is_const@{u w uw | u <= uw, w <= uw}
+  (D : Type@{w}) (ccond : cconst_is_const_cond@{u w uw} D)
   : IsAlgebraicFlabbyType@{u w uw} D.
 Proof.
   intros P PropP f.
@@ -160,37 +161,17 @@ Proof.
   reflexivity.
 Defined.
 
-Definition cconst_is_const_alg_flab@{u w uw suw | u <= uw, w <= uw, uw < suw}
+Definition cconst_is_const_alg_flab@{u w uw | u <= uw, w <= uw}
   (D : Type@{w}) (Daf : IsAlgebraicFlabbyType@{u w uw} D)
-  : cconst_is_const_cond@{u w uw suw} D.
+  : cconst_is_const_cond@{u w uw} D.
 Proof.
   intros X f [f' e].
   srefine ((Daf _ _ f').1; _).
   intros x.
-  apply ((Daf _ _ f').2 (tr x) @ (e x)).
+  exact ((Daf _ _ f').2 (tr x) @ (e x)).
 Defined.
 
-(** We include two direct proofs of the algebraic flabbiness of [Type], instead of combining [alg_inj_alg_flab] with the previous proofs of algebraic injectivity, for better computations later. *)
-Definition alg_flab_Type_sigma@{u su | u < su} `{Univalence}
-  : IsAlgebraicFlabbyType@{u su su} Type@{u}.
-Proof.
-  intros P PropP A.
-  srefine (sig@{u u} (fun p => A p); _).
-  intros p.
-  apply path_universe_uncurried.
-  apply (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
-Defined.
-
-Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
-  : IsAlgebraicFlabbyType@{u su su} Type@{u}.
-Proof.
-  intros P PropP A.
-  srefine (forall p : P, A p; _).
-  intros p.
-  apply path_universe_uncurried.
-  apply (@equiv_contr_forall _ _ (contr_inhabited_hprop _ _)).
-Defined.
-
+(** Algebraic flabbiness is equivalent to algebraic injectivity, with appropriate choices of universes. *)
 Section UniverseStructure.
   Universes u v w uv uw vw.
   Constraint u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw.
@@ -214,19 +195,40 @@ Section UniverseStructure.
     intros X Y j isem f.
     snrefine (_; _).
     - intros y. srapply (Daf (hfiber j y) _ (fun x => f x.1)).1.
-    - intros x. apply ((Daf (hfiber j (j x)) _ (fun x => f x.1)).2 (x; idpath (j x))).
+    - intros x. exact ((Daf (hfiber j (j x)) _ (fun x => f x.1)).2 (x; idpath (j x))).
   Defined.
 
 End UniverseStructure.
 
-(** If D is algebraically [ut],[v]-injective, then it is algebraically [u],[t]-injective. *)
+(** By combining the above, we see that if [D] is algebraically [ut],[v]-injective, then it is algebraically [u],[t]-injective. *)
 Definition resize_alg_inj@{u v w t ut uw vw tw uvt utw | u <= ut, u <= uw, v <= vw, v <= uvt, w <= uw, w <= vw, w <= tw, t <= ut, t <= tw,
                             ut <= uvt, ut <= utw, uw <= utw, tw <= utw}
   {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{ut v w uvt utw vw} D)
   : IsAlgebraicInjectiveType@{u t w ut uw tw} D.
 Proof.
   apply alg_inj_alg_flab.
-  apply (alg_flab_alg_inj Dai).
+  exact (alg_flab_alg_inj Dai).
+Defined.
+
+(** We include two direct proofs of the algebraic flabbiness of [Type], instead of combining [alg_inj_alg_flab] with the previous proofs of algebraic injectivity, for better computations later. *)
+Definition alg_flab_Type_sigma@{u su | u < su} `{Univalence}
+  : IsAlgebraicFlabbyType@{u su su} Type@{u}.
+Proof.
+  intros P PropP A.
+  srefine (sig@{u u} (fun p => A p); _).
+  intros p.
+  apply path_universe_uncurried.
+  exact (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
+Defined.
+
+Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
+  : IsAlgebraicFlabbyType@{u su su} Type@{u}.
+Proof.
+  intros P PropP A.
+  srefine (forall p : P, A p; _).
+  intros p.
+  apply path_universe_uncurried.
+  exact (@equiv_contr_forall _ _ (contr_inhabited_hprop _ _) _).
 Defined.
 
 (** ** Algebraic flabbiness with resizing axioms *)
@@ -255,10 +257,10 @@ Section AssumePropResizing.
   Proof.
     apply alg_inj_alg_flab.
     apply universe_independent_alg_flab@{u u'v' w uw u'v'w}.
-    apply (alg_flab_alg_inj Dai).
+    exact (alg_flab_alg_inj Dai).
   Defined.
 
-  (** Any algebraically injective type [D : Type@{u}] is a retract of [X -> Type@{u}] with [X : Type@{u}] -- Universe independent version of [retract_power_universe_alg_usuinj]. *)
+  (** Any algebraically injective type [D : Type@{u}] is a retract of [X -> Type@{u}] with [X : Type@{u}]. This is a universe independent version of [retract_power_universe_alg_usuinj]. *)
   Definition retract_power_universe_alg_inj@{u su | u < su} `{Univalence}
     {D : Type@{u}} (Dai : IsAlgebraicInjectiveType@{u u u u u u} D)
     : exists (X : Type@{u}) (s : D -> (X -> Type@{u})) (r : (X -> Type@{u}) -> D), r o s == idmap.
@@ -266,7 +268,7 @@ Section AssumePropResizing.
     refine (D; _).
     refine ((@paths D); _).
     apply (retract_power_universe_alg_usuinj D).
-    apply (universe_independent_alg_inj@{u u u u su u u u su u su su} Dai).
+    exact (universe_independent_alg_inj@{u u u u su u u u su u su su} Dai).
   Defined.
 
 End AssumePropResizing.
@@ -310,7 +312,7 @@ Section UniverseStructure.
     - repeat (nrapply istrunc_forall@{T T T}; intro).
       apply istrunc_truncation.
     - intro Dai.
-      apply (inj_alg_inj@{} D Dai).
+      exact (inj_alg_inj@{} D Dai).
   Defined.
 
   (** The retract of an injective type is injective. *)
@@ -320,16 +322,15 @@ Section UniverseStructure.
     : IsInjectiveType@{u v w' uv uw' vw' uvw'} D'.
   Proof.
     intros X Y j isem f.
-    pose proof (mD := Di X Y j isem (s o f)).
-    revert mD.
-    nrapply Trunc_rec@{T T}.
-    - apply istrunc_truncation.
-    - intros [g e].
-      apply tr.
-      snrefine (r o g; _).
-      intros x.
-      rhs_V apply (retr (f x)).
-      apply (ap r (e x)).
+    specialize (Di X Y j isem (s o f)).
+    revert Di.
+    rapply Trunc_rec@{T T}.
+    intros [g e].
+    apply tr.
+    snrefine (r o g; _).
+    intros x.
+    rhs_V apply (retr (f x)).
+    exact (ap r (e x)).
   Defined.
 
 End UniverseStructure.
@@ -349,18 +350,16 @@ Definition inj_arrow@{u v w t uv ut vt tw uvt utw vtw utvw | u <= uv, v <= uv, u
   : IsInjectiveType@{u v tw uv utw vtw utvw} (A -> D).
 Proof.
   intros X Y j isem f.
-  assert (embId : IsEmbedding (fun a : A => a)).
-  - nrapply istruncmap_mapinO_tr. rapply _.
-  - pose proof (mD := Di (X * A) (Y * A) (functor_prod j idmap)
-      (istruncmap_functor_prod@{u v t t ut vt uvt uvt uv t} _ _ _) (uncurry f)).
-    revert mD.
-    nrapply Trunc_rec@{utvw utvw}.
-    * apply istrunc_truncation.
-    * intros [g e].
-      apply tr.
-      refine (fun y a => g (y, a); _).
-      intros x. funext a.
-      apply (e (x, a)).
+  assert (embId : IsEmbedding (fun a : A => a)) by rapply istruncmap_mapinO_tr.
+  pose proof (mD := Di (X * A) (Y * A) (functor_prod j equiv_idmap)
+    (istruncmap_functor_prod@{u v t t ut vt uvt uvt uv t} _ _ _) (uncurry f)).
+  revert mD.
+  rapply Trunc_rec@{utvw utvw}.
+  intros [g e].
+  apply tr.
+  refine (fun y a => g (y, a); _).
+  intros x. funext a.
+  exact (e (x, a)).
 Defined.
 
 (** Any [u],[su]-injective type [X : Type@{u}], is a retract of [X -> Type@{u}] in an unspecified way. *)
@@ -376,22 +375,22 @@ Definition merely_alg_inj_inj@{u su ssu | u < su, su < ssu} `{Univalence}
 Proof.
   srefine (Trunc_functor (-1) _ (merely_retract_power_universe_inj D Di)).
   intros [r retr].
-  apply (alg_inj_retract_power_universe D r retr).
+  exact (alg_inj_retract_power_universe D r retr).
 Defined.
 
 (** ** The equivalence of excluded middle with the (algebraic) injectivity of pointed types *)
 
 (** Assuming excluded middle, all pointed types are algebraically flabby (and thus algebraically injective). *)
-Definition alg_flab_pted_lem@{u w uw | u <= uw, w <= uw}
+Definition alg_flab_pointed_lem@{u w uw | u <= uw, w <= uw}
   `{ExcludedMiddle} {D : Type@{w}} (d : D)
   : IsAlgebraicFlabbyType@{u w uw} D.
 Proof.
   intros P PropP f.
   case (LEM P _).
   - intros p. srefine (f p; _).
-    intros q. apply (ap _ (path_ishprop _ _)).
+    intros q. exact (ap _ (path_ishprop _ _)).
   - intros np. srefine (d; _).
-    intros p. apply (Empty_rec (np p)).
+    intros p. exact (Empty_rec (np p)).
 Defined.
 
 (** If the type [P + ~P + Unit] is algebraically flabby for [P] a proposition, then [P] is decidable. *)
@@ -399,28 +398,23 @@ Definition decidable_alg_flab_hprop@{w} `{Funext} (P : Type@{w}) (PropP : IsHPro
   (Paf : IsAlgebraicFlabbyType@{w w w} ((P + ~P) + (Unit : Type@{w})))
   : Decidable P.
 Proof.
-  transparent assert (f : (P + ~P -> ((P + ~P) + Unit))).
-  { intros p; destruct p.
-    - apply (inl (inl p)).
-    - apply (inl (inr n)). }
-  assert (l : {d : (P + ~P) + Unit & forall z, d = f z}).
+  pose (inl' := inl : P + ~P -> (P + ~P) + Unit).
+  assert (l : {d : (P + ~P) + Unit & forall z, d = inl' z}).
   { apply Paf. rapply ishprop_decidable_hprop@{w w}. }
-  assert (delta : (forall d', l.1 = d' -> (Decidable P))).
-  { intros d' r; destruct d'.
-    - apply s.
-    - assert (np := fun p => (inl_ne_inr _ _ ((l.2 (inl p))^ @ r))).
-      assert (nnp := fun np' => (inl_ne_inr _ _ ((l.2 (inr np'))^ @ r))).
-      apply (Empty_rec (nnp np)). }
-  apply (delta l.1 idpath).
+  destruct l as [[s | u] l2].
+  - exact s.
+  - assert (np := fun p => inl_ne_inr _ _ (l2 (inl p))^).
+    assert (nnp := fun np' => inl_ne_inr _ _ (l2 (inr np'))^).
+    exact (Empty_rec (nnp np)).
 Defined.
 
 (** If all pointed types are algebraically flabby, then excluded middle holds. *)
-Definition lem_pted_types_alg_flab@{w} `{Funext}
+Definition lem_pointed_types_alg_flab@{w} `{Funext}
   (ptaf: forall (D : Type@{w}), D -> IsAlgebraicFlabbyType@{w w w} D)
   : ExcludedMiddle_type@{w}.
 Proof.
   intros P PropP.
   rapply decidable_alg_flab_hprop.
   apply ptaf.
-  apply (inr tt).
+  exact (inr tt).
 Defined.
