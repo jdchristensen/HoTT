@@ -142,15 +142,21 @@ Proof.
   - intros x. reflexivity.
 Defined.
 
-Definition ap_path_forall_precompose `{Funext} {A B : Type} (P : A -> Type) (Q : A -> Type)
-  {f g : forall a, Q a -> P a} (h : f == g) (a : A) (i : B -> Q a)
-  : ap (fun (k : forall a, Q a -> P a) => (fun b => k a (i b))) (path_forall _ _ h)
-    = path_forall _ _ (fun b => ap10 (h a) (i b)).
+Definition ap_precompose_path_forall `{Funext} {B P Q : Type}
+  {f g : Q -> P} (h : f = g) (i : B -> Q)
+  : ap (fun (k : Q -> P) => k o i) h
+    = path_forall (f o i) (g o i) (ap10 h o i).
 Proof.
-  revert h; rapply (equiv_ind apD10).
-  intros []; cbn.
-  unfold path_forall.
-  rewrite (eissect apD10); cbn.
+  destruct h; cbn.
+  symmetry; apply path_forall_1.
+Defined.
+
+Definition ap_postcompose_path_forall `{Funext} {B P Q : Type}
+  {f g : Q -> P} (h : f = g) (j : P -> B)
+  : ap (fun (k : Q -> P) => j o k) h
+    = path_forall (j o f) (j o g ) (fun q => ap j (ap10 h q)).
+Proof.
+  destruct h; cbn.
   symmetry; apply path_forall_1.
 Defined.
 
@@ -170,10 +176,15 @@ Proof.
     apply moveR_Vp.
     rhs nrapply concat_p1.
     unfold compose_mapfam, unit_leftkanfam.
-    rhs nrapply (ap_path_forall_precompose _ _ _ (j x)).
+    symmetry.
+    pose (i := fun px: P x => ((x; 1); px) : (P <| j) (j x)).
+    lhs nrapply (ap_compose (fun k : (P <| j) >=> R => k (j x)) (fun ka => ka o i)).
+    (* [ap (fun k => k (j x))] is exactly [apD10], so it cancels the first [path_forall]. *)
+    lhs nrefine (ap _ (apD10_path_forall _ _ _ _)).
+    lhs rapply (ap_precompose_path_forall _ i).
     unfold path_forall, ap10.
-    rewrite (eisretr apD10).
-    symmetry; apply eissect.
+    rewrite (eisretr apD10); cbn.
+    apply eissect.
 Defined.
 
 Definition univ_property_rightkanfam {X Y} {j : X -> Y}
@@ -183,18 +194,6 @@ Proof.
   snrefine (_; _).
   - intros y A [x p]. exact (a x (p^ # A)).
   - intros x. reflexivity.
-Defined.
-
-Definition ap_path_forall_postcompose `{Funext} {A B : Type} (P : A -> Type) (Q : A -> Type)
-  {f g : forall a, Q a -> P a} (h : f == g) (a : A) (j : P a -> B)
-  : ap (fun (k : forall a, Q a -> P a) => (j o (k a))) (path_forall _ _ h)
-    = path_forall _ _ (fun x => ap j (ap10 (h a) x)).
-Proof.
-  revert h; rapply (equiv_ind apD10).
-  intros []; cbn.
-  unfold path_forall.
-  rewrite (eissect apD10); cbn.
-  symmetry; apply path_forall_1.
 Defined.
 
 Definition contr_univ_property_rightkanfam `{Funext} {X Y} {j : X -> Y}
@@ -211,13 +210,20 @@ Proof.
     lhs nrapply transport_forall_constant.
     lhs nrapply transport_paths_Fl.
     apply moveR_Vp.
-    rhs nrapply concat_p1.
-    unfold compose_mapfam, counit_rightkanfam.
-    rhs nrapply (ap_path_forall_postcompose _ _ _ (j x)).
-    unfold path_forall, ap10, counit_rightkanfam.
+    symmetry.
+    lhs nrapply concat_p1.
+    unfold compose_mapfam.
+    lhs nrapply (ap_compose (fun k : R >=> (P |> j) => k (j x)) (fun ka => _ o ka)).
+    (* [ap (fun k => k (j x))] is exactly [apD10], so it cancels the first [path_forall]. *)
+    lhs nrefine (ap _ (apD10_path_forall _ _ _ _)).
+    lhs nrapply ap_postcompose_path_forall.
+    unfold path_forall, ap10.
     rewrite (eisretr apD10).
-    (*symmetry; apply eissect.*)
-Abort.
+    change (ap _ ?p) with (apD10 p (x; 1)).
+    nrapply moveR_equiv_V.
+    funext r.
+    exact (apD10_path_forall _ _ _ (x; _)).
+Defined.
 
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkanfam `{Funext} {X Y : Type} (P : X -> Type)
