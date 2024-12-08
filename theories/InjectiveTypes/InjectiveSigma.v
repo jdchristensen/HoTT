@@ -32,8 +32,8 @@ Section AlgFlabSigma.
     srefine (((Xaf _ _ (pr1 o f)).1; s (pr2 o f)); _).
     intros h.
     srapply path_sigma.
-    - apply ((Xaf _ _ (pr1 o f)).2 h).
-    - apply (apD10 (e (pr2 o f)) h).
+    - exact ((Xaf _ _ (pr1 o f)).2 h).
+    - exact (apD10 (e (pr2 o f)) h).
   Defined.
 
   Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
@@ -102,7 +102,7 @@ Section AlgFlabUniverse.
     srefine (s; _).
     srefine (pointwise_paths_concat _ J).
     apply ap10. funext x.
-    symmetry; apply (homotopic_alg_flab_map_alg_flab_map_forall P PropP A (s x)).
+    symmetry; exact (homotopic_alg_flab_map_alg_flab_map_forall P PropP A (s x)).
   Defined.
 
   Definition sigma_condition_sigma_condition_sigma `{Univalence}
@@ -115,7 +115,7 @@ Section AlgFlabUniverse.
     srefine (s; _).
     srefine (pointwise_paths_concat _ J).
     apply ap10. funext x.
-    symmetry; apply (homotopic_alg_flab_map_alg_flab_map_sigma P PropP A (s x)).
+    symmetry; exact (homotopic_alg_flab_map_alg_flab_map_sigma P PropP A (s x)).
   Defined.
 
 End AlgFlabUniverse.

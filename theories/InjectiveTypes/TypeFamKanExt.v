@@ -67,8 +67,8 @@ Definition equiv_leftkanfam {X : Type} {Y : Type}
   : {x : X & P x} <~> {y : Y & (P <| j) y}.
 Proof.
   snrapply equiv_adjointify.
-  - apply (fun w : {x : X & P x} => (j w.1; (w.1; idpath); w.2)).
-  - apply (fun '((y; ((x; p); y')) : {y : Y & (P <| j) y}) => (x; y')).
+  - exact (fun w : {x : X & P x} => (j w.1; (w.1; idpath); w.2)).
+  - exact (fun '((y; ((x; p); y')) : {y : Y & (P <| j) y}) => (x; y')).
   - intros [y [[x []] y']]; cbn. reflexivity.
   - intros [x y]; cbn. reflexivity.
 Defined.
@@ -78,8 +78,8 @@ Definition equiv_rightkanfam `{Funext} {X : Type} {Y : Type}
   : (forall x, P x) <~> (forall y, (P |> j) y).
 Proof.
   snrapply equiv_adjointify.
-  - intros g y w. apply (g w.1).
-  - apply (fun h x => h (j x) (x; idpath)).
+  - intros g y w. exact (g w.1).
+  - exact (fun h x => h (j x) (x; idpath)).
   - intros h. funext y. funext [x []]; cbn. reflexivity.
   - intros g. apply path_forall. reflexivity.
 Defined.
@@ -122,14 +122,14 @@ Definition counit_leftkanfam {X Y : Type} (R : Y -> Type) (j : X -> Y)
   : ((R o j) <| j) >=> R.
 Proof.
   intros y [[x p] C].
-  apply (transport R p C).
+  exact (transport R p C).
 Defined.
 
 Definition unit_rightkanfam {X Y : Type} (R : Y -> Type) (j : X -> Y)
   : R >=> ((R o j) |> j).
 Proof.
   intros y C [x p].
-  apply (transport R p^ C).
+  exact (transport R p^ C).
 Defined.
 
 (** Universal property of the Kan extensions. *)
@@ -138,7 +138,7 @@ Definition univ_property_leftkanfam {X Y} {j : X -> Y}
   : { b : P <| j >=> R & compose_mapfam (b o j) (unit_leftkanfam P j) == a}.
 Proof.
   snrefine (_; _).
-  - intros y [[x p] A]. apply (p # a x A).
+  - intros y [[x p] A]. exact (p # a x A).
   - intros x. reflexivity.
 Defined.
 
@@ -181,7 +181,7 @@ Definition univ_property_rightkanfam {X Y} {j : X -> Y}
   : { b : R >=> P |> j & compose_mapfam (counit_rightkanfam P j) (b o j) == a}.
 Proof.
   snrefine (_; _).
-  - intros y A [x p]. apply (a x (p^ # A)).
+  - intros y A [x p]. exact (a x (p^ # A)).
   - intros x. reflexivity.
 Defined.
 
@@ -225,8 +225,8 @@ Definition leftadjoint_leftkanfam `{Funext} {X Y : Type} (P : X -> Type)
   : ((P <| j) >=> R) <~> (P >=> R o j).
 Proof.
   snrapply equiv_adjointify.
-  - intros a x B. apply (a (j x) ((x; idpath); B)).
-  - intros b y [[x p] C]. apply (p # (b x C)).
+  - intros a x B. exact (a (j x) ((x; idpath); B)).
+  - intros b y [[x p] C]. exact (p # (b x C)).
   - intros b. funext x.
     funext B; cbn. reflexivity.
   - intros a. funext y.
@@ -238,8 +238,8 @@ Definition rightadjoint_rightkanfam `{Funext} {X Y : Type} (P : X -> Type)
   : (R >=> (P |> j)) <~> (R o j >=> P).
 Proof.
   snrapply equiv_adjointify.
-  - intros a x C. apply (a (j x) C (x; idpath)).
-  - intros a y C [x p]. apply (a x). apply (p^ # C).
+  - intros a x C. exact (a (j x) C (x; idpath)).
+  - intros a y C [x p]. apply (a x). exact (p^ # C).
   - intros a. funext x. funext C; cbn. reflexivity.
   - intros b. funext y. funext C.
     funext [x p]. destruct p; cbn. reflexivity.
@@ -255,7 +255,7 @@ Section EmbedProofLeft.
   Proof.
     srefine (P <| j; _). intros y.
     snrapply isequiv_adjointify.
-    - apply (fun '(((x; p); C) : (P <| j) y) => ((x; p); ((x; idpath); C))).
+    - exact (fun '(((x; p); C) : (P <| j) y) => ((x; p); ((x; idpath); C))).
     - cbn. intros [[x []] C]. reflexivity.
     - intros [[x []] [[x' p'] C]]; cbn; cbn in C, p'.
       revert p'; apply (equiv_ind (ap j)).
@@ -301,7 +301,7 @@ Section EmbedProofRight.
   Global Instance isequiv_rightkanfam_unit_equiv : IsEquiv rightkanfam_unit_equiv.
   Proof.
     snrapply isequiv_adjointify.
-    - intros [R e]. apply (R o j).
+    - intros [R e]. exact (R o j).
     - intros [R e]. srapply path_sigma_hprop; cbn.
       funext y.
       symmetry; exact (path_universe _ (feq:=e y)).
