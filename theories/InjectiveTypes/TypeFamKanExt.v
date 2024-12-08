@@ -142,24 +142,6 @@ Proof.
   - intros x. reflexivity.
 Defined.
 
-Definition ap_precompose_path_forall `{Funext} {B P Q : Type}
-  {f g : Q -> P} (h : f = g) (i : B -> Q)
-  : ap (fun (k : Q -> P) => k o i) h
-    = path_forall (f o i) (g o i) (ap10 h o i).
-Proof.
-  destruct h; cbn.
-  symmetry; apply path_forall_1.
-Defined.
-
-Definition ap_postcompose_path_forall `{Funext} {B P Q : Type}
-  {f g : Q -> P} (h : f = g) (j : P -> B)
-  : ap (fun (k : Q -> P) => j o k) h
-    = path_forall (j o f) (j o g ) (fun q => ap j (ap10 h q)).
-Proof.
-  destruct h; cbn.
-  symmetry; apply path_forall_1.
-Defined.
-
 Definition contr_univ_property_leftkanfam `{Funext} {X Y} {j : X -> Y}
   {P : X -> Type} {R : Y -> Type} {a : P >=> R o j}
   : Contr { b : P <| j >=> R | compose_mapfam (b o j) (unit_leftkanfam P j) == a}.
@@ -181,7 +163,7 @@ Proof.
     lhs nrapply (ap_compose (fun k : (P <| j) >=> R => k (j x)) (fun ka => ka o i)).
     (* [ap (fun k => k (j x))] is exactly [apD10], so it cancels the first [path_forall]. *)
     lhs nrefine (ap _ (apD10_path_forall _ _ _ _)).
-    lhs rapply (ap_precompose_path_forall _ i).
+    lhs rapply (ap_precompose _ i).
     unfold path_forall, ap10.
     rewrite (eisretr apD10); cbn.
     apply eissect.
@@ -216,7 +198,7 @@ Proof.
     lhs nrapply (ap_compose (fun k : R >=> (P |> j) => k (j x)) (fun ka => _ o ka)).
     (* [ap (fun k => k (j x))] is exactly [apD10], so it cancels the first [path_forall]. *)
     lhs nrefine (ap _ (apD10_path_forall _ _ _ _)).
-    lhs nrapply ap_postcompose_path_forall.
+    lhs nrapply ap_postcompose.
     unfold path_forall, ap10.
     rewrite (eisretr apD10).
     change (ap _ ?p) with (apD10 p (x; 1)).
