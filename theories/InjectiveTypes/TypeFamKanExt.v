@@ -142,7 +142,7 @@ Proof.
   - intros x. reflexivity.
 Defined.
 
-Definition ap_path_forall_helper `{Funext} {A B : Type} (P : A -> Type) (Q : A -> Type)
+Definition ap_path_forall_precompose `{Funext} {A B : Type} (P : A -> Type) (Q : A -> Type)
   {f g : forall a, Q a -> P a} (h : f == g) (a : A) (i : B -> Q a)
   : ap (fun (k : forall a, Q a -> P a) => (fun b => k a (i b))) (path_forall _ _ h)
     = path_forall _ _ (fun b => ap10 (h a) (i b)).
@@ -170,7 +170,7 @@ Proof.
     apply moveR_Vp.
     rhs nrapply concat_p1.
     unfold compose_mapfam, unit_leftkanfam.
-    rhs nrapply (ap_path_forall_helper _ _ _ (j x)).
+    rhs nrapply (ap_path_forall_precompose _ _ _ (j x)).
     unfold path_forall, ap10.
     rewrite (eisretr apD10).
     symmetry; apply eissect.
@@ -184,6 +184,40 @@ Proof.
   - intros y A [x p]. apply (a x (p^ # A)).
   - intros x. reflexivity.
 Defined.
+
+Definition ap_path_forall_postcompose `{Funext} {A B : Type} (P : A -> Type) (Q : A -> Type)
+  {f g : forall a, Q a -> P a} (h : f == g) (a : A) (j : P a -> B)
+  : ap (fun (k : forall a, Q a -> P a) => (j o (k a))) (path_forall _ _ h)
+    = path_forall _ _ (fun x => ap j (ap10 (h a) x)).
+Proof.
+  revert h; rapply (equiv_ind apD10).
+  intros []; cbn.
+  unfold path_forall.
+  rewrite (eissect apD10); cbn.
+  symmetry; apply path_forall_1.
+Defined.
+
+Definition contr_univ_property_rightkanfam `{Funext} {X Y} {j : X -> Y}
+  {P : X -> Type} {R : Y -> Type} (a : R o j >=> P)
+  : Contr { b : R >=> P |> j & compose_mapfam (counit_rightkanfam P j) (b o j) == a}.
+Proof.
+  apply (Build_Contr _ (univ_property_rightkanfam a)).
+  intros [b F].
+  symmetry. (* Do now to avoid inversion in the first subgoal. *)
+  srapply path_sigma.
+  - funext y. funext C. funext [x p]. destruct p. srefine (ap10 (F x) C).
+  - simpl.
+    funext x.
+    lhs nrapply transport_forall_constant.
+    lhs nrapply transport_paths_Fl.
+    apply moveR_Vp.
+    rhs nrapply concat_p1.
+    unfold compose_mapfam, counit_rightkanfam.
+    rhs nrapply (ap_path_forall_postcompose _ _ _ (j x)).
+    unfold path_forall, ap10, counit_rightkanfam.
+    rewrite (eisretr apD10).
+    (*symmetry; apply eissect.*)
+Abort.
 
 (** The above (co)unit constructions are special cases of the following, which tells us that these extensions are adjoint to restriction by [j] *)
 Definition leftadjoint_leftkanfam `{Funext} {X Y : Type} (P : X -> Type)
