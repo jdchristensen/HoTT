@@ -59,7 +59,7 @@ Proof.
   snrefine (_; _).
   - exact (f <| j).
   - intros x.
-    exact (path_universe_uncurried (isext_leftkanfam _ _ isem _)).
+    exact (isext_leftkanfam _ _ isem _).
 Defined.
 
 Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
@@ -69,7 +69,7 @@ Proof.
   snrefine (_; _).
   - exact (f |> j).
   - intros x. 
-    exact (path_universe_uncurried (isext_rightkanfam _ _ isem _)).
+    exact (isext_rightkanfam _ _ isem _).
 Defined.
 
 (** ** Constructions with algebraically injective types *)

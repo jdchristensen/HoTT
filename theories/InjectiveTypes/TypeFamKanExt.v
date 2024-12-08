@@ -27,19 +27,29 @@ Section UniverseStructure.
 
   (* If [j] is an embedding, then [P <| j] and [P |> j] are extensions in the following sense: [(P <| j o j) x <~> P x <~> (P |> j o j) x].  So, with univalence, we get that they are extensions. *)
 
-  Definition isext_leftkanfam@{} {X : Type@{u}} {Y : Type@{v}}
+  Definition isext_equiv_leftkanfam@{} {X : Type@{u}} {Y : Type@{v}}
     (P : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} (LeftKanFam@{} P j (j x)) (P x).
   Proof.
     rapply (@equiv_contr_sigma (hfiber j (j x)) _ _).
   Defined.
 
-  Definition isext_rightkanfam@{} `{Funext} {X : Type@{u}} {Y : Type@{v}}
+  Definition isext_equiv_rightkanfam@{} `{Funext} {X : Type@{u}} {Y : Type@{v}}
     (P : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
     : Equiv@{uvw w} (RightKanFam@{} P j (j x)) (P x).
   Proof.
     rapply (@equiv_contr_forall _ (hfiber j (j x)) _ _).
   Defined.
+
+  Definition isext_leftkanfam@{suvw | uvw < suvw} `{Univalence} {X : Type@{u}} {Y : Type@{v}}
+    (P : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
+    : @paths@{suvw} Type@{uvw} (LeftKanFam@{} P j (j x)) (P x)
+    := path_universe_uncurried (isext_equiv_leftkanfam _ _ _ _).
+
+  Definition isext_rightkanfam@{suvw | uvw < suvw} `{Univalence} {X : Type@{u}} {Y : Type@{v}}
+    (P : X -> Type@{w}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (x : X)
+    : @paths@{suvw} Type@{uvw} (RightKanFam@{} P j (j x)) (P x)
+    := path_universe_uncurried (isext_equiv_rightkanfam _ _ _ _).
 
 End UniverseStructure.
 
@@ -259,7 +269,7 @@ Section EmbedProofLeft.
       exact (path_universe _ (feq:=e y)).
     - intros P.
       funext x.
-      exact (path_universe_uncurried (isext_leftkanfam _ _ _ _)).
+      exact (isext_leftkanfam _ _ _ _).
   Defined.
 
   (** Using these facts we can show that the map [_ <| j] is an embedding if [j] is an embedding. *)
@@ -295,7 +305,7 @@ Section EmbedProofRight.
       symmetry; exact (path_universe _ (feq:=e y)).
     - intros P.
       funext x.
-      exact (path_universe_uncurried (isext_rightkanfam _ _ _ _)).
+      exact (isext_rightkanfam _ _ _ _).
   Defined.
 
   (** The map [_ |> j] is an embedding if [j] is an embedding. *)
