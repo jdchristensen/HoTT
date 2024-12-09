@@ -29,6 +29,22 @@ Section UniverseStructure.
     := forall (X : Type@{u}) (Y : Type@{v}) (j : X -> Y) (isem : IsEmbedding@{u v uv} j)
       (f : X -> D), sig@{vw uw} (fun f' => f' o j == f).
 
+  Class IsAlgebraicInjectiveType'@{} (D : Type@{w}) := {
+      lift_ai {X : Type@{u}} {Y : Type@{v}} (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (f : X -> D) : Y -> D;
+      is_ext_ai {X : Type@{u}} {Y : Type@{v}} (j : X -> Y) (isem : IsEmbedding@{u v uv} j) (f : X -> D) : (lift_ai j isem f) o j == f;
+    }.
+
+  (** Contractible types are algebraically injective. *)
+  Definition alg_inj_contr'@{} (D : Type@{w}) (cD : Contr D)
+    : IsAlgebraicInjectiveType'@{} D.
+  Proof.
+    srefine (Build_IsAlgebraicInjectiveType' D _ _).
+    - intros X Y j isem f. apply (const (center D)).
+    - intros X Y j isem f. 
+      intros x.
+      exact (contr _).
+  Defined.
+
   (** Contractible types are algebraically injective. *)
   Definition alg_inj_contr@{} (D : Type@{w}) (cD : Contr D)
     : IsAlgebraicInjectiveType@{} D.
