@@ -269,7 +269,7 @@ Section EmbedProofLeft.
       exact (path_universe _ (feq:=e y)).
     - intros P.
       funext x.
-      exact (isext_leftkanfam _ _ _ _).
+      rapply isext_leftkanfam.
   Defined.
 
   (** Using these facts we can show that the map [_ <| j] is an embedding if [j] is an embedding. *)
@@ -305,7 +305,7 @@ Section EmbedProofRight.
       symmetry; exact (path_universe _ (feq:=e y)).
     - intros P.
       funext x.
-      exact (isext_rightkanfam _ _ _ _).
+      rapply isext_rightkanfam.
   Defined.
 
   (** The map [_ |> j] is an embedding if [j] is an embedding. *)
