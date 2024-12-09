@@ -13,23 +13,23 @@ Section AlgFlabSigma.
   Context {X : Type} (A : X -> Type) (Xaf : IsAlgebraicFlabbyType X).
 
   (** The condition for a sigma type over an algebraically flabby type to be algebraically flabby can be described as the existence of a section to the following map for every [P] and [f]. *)
-  Definition alg_flab_map (P : Type) (PropP : IsHProp P) (f : P -> X)
-    : (A (Xaf _ _ f).1) -> (forall h, A (f h))
-    := fun a h => (Xaf _ _ f).2 h # a.
+  Definition alg_flab_map (P : HProp) (f : P -> X)
+    : (A (Xaf _ f).1) -> (forall h, A (f h))
+    := fun a h => (Xaf _ f).2 h # a.
 
   Definition alg_flab_sigma_condition : Type
-    := forall P PropP f, {s : _ & ((alg_flab_map P PropP f) o s) == idmap}.
+    := forall P f, {s : _ & ((alg_flab_map P f) o s) == idmap}.
 
   (** A sigma type over an algebraically flabby type is also algebraically flabby, and thus algebraically injective, when the above condition holds. *)
   Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
     : IsAlgebraicFlabbyType {x : X & A x}.
   Proof.
-    intros P PropP f.
-    destruct (cond P PropP (pr1 o f)) as [s e].
-    srefine (((Xaf _ _ (pr1 o f)).1; s (pr2 o f)); _).
+    intros P f.
+    destruct (cond P (pr1 o f)) as [s e].
+    srefine (((Xaf _ (pr1 o f)).1; s (pr2 o f)); _).
     intros h.
     snrapply path_sigma.
-    - exact ((Xaf _ _ (pr1 o f)).2 h).
+    - exact ((Xaf _ (pr1 o f)).2 h).
     - exact (apD10 (e (pr2 o f)) h).
   Defined.
 
@@ -45,7 +45,7 @@ Section AlgFlabUniverse.
 
   (** For a sigma type over [Type], the map [alg_flab_map] can be exchanged for either of these simpler maps for which an equivalent condition for algebraic injectivity can be defined. *)
   Definition alg_flab_map_forall `{Funext}
-    (P : Type) (PropP : IsHProp P) (A : P -> Type)
+    (P : HProp) (A : P -> Type)
     : S (forall h, A h) -> (forall h, S (A h)).
   Proof.
     intros s h.
@@ -54,7 +54,7 @@ Section AlgFlabUniverse.
   Defined.
 
   Definition alg_flab_map_sigma
-    (P : Type) (PropP : IsHProp P) (A : P -> Type)
+    (P : HProp) (A : P -> Type)
     : S {h : P & A h} -> (forall h, S (A h)).
   Proof.
     intros s h.
@@ -64,14 +64,14 @@ Section AlgFlabUniverse.
 
   (** The following conditions can be though of as a closure conditions under pi or sigma types for the type family [S]. *)
   Definition alg_flab_sigma_condition_forall `{Funext} : Type
-    := forall P PropP A, {s : _ & ((alg_flab_map_forall P PropP A) o s) == idmap}.
+    := forall P A, {s : _ & ((alg_flab_map_forall P A) o s) == idmap}.
 
   Definition alg_flab_sigma_condition_sigma : Type
-    := forall P PropP A, {s : _ & ((alg_flab_map_sigma P PropP A) o s) == idmap}.
+    := forall P A, {s : _ & ((alg_flab_map_sigma P A) o s) == idmap}.
 
   Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
-    (P : Type) (PropP : IsHProp P) (A : P -> Type)
-    : alg_flab_map_forall P PropP A == alg_flab_map S alg_flab_Type_forall P PropP A.
+    (P : HProp) (A : P -> Type)
+    : alg_flab_map_forall P A == alg_flab_map S alg_flab_Type_forall P A.
   Proof.
     intros s. funext h.
     srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
@@ -80,8 +80,8 @@ Section AlgFlabUniverse.
   Defined.
 
   Definition homotopic_alg_flab_map_alg_flab_map_sigma `{Univalence}
-    (P : Type) (PropP : IsHProp P) (A : P -> Type)
-    : alg_flab_map_sigma P PropP A == alg_flab_map S alg_flab_Type_sigma P PropP A.
+    (P : HProp) (A : P -> Type)
+    : alg_flab_map_sigma P A == alg_flab_map S alg_flab_Type_sigma P A.
   Proof.
     intros s. funext h.
     srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
@@ -94,26 +94,24 @@ Section AlgFlabUniverse.
     (condf : alg_flab_sigma_condition_forall)
     : alg_flab_sigma_condition S alg_flab_Type_forall.
   Proof.
-    intros P PropP A.
-    pose (s := (condf _ _ A).1).
-    pose (J := (condf _ _ A).2).
+    intros P A.
+    destruct (condf _ A) as [s J].
     srefine (s; _).
     srefine (pointwise_paths_concat _ J).
     apply ap10. funext x.
-    symmetry; exact (homotopic_alg_flab_map_alg_flab_map_forall P PropP A (s x)).
+    symmetry; exact (homotopic_alg_flab_map_alg_flab_map_forall P A (s x)).
   Defined.
 
   Definition sigma_condition_sigma_condition_sigma `{Univalence}
     (condf : alg_flab_sigma_condition_sigma)
     : alg_flab_sigma_condition S alg_flab_Type_sigma.
   Proof.
-    intros P PropP A.
-    pose (s := (condf _ _ A).1).
-    pose (J := (condf _ _ A).2).
+    intros P A.
+    destruct (condf _ A) as [s J].
     srefine (s; _).
     srefine (pointwise_paths_concat _ J).
     apply ap10. funext x.
-    symmetry; exact (homotopic_alg_flab_map_alg_flab_map_sigma P PropP A (s x)).
+    symmetry; exact (homotopic_alg_flab_map_alg_flab_map_sigma P A (s x)).
   Defined.
 
 End AlgFlabUniverse.
@@ -125,7 +123,7 @@ Proof.
   apply (alg_flab_sigma _ alg_flab_Type_forall).
   apply (sigma_condition_sigma_condition_forall _ (@equiv_fun)).
   - intros X. reflexivity.
-  - intros P PropP A.
+  - intros P A.
     srefine (idmap; _).
     intros f. funext h; cbn. reflexivity.
 Defined.
@@ -138,7 +136,7 @@ Proof.
   apply (alg_flab_sigma _ alg_flab_Type_forall).
   apply (sigma_condition_sigma_condition_forall _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
-  - intros P PropP A.
+  - intros P A.
     srefine(_; _).
     intros s. apply path_ishprop.
 Defined.
@@ -150,7 +148,7 @@ Proof.
   apply (alg_flab_sigma _ alg_flab_Type_sigma).
   apply (sigma_condition_sigma_condition_sigma _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
-  - intros P PropP A.
+  - intros P A.
     srefine(_; _).
     intros s. apply path_ishprop.
 Defined.

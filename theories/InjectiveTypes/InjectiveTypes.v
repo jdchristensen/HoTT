@@ -142,7 +142,7 @@ Definition alg_uuinj_alg_usu_inj@{u su | u < su}
 
 (** Algebraic flabbiness is a variant of algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 Definition IsAlgebraicFlabbyType@{u w uw | u <= uw, w <= uw} (D : Type@{w})
-  := forall (P : Type@{u}) (PropP : IsHProp P) (f : P -> D),
+  := forall (P : HProp@{u}) (f : P -> D),
     { d : D & forall p : P, d = f p}.
 
 (** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. First we give the condition, and then the two implications. *)
@@ -155,7 +155,7 @@ Definition alg_flab_cconst_is_const@{u w uw | u <= uw, w <= uw}
   (D : Type@{w}) (ccond : cconst_is_const_cond@{u w uw} D)
   : IsAlgebraicFlabbyType@{u w uw} D.
 Proof.
-  intros P PropP f.
+  intros P f.
   apply (ccond P f).
   apply (cconst_factors_hprop _ _ idmap f).
   reflexivity.
@@ -166,9 +166,9 @@ Definition cconst_is_const_alg_flab@{u w uw | u <= uw, w <= uw}
   : cconst_is_const_cond@{u w uw} D.
 Proof.
   intros X f [f' e].
-  srefine ((Daf _ _ f').1; _).
+  srefine ((Daf _ f').1; _).
   intros x.
-  exact ((Daf _ _ f').2 (tr x) @ (e x)).
+  exact ((Daf _ f').2 (tr x) @ (e x)).
 Defined.
 
 (** Algebraic flabbiness is equivalent to algebraic injectivity, with appropriate choices of universes. *)
@@ -181,7 +181,7 @@ Section UniverseStructure.
     {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
     : IsAlgebraicFlabbyType@{u w uw} D.
   Proof.
-    intros P PropP f.
+    intros P f.
     snrefine (_; _).
     - srapply ((Dai _ _ (const_tt P) _ f).1 tt).
     - intros p. apply (Dai _ _ (const_tt P) _ f).2.
@@ -194,8 +194,8 @@ Section UniverseStructure.
   Proof.
     intros X Y j isem f.
     snrefine (_; _).
-    - intros y. srapply (Daf (hfiber j y) _ (fun x => f x.1)).1.
-    - intros x. exact ((Daf (hfiber j (j x)) _ (fun x => f x.1)).2 (x; idpath (j x))).
+    - intros y. srapply (Daf (Build_HProp (hfiber j y)) (fun x => f x.1)).1.
+    - intros x. exact ((Daf (Build_HProp (hfiber j (j x))) (fun x => f x.1)).2 (x; idpath (j x))).
   Defined.
 
 End UniverseStructure.
@@ -214,7 +214,7 @@ Defined.
 Definition alg_flab_Type_sigma@{u su | u < su} `{Univalence}
   : IsAlgebraicFlabbyType@{u su su} Type@{u}.
 Proof.
-  intros P PropP A.
+  intros P A.
   srefine (sig@{u u} (fun p => A p); _).
   intros p.
   apply path_universe_uncurried.
@@ -224,7 +224,7 @@ Defined.
 Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
   : IsAlgebraicFlabbyType@{u su su} Type@{u}.
 Proof.
-  intros P PropP A.
+  intros P A.
   srefine (forall p : P, A p; _).
   intros p.
   apply path_universe_uncurried.
@@ -241,9 +241,10 @@ Section AssumePropResizing.
     {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{v w vw} D)
     : IsAlgebraicFlabbyType@{u w uw} D.
   Proof.
-    intros P PropP f.
+    intros P f.
     pose (e := (equiv_smalltype@{v u} P)).
-    destruct (Daf _ (istrunc_equiv_istrunc _ e^-1) (f o e)) as [d af].
+    pose (PropQ := (@istrunc_equiv_istrunc _ _ e^-1 (-1) _)).
+    destruct (Daf (Build_HProp (smalltype P)) (f o e)) as [d af].
     exists d.
     intros p. lhs apply (af (e^-1 p)).
     apply ap. apply eisretr.
@@ -385,7 +386,7 @@ Definition alg_flab_pointed_lem@{u w uw | u <= uw, w <= uw}
   `{ExcludedMiddle} {D : Type@{w}} (d : D)
   : IsAlgebraicFlabbyType@{u w uw} D.
 Proof.
-  intros P PropP f.
+  intros P f.
   case (LEM P _).
   - intros p. srefine (f p; _).
     intros q. exact (ap _ (path_ishprop _ _)).
@@ -394,13 +395,13 @@ Proof.
 Defined.
 
 (** If the type [P + ~P + Unit] is algebraically flabby for [P] a proposition, then [P] is decidable. *)
-Definition decidable_alg_flab_hprop@{w} `{Funext} (P : Type@{w}) (PropP : IsHProp P)
+Definition decidable_alg_flab_hprop@{w} `{Funext} (P : HProp@{w})
   (Paf : IsAlgebraicFlabbyType@{w w w} ((P + ~P) + (Unit : Type@{w})))
   : Decidable P.
 Proof.
   pose (inl' := inl : P + ~P -> (P + ~P) + Unit).
   assert (l : {d : (P + ~P) + Unit & forall z, d = inl' z}).
-  { apply Paf. rapply ishprop_decidable_hprop@{w w}. }
+  { rapply Paf. rapply ishprop_decidable_hprop@{w w}. }
   destruct l as [[s | u] l2].
   - exact s.
   - assert (np := fun p => inl_ne_inr _ _ (l2 (inl p))^).
