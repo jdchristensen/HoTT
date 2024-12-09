@@ -5,20 +5,18 @@
 Require Import Basics.
 Require Import Types.Forall Types.Sigma Types.Universe.
 Require Import Modalities.ReflectiveSubuniverse.
-Require Import Truncations.
-
+Require Import Truncations.Core.
 Require Import InjectiveTypes.
 Require Import TypeFamKanExt.
 
 Section AlgFlabSigma.
   Context {X : Type} (A : X -> Type) (Xaf : IsAlgebraicFlabbyType X).
 
-  Definition alg_flab_map
-    (P : Type) (PropP : IsHProp P) (f : P -> X)
+  (** The condition for a sigma type over an algebraically flabby type to be algebraically flabby can be described as the existence of a section to the following map for every [P] and [f]. *)
+  Definition alg_flab_map (P : Type) (PropP : IsHProp P) (f : P -> X)
     : (A (Xaf _ _ f).1) -> (forall h, A (f h))
     := fun a h => (Xaf _ _ f).2 h # a.
 
-  (** The condition for a sigma type over an algebraically flabby type can be described as the existence of a section to the preceding map. *)
   Definition alg_flab_sigma_condition : Type
     := forall P PropP f, {s : _ & ((alg_flab_map P PropP f) o s) == idmap}.
 
@@ -27,18 +25,17 @@ Section AlgFlabSigma.
     : IsAlgebraicFlabbyType {x : X & A x}.
   Proof.
     intros P PropP f.
-    pose (s := (cond P PropP (pr1 o f)).1).
-    pose (e := (cond P PropP (pr1 o f)).2).
+    destruct (cond P PropP (pr1 o f)) as [s e].
     srefine (((Xaf _ _ (pr1 o f)).1; s (pr2 o f)); _).
     intros h.
-    srapply path_sigma.
+    snrapply path_sigma.
     - exact ((Xaf _ _ (pr1 o f)).2 h).
     - exact (apD10 (e (pr2 o f)) h).
   Defined.
 
   Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
     : IsAlgebraicInjectiveType {x : X & A x}
-    := (alg_inj_alg_flab (alg_flab_sigma cond)).
+    := alg_inj_alg_flab (alg_flab_sigma cond).
 
 End AlgFlabSigma.
 
