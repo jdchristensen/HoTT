@@ -62,12 +62,12 @@ Section AlgFlabUniverse.
     apply (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
   Defined.
 
+  (** The following conditions can be though of as a closure conditions under pi or sigma types for the type family [S]. *)
   Definition alg_flab_sigma_condition_forall `{Funext} : Type
     := forall P PropP A, {s : _ & ((alg_flab_map_forall P PropP A) o s) == idmap}.
 
   Definition alg_flab_sigma_condition_sigma : Type
     := forall P PropP A, {s : _ & ((alg_flab_map_sigma P PropP A) o s) == idmap}.
-  (** These can be though of as a closure condition under pi or sigma types for the type family [S]. *)
 
   Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
     (P : Type) (PropP : IsHProp P) (A : P -> Type)
@@ -89,6 +89,7 @@ Section AlgFlabUniverse.
     apply univalent_transport_idequiv.
   Defined.
 
+  (** The orginal [sigma_condition] is satisfied by our reformulated conditions, [sigma_condition_forall] and [sigma_condition_sigma]. *)
   Definition sigma_condition_sigma_condition_forall `{Univalence}
     (condf : alg_flab_sigma_condition_forall)
     : alg_flab_sigma_condition S alg_flab_Type_forall.
