@@ -79,8 +79,8 @@ Proof.
   snrapply equiv_adjointify.
   - exact (fun w : {x : X & P x} => (j w.1; (w.1; idpath); w.2)).
   - exact (fun '((y; ((x; p); y')) : {y : Y & (P <| j) y}) => (x; y')).
-  - intros [y [[x []] y']]; cbn. reflexivity.
-  - intros [x y]; cbn. reflexivity.
+  - by intros [y [[x []] y']].
+  - by intros.
 Defined.
 
 Definition equiv_rightkanfam `{Funext} {X : Type} {Y : Type}
@@ -90,8 +90,8 @@ Proof.
   snrapply equiv_adjointify.
   - intros g y w. exact (g w.1).
   - exact (fun h x => h (j x) (x; idpath)).
-  - intros h. funext y. funext [x []]; cbn. reflexivity.
-  - intros g. apply path_forall. reflexivity.
+  - intros h. funext y. by funext [x []].
+  - intros g. by apply path_forall.
 Defined.
 
 (** Here we are taking the perspective that a type family [P : X -> Type] is a sort of oo-presheaf, considering the interpretation of [X] as an oo-groupoid and [Type] as a universe of spaces i.e. an appropriate generalization of the category of sets. It is easy to see that a type family [P] is functorial if we define its action on paths with [transport]. Functoriality then reduces to known lemmas about the [transport] function. *)
@@ -149,7 +149,7 @@ Definition univ_property_leftkanfam {X Y} {j : X -> Y}
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. exact (p # a x A).
-  - intros x. reflexivity.
+  - by intros.
 Defined.
 
 Definition contr_univ_property_leftkanfam `{Funext} {X Y} {j : X -> Y}
@@ -185,7 +185,7 @@ Definition univ_property_rightkanfam {X Y} {j : X -> Y}
 Proof.
   snrefine (_; _).
   - intros y A [x p]. exact (a x (p^ # A)).
-  - intros x. reflexivity.
+  - by intros.
 Defined.
 
 Definition contr_univ_property_rightkanfam `{Funext} {X Y} {j : X -> Y}
@@ -225,10 +225,8 @@ Proof.
   snrapply equiv_adjointify.
   - intros a x B. exact (a (j x) ((x; idpath); B)).
   - intros b y [[x p] C]. exact (p # (b x C)).
-  - intros b. funext x.
-    funext B; cbn. reflexivity.
-  - intros a. funext y.
-    funext [[x []] C]; cbn. reflexivity.
+  - intros b. by repeat funext _.
+  - intros a. funext y. by funext [[x []] C].
 Defined.
 
 Definition rightadjoint_rightkanfam `{Funext} {X Y : Type} (P : X -> Type)
@@ -238,7 +236,7 @@ Proof.
   snrapply equiv_adjointify.
   - intros a x C. exact (a (j x) C (x; idpath)).
   - intros a y C [x p]. apply (a x). exact (p^ # C).
-  - intros a. funext x. funext C; cbn. reflexivity.
+  - intros a. by repeat funext _.
   - intros b. funext y. funext C.
     funext [x p]. destruct p; cbn. reflexivity.
 Defined.
@@ -254,7 +252,7 @@ Section EmbedProofLeft.
     srefine (P <| j; _). intros y.
     snrapply isequiv_adjointify.
     - exact (fun '(((x; p); C) : (P <| j) y) => ((x; p); ((x; idpath); C))).
-    - cbn. intros [[x []] C]. reflexivity.
+    - by intros [[x []] C].
     - intros [[x []] [[x' p'] C]]; cbn; cbn in C, p'.
       revert p'; apply (equiv_ind (ap j)).
       by intros [].
