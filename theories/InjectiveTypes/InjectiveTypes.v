@@ -127,11 +127,10 @@ Definition retract_power_universe_alg_usuinj@{u su | u < su} `{Univalence}
   := retract_alg_inj_embedding D (@paths D) isembedding_paths Dai.
 
 (** ** Algebraic flabbiness and resizing constructions *)
-
 (** If [D : Type@{u}] is algebraically [u],[su]-injective, then it is algebraically [u],[u]-injective. *)
-Definition alg_uuinj_alg_usu_inj@{u su | u < su}
-  (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su} D)
-  : IsAlgebraicInjectiveType@{u u u u u u} D.
+Definition alg_uuinj_alg_usu_inj@{u w su uw suw | u < su, u <= uw, w <= uw, su <= suw, w <= suw}
+  (D : Type@{w}) (Dai : IsAlgebraicInjectiveType@{u su w su uw suw} D)
+  : IsAlgebraicInjectiveType@{u u w u uw uw} D.
 Proof.
   snrapply Build_IsAlgebraicInjectiveType.
   - exact (@lift_ai D Dai).
@@ -382,7 +381,7 @@ Defined.
 (** ** The equivalence of excluded middle with the (algebraic) injectivity of pointed types *)
 
 (** Assuming excluded middle, all pointed types are algebraically flabby (and thus algebraically injective). *)
-Definition alg_flab_pointed_lem@{u w uw | u <= uw, w <= uw}
+Definition alg_flab_pointed_lem@{u w}
   `{ExcludedMiddle} {D : Type@{w}} (d : D)
   : IsAlgebraicFlabbyType@{u w} D.
 Proof.
