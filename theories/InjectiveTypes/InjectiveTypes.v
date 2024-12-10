@@ -36,7 +36,7 @@ Section UniverseStructure.
   Definition alg_inj_contr@{} (D : Type@{w}) (cD : Contr D)
     : IsAlgebraicInjectiveType@{} D.
   Proof.
-    srefine (Build_IsAlgebraicInjectiveType D _ _); intros X Y j isem f.
+    snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
     - exact (const (center D)).
     - intros x.
       exact (contr _).
@@ -58,7 +58,7 @@ End UniverseStructure.
 Definition alg_inj_Type_sigma@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv} Type@{uv}.
 Proof.
-  srefine (Build_IsAlgebraicInjectiveType Type@{uv} _ _); intros X Y j isem f.
+  snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
   - exact (f <| j).
   - intros x.
     rapply isext_leftkanfam.
@@ -67,7 +67,7 @@ Defined.
 Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv} Type@{uv}.
 Proof.
-  srefine (Build_IsAlgebraicInjectiveType Type@{uv} _ _); intros X Y j isem f.
+  snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
   - exact (f |> j).
   - intros x. 
     rapply isext_rightkanfam.
@@ -81,7 +81,7 @@ Definition alg_inj_retract@{u v w w' uv uw vw uw' vw' | u <= uv, v <= uv, u <= u
   (retr : r o s == idmap) (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
   : IsAlgebraicInjectiveType@{u v w' uv uw' vw'} D'.
 Proof.
-  srefine (Build_IsAlgebraicInjectiveType D' _ _); intros X Y j isem f.
+  snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
   - exact (r o (lift_ai _ (s o f))).
   - intros x. rhs_V apply (retr (f x)).
     exact (ap r ((is_ext_ai _ (s o f)) x)).
@@ -98,7 +98,7 @@ Section UniverseStructure.
     (Dai : forall a, IsAlgebraicInjectiveType@{u v w uv uw vw} (D a))
     : IsAlgebraicInjectiveType@{u v tw uv utw vtw} (forall a, D a).
   Proof.
-    srefine (Build_IsAlgebraicInjectiveType (forall a, D a) _ _); intros X Y j isem f. 
+    snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
     - exact (fun y a => (lift_ai _ (fun x => f x a)) y).
     - intros x. funext a.
       exact ((is_ext_ai _ (fun x => f x a)) x).
@@ -161,7 +161,7 @@ Definition alg_flab_cconst_is_const@{u w uw | u <= uw, w <= uw}
   (D : Type@{w}) (ccond : cconst_is_const_cond@{u w uw} D)
   : IsAlgebraicFlabbyType@{u w} D.
 Proof.
-  srefine (Build_IsAlgebraicFlabbyType D _ _); intros P f.
+  snrapply Build_IsAlgebraicFlabbyType; intros P f.
   - apply (ccond P f).
     apply (cconst_factors_hprop _ _ idmap f).
     reflexivity.
@@ -188,7 +188,7 @@ Section UniverseStructure.
     {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
     : IsAlgebraicFlabbyType@{u w} D.
   Proof.
-    srefine (Build_IsAlgebraicFlabbyType D _ _); intros P f.
+    snrapply Build_IsAlgebraicFlabbyType; intros P f.
     - srapply (lift_ai _ f tt).
     - intros p. apply (is_ext_ai _ f p).
   Defined.
@@ -219,7 +219,7 @@ Defined.
 Definition alg_flab_Type_sigma@{u su | u < su} `{Univalence}
   : IsAlgebraicFlabbyType@{u su} Type@{u}.
 Proof.
-  srefine (Build_IsAlgebraicFlabbyType Type@{u} _ _); intros P A.
+  snrapply Build_IsAlgebraicFlabbyType; intros P A.
   - exact (sig@{u u} (fun p => A p)).
   - intros p.
     apply path_universe_uncurried.
@@ -229,7 +229,7 @@ Defined.
 Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
   : IsAlgebraicFlabbyType@{u su} Type@{u}.
 Proof.
-  srefine (Build_IsAlgebraicFlabbyType Type@{u} _ _); intros P A.
+  snrapply Build_IsAlgebraicFlabbyType; intros P A.
   - exact (forall p : P, A p).
   - intros p.
     apply path_universe_uncurried.
@@ -246,7 +246,7 @@ Section AssumePropResizing.
     {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{v w} D)
     : IsAlgebraicFlabbyType@{u w} D.
   Proof.
-    srefine (Build_IsAlgebraicFlabbyType D _ _); intros P f;
+    snrapply Build_IsAlgebraicFlabbyType; intros P f;
     pose (e := (equiv_smalltype@{v u} P));
     pose (PropQ := (@istrunc_equiv_istrunc _ _ e^-1 (-1) _)).
     - exact (center_af (Build_HProp (smalltype P)) (f o e)).
@@ -421,7 +421,7 @@ Definition lem_pointed_types_alg_flab@{w} `{Funext}
   : ExcludedMiddle_type@{w}.
 Proof.
   intros P PropP.
-  srefine (decidable_alg_flab_hprop _ _).
+  snrapply decidable_alg_flab_hprop.
   - apply ptaf.
     exact (inr tt).
   - exact PropP. (*Don't know why it can't find this.*)

@@ -24,7 +24,7 @@ Section AlgFlabSigma.
   Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
     : IsAlgebraicFlabbyType {x : X & A x}.
   Proof.
-    srefine (Build_IsAlgebraicFlabbyType _ _ _); intros P f;
+    snrapply Build_IsAlgebraicFlabbyType; intros P f;
     destruct (cond P (pr1 o f)) as [s e].
     - exact ((center_af _ (pr1 o f)); s (pr2 o f)).
     - unfold alg_flab_sigma_condition in cond. intros h.
