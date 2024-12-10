@@ -14,8 +14,8 @@ Section AlgFlabSigma.
 
   (** The condition for a sigma type over an algebraically flabby type to be algebraically flabby can be described as the existence of a section to the following map for every [P] and [f]. *)
   Definition alg_flab_map (P : HProp) (f : P -> X)
-    : (A (Xaf _ f).1) -> (forall h, A (f h))
-    := fun a h => (Xaf _ f).2 h # a.
+    : (A (center_af P f)) -> (forall h, A (f h))
+    := fun a h => (contr_af _ f) h # a.
 
   Definition alg_flab_sigma_condition : Type
     := forall P f, {s : _ & ((alg_flab_map P f) o s) == idmap}.
@@ -24,13 +24,13 @@ Section AlgFlabSigma.
   Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
     : IsAlgebraicFlabbyType {x : X & A x}.
   Proof.
-    intros P f.
+    srefine (Build_IsAlgebraicFlabbyType _ _ _); intros P f;
     destruct (cond P (pr1 o f)) as [s e].
-    srefine (((Xaf _ (pr1 o f)).1; s (pr2 o f)); _).
-    intros h.
-    snrapply path_sigma.
-    - exact ((Xaf _ (pr1 o f)).2 h).
-    - exact (apD10 (e (pr2 o f)) h).
+    - exact ((center_af _ (pr1 o f)); s (pr2 o f)).
+    - unfold alg_flab_sigma_condition in cond. intros h.
+      snrapply path_sigma.
+      * exact (contr_af _ (pr1 o f) h).
+      * exact (apD10 ((cond P (pr1 o f)).2 (pr2 o f)) h). (*Doesn't work with [e] instead of [(cond P (pr1 o f)).2] here for some reason*)
   Defined.
 
   Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
@@ -131,7 +131,7 @@ Defined.
 (** For a subuniverse, the flabbiness condition is equivalent to closure under proposition indexed pi types (or sigma types), so using this we can state a simpler theorem for proving flabbiness of subuniverses. *)
 Definition alg_flab_subuniverse_forall `{Univalence} (O : Subuniverse)
   (condForall : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O (forall h : P, A h))
-  : IsAlgebraicFlabbyType@{u su su} (Type_ O).
+  : IsAlgebraicFlabbyType@{u su} (Type_ O).
 Proof.
   apply (alg_flab_sigma _ alg_flab_Type_forall).
   apply (sigma_condition_sigma_condition_forall _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
@@ -143,7 +143,7 @@ Defined.
 
 Definition alg_flab_subuniverse_sigma `{Univalence} (O : Subuniverse)
   (condSigma : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O {h : P & A h})
-  : IsAlgebraicFlabbyType@{u su su} (Type_ O).
+  : IsAlgebraicFlabbyType@{u su} (Type_ O).
 Proof.
   apply (alg_flab_sigma _ alg_flab_Type_sigma).
   apply (sigma_condition_sigma_condition_sigma _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
@@ -155,5 +155,5 @@ Defined.
 
 (** As an immediate corollary, we get that reflective subuniverses are algebraically flabby. *)
 Definition alg_flab_reflective_subuniverse `{Univalence} (O : ReflectiveSubuniverse)
-  : IsAlgebraicFlabbyType@{u su su} (Type_ O)
+  : IsAlgebraicFlabbyType@{u su} (Type_ O)
   := alg_flab_subuniverse_forall _ _.

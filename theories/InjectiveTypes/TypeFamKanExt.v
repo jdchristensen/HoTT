@@ -236,9 +236,8 @@ Proof.
   snrapply equiv_adjointify.
   - intros a x C. exact (a (j x) C (x; idpath)).
   - intros a y C [x p]. apply (a x). exact (p^ # C).
-  - intros a. by repeat funext _.
-  - intros b. funext y. funext C.
-    funext [x p]. destruct p; cbn. reflexivity.
+  - intros a. by funext x C.
+  - intros b. funext y C [x p]. destruct p; cbn. reflexivity.
 Defined.
 
 (** This section is all set up for the proof that the left Kan extension of an embedding is an embedding of type families. *)
