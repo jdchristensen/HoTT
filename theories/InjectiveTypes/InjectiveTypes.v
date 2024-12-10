@@ -242,7 +242,7 @@ Section AssumePropResizing.
     snrapply Build_IsAlgebraicFlabbyType; intros P f;
     pose (e := (equiv_smalltype@{v u} P));
     pose (PropQ := (@istrunc_equiv_istrunc _ _ e^-1 (-1) _)).
-    - exact (center_af (Build_HProp (smalltype P)) (f o e)).
+    - exact (center_af (smallhprop P) (f o e)).
     - intros p.
       lhs apply (contr_af (f o e) (e^-1 p)).
       apply ap.
