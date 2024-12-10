@@ -64,7 +64,7 @@ Proof.
     rapply isext_leftkanfam.
 Defined.
 
-Definition alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
+Global Instance alg_inj_Type_forall@{u v uv suv | u <= uv, v <= uv, uv < suv} `{Univalence}
   : IsAlgebraicInjectiveType@{u v suv uv suv suv} Type@{uv}.
 Proof.
   snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
@@ -219,7 +219,7 @@ Proof.
     exact (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
 Defined.
 
-Definition alg_flab_Type_forall@{u su | u < su} `{Univalence}
+Global Instance alg_flab_Type_forall@{u su | u < su} `{Univalence}
   : IsAlgebraicFlabbyType@{u su} Type@{u}.
 Proof.
   snrapply Build_IsAlgebraicFlabbyType; intros P A.
@@ -280,8 +280,7 @@ Definition alg_inj_retract_power_universe@{u su | u < su}
   : IsAlgebraicInjectiveType@{u u u u u u} D.
 Proof.
   apply (alg_inj_retract r retr).
-  apply alg_inj_arrow.
-  apply alg_inj_Type_sigma.
+  rapply alg_inj_arrow.
 Defined.
 
 (** ** Injectivity in terms of algebraic injectivity in the absence of resizing *)

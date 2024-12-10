@@ -74,7 +74,7 @@ Section AlgFlabUniverse.
 
   Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
     (P : HProp) (A : P -> Type)
-    : alg_flab_map_forall P A == alg_flab_map S alg_flab_Type_forall P A.
+    : alg_flab_map_forall P A == alg_flab_map S _ P A.
   Proof.
     intros s. funext h.
     srefine (homotopic_trequiv S T (@univalent_transport H S) Trefl _ _ s).
@@ -95,7 +95,7 @@ Section AlgFlabUniverse.
   (** The orginal [sigma_condition] is satisfied by our reformulated conditions, [sigma_condition_forall] and [sigma_condition_sigma]. *)
   Definition sigma_condition_sigma_condition_forall `{Univalence}
     (condf : alg_flab_sigma_condition_forall)
-    : alg_flab_sigma_condition S alg_flab_Type_forall.
+    : alg_flab_sigma_condition S _.
   Proof.
     intros P A.
     destruct (condf _ A) as [s J].
@@ -123,7 +123,7 @@ End AlgFlabUniverse.
 Definition alg_flab_pType `{Univalence}
   : IsAlgebraicFlabbyType {X : Type & X}.
 Proof.
-  apply (alg_flab_sigma _ alg_flab_Type_forall).
+  apply (alg_flab_sigma _ _).
   apply (sigma_condition_sigma_condition_forall _ (@equiv_fun)).
   - intros X. reflexivity.
   - intros P A.
@@ -136,7 +136,7 @@ Definition alg_flab_subuniverse_forall `{Univalence} (O : Subuniverse)
   (condForall : forall P (PropP : IsHProp P) A, (forall h : P, In O (A h)) -> In O (forall h : P, A h))
   : IsAlgebraicFlabbyType@{u su} (Type_ O).
 Proof.
-  apply (alg_flab_sigma _ alg_flab_Type_forall).
+  apply (alg_flab_sigma _ _).
   apply (sigma_condition_sigma_condition_forall _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
   - intros P A.
