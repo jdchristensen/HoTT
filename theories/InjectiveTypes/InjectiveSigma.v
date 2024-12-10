@@ -15,10 +15,10 @@ Section AlgFlabSigma.
   (** The condition for a sigma type over an algebraically flabby type to be algebraically flabby can be described as the existence of a section to the following map for every [P] and [f]. *)
   Definition alg_flab_map (P : HProp) (f : P -> X)
     : (A (center_af P f)) -> (forall h, A (f h))
-    := fun a h => (contr_af _ f) h # a.
+    := fun a h => contr_af f h # a.
 
   Definition alg_flab_sigma_condition : Type
-    := forall P f, {s : _ & ((alg_flab_map P f) o s) == idmap}.
+    := forall P f, {s : _ & alg_flab_map P f o s == idmap}.
 
   (** A sigma type over an algebraically flabby type is also algebraically flabby, and thus algebraically injective, when the above condition holds. *)
   Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
@@ -43,7 +43,8 @@ End AlgFlabSigma.
 
 (** Taking our algebraically flabby type [X] to be [Type], this introduces our primary examples (the type of pointed types, monoids, etc.), and introduces a few simplifying lemmas. *)
 Section AlgFlabUniverse.
-  Context (S : Type -> Type) (T : forall {X Y}, X <~> Y -> S X -> S Y) (Trefl : forall {X}, (T (equiv_idmap X) == idmap)).
+  Context (S : Type -> Type) (T : forall {X Y}, X <~> Y -> S X -> S Y)
+    (Trefl : forall {X}, (T (equiv_idmap X) == idmap)).
 
   (** For a sigma type over [Type], the map [alg_flab_map] can be exchanged for either of these simpler maps for which an equivalent condition for algebraic injectivity can be defined. *)
   Definition alg_flab_map_forall `{Funext}
@@ -66,10 +67,10 @@ Section AlgFlabUniverse.
 
   (** The following conditions can be though of as a closure conditions under pi or sigma types for the type family [S]. *)
   Definition alg_flab_sigma_condition_forall `{Funext} : Type
-    := forall P A, {s : _ & ((alg_flab_map_forall P A) o s) == idmap}.
+    := forall P A, {s : _ & alg_flab_map_forall P A o s == idmap}.
 
   Definition alg_flab_sigma_condition_sigma : Type
-    := forall P A, {s : _ & ((alg_flab_map_sigma P A) o s) == idmap}.
+    := forall P A, {s : _ & alg_flab_map_sigma P A o s == idmap}.
 
   Definition homotopic_alg_flab_map_alg_flab_map_forall `{Univalence}
     (P : HProp) (A : P -> Type)
@@ -126,7 +127,7 @@ Proof.
   apply (sigma_condition_sigma_condition_forall _ (@equiv_fun)).
   - intros X. reflexivity.
   - intros P A.
-    srefine (idmap; _).
+    snrefine (idmap; _).
     intros f. funext h; cbn. reflexivity.
 Defined.
 
@@ -139,7 +140,7 @@ Proof.
   apply (sigma_condition_sigma_condition_forall _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
   - intros P A.
-    srefine(_; _).
+    srefine (_; _).
     intros s. apply path_ishprop.
 Defined.
 
@@ -151,7 +152,7 @@ Proof.
   apply (sigma_condition_sigma_condition_sigma _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
   - intros P A.
-    srefine(_; _).
+    srefine (_; _).
     intros s. apply path_ishprop.
 Defined.
 

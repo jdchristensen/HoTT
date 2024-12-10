@@ -47,8 +47,8 @@ Section UniverseStructure.
     : IsAlgebraicInjectiveType@{} Empty -> Empty.
   Proof.
     intros Eai.
-    refine ((lift_ai (Empty_rec@{v}) idmap) tt).
-    apply istruncmap_mapinO_tr@{v u uv}.
+    refine (lift_ai (Empty_rec@{v}) idmap tt).
+    apply istruncmap_mapinO_tr.
     rapply mapinO_between_inO@{uv u v uv}.
   Defined.
 
@@ -82,9 +82,9 @@ Definition alg_inj_retract@{u v w w' uv uw vw uw' vw' | u <= uv, v <= uv, u <= u
   : IsAlgebraicInjectiveType@{u v w' uv uw' vw'} D'.
 Proof.
   snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
-  - exact (r o (lift_ai _ (s o f))).
+  - exact (r o lift_ai _ (s o f)).
   - intros x. rhs_V apply (retr (f x)).
-    exact (ap r ((is_ext_ai _ (s o f)) x)).
+    exact (ap r (is_ext_ai _ (s o f) x)).
 Defined.
 
 Section UniverseStructure.
@@ -99,9 +99,9 @@ Section UniverseStructure.
     : IsAlgebraicInjectiveType@{u v tw uv utw vtw} (forall a, D a).
   Proof.
     snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
-    - exact (fun y a => (lift_ai _ (fun x => f x a)) y).
+    - exact (fun y a => lift_ai _ (fun x => f x a) y).
     - intros x. funext a.
-      exact ((is_ext_ai _ (fun x => f x a)) x).
+      exact (is_ext_ai _ (fun x => f x a) x).
   Defined.
 
   (** In particular, exponentials of algebraically injective types are algebraically injective. *)
@@ -142,7 +142,7 @@ Defined.
 (** Algebraic flabbiness is a variant of algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 Class IsAlgebraicFlabbyType@{u w} (D : Type@{w}) := {
   center_af (P : HProp@{u}) (f : P -> D) : D;
-  contr_af (P : HProp@{u}) (f : P -> D) (p : P) : center_af P f = f p;
+  contr_af {P : HProp@{u}} (f : P -> D) (p : P) : center_af P f = f p;
 }.
 
 (** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. First we give the condition, and then the two implications. *)
@@ -169,7 +169,7 @@ Proof.
   intros X f [f' e].
   srefine (center_af _ f'; _).
   intros x.
-  exact (contr_af _ f' (tr x) @ (e x)).
+  exact (contr_af f' (tr x) @ e x).
 Defined.
 
 (** Algebraic flabbiness is equivalent to algebraic injectivity, with appropriate choices of universes. *)
@@ -194,7 +194,7 @@ Section UniverseStructure.
   Proof.
     snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
     - intros y. exact (center_af (Build_HProp (hfiber j y)) (fun x => f x.1)).
-    - intros x. exact (contr_af (Build_HProp (hfiber j (j x))) (fun x => f x.1) (x; idpath (j x))).
+    - intros x. exact (contr_af _ (x; idpath (j x))).
   Defined.
 
 End UniverseStructure.
@@ -245,7 +245,7 @@ Section AssumePropResizing.
     pose (PropQ := (@istrunc_equiv_istrunc _ _ e^-1 (-1) _)).
     - exact (center_af (Build_HProp (smalltype P)) (f o e)).
     - intros p.
-      lhs apply (contr_af (Build_HProp (smalltype P)) (f o e) (e^-1 p)).
+      lhs apply (contr_af (f o e) (e^-1 p)).
       apply ap.
       apply eisretr.
   Defined.
@@ -267,7 +267,7 @@ Section AssumePropResizing.
     : exists (X : Type@{u}) (s : D -> (X -> Type@{u})) (r : (X -> Type@{u}) -> D), r o s == idmap.
   Proof.
     refine (D; _).
-    refine ((@paths D); _).
+    refine (@paths D; _).
     apply (retract_power_universe_alg_usuinj D).
     exact (universe_independent_alg_inj@{u u u u su u u u su u su} Dai).
   Defined.
@@ -299,7 +299,7 @@ Section UniverseStructure.
   Proof.
     intros X Y j isem f.
     apply tr.
-    srapply (lift_ai _ _; is_ext_ai _ f).
+    exact (lift_ai _ _; is_ext_ai _ f).
   Defined.
 
   (** The propositional truncation of algebraic injectivity implies injectivity. *)
@@ -403,7 +403,7 @@ Definition decidable_alg_flab_hprop@{w} `{Funext} (P : HProp@{w})
 Proof.
   pose (inl' := inl : P + ~P -> (P + ~P) + (Unit : Type@{w})).
   assert (l : {d : (P + ~P) + (Unit : Type@{w}) & forall z, d = inl' z}).
-  { refine (center_af _ _; contr_af _ inl'). rapply ishprop_decidable_hprop@{w w}. }
+  { refine (center_af _ _; contr_af inl'). rapply ishprop_decidable_hprop@{w w}. }
   destruct l as [[s | u] l2].
   - exact s.
   - assert (np := fun p => inl_ne_inr _ _ (l2 (inl p))^).
