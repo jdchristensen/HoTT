@@ -24,13 +24,15 @@ Section AlgFlabSigma.
   Definition alg_flab_sigma (cond : alg_flab_sigma_condition)
     : IsAlgebraicFlabbyType {x : X & A x}.
   Proof.
-    snrapply Build_IsAlgebraicFlabbyType; intros P f;
-    destruct (cond P (pr1 o f)) as [s e].
-    - exact ((center_af _ (pr1 o f)); s (pr2 o f)).
-    - unfold alg_flab_sigma_condition in cond. intros h.
-      snrapply path_sigma.
-      * exact (contr_af _ (pr1 o f) h).
-      * exact (apD10 ((cond P (pr1 o f)).2 (pr2 o f)) h). (*Doesn't work with [e] instead of [(cond P (pr1 o f)).2] here for some reason*)
+    snrapply Build_IsAlgebraicFlabbyType; intros P f.
+    - destruct (cond P (pr1 o f)) as [s e].
+      exact (center_af _ (pr1 o f); s (pr2 o f)).
+    - intros h; cbn.
+      (* We use the following so that Coq finds [cond P (fun x => (f x).1)] in the goal: *)
+      match goal with |- (_; ?C.1 _) = _ => destruct C as [s e] end; clear cond.
+      snrapply path_sigma; cbn.
+      + nrapply contr_af.
+      + exact (apD10 (e (pr2 o f)) h).
   Defined.
 
   Definition alg_inj_sigma (cond : alg_flab_sigma_condition)
