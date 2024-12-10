@@ -33,7 +33,7 @@ Section UniverseStructure.
   }.
 
   (** Contractible types are algebraically injective. *)
-  Definition alg_inj_contr@{} (D : Type@{w}) (cD : Contr D)
+  Global Instance alg_inj_contr@{} (D : Type@{w}) (cD : Contr D)
     : IsAlgebraicInjectiveType@{} D.
   Proof.
     snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
@@ -47,7 +47,7 @@ Section UniverseStructure.
     : IsAlgebraicInjectiveType@{} Empty -> Empty.
   Proof.
     intros Eai.
-    srefine ((lift_ai (Empty_rec@{v}) idmap) tt).
+    refine ((lift_ai (Empty_rec@{v}) idmap) tt).
     apply istruncmap_mapinO_tr@{v u uv}.
     rapply mapinO_between_inO@{uv u v uv}.
   Defined.
@@ -93,7 +93,7 @@ Section UniverseStructure.
     uw <= utw, vw <= vtw, tw <= utw, tw <= vtw.
   
   (** Dependent products are algebraically injective when all their factors are. *)
-  Definition alg_inj_forall@{}
+  Global Instance alg_inj_forall@{}
     `{Funext} {A : Type@{t}} (D : A -> Type@{w})
     (Dai : forall a, IsAlgebraicInjectiveType@{u v w uv uw vw} (D a))
     : IsAlgebraicInjectiveType@{u v tw uv utw vtw} (forall a, D a).
@@ -108,12 +108,8 @@ Section UniverseStructure.
   Definition alg_inj_arrow@{}
     `{Funext} {A : Type@{t}} {D : Type@{w}}
     (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
-    : IsAlgebraicInjectiveType@{u v tw uv utw vtw} (A -> D).
-  Proof.
-    apply (alg_inj_forall _).
-    intros a.
-    apply Dai.
-  Defined.
+    : IsAlgebraicInjectiveType@{u v tw uv utw vtw} (A -> D)
+    := _.
 
 End UniverseStructure.
 
@@ -122,7 +118,7 @@ Definition retract_alg_inj_embedding@{v w vw | v <= vw, w <= vw}
   (D : Type@{w}) {Y : Type@{v}} (j : D -> Y) (isem : IsEmbedding j)
   (Dai : IsAlgebraicInjectiveType@{w v w vw w vw} D)
   : { r : Y -> D & r o j == idmap }
-  := (lift_ai _ idmap; is_ext_ai _ idmap). (*Replacing second idmap with _ causes infinite loop*)
+  := (lift_ai _ idmap; is_ext_ai _ idmap).
 
 (** Any algebraically [u],[su]-injective type [X : Type@{u}], is a retract of [X -> Type@{u}]. *)
 Definition retract_power_universe_alg_usuinj@{u su | u < su} `{Univalence}
@@ -137,18 +133,16 @@ Definition alg_uuinj_alg_usu_inj@{u su | u < su}
   (D : Type@{u}) (Dai : IsAlgebraicInjectiveType@{u su u su u su} D)
   : IsAlgebraicInjectiveType@{u u u u u u} D.
 Proof.
-  srefine (Build_IsAlgebraicInjectiveType@{u u u u u u} D _ _); intros X Y j isem f.
-  - apply (lift_ai _ f).
-  - apply (is_ext_ai _ _).
+  snrapply Build_IsAlgebraicInjectiveType.
+  - exact (@lift_ai D Dai).
+  - exact (@is_ext_ai D Dai).
 Defined.
-(** Note that this proof is made trivial by cumulativity (which is not assumed in the original paper). *)
+(** Note that this proof is easy because of cumulativity of [Type] (which is not assumed in the original paper). *)
 
 (** Algebraic flabbiness is a variant of algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
-Class IsAlgebraicFlabbyType@{u w} (D : Type@{w}) : Type := {
-  center_af (P : HProp@{u}) (f : P -> D)
-    : D;
-  contr_af (P : HProp@{u}) (f : P -> D) (p : P)
-    : center_af P f = f p;
+Class IsAlgebraicFlabbyType@{u w} (D : Type@{w}) := {
+  center_af (P : HProp@{u}) (f : P -> D) : D;
+  contr_af (P : HProp@{u}) (f : P -> D) (p : P) : center_af P f = f p;
 }.
 
 (** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. First we give the condition, and then the two implications. *)
@@ -190,7 +184,7 @@ Section UniverseStructure.
   Proof.
     snrapply Build_IsAlgebraicFlabbyType; intros P f.
     - srapply (lift_ai _ f tt).
-    - intros p. apply (is_ext_ai _ f p).
+    - apply is_ext_ai.
   Defined.
 
   (** Algebraically [uv]-flabby types are algebraically [u],[v]-injective. *)
@@ -198,8 +192,8 @@ Section UniverseStructure.
     {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{uv w} D)
     : IsAlgebraicInjectiveType@{u v w uv uw vw} D.
   Proof.
-    srefine (Build_IsAlgebraicInjectiveType D _ _); intros X Y j isem f.
-    - intros y. srapply (center_af (Build_HProp (hfiber j y)) (fun x => f x.1)).
+    snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
+    - intros y. exact (center_af (Build_HProp (hfiber j y)) (fun x => f x.1)).
     - intros x. exact (contr_af (Build_HProp (hfiber j (j x))) (fun x => f x.1) (x; idpath (j x))).
   Defined.
 
@@ -242,7 +236,7 @@ Section AssumePropResizing.
   Context `{PropResizing}.
 
   (** Algebraic flabbiness is independent of universes under propositional resizing. *)
-  Definition universe_independent_alg_flab@{v u w vw uw | w <= vw, v <= vw, u <= uw, w <= uw}
+  Definition universe_independent_alg_flab@{v u w}
     {D : Type@{w}} (Daf : IsAlgebraicFlabbyType@{v w} D)
     : IsAlgebraicFlabbyType@{u w} D.
   Proof.
@@ -257,13 +251,13 @@ Section AssumePropResizing.
   Defined.
 
   (** Algebraic injectivity is independent of universes under propositional resizing. *)
-  Definition universe_independent_alg_inj@{u v w u' v' uv uw vw u'v' u'w v'w u'v'w | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw,
-                                            u' <= u'v', v' <= u'v', u' <= u'w, w <= u'w, v' <= v'w, w <= v'w, u'v' <= u'v'w, u'w <= u'v'w, v'w <= u'v'w}
+  Definition universe_independent_alg_inj@{u v w u' v' uv uw vw u'v' u'w v'w | u <= uv, v <= uv, u <= uw, w <= uw, v <= vw, w <= vw,
+                                            u' <= u'v', v' <= u'v', u' <= u'w, w <= u'w, v' <= v'w, w <= v'w}
     {D : Type@{w}} (Dai : IsAlgebraicInjectiveType@{u v w uv uw vw} D)
     : IsAlgebraicInjectiveType@{u' v' w u'v' u'w v'w} D.
   Proof.
     apply alg_inj_alg_flab.
-    apply universe_independent_alg_flab@{u u'v' w uw u'v'w}.
+    apply universe_independent_alg_flab@{u u'v' w}.
     exact (alg_flab_alg_inj Dai).
   Defined.
 
@@ -275,7 +269,7 @@ Section AssumePropResizing.
     refine (D; _).
     refine ((@paths D); _).
     apply (retract_power_universe_alg_usuinj D).
-    exact (universe_independent_alg_inj@{u u u u su u u u su u su su} Dai).
+    exact (universe_independent_alg_inj@{u u u u su u u u su u su} Dai).
   Defined.
 
 End AssumePropResizing.
@@ -322,7 +316,7 @@ Section UniverseStructure.
       exact (inj_alg_inj@{} D Dai).
   Defined.
 
-  (** The retract of an injective type is injective. *)
+  (** A retract of an injective type is injective. *)
   Definition inj_retract@{w' uw' vw' uvw' T | u <= uw', v <= vw', w' <= uw', w' <= vw', uv <= uvw', uw' <= uvw', vw' <= uvw', uvw < T, uvw' < T}
     `{Funext} {D' : Type@{w'}} {D : Type@{w}} (r : D -> D') {s : D' -> D}
     (retr : r o s == idmap) (Di : IsInjectiveType@{u v w uv uw vw uvw} D)
@@ -392,13 +386,15 @@ Definition alg_flab_pointed_lem@{u w uw | u <= uw, w <= uw}
   `{ExcludedMiddle} {D : Type@{w}} (d : D)
   : IsAlgebraicFlabbyType@{u w} D.
 Proof.
-  srefine (Build_IsAlgebraicFlabbyType D _ _); intros P f;
-  case (LEM P _).
-  - intros p. exact (f p).
-  - intros np. exact d.
-  - intros q p. (*exact (ap f (path_ishprop _ _)).
-  - intros np p. exact (Empty_rec (np p)).*)
-Abort. (*Need to do cases on P before applying [Build_IsAlgebraicFlabbyType]?*)
+  snrapply Build_IsAlgebraicFlabbyType; intros P f.
+  - destruct (LEM P _) as [p | np].
+    + exact (f p).
+    + exact d.
+  - cbn.  intros q.
+    destruct (LEM P _) as [p | np].
+    + exact (ap f (path_ishprop _ _)).
+    + exact (Empty_rec (np q)).
+Defined.
 
 (** If the type [P + ~P + Unit] is algebraically flabby for [P] a proposition, then [P] is decidable. *)
 Definition decidable_alg_flab_hprop@{w} `{Funext} (P : HProp@{w})
@@ -407,7 +403,7 @@ Definition decidable_alg_flab_hprop@{w} `{Funext} (P : HProp@{w})
 Proof.
   pose (inl' := inl : P + ~P -> (P + ~P) + (Unit : Type@{w})).
   assert (l : {d : (P + ~P) + (Unit : Type@{w}) & forall z, d = inl' z}).
-  { rapply (center_af _ _; contr_af _ inl'). rapply ishprop_decidable_hprop@{w w}. }
+  { refine (center_af _ _; contr_af _ inl'). rapply ishprop_decidable_hprop@{w w}. }
   destruct l as [[s | u] l2].
   - exact s.
   - assert (np := fun p => inl_ne_inr _ _ (l2 (inl p))^).
@@ -424,5 +420,5 @@ Proof.
   snrapply decidable_alg_flab_hprop.
   - apply ptaf.
     exact (inr tt).
-  - exact PropP. (*Don't know why it can't find this.*)
+  - exact PropP. (* Don't know why type class search doesn't find this. *)
 Defined.
