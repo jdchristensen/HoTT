@@ -153,8 +153,8 @@ Section IntegersHITLemmas.
     (f :  P -> P)
     (g1 :  P -> P)
     (g2 :  P -> P)
-    (s : forall  (t : P ), (g1 (f t)= t))
-    (r : forall  (t : P ), (f (g2 t)= t))
+    (s : forall  (t : P ), g1 (f t)= t)
+    (r : forall  (t : P ), f (g2 t)= t)
     : IntegersHIT -> P.
   Proof.
     srapply IntegersHIT_ind.
@@ -171,13 +171,14 @@ Section IntegersHITLemmas.
       refine ((transport_const (ret z) (f (g2 t))) @ (r t)).
   Defined.
 
-  Definition IntegersHIT_rec_pred
+  (** This verison of the recursion principle requires only a quasiinverse rather than a biinvertible map*)
+  Definition IntegersHIT_rec_qinv
     (P: Type)
     (t0 : P)
     (f :  P -> P)
     (g :  P -> P)
-    (s : forall  (t : P ), (g (f t)= t))
-    (r : forall  (t : P ), (f (g t)= t))
+    (s : forall  (t : P ), g (f t)= t)
+    (r : forall  (t : P ), f (g t)= t)
     : IntegersHIT -> P.
   Proof.
     srapply IntegersHIT_ind.
@@ -195,11 +196,11 @@ Section IntegersHITLemmas.
   Defined.
 
 
-  Definition IntegersHIT_rec_pred_equiv
+  Definition IntegersHIT_rec_biinv
     (P: Type)
     (t0 : P)
     (f : P -> P)
-   `{e: IsEquiv P P f}
+   `{e: IsBiInv P P f}
     : IntegersHIT -> P.
   Proof.
     srapply IntegersHIT_ind; cbn beta.
@@ -207,15 +208,28 @@ Section IntegersHITLemmas.
     - intro z.
       exact f.
     - intro z.
-      exact f^-1.
+      exact (retr_biinv f).
     - intro z.
-      exact f^-1.
+      exact (sect_biinv f).
     - intros z t.
-      refine ((transport_const (sec z) (f^-1 (f t))) @ ((eissect f) t)).
+      refine ((transport_const (sec z) (retr_biinv f (f t))) @ ((eissect_biinv f) t)).
     - intros z t.
-      refine ((transport_const (ret z) (f (f^-1 t))) @ ((eisretr f) t)).
+      refine ((transport_const (ret z) (f ((sect_biinv f) t))) @ ((eisretr_biinv f) t)).
   Defined.
 
+  (** This verison of the recursion principle requires only a half-adjoint equivalence.*)
+  (** Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntegersHIT_rec_biinv instead.*)
+  Definition IntegersHIT_rec_equiv
+    (P: Type)
+    (t0 : P)
+    (f : P -> P)
+   `{e: IsEquiv P P f}
+    : IntegersHIT -> P.
+  Proof.
+    exact (IntegersHIT_rec_biinv _ t0 f (e := (biinv_isequiv' _ e))).
+  Defined.
+
+    
   Definition IntegersHIT_rec_beta_sec
     (P: Type)
     (t0 : P)
@@ -254,6 +268,7 @@ Section IntegersHITLemmas.
     rapply IntegersHIT_ind_beta_ret.
   Defined.
 
+  (** Successor is biinvertible*)
   Global Instance isbiinv_succ
       : IsBiInv succ.
   Proof.
@@ -270,16 +285,16 @@ Section IntegersHITLemmas.
     exact (Build_EquivBiInv _ _ _ isbiinv_succ).
   Defined.
 
-  (* * The successor is an equivalence on [Int] *)
+  (* * The successor is an equivalence on [IntegersHIT] *)
   Global Instance isequiv_IntegersHIT_succ : IsEquiv succ
-    := isequiv_biinv' biinv_IntegersHIT.
+    := isequiv_biinv'' biinv_IntegersHIT.
 
-  (** The predecessor is an equivalence on [Int] *)
-  Global Instance isequiv_IntegersHI_pred2 : IsEquiv pred2
+  (** The predecessor is an equivalence on [IntegersHIT] *)
+  Global Instance isequiv_IntegersHIT_pred1 : IsEquiv pred1
     := isequiv_inverse succ.
 
-  Global Instance isequiv_IntegersHI_pred1 : IsEquiv pred1
-    := (isequiv_homotopic _ ( fun x => (pred1_is_pred2 x)^)).
+  Global Instance isequiv_IntegersHIT_pred2 : IsEquiv pred2
+    := (isequiv_homotopic _ pred1_is_pred2).
 
 End IntegersHITLemmas.
 
@@ -562,42 +577,13 @@ Declare Scope IntegersHIT_scope.
 Delimit Scope IntegersHIT_scope with IntegersHIT.
 Local Open Scope IntegersHIT_scope.
 
-(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [succ n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
-Definition IntegersHIT_of_nat (n : nat) : IntegersHIT.
-Proof.
-  induction n.
-  - exact zero_i.
-  - exact (succ IHn).
-Defined.
-
-(* Compute (IntegersHIT_of_nat 5). *)
-
-
-(** Printing *)
-Definition IntegersHIT_to_number_int  :IntegersHIT ->  Numeral.int := int_to_number_int o IntHITtoIntIT.
-
-(** Parsing *)
-Definition IntegersHIT_of_number_int (d : Numeral.int) := IntITtoIntHIT (int_of_number_int  d).
-
-Number Notation IntegersHIT IntegersHIT_of_number_int IntegersHIT_to_number_int  : IntegersHIT_scope.
-
-(** The following function reduces an expression succ(pred1(succ( ... )))*)
-Definition IntegersHIT_reduce 
-  := IntITtoIntHIT o IntHITtoIntIT.
-
-Compute IntegersHIT_reduce (succ(pred2(succ(pred1(succ(succ 0)))))).
-
-Compute (succ(pred2(succ(pred1(succ(succ 0)))))).
-
-
-Compute pred2(0).
 
 Definition IntegersHIT_neg (x : IntegersHIT) 
   : IntegersHIT.
   Proof.
     revert x.
-    srapply (IntegersHIT_rec_pred_equiv _ _ pred1).
-    - exact 0.
+    srapply (IntegersHIT_rec_equiv _ _ pred1).
+    - exact zero_i.
     (* - exact 0.
     - exact pred1.
     - exact succ. 
@@ -615,11 +601,91 @@ Definition IntegersHIT_neg' (x : IntegersHIT)
   : IntegersHIT.
   Proof.
     revert x.
-    snrapply IntegersHIT_rec_pred_equiv.
-    - exact 0.
+    snrapply IntegersHIT_rec_equiv.
+    - exact zero_i.
     - exact pred1.
-    - exact isequiv_IntegersHI_pred1.
+    - exact isequiv_IntegersHIT_pred1.
 Defined.
+
+(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [succ n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
+Definition IntegersHIT_of_nat (n : nat) : IntegersHIT.
+Proof.
+  induction n.
+  - exact zero_i.
+  - exact (succ IHn).
+Defined.
+
+Compute (IntegersHIT_of_nat 5).
+
+Definition test (n : nat) : nat_pred (nat_succ n) = n.
+Proof.
+  reflexivity.
+Defined.
+
+(** Printing *)
+Definition IntegersHIT_to_number_int' (n : IntegersHIT) : Numeral.int.
+Proof.
+  revert n.
+  srapply IntegersHIT_rec_qinv.
+  - exact (Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))).
+  - intro i.
+    exact  (match i with
+          | Numeral.IntDec (Decimal.Pos i) => Nat.to_num_int (nat_succ (Nat.of_uint i))
+          | Numeral.IntDec (Decimal.Neg i) => Numeral.IntDec ( (Decimal.Neg (Nat.to_uint (nat_pred (Nat.of_uint i)))))
+          | Numeral.IntHex (Hexadecimal.Pos i) => Nat.to_num_int (nat_succ (Nat.of_hex_uint i))
+          | Numeral.IntHex (Hexadecimal.Neg i) => Numeral.IntDec ( (Decimal.Neg (Nat.to_uint (nat_pred (Nat.of_hex_uint i)))))
+            end).
+  - intro i.
+    exact  (match i with
+          | Numeral.IntDec (Decimal.Pos i) => Nat.to_num_int (nat_pred (Nat.of_uint i))
+          | Numeral.IntDec (Decimal.Neg i) => Numeral.IntDec ( (Decimal.Neg (Nat.to_uint (nat_succ (Nat.of_uint i)))))
+          | Numeral.IntHex (Hexadecimal.Pos i) => Nat.to_num_int (nat_pred (Nat.of_hex_uint i))
+          | Numeral.IntHex (Hexadecimal.Neg i) => Numeral.IntDec ( (Decimal.Neg (Nat.to_uint (nat_succ (Nat.of_hex_uint i)))))
+            end).
+    - simpl.
+      intro t.
+      admit.
+    - admit.
+      (* reflexivity. *)
+
+      (* exact (Numeral.IntDec (Decimal.Pos (Nat.to_uint (S n)))).
+  match n with
+  | posS n => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S n)))
+  | zero => Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))
+  | negS n => Numeral.IntDec (Decimal.Neg (Nat.to_uint (S n)))
+  end. *)
+Admitted. 
+
+(** Parsing *)
+Definition IntegersHIT_of_number_int' (d : Numeral.int) :=
+  match d with
+  | Numeral.IntDec (Decimal.Pos d) => IntegersHIT_of_nat (Nat.of_uint d)
+  | Numeral.IntDec (Decimal.Neg d) => IntegersHIT_neg ( IntegersHIT_of_nat(Nat.of_uint d))
+  | Numeral.IntHex (Hexadecimal.Pos u) => IntegersHIT_of_nat (Nat.of_hex_uint u)
+  | Numeral.IntHex (Hexadecimal.Neg u) => IntegersHIT_neg (IntegersHIT_of_nat ((Nat.of_hex_uint u)))
+  end.
+
+
+(** Printing *)
+Definition IntegersHIT_to_number_int  :IntegersHIT ->  Numeral.int := int_to_number_int o IntHITtoIntIT.
+
+(** Parsing *)
+(* Definition IntegersHIT_of_number_int (d : Numeral.int) := IntITtoIntHIT (int_of_number_int  d). *)
+
+
+Number Notation IntegersHIT IntegersHIT_of_number_int' IntegersHIT_to_number_int  : IntegersHIT_scope.
+
+(** The following function reduces an expression succ(pred1(succ( ... )))*)
+Definition IntegersHIT_reduce 
+  := IntITtoIntHIT o IntHITtoIntIT.
+
+Compute IntegersHIT_reduce (succ(pred2(succ(pred1(succ(succ 0)))))).
+
+Compute (succ(pred2(succ(pred1(succ(succ 0)))))).
+
+
+Compute pred2(0).
+
 
 Notation "- x" := (IntegersHIT_neg x) : IntegersHIT_scope.
 
@@ -628,6 +694,8 @@ Notation "z .-1" := (pred1 z) : IntegersHIT_scope.
 
 
 Compute (-5).
+
+Compute 5.
 
 Compute   IntegersHIT_neg(0).
 
@@ -640,17 +708,28 @@ Compute   IntegersHIT_neg(pred1 (pred2 zero_i)).
 Compute   IntegersHIT_reduce (IntegersHIT_neg(pred1 (pred1 zero_i))).
 
 (** we define addition by recursion on the first argument*)
-Definition IntegersHIT_add 
+(* Definition IntegersHIT_add 
 (x y : IntegersHIT) 
 : IntegersHIT.
 Proof.
   revert x.
-  snrapply IntegersHIT_rec_pred.
+  snrapply IntegersHIT_rec_qinv.
   - exact y.
   - exact succ.
   - exact pred1.
   - exact sec.
   - exact ret_pred1.
+Defined. *)
+
+(** we define addition by recursion on the first argument*)
+Definition IntegersHIT_add 
+(x y : IntegersHIT) 
+: IntegersHIT.
+Proof.
+  revert x.
+  snrapply (IntegersHIT_rec_equiv _ _ succ).
+  - exact y.
+  - exact isequiv_IntegersHIT_succ.
 Defined.
 
 Infix "+" := IntegersHIT_add : IntegersHIT_scope.
@@ -675,13 +754,10 @@ Proof.
     exact H.
 Defined. *)
 
-Definition IntegersHIT_neg_neg (x : IntegersHIT) : - - x = x.  
+Definition IntegersHIT_neg_neg (x: IntegersHIT): - - x = x.
 Proof.
   revert x.
-  srapply (uniquenessZset_two_fun_equiv succ); cbn beta.
-  - reflexivity.
-  - reflexivity.
-  - reflexivity.
+  by srapply (uniquenessZset_two_fun_equiv succ).
 Defined.
 
 (* * Negation is an equivalence. *)
@@ -778,7 +854,7 @@ Defined. *)
 Definition IntegersHIT_add_succ_r (x y : IntegersHIT) : x + (succ y) = succ (x + y).
 Proof.
   revert x.
-  srapply (uniquenessZset_two_fun_equiv succ); cbn  beta.
+  srapply (uniquenessZset_two_fun_equiv succ); cbn beta.
   - reflexivity.
   - reflexivity.
   - reflexivity.
@@ -1002,7 +1078,7 @@ Defined.
 : IntegersHIT.
 Proof.
   revert x.
-  snrapply IntegersHIT_rec_pred_equiv.
+  snrapply IntegersHIT_rec_equiv.
   - exact 0.
   - exact (fun z => (IntegersHIT_add) z y).
   - exact (isequiv_IntegersHIT_add_r y).
@@ -1013,7 +1089,7 @@ Definition IntegersHIT_mul
 : IntegersHIT.
 Proof.
   revert x.
-  srapply (IntegersHIT_rec_pred_equiv _ _ (fun z => (IntegersHIT_add) z y)).
+  srapply (IntegersHIT_rec_equiv _ _ (fun z => (IntegersHIT_add) z y)).
   - exact 0.
 Defined.
 
@@ -1145,21 +1221,9 @@ Proof.
     by rewrite H.
 Defined. *)
 
-(** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
-Definition IntegersHIT_mul_succ_r (x y : IntegersHIT) : x * (succ y) = x + x * y.
-Proof.
-  revert x.
-  rapply (uniquenessZset_two_fun_equiv (fun x => IntegersHIT_add x (succ y))); cbn beta.
-  - reflexivity.
-  - reflexivity.
-  - intro z.
-    rewrite  IntegersHIT_mul_succ_l.
-    rewrite  IntegersHIT_add_succ_l.
-    rewrite  IntegersHIT_add_succ_r.
-    by rewrite IntegersHIT_add_assoc.
-Defined.
 
-Definition IntegersHIT_mul_succ_r' (x y : IntegersHIT) : x * (succ y) = x * y + x.
+(** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
+(* Definition IntegersHIT_mul_succ_r' (x y : IntegersHIT) : x * (succ y) = x * y + x.
 Proof.
   revert x.
   srapply IntegersHIT_ind_hprop_pred; cbn beta.
@@ -1180,12 +1244,25 @@ Proof.
     rewrite <- (IntegersHIT_add_pred_r x (-y)).
     rewrite IntegersHIT_add_assoc.
     by rewrite H.
+Defined. *)
+
+(** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
+Definition IntegersHIT_mul_succ_r' (x y : IntegersHIT) : x * (succ y) = x * y + x.
+Proof.
+  rewrite IntegersHIT_add_comm.
+  revert x.
+  rapply (uniquenessZset_two_fun_equiv (fun x => IntegersHIT_add x (succ y))); cbn beta.
+  - reflexivity.
+  - reflexivity.
+  - intro z. 
+    rewrite  IntegersHIT_mul_succ_l.
+    rewrite  IntegersHIT_add_succ_l.
+    rewrite  IntegersHIT_add_succ_r.
+    by rewrite IntegersHIT_add_assoc.
 Defined.
 
-
-(** TODO change this to -x on right*)
 (** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
-Definition IntegersHIT_mul_pred_r (x y : IntegersHIT) : x * (pred1 y) = - x + x * y.
+(* Definition IntegersHIT_mul_pred_r (x y : IntegersHIT) : x * (pred1 y) = - x + x * y.
 Proof.
   revert x.
   rapply IntegersHIT_ind_hprop_pred.
@@ -1210,13 +1287,10 @@ Proof.
     rewrite IntegersHIT_add_succ_l.
     rewrite (IntegersHIT_add_succ_r (- x + x * y) (-y)) in H.
     by rewrite (IntegersHIT_add_assoc _ _ _)^ in H.
-Defined.
+Defined. *)
 
-(** (fun x => IntegersHIT_add x (pred1 y)) *)
-
-
-
-Definition IntegersHIT_mul_pred_r' (x y : IntegersHIT) : x * (pred1 y) = x * y -x.
+(** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
+Definition IntegersHIT_mul_pred_r (x y : IntegersHIT) : x * (pred1 y) = x * y - x.
 Proof.
   revert x.
   rapply (uniquenessZset_two_fun_equiv (fun x => IntegersHIT_add x (pred1 y))); cbn beta.
@@ -1363,11 +1437,14 @@ Proof.
   - reflexivity. 
 Defined.
 
-(** Integers interation*)
 
+
+
+(** Integers interation*)
+(* 
 Definition IntegersHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntegersHIT) (a0: A) : A.
 Proof.
-  snrapply IntegersHIT_rec_pred_equiv.
+  snrapply IntegersHIT_rec_equiv.
   - exact a0.
   - exact f.
   - exact _.
@@ -1386,7 +1463,7 @@ Proof.
   (* reflexivity.
   simpl.
   unfold IntegersHIT_iter.
-  unfold IntegersHIT_rec_pred_equiv.
+  unfold IntegersHIT_rec_equiv.
   unfold IntegersHIT_ind.
   reflexivity.
   cbn beta.
@@ -1483,7 +1560,7 @@ Compute IntegersHIT_iter f (-5) a.
 Compute IntegersHIT_iter f^-1 5 a.
 
 Compute IntegersHIT_iter f (-5) a.
-Compute IntegersHIT_iter f^-1 5 a.
+Compute IntegersHIT_iter f^-1 5 a. *)
 
 
 

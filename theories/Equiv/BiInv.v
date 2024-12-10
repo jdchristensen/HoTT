@@ -7,11 +7,11 @@ Generalizable Variables A B f.
 
 (** A map is "bi-invertible" if it has both a section and a retraction, not necessarily the same.  This definition of equivalence was proposed by Andre Joyal. *)
 
-Class IsBiInv {A B : Type} (f : A -> B) := {
+Class IsBiInv {A B : Type} (e : A -> B) := {
   sect_biinv : B -> A ;
   retr_biinv : B -> A ;
-  eisretr_biinv : f o sect_biinv == idmap ;
-  eissect_biinv : retr_biinv o f == idmap ;
+  eisretr_biinv : e o sect_biinv == idmap ;
+  eissect_biinv : retr_biinv o e == idmap ;
 }.
 
 Arguments sect_biinv {A B}%_type_scope f%_function_scope {_} _.
