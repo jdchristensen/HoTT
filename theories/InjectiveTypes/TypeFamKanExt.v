@@ -80,7 +80,7 @@ Proof.
   - exact (fun w : {x : X & P x} => (j w.1; (w.1; idpath); w.2)).
   - exact (fun '((y; ((x; p); y')) : {y : Y & (P <| j) y}) => (x; y')).
   - by intros [y [[x []] y']].
-  - by intros.
+  - reflexivity.
 Defined.
 
 Definition equiv_rightkanfam `{Funext} {X : Type} {Y : Type}
@@ -90,7 +90,7 @@ Proof.
   snrapply equiv_adjointify.
   - intros g y w. exact (g w.1).
   - exact (fun h x => h (j x) (x; idpath)).
-  - intros h. funext y. by funext [x []].
+  - intros h. by funext y [x []].
   - intros g. by apply path_forall.
 Defined.
 
@@ -149,7 +149,7 @@ Definition univ_property_leftkanfam {X Y} {j : X -> Y}
 Proof.
   snrefine (_; _).
   - intros y [[x p] A]. exact (p # a x A).
-  - by intros.
+  - intros x. reflexivity.
 Defined.
 
 Definition contr_univ_property_leftkanfam `{Funext} {X Y} {j : X -> Y}
@@ -185,7 +185,7 @@ Definition univ_property_rightkanfam {X Y} {j : X -> Y}
 Proof.
   snrefine (_; _).
   - intros y A [x p]. exact (a x (p^ # A)).
-  - by intros.
+  - intro x. reflexivity.
 Defined.
 
 Definition contr_univ_property_rightkanfam `{Funext} {X Y} {j : X -> Y}
@@ -225,8 +225,8 @@ Proof.
   snrapply equiv_adjointify.
   - intros a x B. exact (a (j x) ((x; idpath); B)).
   - intros b y [[x p] C]. exact (p # (b x C)).
-  - intros b. by repeat funext _.
-  - intros a. funext y. by funext [[x []] C].
+  - intros b. by funext x C.
+  - intros a. by funext y [[x []] C].
 Defined.
 
 Definition rightadjoint_rightkanfam `{Funext} {X Y : Type} (P : X -> Type)
