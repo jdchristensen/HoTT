@@ -140,8 +140,8 @@ Defined.
 
 (** Algebraic flabbiness is a variant of algebraic injectivity, but only ranging over embeddings of propositions into the unit type. *)
 Class IsAlgebraicFlabbyType@{u w} (D : Type@{w}) := {
-  center_af (P : HProp@{u}) (f : P -> D) : D;
-  contr_af {P : HProp@{u}} (f : P -> D) (p : P) : center_af P f = f p;
+  center_af {P : HProp@{u}} (f : P -> D) : D;
+  contr_af {P : HProp@{u}} (f : P -> D) (p : P) : center_af f = f p;
 }.
 
 (** Algebraic flabbiness of a type [D] is equivalent to the statement that all conditionally constant functions [X -> D] are constant. First we give the condition, and then the two implications. *)
@@ -166,7 +166,7 @@ Definition cconst_is_const_alg_flab@{u w uw | u <= uw, w <= uw}
   : cconst_is_const_cond@{u w uw} D.
 Proof.
   intros X f [f' e].
-  srefine (center_af _ f'; _).
+  srefine (center_af f'; _).
   intros x.
   exact (contr_af f' (tr x) @ e x).
 Defined.
@@ -192,7 +192,7 @@ Section UniverseStructure.
     : IsAlgebraicInjectiveType@{u v w uv uw vw} D.
   Proof.
     snrapply Build_IsAlgebraicInjectiveType; intros X Y j isem f.
-    - intros y. exact (center_af (Build_HProp (hfiber j y)) (fun x => f x.1)).
+    - intros y. exact (center_af (fun x : Build_HProp (hfiber j y) => f x.1)).
     - intros x. exact (contr_af _ (x; idpath (j x))).
   Defined.
 
@@ -242,7 +242,7 @@ Section AssumePropResizing.
     snrapply Build_IsAlgebraicFlabbyType; intros P f;
     pose (e := (equiv_smalltype@{v u} P));
     pose (PropQ := (@istrunc_equiv_istrunc _ _ e^-1 (-1) _)).
-    - exact (center_af (smallhprop P) (f o e)).
+    - exact (center_af (f o e)).
     - intros p.
       lhs apply (contr_af (f o e) (e^-1 p)).
       apply ap.
@@ -401,7 +401,7 @@ Definition decidable_alg_flab_hprop@{w} `{Funext} (P : HProp@{w})
 Proof.
   pose (inl' := inl : P + ~P -> (P + ~P) + (Unit : Type@{w})).
   assert (l : {d : (P + ~P) + (Unit : Type@{w}) & forall z, d = inl' z}).
-  { refine (center_af _ _; contr_af inl'). rapply ishprop_decidable_hprop@{w w}. }
+  { refine (center_af _; contr_af inl'). rapply ishprop_decidable_hprop@{w w}. }
   destruct l as [[s | u] l2].
   - exact s.
   - assert (np := fun p => inl_ne_inr _ _ (l2 (inl p))^).
