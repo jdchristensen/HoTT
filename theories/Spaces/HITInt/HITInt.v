@@ -140,6 +140,7 @@ Proof.
   - intros z t.
     rapply path_ishprop.
 Defined.
+
 (** The recursion principle.*)
 Definition IntHIT_rec
   (P: Type)
@@ -211,7 +212,6 @@ Proof.
     refine ((transport_const (ret z) (f (g t))) @ (r t)).
 Defined. 
 
-
 (** This verison of the recursion principle requires only a half-adjoint equivalence.*)
 (** Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead.*)
 Definition IntHIT_rec_equiv
@@ -221,7 +221,7 @@ Definition IntHIT_rec_equiv
   `{e: IsEquiv P P f}
   : IntHIT -> P.
 Proof.
-  exact (IntHIT_rec_biinv _ t0 f (e := (biinv_isequiv _ e))).
+  exact (IntHIT_rec_biinv _ t0 f (e := (isbiinv_isequiv _ e))).
 Defined.
 
 (** Integers interation*)
@@ -291,7 +291,7 @@ Defined.
 
 (* * The successor is an equivalence on [IntHIT] *)
 Global Instance isequiv_IntHIT_succ : IsEquiv succ
-  := isequiv_biinv biinv_IntHIT.
+  := isequiv_isbiinv biinv_IntHIT.
 
 (** The predecessor is an equivalence on [IntHIT] *)
 Global Instance isequiv_IntHIT_pred1 : IsEquiv pred1
@@ -368,7 +368,7 @@ Section Uniqueness.
   Defined.  
  
 (** The following unqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal.*)
-Definition uniquenessZ_two_fun_binv
+Definition uniquenessZ_two_fun_biinv
   (k1: IntHIT -> P)
   (k2: IntHIT -> P)
   (p0 : k1 zero_i = k2 zero_i)
@@ -395,7 +395,7 @@ Definition uniquenessZ_two_fun_equiv
   (pf2 : forall (z : IntHIT), (f o k2) z = (k2 o succ) z)
   : forall (z : IntHIT), k1 z = k2 z.
   Proof.
-  exact (uniquenessZ_two_fun_binv (e := Build_EquivBiInv P P _ (biinv_isequiv f e')) k1 k2 p0 pf1 pf2).
+  exact (uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2).
 Defined.
 
 (** Next we prove that [IntHIT] is equivalent to [Int]*)
@@ -580,10 +580,12 @@ Section IntegerArithmetic.
     := equiv_inj IntHIT_neg.
 
   (** The negation of a successor is the predecessor of the negation. *)
-  Definition IntHIT_neg_succ (x : IntHIT) : - succ x = pred1 (-x) := idpath.
+  Definition IntHIT_neg_succ (x : IntHIT) : - succ x = pred1 (-x) 
+    := idpath.
 
   (** The negation of a predecessor is the successor of the negation. *)
-  Definition IntHIT_neg_pred (x : IntHIT) : - pred1 x = succ (- x) := idpath.
+  Definition IntHIT_neg_pred (x : IntHIT) : - pred1 x = succ (- x) 
+    := idpath.
 
   (** *** Addition *)
 
@@ -591,7 +593,8 @@ Section IntegerArithmetic.
   Infix "-" := (fun x y => x + -y) : IntHIT_scope.
 
   (** Integer addition with zero on the left is the identity by definition. *)
-  Definition IntHIT_add_0_l (x : IntHIT) : 0 + x = x := idpath.
+  Definition IntHIT_add_0_l (x : IntHIT) : 0 + x = x 
+    := idpath.
 
   (** Integer addition with zero on the right is the identity. *)
   Definition IntHIT_add_0_r (x : IntHIT) : x + 0 = x.
@@ -601,10 +604,12 @@ Section IntegerArithmetic.
   Defined.
 
   (** Adding a successor on the left is the successor of the sum. *)
-  Definition IntHIT_add_succ_l (x y : IntHIT) : (succ x) + y = succ (x + y) := idpath.
+  Definition IntHIT_add_succ_l (x y : IntHIT) : (succ x) + y = succ (x + y) 
+    := idpath.
 
   (** Adding a predecessor on the left is the predecessor of the sum. *)
-  Definition IntHIT_add_pred_l (x y : IntHIT) : (pred1 x) + y = pred1 (x + y) := idpath.
+  Definition IntHIT_add_pred_l (x y : IntHIT) : (pred1 x) + y = pred1 (x + y) 
+    := idpath.
 
   (** Adding a successor on the right is the successor of the sum. *)
   Definition IntHIT_add_succ_r (x y : IntHIT) : x + (succ y) = succ (x + y).
@@ -627,7 +632,8 @@ Section IntegerArithmetic.
   Defined.
 
   (** Integer addition with 1 on the left is the successor. *)
-  Definition IntHIT_add_1_l (x : IntHIT) : 1 + x = succ x := idpath.
+  Definition IntHIT_add_1_l (x : IntHIT) : 1 + x = succ x 
+    := idpath.
 
   (** Integer addition with 1 on the right is the successor. *)
   Definition IntHIT_add_1_r (x : IntHIT) : x + 1 = succ x.
@@ -726,13 +732,16 @@ Section IntegerArithmetic.
   Infix "*" := IntHIT_mul : IntHIT_scope.
 
   (** Multiplication with a successor on the left is the sum of the multplication without the successor and the multiplicand which was not a successor. *)
-  Definition IntHIT_mul_succ_l (x y : IntHIT) : (succ x) * y = x * y + y := idpath.
+  Definition IntHIT_mul_succ_l (x y : IntHIT) : (succ x) * y = x * y + y 
+    := idpath.
 
   (** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
-  Definition IntHIT_mul_pred_l (x y : IntHIT) : (pred1 x) * y = x * y - y := idpath.
+  Definition IntHIT_mul_pred_l (x y : IntHIT) : (pred1 x) * y = x * y - y 
+    := idpath.
 
   (** Integer multiplication with zero on the left is zero by definition. *)
-  Definition IntHIT_mul_0_l (x : IntHIT) : 0 * x = 0 := idpath.
+  Definition IntHIT_mul_0_l (x : IntHIT) : 0 * x = 0 
+    := idpath.
 
   (** Integer multiplication with zero on the right is zero. *)
   Definition IntHIT_mul_0_r (x : IntHIT) : x * 0 = 0.
@@ -747,7 +756,8 @@ Section IntegerArithmetic.
   Defined.
 
   (** Integer multiplication with one on the left is the identity. *)
-  Definition IntHIT_mul_1_l (x : IntHIT) : 1 * x = x := idpath.
+  Definition IntHIT_mul_1_l (x : IntHIT) : 1 * x = x 
+    := idpath.
 
   (** Integer multiplication with one on the right is the identity. *)
   Definition IntHIT_mul_1_r (x : IntHIT) : x * 1 = x.
