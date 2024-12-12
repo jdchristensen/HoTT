@@ -116,7 +116,7 @@ Proof.
 Defined.
 
 
-  Definition IntHIT_ind_hprop_succ
+Definition IntHIT_ind_hprop_succ
 `{P : IntHIT -> Type}
 `{h: forall (x : IntHIT), IsHProp (P x)}
 (t0 : P zero_i) 
