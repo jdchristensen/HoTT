@@ -172,6 +172,7 @@ Section EquivalenceCompatibility.
     pes : forall (y : B), es' (g y) = ap e' (ps y) @ pe (s y) @ ap g (es y);
   }.
 
+  (** To be compatible it suffices to commute with [e] and [e']*)
   Definition compat_implies_prBiInv (pe : forall (x : A), e' (f x) = g (e x))
     : prBiInv.
   Proof.

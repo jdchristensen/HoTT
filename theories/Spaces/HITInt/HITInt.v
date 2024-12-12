@@ -23,8 +23,8 @@ Module Export IntHIT.
 
     Context {P : IntHIT -> Type} {t0 : P zero_i} {f : forall z : IntHIT, P z -> P (succ z)}
       {g1 : forall z : IntHIT, P z -> P (pred1 z)} {g2 : forall z : IntHIT, P z -> P (pred2 z)}
-      {s : forall (z : IntHIT) (t : P z), (sec z # (g1 (succ z) (f z t)) = t)}
-      {r : forall (z : IntHIT) (t : P z), (ret z # (f (pred2 z) (g2 z t)) = t)}.
+      {s : forall (z : IntHIT) (t : P z), sec z # (g1 (succ z) (f z t)) = t}
+      {r : forall (z : IntHIT) (t : P z), ret z # (f (pred2 z) (g2 z t)) = t}.
 
     Fixpoint IntHIT_ind
       (x : IntHIT) 
@@ -244,8 +244,8 @@ Section IntHITLemmas.
     (f :  P -> P)
     (g1 :  P -> P)
     (g2 :  P -> P)
-    (s : forall  (t : P ), (g1 (f t)= t))
-    (r : forall  (t : P ), (f (g2 t)= t))
+    (s : forall (t : P ), g1 (f t)= t)
+    (r : forall (t : P ), f (g2 t)= t)
     : forall (z: IntHIT),
       (let f':= (IntHIT_rec P t0 f g1 g2 s r) in
       ((ap f' (sec z)) = s (f' z))).
@@ -260,11 +260,11 @@ Section IntHITLemmas.
   Definition IntHIT_rec_beta_ret
     (P: Type)
     (t0 : P)
-    (f :  P -> P)
-    (g1 :  P -> P)
-    (g2 :  P -> P)
-    (s : forall  (t : P ), (g1 (f t)= t))
-    (r : forall  (t : P ), (f (g2 t)= t))
+    (f : P -> P)
+    (g1 : P -> P)
+    (g2 : P -> P)
+    (s : forall (t : P ), g1 (f t)= t)
+    (r : forall (t : P ), f (g2 t)= t)
     : forall (z: IntHIT),
       (let f':= (IntHIT_rec P t0 f g1 g2 s r) in
       ((ap f' (ret z)) = r (f' z))).
@@ -434,7 +434,7 @@ Section IntHITEquiv.
   (z : Int )
   : ((IntHITtoIntIT o IntITtoIntHIT) z) = z.
   Proof.
-    induction z as [|[|n] IHz|[|n] IHz].  
+    induction z as [|[|n] IHz|[|n] IHz].
     - simpl.
       reflexivity.
     - simpl.
@@ -467,7 +467,7 @@ Section IntHITEquiv.
 
   Definition IntITtoIntHIT_comp_succ'
     (z: IntHIT)
-    : succ (IntITtoIntHIT ( IntHITtoIntIT z)) = IntITtoIntHIT ( IntHITtoIntIT  (succ z)).
+    : succ (IntITtoIntHIT ( IntHITtoIntIT z)) = IntITtoIntHIT ( IntHITtoIntIT (succ z)).
     simpl.
     exact ((IntITtoIntHIT_comp_succ o IntHITtoIntIT) z).
   Defined.
@@ -476,7 +476,7 @@ Section IntHITEquiv.
   (z : IntHIT )
   : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
   Proof.
-    exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT) zero_i (IntITtoIntHIT o IntHITtoIntIT)  idpath IntITtoIntHIT_comp_succ') z) 
+    exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z) 
     @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT) zero_i idmap idpath (fun x => idpath)) z)^).
   Defined.
 
@@ -501,6 +501,8 @@ Section IntHITEquiv.
       snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
       exact ishset_int.
     Defined.
+  (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
+  Global Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
 
 End IntHITEquiv.
 
@@ -512,8 +514,7 @@ Section IntegerArithmetic.
   Delimit Scope IntHIT_scope with IntHIT.
   Local Open Scope IntHIT_scope.
 
-
-  (** We define negation by recursion. Negation is defined here first because it will be used parsing.*)
+  (** We define negation by recursion. Negation is defined at this early stage because it will be used in parsing numerals.*)
   Definition IntHIT_neg (x : IntHIT) 
     : IntHIT.
     Proof.
@@ -522,7 +523,7 @@ Section IntegerArithmetic.
       - exact zero_i.
   Defined.
 
-  (** We define addition by recursion on the first argument*)
+  (** We define addition by recursion on the first argument.*)
   Definition IntHIT_add 
   (x y : IntHIT) 
   : IntHIT.
@@ -548,10 +549,10 @@ Section IntegerArithmetic.
 
   (** Printing *)
   (** Here we rely for now on the 'old' integers. This can be maybe improved in the future.*)
-  Definition IntHIT_to_number_int  :IntHIT ->  Numeral.int := int_to_number_int o IntHITtoIntIT.
+  Definition IntHIT_to_number_int  :IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
 
   (** Parsing *)
-  Definition IntHIT_of_number_int' (d : Numeral.int) :=
+  Definition IntHIT_of_number_int (d : Numeral.int) :=
     match d with
     | Numeral.IntDec (Decimal.Pos d) => IntHIT_of_nat (Nat.of_uint d)
     | Numeral.IntDec (Decimal.Neg d) => IntHIT_neg ( IntHIT_of_nat(Nat.of_uint d))
@@ -559,9 +560,9 @@ Section IntegerArithmetic.
     | Numeral.IntHex (Hexadecimal.Neg u) => IntHIT_neg (IntHIT_of_nat ((Nat.of_hex_uint u)))
     end.
 
-  Number Notation IntHIT IntHIT_of_number_int' IntHIT_to_number_int  : IntHIT_scope.
+  Number Notation IntHIT IntHIT_of_number_int IntHIT_to_number_int : IntHIT_scope.
 
-  (** The following function reduces an expression succ(pred1(succ( ... )))*)
+  (** The following function reduces an expression by cancelling succesive successor and predecessor terms*)
   Definition IntHIT_reduce 
     := IntITtoIntHIT o IntHITtoIntIT.
 
@@ -586,7 +587,7 @@ Section IntegerArithmetic.
     := equiv_inj IntHIT_neg.
 
   (** The negation of a successor is the predecessor of the negation. *)
-  Definition IntHIT_neg_succ (x : IntHIT) :  - succ x = pred1 (-x).
+  Definition IntHIT_neg_succ (x : IntHIT) : - succ x = pred1 (-x).
   Proof.
     reflexivity.
   Defined.
@@ -612,10 +613,7 @@ Section IntegerArithmetic.
   Definition IntHIT_add_0_r (x : IntHIT) : x + 0 = x.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv succ); cbn beta.
-    - reflexivity.
-    - reflexivity.
-    - reflexivity.  
+    by srapply (uniquenessZ_two_fun_equiv succ).
   Defined.  
 
   (** Adding a successor on the left is the successor of the sum. *)
@@ -634,10 +632,7 @@ Section IntegerArithmetic.
   Definition IntHIT_add_succ_r (x y : IntHIT) : x + (succ y) = succ (x + y).
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv succ); cbn beta.
-    - reflexivity.
-    - reflexivity.
-    - reflexivity.
+    by srapply (uniquenessZ_two_fun_equiv succ).
   Defined.
 
   (** Adding a predecessor on the right is the predecessor of the sum. *)
@@ -663,10 +658,7 @@ Section IntegerArithmetic.
   Definition IntHIT_add_1_r (x : IntHIT) : x + 1 = succ x.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv _); cbn beta.
-    - reflexivity.
-    - reflexivity.
-    - reflexivity.
+    by srapply (uniquenessZ_two_fun_equiv succ).
   Defined.
 
   (** Integer addition is commutative. *)
@@ -684,10 +676,7 @@ Section IntegerArithmetic.
   Definition IntHIT_add_assoc (x y z : IntHIT) : x + (y + z) = x + y + z.
   Proof.
     revert x. 
-    srapply (uniquenessZ_two_fun_equiv succ); cbn beta.
-    - reflexivity.
-    - reflexivity.
-    - reflexivity.
+    by srapply (uniquenessZ_two_fun_equiv succ).
   Defined.
 
   (** Negation is a left inverse with respect to integer addition. *)
@@ -714,39 +703,36 @@ Section IntegerArithmetic.
   Definition IntHIT_neg_add (x y : IntHIT) : - (x + y) = - x - y.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv pred1); cbn beta.
-    - reflexivity.
-    - reflexivity.
-    - reflexivity.
+    by srapply (uniquenessZ_two_fun_equiv pred1).
   Defined.
 
-  (** Addition is an equivalence with one argument fixed*)
-  Global Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (fun y => IntHIT_add x y).
+  (** Addition is an equivalence with first argument fixed*)
+  Global Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
   Proof.
-    snrapply (isequiv_adjointify (fun y => IntHIT_add x y) (fun y => IntHIT_add (-x) y)).
+    srapply (isequiv_adjointify (IntHIT_add x) (IntHIT_add (-x))).
     - simpl.
       intro y.
       rewrite IntHIT_add_assoc.
-      by rewrite  IntHIT_add_neg_r.
+      by rewrite IntHIT_add_neg_r.
     - simpl.
       intro y.
       rewrite IntHIT_add_assoc.
-      by rewrite  IntHIT_add_neg_l.
+      by rewrite IntHIT_add_neg_l.
   Defined.
 
-
+  (** Addition is an equivalence with second argument fixed*)
   Global Instance isequiv_IntHIT_add_r (y : IntHIT): IsEquiv (fun x => IntHIT_add x y).
   Proof.
     snrapply (isequiv_adjointify (fun x => IntHIT_add x y) (fun x => IntHIT_add x (-y))).
     - simpl.
       intro x.
       rewrite <- IntHIT_add_assoc.
-      rewrite  IntHIT_add_neg_l.
+      rewrite IntHIT_add_neg_l.
       by rewrite IntHIT_add_0_r.
     - simpl.
       intro x.
       rewrite <- IntHIT_add_assoc.
-      rewrite  IntHIT_add_neg_r.
+      rewrite IntHIT_add_neg_r.
       by rewrite IntHIT_add_0_r.
   Defined.
 
@@ -758,20 +744,20 @@ Section IntegerArithmetic.
   : IntHIT.
   Proof.
     revert x.
-    srapply (IntHIT_rec_equiv _ _ (fun z => (IntHIT_add) z y)).
+    srapply (IntHIT_rec_equiv _ _ (fun z => IntHIT_add z y)).
     - exact 0.
   Defined.
 
   Infix "*" := IntHIT_mul : IntHIT_scope.
 
   (** Multiplication with a successor on the left is the sum of the multplication without the sucesseor and the multiplicand which was not a successor. *)
-  Definition IntHIT_mul_succ_l (x y : IntHIT) : (succ x) * y =  x * y + y.
+  Definition IntHIT_mul_succ_l (x y : IntHIT) : (succ x) * y = x * y + y.
   Proof.
     reflexivity.
   Defined.
 
   (** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
-  Definition IntHIT_mul_pred_l (x y : IntHIT) : (pred1 x) * y = x * y  - y.
+  Definition IntHIT_mul_pred_l (x y : IntHIT) : (pred1 x) * y = x * y - y.
   Proof.
     reflexivity.
   Defined.
@@ -844,7 +830,7 @@ Section IntegerArithmetic.
     - reflexivity.
     - reflexivity.
     - intro z.
-      rewrite  IntHIT_mul_succ_l.
+      rewrite IntHIT_mul_succ_l.
       rewrite <- IntHIT_add_assoc.
       rewrite (IntHIT_add_comm (-z) _).
       rewrite IntHIT_add_pred_l.
@@ -905,7 +891,7 @@ Section IntegerArithmetic.
       by rewrite IntHIT_dist_r.
   Defined.
 
-  (** This is a shorter proof of linv, but it requires that we already know that IntHIT is as set. This might be useful in the future, if we can show that they are a set independently.*)
+  (** This is a shorter proof of linv, but it requires that we already know that IntHIT is as set. This might be useful in the future, if we can show that [IntHIT] a set independently of its equivalence to [Int].*)
   Definition IntITtoIntHIT_is_linv'
   (z : IntHIT )
   : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
