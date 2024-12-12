@@ -191,10 +191,10 @@ Defined.
 Definition IntHIT_rec_qinv
   (P: Type)
   (t0 : P)
-  (f :  P -> P)
-  (g :  P -> P)
-  (s : forall  (t : P ), g (f t)= t)
-  (r : forall  (t : P ), f (g t)= t)
+  (f : P -> P)
+  (g : P -> P)
+  (s : forall (t : P ), g (f t)= t)
+  (r : forall (t : P ), f (g t)= t)
   : IntHIT -> P.
 Proof.
   srapply IntHIT_ind.
@@ -782,9 +782,9 @@ Section IntegerArithmetic.
     - reflexivity.
     - reflexivity.
     - intro z. 
-      rewrite  IntHIT_mul_succ_l.
-      rewrite  IntHIT_add_succ_l.
-      rewrite  IntHIT_add_succ_r.
+      rewrite IntHIT_mul_succ_l.
+      rewrite IntHIT_add_succ_l.
+      rewrite IntHIT_add_succ_r.
       by rewrite IntHIT_add_assoc.
   Defined.
 
