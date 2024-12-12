@@ -72,7 +72,7 @@ Section AlgFlabUniverse.
     apply (@equiv_contr_sigma _ _ (contr_inhabited_hprop _ _)).
   Defined.
 
-  (** The following conditions can be though of as a closure conditions under pi or sigma types for the type family [A]. *)
+  (** The following conditions can be thought of as closure conditions under pi or sigma types for the type family [A]. *)
   Definition alg_flab_sigma_condition_forall `{Funext}
     := forall P f, {s : _ & alg_flab_map_forall P f o s == idmap}.
 
@@ -97,7 +97,7 @@ Section AlgFlabUniverse.
     apply univalent_transport_idequiv.
   Defined.
 
-  (** The orginal [sigma_condition] is satisfied by our reformulated conditions, [alg_flab_sigma_condition_forall] and [alg_flab_sigma_condition_sigma]. *)
+  (** The original [sigma_condition] is implied by our reformulated conditions [alg_flab_sigma_condition_forall] and [alg_flab_sigma_condition_sigma]. *)
   Definition sigma_condition_sigma_condition_forall `{Univalence}
     (condf : alg_flab_sigma_condition_forall)
     : alg_flab_sigma_condition A _.
@@ -114,7 +114,7 @@ Section AlgFlabUniverse.
     : IsAlgebraicFlabbyType {X : Type & A X}.
   Proof.
     nrapply alg_flab_sigma.
-    apply (sigma_condition_sigma_condition_forall condf).
+    exact (sigma_condition_sigma_condition_forall condf).
   Defined.
 
   Definition sigma_condition_sigma_condition_sigma `{Univalence}
@@ -133,7 +133,7 @@ Section AlgFlabUniverse.
     : IsAlgebraicFlabbyType {X : Type & A X}.
   Proof.
     nrapply alg_flab_sigma.
-    apply (sigma_condition_sigma_condition_sigma conds).
+    exact (sigma_condition_sigma_condition_sigma conds).
   Defined.
 
 End AlgFlabUniverse.
@@ -159,7 +159,7 @@ Proof.
   rapply (alg_flab_sigma_forall _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
   - intros P A.
-    srefine (_; _).
+    exists _.
     intros s. apply path_ishprop.
 Defined.
 
@@ -170,7 +170,7 @@ Proof.
   rapply (alg_flab_sigma_sigma _ (fun X Y f H => @inO_equiv_inO' O X Y H f)).
   - intros X A. apply path_ishprop.
   - intros P A.
-    srefine (_; _).
+    exists _.
     intros s. apply path_ishprop.
 Defined.
 
