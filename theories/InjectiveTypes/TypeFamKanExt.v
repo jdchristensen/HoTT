@@ -244,17 +244,24 @@ Defined.
 Section EmbedProofLeft.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
 
-  (** Given a type family over [X] and an embedding [j : X -> Y], we can construct a type family over [Y] such that evey map in [counit_leftkanfam R j] is an equivalence i.e. the counit transformation is a natural isomorphism. *)
-  Definition leftkanfam_counit_equiv (P : X -> Type)
-    : { R : Y -> Type & forall y, IsEquiv (counit_leftkanfam R j y) }.
+  (** Precomposing the counit map with the extension [_ <| j] makes each of its components an equivalence i.e. the counit transformation whiskered with [_ <| j] is a natural isomorphism. *)
+  Definition isequiv_counit_leftkanfam_leftkanfam (P : X -> Type) {y : Y}
+    : IsEquiv (counit_leftkanfam (P <| j) j y).
   Proof.
-    srefine (P <| j; _). intros y.
     snrapply isequiv_adjointify.
     - exact (fun '(((x; p); C) : (P <| j) y) => ((x; p); ((x; idpath); C))).
     - by intros [[x []] C].
     - intros [[x []] [[x' p'] C]]; cbn; cbn in C, p'.
       revert p'; apply (equiv_ind (ap j)).
       by intros [].
+  Defined.
+
+  (** We now use the above fact to show that type families over [X] are equivalent to type families over [Y] such that the counit map is a natural isomorphism. *)
+  Definition leftkanfam_counit_equiv (P : X -> Type)
+    : { R : Y -> Type & forall y, IsEquiv (counit_leftkanfam R j y) }.
+  Proof.
+    exists (P <| j).
+    rapply isequiv_counit_leftkanfam_leftkanfam.
   Defined.
 
   Global Instance isequiv_leftkanfam_counit_equiv : IsEquiv leftkanfam_counit_equiv.
@@ -280,10 +287,9 @@ End EmbedProofLeft.
 Section EmbedProofRight.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
 
-  Definition rightkanfam_unit_equiv (P : X -> Type)
-    : {R : Y -> Type & forall y, IsEquiv (unit_rightkanfam R j y)}.
+  Definition isequiv_unit_rightkanfam_rightkanfam (P : X -> Type) {y : Y}
+    : IsEquiv (unit_rightkanfam (P |> j) j y).
   Proof.
-    srefine (P |> j; _). intros y.
     snrapply isequiv_adjointify.
     - intros C [x p]. exact (C (x; p) (x; idpath)).
     - intros C. funext [x p]. destruct p. funext w.
@@ -291,6 +297,13 @@ Section EmbedProofRight.
         (center _ (isem (j x) (x; idpath) w)) idpath).
     - intros a. funext [x p]. destruct p.
       reflexivity.
+  Defined.
+
+  Definition rightkanfam_unit_equiv (P : X -> Type)
+    : {R : Y -> Type & forall y, IsEquiv (unit_rightkanfam R j y)}.
+  Proof.
+    exists (P |> j).
+    rapply isequiv_unit_rightkanfam_rightkanfam.
   Defined.
       
   Global Instance isequiv_rightkanfam_unit_equiv : IsEquiv rightkanfam_unit_equiv.
