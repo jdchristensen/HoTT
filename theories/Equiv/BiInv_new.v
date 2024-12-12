@@ -20,9 +20,8 @@ Arguments eisretr_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments eissect_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments IsBiInv {A B}%_type_scope e%_function_scope.
 
-
 (** If [e] is bi-invertible, then the retraction and the section of [e] are equal. *)
-Definition sec_ret_homotopic_binv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
+Definition sect_retr_homotopic_binv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
   : sect_biinv f == retr_biinv f.
 Proof.
   revert bi.
@@ -30,10 +29,9 @@ Proof.
   exact (fun y => (s (h y))^ @ ap g (r y)).
 Defined.
 
-
 (** The record is equivalent to a product type. This is used below in a 'product of contractible types is contractible' argument.*)
 Definition prod_isbiinv (A B : Type) `{f: A -> B}
-  :  {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap} <~>  IsBiInv f.
+  : {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap} <~> IsBiInv f.
 Proof.
     make_equiv.
 Defined.
@@ -68,7 +66,7 @@ Proof.
   - apply (sect_biinv f).
   - apply eisretr_biinv.  (* We provide proof of eissect, but it gets modified. *)
   - intro a.
-    lhs nrapply sec_ret_homotopic_binv.
+    lhs nrapply sect_retr_homotopic_binv.
     apply eissect_biinv.
 Defined.
 
@@ -87,7 +85,7 @@ Proof.
   - apply biinv_isequiv.
 Defined.
 
-(** This here uses implicitly that the product of contractible types is contractible*)
+(** This here uses implicitly that the product of contractible types is contractible. *)
 Global Instance ishprop_biinv `{Funext} `(f : A -> B) : IsHProp (IsBiInv f) | 0.
 Proof.
   apply hprop_inhabited_contr.
@@ -101,18 +99,11 @@ Proof.
   apply equiv_iff_hprop_uncurried, iff_biinv_isequiv.
 Defined.
 
-(* Some lemmas to send equivalences and biinvertible maps back and forth.*)
+(* Some lemmas to send equivalences and biinvertible maps back and forth. *)
 
-Definition equiv_biinv A B (f : EquivBiInv A B)
-  : A <~> B
-  := Build_Equiv A B f _.
+Definition equiv_biinv A B (f : EquivBiInv A B) : A <~> B := Build_Equiv A B f _.
 
-Definition biinv_equiv A B
-  :  A <~> B -> EquivBiInv A B.
-Proof.
-  intros [f e].
-  exact (Build_EquivBiInv A B f (biinv_isequiv f e)).
-Defined.
+Definition biinv_equiv A B  (e : A <~> B):  EquivBiInv A B := Build_EquivBiInv A B e (biinv_isequiv e (equiv_isequiv e)).
 
 Definition equiv_biinv_equiv `{Funext} A B
   : EquivBiInv A B <~> (A <~> B) .
@@ -121,8 +112,7 @@ Proof.
   rapply (equiv_functor_sigma_id equiv_biinv_isequiv).
 Defined.
 
-Definition equiv_idmap_binv (A : Type) 
-  : (EquivBiInv A A).
+Definition equiv_idmap_binv (A : Type) : (EquivBiInv A A).
 Proof.
   by nrefine (Build_EquivBiInv A A idmap (Build_IsBiInv A A idmap idmap idmap _ _ )).
 Defined.
@@ -136,6 +126,7 @@ Proof.
   apply eisretr.
 Defined.
 
+(** We define what it means for two maps [f] and [g] to be compatible with two equiavlences [e] and [e'] in a commutative square.*)
 Section EquivalenceCompatibility.
 
   Context (A B C D : Type).
@@ -162,7 +153,7 @@ Section EquivalenceCompatibility.
     exact (es' (g y) @ (ap g (es y))^ @ (pe (s y))^).
   Defined.
 
-  (** A record that contains all the data witnessing what it means for two maps [f] and [g] between biinvertible maps [e] and [e'] to be compatible with the biinvertible structure.*)
+  (** A record that contains all the data witnessing what it means for two maps [f] and [g] between biinvertible maps [e] and [e'] to be compatible with the biinvertible structure. *)
   Record prBiInv
   := {
     pe : forall (x : A), e' (f x) = g (e x);
