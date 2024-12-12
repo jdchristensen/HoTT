@@ -244,7 +244,7 @@ Defined.
 Section EmbedProofLeft.
   Context `{Univalence} {X Y : Type} (j : X -> Y) (isem : IsEmbedding j).
 
-  (** Precomposing the counit map with the extension [_ <| j] makes each of its components an equivalence i.e. the counit transformation whiskered with [_ <| j] is a natural isomorphism. *)
+  (** The counit transformation of a type family of the form [P <| j] has each of its components an equivalence.  In other words, the type family [P <| j] is the left Kan extension of its restriction along [j]. *)
   Definition isequiv_counit_leftkanfam_leftkanfam (P : X -> Type) {y : Y}
     : IsEquiv (counit_leftkanfam (P <| j) j y).
   Proof.
