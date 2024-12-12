@@ -12,6 +12,8 @@ Generalizable All Variables.
 
 (** * Colimits *)
 
+(** ** Abstract definition *)
+
 (** A colimit is the extremity of a cocone. *)
 
 Class IsColimit `(D: Diagram G) (Q: Type) := {
@@ -33,21 +35,16 @@ Definition cocone_postcompose_inv `{D: Diagram G} {Q X}
   (H : IsColimit D Q) (C' : Cocone D X) : Q -> X
   := @equiv_inv _ _ _ (iscolimit_unicocone H X) C'.
 
-(** * Existence of colimits *)
+(** ** Existence of colimits *)
 
-(** Whatever the diagram considered, there exists a colimit of it. The existence is given by the HIT [colimit]. *)
-
-(** ** Definition of the HIT 
+(** Every diagram has a colimit.  It could be described as the following HIT
 <<
   HIT Colimit {G : Graph} (D : Diagram G) : Type :=
   | colim : forall i, D i -> Colimit D
   | colimp : forall i j (f : G i j) (x : D i) : colim j (D _f f x) = colim i x
   .
 >>
-*)
-
-(** A colimit is just the coequalizer of the source and target maps of the diagram. *)
-(** The source type in the coequalizer ought to be:
+but we instead describe it as the coequalizer of the source and target maps of the diagram.  The source type in the coequalizer ought to be:
 <<
 {x : sig D & {y : sig D & {f : G x.1 y.1 & D _f f x.2 = y.2}}}
 >>
@@ -123,66 +120,129 @@ Defined.
 Arguments colim : simpl never.
 Arguments colimp : simpl never.
 
-(** Colimit_rec is an equivalence *)
+(** The natural cocone to the colimit. *)
+Definition cocone_colimit {G : Graph} (D : Diagram G) : Cocone D (Colimit D)
+  := Build_Cocone colim colimp.
 
+(** Given a cocone [C] and [f : Colimit D -> P] inducing a "homotopic" cocone, [Colimit_rec P C] is homotopic to [f]. *)
+Definition Colimit_rec_homotopy {G : Graph} {D : Diagram G} (P : Type) (C : Cocone D P)
+  (f : Colimit D -> P)
+  (h_obj : forall i, legs C i == f o colim i)
+  (h_comm : forall i j (g : G i j) x,
+      legs_comm C i j g x @ h_obj i x = h_obj j ((D _f g) x) @ ap f (colimp i j g x))
+  : Colimit_rec P C == f.
+Proof.
+  snrapply Colimit_ind.
+  - simpl. exact h_obj.
+  - cbn beta; intros i j g x.
+    nrapply (transport_paths_FlFr' (colimp i j g x)).
+    lhs nrapply (Colimit_rec_beta_colimp _ _ _ _ _ _ @@ 1).
+    apply h_comm.
+Defined.
+
+(** "Homotopic" cocones induces homotopic maps. *)
+Definition Colimit_rec_homotopy' {G : Graph} {D : Diagram G} (P : Type) (C1 C2 : Cocone D P)
+  (h_obj : forall i, legs C1 i == legs C2 i)
+  (h_comm : forall i j (g : G i j) x,
+      legs_comm C1 i j g x @ h_obj i x = h_obj j ((D _f g) x) @ legs_comm C2 i j g x)
+  : Colimit_rec P C1 == Colimit_rec P C2.
+Proof.
+  snrapply Colimit_rec_homotopy.
+  - apply h_obj.
+  - intros i j g x.
+    rhs nrapply (1 @@ Colimit_rec_beta_colimp _ _ _ _ _ _).
+    apply h_comm.
+Defined.
+
+(** [Colimit_rec] is an equivalence. *)
 Global Instance isequiv_colimit_rec `{Funext} {G : Graph}
-  {D : Diagram G} (P : Type) : IsEquiv (Colimit_rec (D:=D) P).
+  {D : Diagram G} (P : Type)
+  : IsEquiv (Colimit_rec (D:=D) P).
 Proof.
   srapply isequiv_adjointify.
-  { intro f.
-    srapply Build_Cocone.
-    1: intros i g; apply f, (colim i g).
-    intros i j g x.
-    apply ap, colimp. }
-  { intro.
+  - exact (cocone_postcompose (cocone_colimit D)).
+  - intro f.
     apply path_forall.
-    srapply Colimit_ind.
+    snrapply Colimit_rec_homotopy.
     1: reflexivity.
-    intros ????; cbn.
-    nrapply transport_paths_FlFr'.
-    apply equiv_p1_1q.
-    apply Colimit_rec_beta_colimp. }
-  { intros [].
+    intros; cbn.
+    apply concat_p1_1p.
+  - intros [].
     srapply path_cocone.
     1: reflexivity.
-    intros ????; cbn.
-    rewrite Colimit_rec_beta_colimp.
-    hott_simpl. }
+    intros; cbn.
+    apply equiv_p1_1q.
+    apply Colimit_rec_beta_colimp.
 Defined.
 
 Definition equiv_colimit_rec `{Funext} {G : Graph} {D : Diagram G} (P : Type)
   : Cocone D P <~> (Colimit D -> P) := Build_Equiv _ _ _ (isequiv_colimit_rec P).
 
-(** And we can now show that the HIT is actually a colimit. *)
-
-Definition cocone_colimit {G : Graph} (D : Diagram G) : Cocone D (Colimit D)
-  := Build_Cocone colim colimp.
-
+(** It follows that the HIT Colimit is an abstract colimit. *)
 Global Instance unicocone_colimit `{Funext} {G : Graph} (D : Diagram G)
   : UniversalCocone (cocone_colimit D).
 Proof.
   srapply Build_UniversalCocone; intro Y.
-  srapply (isequiv_adjointify _ (Colimit_rec Y) _ _).
-  - intros C.
-    srapply path_cocone.
-    1: reflexivity.
-    intros i j f x; simpl.
-    apply equiv_p1_1q.
-    apply Colimit_rec_beta_colimp.
-  - intro f.
-    apply path_forall.
-    srapply Colimit_ind.
-    1: reflexivity.
-    intros i j g x; simpl.
-    nrapply (transport_paths_FlFr' (g:=f)).
-    apply equiv_p1_1q.
-    apply Colimit_rec_beta_colimp.
+  (* The goal is to show that [cocone_postcompose (cocone_colimit D)] is an equivalence, but that's the inverse to the equivalence we just defined. *)
+  exact (isequiv_inverse (equiv_colimit_rec Y)).
 Defined.
 
 Global Instance iscolimit_colimit `{Funext} {G : Graph} (D : Diagram G)
-  : IsColimit D (Colimit D) := Build_IsColimit _ (unicocone_colimit D).
+  : IsColimit D (Colimit D)
+  := Build_IsColimit _ (unicocone_colimit D).
 
-(** * Functoriality of colimits *)
+(** ** Functoriality of concrete colimits *)
+
+(** We will capitalize [Colimit] in the identifiers to indicate that these definitions relate to the concrete colimit defined above.  Below, we will also get functoriality for abstract colimits, without the capital C.  However, to apply those results to the concrete colimit uses [iscolimit_colimit], which requires [Funext], so it is also useful to give direct proofs of some facts. *)
+
+(** We first work in a more general situation.  Any diagram map [m : D1 => D2] induces a map between the canonical colimit of [D1] and any cocone over [D2].  We use "half" to indicate this situation. *)
+Definition functor_Colimit_half {G : Graph} {D1 D2 : Diagram G} (m : DiagramMap D1 D2) {Q} (HQ : Cocone D2 Q)
+  : Colimit D1 -> Q.
+Proof.
+  apply Colimit_rec.
+  refine (cocone_precompose m HQ).
+Defined.
+
+(** Homotopic diagram maps induce homotopic maps. *)
+Definition functor_Colimit_half_homotopy {G : Graph} {D1 D2 : Diagram G}
+  {m1 m2 : DiagramMap D1 D2} {Q} (HQ : Cocone D2 Q) (h_obj : forall i, m1 i == m2 i)
+  (h_comm : forall i j (g : G i j) x,
+      DiagramMap_comm m1 g x @ h_obj j (D1 _f g x)
+      = ap (D2 _f g) (h_obj i x) @ DiagramMap_comm m2 g x)
+  : functor_Colimit_half m1 HQ == functor_Colimit_half m2 HQ.
+Proof.
+  snrapply Colimit_rec_homotopy'.
+  - intros i x; cbn. apply ap, h_obj.
+  - intros i j g x; simpl.
+    Open Scope long_path_scope.
+    (* TODO: Most of the work here comes from a mismatch between the direction of the path in [DiagramMap_comm] and [legs_comm] in the [Cocone] record, causing a reversal in [cocone_precompose].  There is no reversal in [cocone_postcompose], so I think [Cocone] should change. If that is done, then this result wouldn't be needed at all, and one could directly use [Colimit_rec_homotopy']. *)
+    rewrite ap_V.
+    lhs nrapply concat_pp_p.
+    apply moveR_Vp.
+    rewrite ! concat_p_pp.
+    rewrite <- 2 ap_pp.
+    rewrite h_comm.
+    rewrite concat_pp_V.
+    rewrite <- ap_compose.
+    exact (concat_Ap (legs_comm HQ i j g) (h_obj i x))^.
+    Close Scope long_path_scope.
+Defined.
+
+(** Now we specialize to the case where the second cone is a colimiting cone. *)
+Definition functor_Colimit {G : Graph} {D1 D2 : Diagram G} (m : DiagramMap D1 D2)
+  : Colimit D1 -> Colimit D2
+  := functor_Colimit_half m (cocone_colimit D2).
+
+(** A homotopy between diagram maps [m1, m2 : D1 => D2] gives a homotopy between the induced maps. *)
+Definition functor_Colimit_homotopy {G : Graph} {D1 D2 : Diagram G}
+  {m1 m2 : DiagramMap D1 D2} (h_obj : forall i, m1 i == m2 i)
+  (h_comm : forall i j (g : G i j) x,
+      DiagramMap_comm m1 g x @ h_obj j (D1 _f g x)
+      = ap (D2 _f g) (h_obj i x) @ DiagramMap_comm m2 g x)
+  : functor_Colimit m1 == functor_Colimit m2
+  := functor_Colimit_half_homotopy _ h_obj h_comm.
+
+(** ** Functoriality of abstract colimits *)
 
 Section FunctorialityColimit.
 
@@ -207,7 +267,7 @@ Section FunctorialityColimit.
     apply cocone_postcompose_equiv_universality, HQ.
   Defined.
 
-  (** A diagram map [m] : [D1] => [D2] induces a map between any two colimits of [D1] and [D2]. *)
+  (** A diagram map [m : D1 => D2] induces a map between any two colimits of [D1] and [D2]. *)
 
   Definition functor_colimit {D1 D2 : Diagram G} (m : DiagramMap D1 D2)
     {Q1 Q2} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
@@ -222,9 +282,7 @@ Section FunctorialityColimit.
       = cocone_postcompose HQ1 (functor_colimit m HQ1 HQ2)
     := (eisretr (cocone_postcompose HQ1) _)^.
 
-  (** ** Colimits of equivalent diagrams *)
-
-  (** Now we have than two equivalent diagrams have equivalent colimits. *)
+  (** Equivalent diagrams have equivalent colimits. *)
 
   Context {D1 D2 : Diagram G} (m : D1 ~d~ D2) {Q1 Q2}
     (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2).
@@ -271,7 +329,7 @@ Section FunctorialityColimit.
 
 End FunctorialityColimit.
 
-(** * Unicity of colimits *)
+(** ** Unicity of colimits *)
 
 (** A particuliar case of the functoriality result is that all colimits of a diagram are equivalent (and hence equal in presence of univalence). *)
 
@@ -283,7 +341,7 @@ Proof.
   srapply (Build_diagram_equiv (diagram_idmap D)).
 Defined.
 
-(** * Colimits are left adjoint to constant diagram *)
+(** ** Colimits are left adjoint to constant diagram *)
 
 Theorem colimit_adjoint `{Funext} {G : Graph} {D : Diagram G} {C : Type}
   : (Colimit D -> C) <~> DiagramMap D (diagram_const C).
