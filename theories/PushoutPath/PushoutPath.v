@@ -564,3 +564,48 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
       simpl. *)
     Admitted.
 End ZigzagIdentity.
+
+Section KvRApplication.
+  (** Conclude by applying Kraus-von Raumer to get an equivalence with the identity types. *)
+
+  Context {A B : Type} (R : A -> B -> Type) (a0 : A) `{Univalence}.
+
+  Let R' := relation_total R.
+  Let f : R' -> A := fst o pr1.
+  Let g : R' -> B := snd o pr1.
+
+  (** Package the data for KvR. *)
+  Local Definition zigzag_poDescent : poDescent f g.
+  Proof.
+    snrapply Build_poDescent.
+    + exact (zigzag_Pinf R a0).
+    + exact (zigzag_Qinf R a0).
+    + intros [[a b] r]; exact (equiv_zigzag_glueinf R a0 r).
+  Defined.
+
+  Local Definition zigzag_based_ind : forall (Qe : poDepDescent zigzag_poDescent) (q0 : podd_faml Qe a0 (zigzag_refl R a0)), poDepDescentSection Qe.
+  Proof.
+    intros Qe q0.
+    Check podd_faml Qe.
+    pose (indL := indL_colim R a0 (podd_faml Qe) (podd_famr Qe) q0 (fun a b r => podd_e Qe ((a , b) ; r))).
+    pose (indR := indR_colim R a0 (podd_faml Qe) (podd_famr Qe) q0 (fun a b r => podd_e Qe ((a , b) ; r))).
+    snrapply Build_poDepDescentSection.
+    - exact indL.
+    - exact indR.
+    - intros [[a b] r] pf; symmetry.
+      snrapply ind_comp_glue.
+  Defined.
+
+  (** Get the equivalence. *)
+  Definition zigzag_equiv_identity (x : Pushout f g) : (pushl a0) = x <~> (zigzag_family_half R a0 x).
+  Proof.
+    snrapply fam_podescent_equiv_path.
+    2: exact zigzag_based_ind.
+    intros Qe q0.
+    unfold zigzag_based_ind.
+    simpl podds_sectl.
+    snrapply indL_comp_refl.
+    + exact (podd_famr Qe).
+    + exact (fun a b r => podd_e Qe ((a , b) ; r)).
+  Defined.
+End KvRApplication.
