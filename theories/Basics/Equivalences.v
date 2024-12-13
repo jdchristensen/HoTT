@@ -438,6 +438,8 @@ Definition equiv_ap_inv' `(f : A <~> B) (x y : B)
   : (f^-1 x = f^-1 y) <~> (x = y)
   := (equiv_ap' f^-1%equiv x y)^-1%equiv.
 
+(** We define the 2-out-of-3 property, or 2 for 3 property *)
+
 (** If [g \o f] and [f] are equivalences, so is [g].  This is not an Instance because it would require Coq to guess [f]. *)
 Definition cancelR_isequiv {A B C} (f : A -> B) {g : B -> C}
   `{IsEquiv A B f} `{IsEquiv A C (g o f)}
@@ -482,6 +484,33 @@ Proof.
   refine (@cancelL_isequiv _ _ _ k f _ _).
   refine (isequiv_homotopic _ p).
 Defined.
+
+(** We define the 2-out-of-6 property *)
+
+Definition two_out_of_sixM {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{iegf : IsEquiv _ _ (g o f)} `{iehg : IsEquiv _ _ (h o g)}
+  : IsEquiv g.
+Proof.
+  snrapply isequiv_adjointify.
+  - exact ((h o g)^-1 o h).
+  - exact (fun x => ap g (ap ((h o g)^-1 o h) ((eisretr (g o f)) x)^ 
+    @ (eissect (h o g)) ((f o (g o f)^-1) x)) 
+    @ (eisretr (g o f)) x).
+  - exact (eissect (h o g)).
+Defined.
+
+Definition two_out_of_sixR {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  : IsEquiv f
+  := @cancelL_isequiv _ _ _ g _ (two_out_of_sixM f g h) _.
+
+Definition two_out_of_sixL {A B C D}
+  (f : A -> B) (g : B -> C) (h : C -> D)
+  `{IsEquiv _ _ (g o f)} `{IsEquiv _ _ (h o g)}
+  : IsEquiv h
+  := @cancelR_isequiv _ _ _ g _ (two_out_of_sixM f g h) _.
 
 (** Based homotopy spaces *)
 
