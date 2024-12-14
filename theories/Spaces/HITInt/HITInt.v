@@ -115,7 +115,6 @@ Proof.
     rapply path_ishprop.
 Defined.
 
-
 Definition IntHIT_ind_hprop_succ
 `{P : IntHIT -> Type}
 `{h: forall (x : IntHIT), IsHProp (P x)}
