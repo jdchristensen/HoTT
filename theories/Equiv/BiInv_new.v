@@ -84,7 +84,7 @@ Proof.
   - apply isbiinv_isequiv.
 Defined.
 
-(** This here uses implicitly that the product of contractible types is contractible. *)
+(** This uses implicitly that the product of contractible types is contractible. *)
 Global Instance ishprop_isbiinv `{Funext} `(f : A -> B) : IsHProp (IsBiInv f) | 0.
 Proof.
   apply hprop_inhabited_contr.
@@ -100,9 +100,11 @@ Defined.
 
 (* Some lemmas to send equivalences and biinvertible maps back and forth. *)
 
-Definition equiv_biinv A B (f : EquivBiInv A B) : A <~> B := Build_Equiv A B f _.
+Definition equiv_biinv A B (f : EquivBiInv A B) : A <~> B 
+  := Build_Equiv A B f _.
 
-Definition biinv_equiv A B  (e : A <~> B):  EquivBiInv A B := Build_EquivBiInv A B e (isbiinv_isequiv e (equiv_isequiv e)).
+Definition biinv_equiv A B  (e : A <~> B) : EquivBiInv A B 
+  := Build_EquivBiInv A B e (isbiinv_isequiv e (equiv_isequiv e)).
 
 Definition equiv_biinv_equiv `{Funext} A B
   : EquivBiInv A B <~> (A <~> B) .
