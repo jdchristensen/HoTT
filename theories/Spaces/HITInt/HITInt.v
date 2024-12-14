@@ -37,7 +37,6 @@ Module Export IntHIT.
       end s r.
       (*We make sure that this is dependent on s and r as well. *)
 
-
     (** We define the beta principles for sec and ret. *)
     Axiom IntHIT_ind_beta_sec
      : forall (z: IntHIT),
@@ -46,7 +45,6 @@ Module Export IntHIT.
     Axiom IntHIT_ind_beta_ret
      : forall (z: IntHIT),
       (apD IntHIT_ind (ret z)) = r z (IntHIT_ind z).
-
 
   End IntHIT.
 End IntHIT.
@@ -140,7 +138,7 @@ Proof.
     rapply path_ishprop.
 Defined.
 
-(** The recursion principle.*)
+(** The recursion principle. *)
 Definition IntHIT_rec
   (P: Type)
   (t0 : P)
@@ -211,8 +209,8 @@ Proof.
     refine ((transport_const (ret z) (f (g t))) @ (r t)).
 Defined. 
 
-(** This verison of the recursion principle requires only a half-adjoint equivalence.*)
-(** Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead.*)
+(** This verison of the recursion principle requires only a half-adjoint equivalence. *)
+(** Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
 Definition IntHIT_rec_equiv
   (P: Type)
   (t0 : P)
@@ -223,7 +221,7 @@ Proof.
   exact (IntHIT_rec_biinv _ t0 f (e := (isbiinv_isequiv _ e))).
 Defined.
 
-(** Integers interation*)
+(** We define equivalence interation. *)
 Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0: A) : A.
 Proof.
   snrapply IntHIT_rec_equiv.
@@ -271,7 +269,7 @@ Proof.
   rapply IntHIT_ind_beta_ret.
 Defined.
 
-(** Successor is biinvertible*)
+(** Successor is biinvertible. *)
 Global Instance isbiinv_succ
     : IsBiInv succ.
 Proof.
@@ -288,11 +286,11 @@ Proof.
   exact (Build_EquivBiInv _ _ _ isbiinv_succ).
 Defined.
 
-(* * The successor is an equivalence on [IntHIT] *)
+(** The successor is an equivalence on [IntHIT]. *)
 Global Instance isequiv_IntHIT_succ : IsEquiv succ
   := isequiv_isbiinv biinv_IntHIT.
 
-(** The predecessor is an equivalence on [IntHIT] *)
+(** The predecessor is an equivalence on [IntHIT]. *)
 Global Instance isequiv_IntHIT_pred1 : IsEquiv pred1
   := isequiv_inverse succ.
 
@@ -308,7 +306,7 @@ Section Uniqueness.
   Local Definition s := eissect_biinv e.
   Local Definition r := eisretr_biinv e.
   
-  (** We prove a uniqueness principle expressing the universal property of the recursor, up to propositional equality.*)
+  (** We prove a uniqueness principle expressing the universal property of the recursor, up to propositional equality. *)
   Definition uniquenessZ
     (t0 : P)
     (k: IntHIT -> P)
@@ -366,7 +364,7 @@ Section Uniqueness.
       apply (concat_A1p (f := e o g2)).
   Defined.  
  
-(** The following unqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal.*)
+(** The following unqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
 Definition uniquenessZ_two_fun_biinv
   (k1: IntHIT -> P)
   (k2: IntHIT -> P)
@@ -382,7 +380,7 @@ Defined.
 
 End Uniqueness.
 
-(** The same uniqueness principle but for half-adjoint equivalences.*)
+(** The same uniqueness principle but for half-adjoint equivalences. *)
 Definition uniquenessZ_two_fun_equiv 
   {P : Type} 
   (f : P -> P)
@@ -397,7 +395,7 @@ Definition uniquenessZ_two_fun_equiv
   exact (uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2).
 Defined.
 
-(** Next we prove that [IntHIT] is equivalent to [Int]*)
+(** Next we prove that [IntHIT] is equivalent to [Int]. *)
 
 Section IntHITEquiv.
 
@@ -472,7 +470,7 @@ Section IntHITEquiv.
     @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT) zero_i idmap idpath (fun x => idpath)) z)^).
   Defined.
 
-  (** Proof that they are equivalent*)
+  (** Proof that they are equivalent. *)
   Definition isequiv_IntHIT_Int
     : IntHIT <~> Int.
   Proof.
@@ -486,7 +484,7 @@ Section IntHITEquiv.
         * exact IntITtoIntHIT_is_linv.
   Defined.
 
-  (**Therefore [IntHIT] is a set.*)
+  (**Therefore [IntHIT] is a set. *)
   Global Instance ishset_IntHIT
     : IsHSet IntHIT.
     Proof.
@@ -498,7 +496,7 @@ Section IntHITEquiv.
 
 End IntHITEquiv.
 
-(** Integer Arithmetic using [IntHIT]*)
+(** * Integer Arithmetic using [IntHIT] *)
 
 Section IntegerArithmetic.
 
@@ -515,10 +513,10 @@ Section IntegerArithmetic.
       - exact zero_i.
   Defined.
 
-  (** We define addition by recursion on the first argument.*)
+  (** We define addition by recursion on the first argument. *)
   Definition IntHIT_add 
-  (x y : IntHIT) 
-  : IntHIT.
+    (x y : IntHIT) 
+    : IntHIT.
   Proof.
     revert x.
     snrapply (IntHIT_rec_equiv _ _ succ).
@@ -540,7 +538,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Printing *)
-  (** Here we rely for now on the 'old' integers. This can be maybe improved in the future.*)
+  (** Here we rely for now on the 'old' integers. This can be maybe improved in the future. *)
   Definition IntHIT_to_number_int  :IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
 
   (** Parsing *)
@@ -686,7 +684,7 @@ Section IntegerArithmetic.
     by srapply (uniquenessZ_two_fun_equiv pred1).
   Defined.
 
-  (** Addition is an equivalence with first argument fixed*)
+  (** Addition is an equivalence with first argument fixed. *)
   Global Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
   Proof.
     srapply (isequiv_adjointify (IntHIT_add x) (IntHIT_add (-x))).
@@ -700,7 +698,7 @@ Section IntegerArithmetic.
       by rewrite IntHIT_add_neg_l.
   Defined.
 
-  (** Addition is an equivalence with second argument fixed*)
+  (** Addition is an equivalence with second argument fixed. *)
   Global Instance isequiv_IntHIT_add_r (y : IntHIT): IsEquiv (fun x => IntHIT_add x y).
   Proof.
     snrapply (isequiv_adjointify (fun x => IntHIT_add x y) (fun x => IntHIT_add x (-y))).

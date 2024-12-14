@@ -29,7 +29,7 @@ Proof.
   exact (fun y => (s (h y))^ @ ap g (r y)).
 Defined.
 
-(** The record is equivalent to a product type. This is used below in a 'product of contractible types is contractible' argument.*)
+(** The record is equivalent to a product type. This is used below in a 'product of contractible types is contractible' argument. *)
 Definition prod_isbiinv (A B : Type) `{f: A -> B}
   : {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap} <~> IsBiInv f.
 Proof.
@@ -126,7 +126,7 @@ Proof.
   apply eisretr.
 Defined.
 
-(** We define what it means for two maps [f] and [g] to be compatible with two equivalences [e] and [e'] in a commutative square.*)
+(** We define what it means for two maps [f] and [g] to be compatible with two equivalences [e] and [e'] in a commutative square. *)
 Section EquivalenceCompatibility.
 
   Context (A B C D : Type).
@@ -163,7 +163,7 @@ Section EquivalenceCompatibility.
     pes : forall (y : B), es' (g y) = ap e' (ps y) @ pe (s y) @ ap g (es y);
   }.
 
-  (** To be compatible it suffices to commute with [e] and [e']*)
+  (** To be compatible it suffices to commute with [e] and [e']. *)
   Definition compat_implies_prBiInv (pe : forall (x : A), e' (f x) = g (e x))
     : prBiInv.
   Proof.
