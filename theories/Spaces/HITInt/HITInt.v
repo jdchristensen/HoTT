@@ -57,16 +57,16 @@ Definition pred1_is_pred2
   := (ap pred1 ((ret z) ^)) @ sec (pred2 z).
 
 Definition ret_pred1
-    (z: IntHIT)
-    : (succ (pred1 z)) = z.
+  (z: IntHIT)
+  : (succ (pred1 z)) = z.
 Proof.
   intros.
   exact ((ap succ (pred1_is_pred2 z)) @ (ret z)).
 Defined.
 
-  Definition sec_pred2
-    (z: IntHIT)
-    : (pred2 (succ z)) = z.
+Definition sec_pred2
+  (z: IntHIT)
+  : (pred2 (succ z)) = z.
 Proof.
   intros.
   rewrite (pred1_is_pred2 _)^.
@@ -74,14 +74,14 @@ Proof.
 Defined.
 
 Definition IntHIT_ind_hprop
-`{P : IntHIT -> Type}
-`{h: forall (x : IntHIT), IsHProp (P x)}
-(t0 : P zero_i) 
-(f : forall z : IntHIT, P z -> P (succ z))
-(g1 : forall z : IntHIT, P z -> P (pred1 z))
-(g2 : forall z : IntHIT, P z -> P (pred2 z))
-(x: IntHIT)
-: P x.
+  `{P : IntHIT -> Type}
+  `{h: forall (x : IntHIT), IsHProp (P x)}
+  (t0 : P zero_i) 
+  (f : forall z : IntHIT, P z -> P (succ z))
+  (g1 : forall z : IntHIT, P z -> P (pred1 z))
+  (g2 : forall z : IntHIT, P z -> P (pred2 z))
+  (x: IntHIT)
+  : P x.
 Proof.
   srapply IntHIT_ind.
   - exact t0.
@@ -95,13 +95,13 @@ Proof.
 Defined.
 
 Definition IntHIT_ind_hprop_pred
-`{P : IntHIT -> Type}
-`{h: forall (x : IntHIT), IsHProp (P x)}
-(t0 : P zero_i) 
-(f : forall z : IntHIT, P z -> P (succ z))
-(g : forall z : IntHIT, P z -> P (pred1 z))
-(x: IntHIT)
-: P x.
+  `{P : IntHIT -> Type}
+  `{h: forall (x : IntHIT), IsHProp (P x)}
+  (t0 : P zero_i) 
+  (f : forall z : IntHIT, P z -> P (succ z))
+  (g : forall z : IntHIT, P z -> P (pred1 z))
+  (x: IntHIT)
+  : P x.
 Proof.
   srapply IntHIT_ind.
   - exact t0.
@@ -116,12 +116,12 @@ Proof.
 Defined.
 
 Definition IntHIT_ind_hprop_succ
-`{P : IntHIT -> Type}
-`{h: forall (x : IntHIT), IsHProp (P x)}
-(t0 : P zero_i) 
-(f : forall z : IntHIT, P z <-> P (succ z))
-(x: IntHIT)
-: P x.
+  `{P : IntHIT -> Type}
+  `{h: forall (x : IntHIT), IsHProp (P x)}
+  (t0 : P zero_i) 
+  (f : forall z : IntHIT, P z <-> P (succ z))
+  (x: IntHIT)
+  : P x.
 Proof.
   srapply IntHIT_ind.
   - exact t0.
