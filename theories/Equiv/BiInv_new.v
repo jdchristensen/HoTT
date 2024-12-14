@@ -18,7 +18,6 @@ Arguments sect_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments retr_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments eisretr_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments eissect_biinv {A B}%_type_scope e%_function_scope {_} _.
-Arguments IsBiInv {A B}%_type_scope e%_function_scope.
 
 (** If [e] is bi-invertible, then the retraction and the section of [e] are equal. *)
 Definition sect_retr_homotopic_biinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
