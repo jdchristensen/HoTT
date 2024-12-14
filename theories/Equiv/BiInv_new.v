@@ -32,15 +32,15 @@ Defined.
 Definition prod_isbiinv (A B : Type) `{f: A -> B}
   : {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap} <~> IsBiInv f.
 Proof.
-    make_equiv.
+  make_equiv.
 Defined.
 
 Record EquivBiInv A B := {
   equiv_fun_biinv :> A -> B ;
-  equiv_isequiv_biinv :> IsBiInv equiv_fun_biinv
+  equiv_isbiinv :> IsBiInv equiv_fun_biinv
 }.
 
-Existing Instance equiv_isequiv_biinv.
+Existing Instance equiv_isbiinv.
 
 Definition issig_equivbiinv (A B : Type)
   : {f : A -> B & IsBiInv f} <~> EquivBiInv A B.
