@@ -11,7 +11,7 @@ Require Import Colimits.Sequential.
 Require Import Diagram.
 Require Import Types.
 
-(** * Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations [d : A_i => B_i] ([d] for down) and [u : B_i => A_i+1] ([u] for up), such that the following diagram is commutative:
+(** * Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations [f : A_i => B_i] and [g : B_i => A_i+1] such that the following diagram is commutative:
 
 <<
     A_0 -------> A_1 ------> A_2 ------>
@@ -22,7 +22,7 @@ Require Import Types.
            B_0 ------> B_1 ------->
 >>
 
-Given the setup above, we want to say that the colimit of the upper and lower sequences are equivalent same. *)
+Given the setup above, we want to say that the colimits of the upper and lower sequences are equivalent. *)
 
 (** ** Given families of maps [f n : A n -> B n] and [g : B n -> A (n + 1)] with homotopies showing that they form zigzags, construct the actual diagram maps and show that their composition is equal to the successor diagram map. *)
 
@@ -38,10 +38,9 @@ Section Interme.
   Proof.
     snrapply Build_DiagramMap.
     - exact f.
-    - intros n m [] x.
+    - intros n _ [] x.
       lhs apply (L n).
-      apply ap.
-      exact (U n x)^.
+      exact (ap _ (U n x)^).
   Defined.
 
   (** The map built from [g]. *)
@@ -49,10 +48,9 @@ Section Interme.
   Proof.
     snrapply Build_DiagramMap.
     - exact g.
-    - intros n m [] x.
+    - intros n _ [] x.
       lhs apply (U (S n)).
-      apply ap.
-      exact (L n x)^.
+      exact (ap _ (L n x))^.
   Defined.
 
   Local Open Scope path_scope.
@@ -60,21 +58,20 @@ Section Interme.
   (** Show that the composition of the two maps is the successor map. *)
   Definition zigzag_glue_map_tri : DiagramMap_homotopy (diagram_comp zigzag_glue_map_inv zigzag_glue_map) (seq_to_succ_seq A).
   Proof.
-    snrapply (_ ; _).
+    snrapply (_; _).
     - intros n x.
       simpl.
       exact (U n x)^.
-    - intros n m [] x.
+    - intros n _ [] x.
       simpl.
-      unfold CommutativeSquares.comm_square_comp.
+      unfold comm_square_comp.
       Open Scope long_path_scope.
-      rhs nrapply (concat_p1 _).
+      rhs nrapply concat_p1.
       apply moveR_pV.
-      lhs nrapply (1 @@ ap_pp (g n.+1) (L n (f n x)) (ap (f n.+1) (U n x)^)).
-      lhs nrapply (1 @@ ap_V (g n.+1) (L n (f n x)) @@ 1).
-      lhs nrapply (concat_pp_p (U n.+1 _) ((ap (g n.+1) _)^) _).
+      lhs nrapply (1 @@ ap_pp _ _ _).
+      lhs nrapply concat_pp_p.
       lhs nrapply (1 @@ concat_V_pp _ _).
-      lhs_V nrapply (1 @@ ap_compose (f n.+1) (g n.+1) _).
+      lhs_V nrapply (1 @@ ap_compose _ _ _).
       exact (concat_Ap _ _)^.
       Close Scope long_path_scope.
   Defined.
@@ -102,13 +99,15 @@ Section Interleaving.
   (** Show that the two gluing maps are inverse. *)
 
   (** A coherence that comes up in the construction of the section: [(L f g) @ (f g L)^] is the same as [(L x^+) @ ((L x)^+)^]. *)
-  Local Definition Lfg_coherence (n : nat) (x : B n) : (L n.+1 (f n.+1 (g n x))) @ (ap ((f n.+2) o (g n.+1)) (L n x))^ @ (L (S n) x^+)^ = (ap (fun z => z^+) (L n x))^.
+  Local Definition Lfg_coherence (n : nat) (x : B n)
+    : L n.+1 (f n.+1 (g n x)) @ (ap ((f n.+2) o (g n.+1)) (L n x))^ @ (L (S n) x^+)^
+      = (ap (fun z => z^+) (L n x))^.
   Proof.
-    nrapply (cancelR _ _ (L n.+1 x^+)).
-    lhs nrapply concat_pV_p.
-    lhs nrapply (1 @@ (ap_V _ _)^).
-    rhs nrapply ((ap_V _ _)^ @@ 1).
-    nrapply (concat_Ap _ _)^.
+    apply moveR_pV.
+    rhs_V nrapply (ap_V _ _ @@ 1).
+    symmetry.
+    rhs_V nrapply (1 @@ ap_V _ _).
+    nrapply concat_Ap.
   Qed.
 
   (** Construct a better section for the equivalence which is needed in the proof of the induction principle. *)
