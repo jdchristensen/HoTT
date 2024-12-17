@@ -170,6 +170,22 @@ Defined.
 #[export]
 Hint Immediate istruncmap_mapinO_tr : typeclass_instances.
 
+(** ** Tactic to remove truncations in hypotheses if possible *)
+
+Ltac strip_truncations :=
+  (** search for truncated hypotheses *)
+  progress repeat
+    match goal with
+    | [ T : _ |- _ ]
+      => revert_opaque T;
+        refine (@Trunc_ind _ _ _ _ _);
+        (** ensure that we didn't generate more than one subgoal, i.e. that the goal was appropriately truncated *)
+        [];
+        intro T
+  end.
+
+(** See [strip_reflections] and [strip_modalities] for generalizations to other reflective subuniverses and modalities.  We provide this version because it sometimes needs fewer universes (due to the cumulativity of [Trunc]).  However, that same cumulativity sometimes causes free universe variables.  For a hypothesis of type [Trunc@{i} X], we can use [Trunc_ind@{i j}], but sometimes Coq uses [Trunc_ind@{k j}] with [i <= k] and [k] otherwise free.  In these cases, [strip_reflections] and/or [strip_modalities] may generate fewer universe variables. *)
+
 (** ** A few special things about the (-1)-truncation *)
 
 Local Open Scope trunc_scope.
@@ -252,6 +268,19 @@ Proof.
   exact (tr (s y; h y)).
 Defined.
 
+(** To prove a prop-valued predicate for the codomain of a surjection, it suffices to prove it on the domain. *)
+Definition surjection_ind {A B : Type} (f : A -> B) `{IsSurjection f}
+  (P : B -> Type) `{forall b, IsHProp (P b)}
+  (p : forall a, P (f a))
+  : forall b, P b.
+Proof.
+  intro b.
+  pose proof (a := center (Tr (-1) (hfiber f b))).
+  strip_truncations.
+  apply (transport P a.2).
+  apply p.
+Defined.
+
 (** ** Embeddings *)
 
 (** Since embeddings are the (-1)-truncated maps, a map that is both a surjection and an embedding is an equivalence. *)
@@ -322,22 +351,6 @@ Proof.
     intros [].
     reflexivity.
 Defined.
-
-(** ** Tactic to remove truncations in hypotheses if possible *)
-
-Ltac strip_truncations :=
-  (** search for truncated hypotheses *)
-  progress repeat
-    match goal with
-    | [ T : _ |- _ ]
-      => revert_opaque T;
-        refine (@Trunc_ind _ _ _ _ _);
-        (** ensure that we didn't generate more than one subgoal, i.e. that the goal was appropriately truncated *)
-        [];
-        intro T
-  end.
-
-(** See [strip_reflections] and [strip_modalities] for generalizations to other reflective subuniverses and modalities.  We provide this version because it sometimes needs fewer universes (due to the cumulativity of [Trunc]).  However, that same cumulativity sometimes causes free universe variables.  For a hypothesis of type [Trunc@{i} X], we can use [Trunc_ind@{i j}], but sometimes Coq uses [Trunc_ind@{k j}] with [i <= k] and [k] otherwise free.  In these cases, [strip_reflections] and/or [strip_modalities] may generate fewer universe variables. *)
 
 (** ** Iterated truncations *)
 
