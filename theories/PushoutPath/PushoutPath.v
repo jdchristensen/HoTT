@@ -15,16 +15,16 @@ Definition Family (C : Type) := C -> Type.
 
 (** Here [P a] should be thought of as [a_0 squiggle_t a] and [Q b] as [a_0 squiggle_{t+1} b].  This describes the type of the "dot" operation [- ._t -]. This will also be used with [A] and [B] swapped and [R] flipped. *)
 Definition Dot {A B : Type} (R : A -> B -> Type) (P : Family A) (Q : Family B)
-  := forall (a : A) (b : B) (r : R a b) (p : P a), Q b.
+  := forall (a : A) (b : B) (r : R a b), P a -> Q b.
 
 Section InductiveStep.
 
-  (** Given two families [P] and [Q] and a dot map from [P] to [Q], we define one more family [P'], a stage map from [Q] to [P'] (relative to the flipped relation), and a fiberwise map iota from [P] to [P']. Note that [flip R] has type [B -> A -> Type]. *)
+  (** Given two families [P] and [Q] and a dot map from [P] to [Q], we define one more family [P'], a dot map from [Q] to [P'] (relative to the flipped relation), and a fiberwise map [iota] from [P] to [P']. Note that [flip R] has type [B -> A -> Type]. *)
 
   Context {A B : Type} (R : A -> B -> Type).
   Context {P : Family A} {Q : Family B} (dot : Dot R P Q).
 
-  (** We define the new type family as the pushout. *)
+  (** The new type family is a pushout. *)
   Definition family_step : Family A.
   Proof.
     intro a.
@@ -34,30 +34,30 @@ Section InductiveStep.
       exact (b; (r, dot a b r p)).
   Defined.
 
-  (** We define the next "dot" map as [pushr]. *)
+  (** The next "dot" map is [pushr]. *)
   Definition dot_step : Dot (flip R) Q family_step
-:= fun b a r q => pushr (b; (r, q)).
+    := fun b a r q => pushr (b; (r, q)).
 
-  (** We define iota as [pushl]. *)
+  (** The next "iota" map is [pushl]. *)
   Definition iota_step : forall a, P a -> family_step a
-    := fun a p => pushl p.
+    := fun a => pushl.
 
-  (** We define the homotopy showing that the composition of the two dot maps is iota. *)
+  (** The composite of the two dot maps is homotopic to [iota_step]. *)
   Definition homotopy_step : forall (a : A) (b : B) (r : R a b), 
-    (iota_step a) == (dot_step b a r) o (dot a b r) 
-    := fun a b r p => (pglue ((b ; r) , p)).
+    iota_step a == dot_step b a r o dot a b r
+    := fun a b r p => pglue ((b; r), p).
 End InductiveStep.
 
-Section ZigzagIdentity.
+Section Zigzag.
 
-  (** Construct the identity zigzag sequence. *)
+  (** Construct the zigzag sequence whose colimit will give the identity types. *)
 
   Context {A B : Type} (R : A -> B -> Type) (a0 : A).
 
-  (** Use a record type for a full step to avoid the interleaved sequence and [flip R]. *)
+  (** Above we gave a method for going a "half-step".  We do that twice to go a full step, storing the following data at each step. *)
   Record Zig : Type := {
-    P : Family A;
     Q : Family B;
+    P : Family A;
     concatQP : Dot (flip R) Q P;
   }.
 
@@ -74,15 +74,15 @@ Section ZigzagIdentity.
     := dot_step R (concatPQ Z).
 
   Definition zigzag_step (Z : Zig) : Zig
-    := Build_Zig (Psucc Z) (Qsucc Z) (concatQPsucc Z).
+    := Build_Zig (Qsucc Z) (Psucc Z) (concatQPsucc Z).
 
-  (** The initial zigzag: over [A] we have the identity type at [a0] and over [B] we have the empty type; these should be thought of as paths of length 0 and -1, respectively. *)
+  (** The initial zigzag: over [B] we have the empty type and over [A] we have the identity type at [a0]; these should be thought of as paths of length -1 and 0, respectively. *)
   Definition zigzag_initial : Zig.
   Proof.
     snrapply Build_Zig.
-    - exact (fun a => a0 = a). (** Define [P0 := Id a0] *)
     - exact (fun b => Empty). (** Define [Q0 := Empty] *)
-  - intros b a r q; destruct q. (** Define [Q0 -> P_0] *)
+    - exact (fun a => a0 = a). (** Define [P0 := Id a0] *)
+  - intros b a r q; destruct q. (** Define [Q0 -> P0] *)
   Defined.
 
   Definition zigzag : nat -> Zig
@@ -93,7 +93,7 @@ Section ZigzagIdentity.
     intro a.
     snrapply Build_Sequence.
     - intro n; exact (P (zigzag n) a).
-    - intro n. cbn. apply iota_step.
+    - intro n. simpl. apply iota_step.
   Defined.
 
   Definition zigzag_Q : B -> Sequence.
@@ -101,7 +101,7 @@ Section ZigzagIdentity.
     intro b.
     snrapply Build_Sequence.
     - intro n; exact (Q (zigzag n) b).
-    - intro n. cbn. apply iota_step.
+    - intro n. simpl. apply iota_step.
   Defined.
 
   Definition zigzag_gluePQ {a : A} {b : B} (r : R a b) 
@@ -109,22 +109,24 @@ Section ZigzagIdentity.
   Proof.
     snrapply Build_DiagramMap.
     - intro n; exact (concatPQ (zigzag n) a b r).
-    - intros n m g x.
-      destruct g.
-      lhs nrapply homotopy_step.
+    - intros n _ [] x.
+      simpl.
+      lhs nrapply (homotopy_step _ _ b a r).
+      unfold concatPQ.
       apply ap.
       symmetry.
       apply homotopy_step.
   Defined.
 
   Definition zigzag_glueQP {a : A} {b : B} (r : R a b) 
-: DiagramMap (zigzag_Q b) (zigzag_P a).
+    : DiagramMap (zigzag_Q b) (zigzag_P a).
   Proof.
     snrapply Build_DiagramMap.
     - intro n; exact (concatQP (zigzag n) b a r).
-    - intros n m g x.
-      destruct g.
-      lhs nrapply homotopy_step.
+    - intros n _ [] x.
+      simpl.
+      lhs nrapply (homotopy_step _ _ a b r).
+      unfold concatQPsucc.
       apply ap.
       symmetry.
       apply homotopy_step.
@@ -132,13 +134,13 @@ Section ZigzagIdentity.
 
   Definition zigzag_gluePQP {a : A} {b : B} (r : R a b) (n : nat)
     : (fun (x : zigzag_P a n) => x^+) == zigzag_glueQP r (S n) o zigzag_gluePQ r n
-    := (homotopy_step R _ a b r).
+    := homotopy_step R _ a b r.
 
   Definition zigzag_glueQPQ {a : A} {b : B} (r : R a b) (n : nat)
     : (fun (x : zigzag_Q b n) => x^+) == zigzag_gluePQ r n o zigzag_glueQP r n
-    := (homotopy_step (flip R) _ b a r).
+    := homotopy_step (flip R) _ b a r.
 
-  (** The colimit of paths starting and ending in A. *)
+  (** The colimit of paths starting and ending in [A]. *)
   Definition zigzag_Pinf (a : A) : Type
     := Colimit (zigzag_P a).
 
@@ -146,7 +148,7 @@ Section ZigzagIdentity.
   Definition zigzag_refl : zigzag_Pinf a0
     := @colim _ (zigzag_P a0) 0%nat idpath.
 
-  (** The colimit of paths starting in A and ending in B. *)
+  (** The colimit of paths starting in [A] and ending in [B]. *)
   Definition zigzag_Qinf (b : B) : Type 
     := Colimit (zigzag_Q b).
 
@@ -155,20 +157,25 @@ Section ZigzagIdentity.
     Context {a : A} {b : B} (r : R a b).
 
     (** The gluing equivalence. *)
-    Definition equiv_zigzag_glueinf
-      : (zigzag_Pinf a) <~> (zigzag_Qinf b)
+    Definition equiv_zigzag_glueinf : zigzag_Pinf a <~> zigzag_Qinf b
       := equiv_zigzag_glue (zigzag_glueQP r) (zigzag_gluePQ r) (zigzag_glueQPQ r) (zigzag_gluePQP r).
 
+    (** jdc: I would be inclined to delete the next two, but I won't yet. *)
     Definition zigzag_gluePQinf : zigzag_Pinf a -> zigzag_Qinf b
       := equiv_zigzag_glueinf.
 
     Definition zigzag_glueQPinf : zigzag_Qinf b -> zigzag_Pinf a
       := equiv_zigzag_glueinf^-1.
 
-    Definition zigzag_comp_eissect (n : nat) (p : zigzag_P a n) : (eissect equiv_zigzag_glueinf (@colim _ (zigzag_P a) n p)) = (ap (@colim _ (zigzag_P a) (S n)) (zigzag_gluePQP r n p)^) @ (@colimp _ (zigzag_P a) n _ _ p)
+    (** jdc: rename to not shadow existing name. *)
+    Definition zigzag_comp_eissect (n : nat) (p : zigzag_P a n)
+      : eissect equiv_zigzag_glueinf (@colim _ (zigzag_P a) n p)
+        = ap (@colim _ (zigzag_P a) (S n)) (zigzag_gluePQP r n p)^ @ @colimp _ (zigzag_P a) n _ _ p
       := zigzag_comp_eissect (zigzag_glueQP r) (zigzag_gluePQ r) (zigzag_glueQPQ r) (zigzag_gluePQP r) n p.
 
-    Definition zigzag_comp_eisretr (n : nat) (q : zigzag_Q b n) : (eisretr equiv_zigzag_glueinf (@colim _ (zigzag_Q b) n q)) = (ap (@colim _ (zigzag_Q b) (S n)) (zigzag_glueQPQ r n q)^) @ (@colimp _ (zigzag_Q b) n _ _ q)
+    Definition zigzag_comp_eisretr (n : nat) (q : zigzag_Q b n)
+      : eisretr equiv_zigzag_glueinf (@colim _ (zigzag_Q b) n q)
+        = ap (@colim _ (zigzag_Q b) (S n)) (zigzag_glueQPQ r n q)^ @ @colimp _ (zigzag_Q b) n _ _ q
       := zigzag_comp_eisretr (zigzag_glueQP r) (zigzag_gluePQ r) (zigzag_glueQPQ r) (zigzag_gluePQP r) n q.
 
   End GluingEquiv.
@@ -219,9 +226,9 @@ Section ZigzagIdentity.
   Let einv (a : A) (b : B) (r : R a b) (q : zigzag_Qinf b) : Q b q <~> P a (zigzag_glueQPinf r q)
     := finv (equiv_zigzag_glueinf r) (e a b r) q.
 
-  Let iotaP {a : A} (n : nat) := (seq_to_succ_seq (zigzag_P a) n).
+  Let iotaP {a : A} (n : nat) := seq_to_succ_seq (zigzag_P a) n.
 
-  Let iotaQ {b : B} (n : nat) := (seq_to_succ_seq (zigzag_Q b) n).
+  Let iotaQ {b : B} (n : nat) := seq_to_succ_seq (zigzag_Q b) n.
 
   (** The two type families, viewed over the sequences [zigzag_P] and [zigzag_Q] instead of their colimits. *)
   Let Pn (n : nat) (a : A) (p : zigzag_P a n)
@@ -235,21 +242,21 @@ Section ZigzagIdentity.
     := snd.
 
   Let pushgP (a : A) (n : nat)
-    : forall (c : ({b : B | R a b} * (zigzag_P a n))), {b : B & (R a b * (zigzag_Q b (S n)))}.
+    : forall (c : {b : B | R a b} * (zigzag_P a n)), {b : B & R a b * (zigzag_Q b (S n))}.
   Proof.
     intros [[b r] p].
-    exact (b ; (r , (zigzag_gluePQ r n p))).
+    exact (b; (r, zigzag_gluePQ r n p)).
   Defined.
 
   (** These are the maps used in the pushout defining [Q_{n+1}] in the identity zigzag. *)
-  Let pushfQ (b : B) (n : nat) : forall (c : ({a : A | R a b} * (zigzag_Q b n))), zigzag_Q b n
+  Let pushfQ (b : B) (n : nat) : forall (c : {a : A | R a b} * (zigzag_Q b n)), zigzag_Q b n
     := snd.
 
   Let pushgQ (b : B) (n : nat)
-    : forall (c : ({a : A | R a b} * (zigzag_Q b n))), {a : A & (R a b * (zigzag_P a n))}.
+    : forall (c : {a : A | R a b} * (zigzag_Q b n)), {a : A & R a b * (zigzag_P a n)}.
   Proof.
     intros [[a r] q].
-    exact (a ; (r , (zigzag_glueQP r n q))).
+    exact (a; (r, zigzag_glueQP r n q)).
   Defined.
 
   (* The type of the maps we wish to construct: *)
@@ -329,12 +336,15 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
   End ind_dataR.
 
   (** Interaction of iterated transport with composition of the type family. *)
-  Local Definition transportlemma {X X' Y : Type} (f : X -> X') (g : X -> Y) (g' : X' -> Y) (Z : Y -> Type) {x : X} {y : X'} (p : f x = y) (q : g x = g' (f x)) : (fun z => (transport (Z o g') p (transport Z q z))) == (transport Z (q @ ap g' p)).
+  Local Definition transportlemma {X X' Y : Type}
+    (f : X -> X') (g : X -> Y) (g' : X' -> Y)
+    (Z : Y -> Type) {x : X} {y : X'} (p : f x = y) (q : g x = g' (f x))
+    : (fun z => transport (Z o g') p (transport Z q z)) == transport Z (q @ ap g' p).
   Proof.
     destruct p.
     simpl.
     intro z.
-    by rhs apply (ap (fun a => transport Z a z) (concat_p1 q)).
+    symmetry; apply (ap (fun a => transport Z a z) (concat_p1 q)).
   Defined.
 
   (* We have the following situation:
@@ -562,8 +572,8 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
       unfold zigzag_glueQPQ.
       unfold ind_pushcQ.
       simpl. *)
-    Admitted.
-End ZigzagIdentity.
+  Admitted.
+End Zigzag.
 
 Section KvRApplication.
   (** Conclude by applying Kraus-von Raumer to get an equivalence with the identity types. *)
@@ -578,15 +588,15 @@ Section KvRApplication.
   Local Definition zigzag_poDescent : poDescent f g.
   Proof.
     snrapply Build_poDescent.
-    + exact (zigzag_Pinf R a0).
-    + exact (zigzag_Qinf R a0).
-    + intros [[a b] r]; exact (equiv_zigzag_glueinf R a0 r).
+    - exact (zigzag_Pinf R a0).
+    - exact (zigzag_Qinf R a0).
+    - intros [[a b] r]; exact (equiv_zigzag_glueinf R a0 r).
   Defined.
 
-  Local Definition zigzag_based_ind : forall (Qe : poDepDescent zigzag_poDescent) (q0 : podd_faml Qe a0 (zigzag_refl R a0)), poDepDescentSection Qe.
+  Local Definition zigzag_based_ind
+    : forall (Qe : poDepDescent zigzag_poDescent) (q0 : podd_faml Qe a0 (zigzag_refl R a0)), poDepDescentSection Qe.
   Proof.
     intros Qe q0.
-    Check podd_faml Qe.
     pose (indL := indL_colim R a0 (podd_faml Qe) (podd_famr Qe) q0 (fun a b r => podd_e Qe ((a , b) ; r))).
     pose (indR := indR_colim R a0 (podd_faml Qe) (podd_famr Qe) q0 (fun a b r => podd_e Qe ((a , b) ; r))).
     snrapply Build_poDepDescentSection.
@@ -605,7 +615,7 @@ Section KvRApplication.
     unfold zigzag_based_ind.
     simpl podds_sectl.
     snrapply indL_comp_refl.
-    + exact (podd_famr Qe).
-    + exact (fun a b r => podd_e Qe ((a , b) ; r)).
+    - exact (podd_famr Qe).
+    - exact (fun a b r => podd_e Qe ((a, b); r)).
   Defined.
 End KvRApplication.
