@@ -104,32 +104,25 @@ Section Zigzag.
     - intro n. simpl. apply iota_step.
   Defined.
 
+  (** jdc: I think the next part should be reorganized.  First give names to the four things defined in the "-" bullets below, and then use them to apply all of the results from interleaving.  Two of the four are already named zigzag_gluePQP and QPQ below. *)
   Definition zigzag_gluePQ {a : A} {b : B} (r : R a b) 
     : DiagramMap (zigzag_P a) (succ_seq (zigzag_Q b)).
   Proof.
-    snrapply Build_DiagramMap.
+    snrapply zigzag_glue_map_inv.
+    - intro n; exact (concatQP (zigzag n) b a r).
     - intro n; exact (concatPQ (zigzag n) a b r).
-    - intros n _ [] x.
-      simpl.
-      lhs nrapply (homotopy_step _ _ b a r).
-      unfold concatPQ.
-      apply ap.
-      symmetry.
-      apply homotopy_step.
+    - intros n q; simpl. apply homotopy_step.
+    - intros n p; simpl. apply homotopy_step.
   Defined.
 
   Definition zigzag_glueQP {a : A} {b : B} (r : R a b) 
     : DiagramMap (zigzag_Q b) (zigzag_P a).
   Proof.
-    snrapply Build_DiagramMap.
+    snrapply zigzag_glue_map.
     - intro n; exact (concatQP (zigzag n) b a r).
-    - intros n _ [] x.
-      simpl.
-      lhs nrapply (homotopy_step _ _ a b r).
-      unfold concatQPsucc.
-      apply ap.
-      symmetry.
-      apply homotopy_step.
+    - intro n; exact (concatPQ (zigzag n) a b r).
+    - intros n q; simpl. apply homotopy_step.
+    - intros n p; simpl. apply homotopy_step.
   Defined.
 
   Definition zigzag_gluePQP {a : A} {b : B} (r : R a b) (n : nat)
