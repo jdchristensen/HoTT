@@ -283,13 +283,14 @@ Section InverseEquivCoh.
     simpl.
     lhs nrapply (ap (fun z => (f (e^-1 (e a)))^-1 (transport Q z^ (f a x))) (eisadj e a)).
     nrapply (moveR_equiv_V' (f (e^-1 (e a)))).
-    lhs nrapply (ap (fun z => transport Q z (f a x)) (ap_V e _)^).
+    lhs_V nrapply (transport2 _ (ap_V e _)).
     by destruct (eissect e a)^.
   Defined.
 
   Definition f_finv : forall (b : B), (f (e^-1 b)) o (finv b) == transport (fun y => Q y) (eisretr e b)^.
   Proof.
     intros b x.
-    by nrapply (moveR_equiv_M' (f (e^-1 b))).
+    simpl.
+    nrapply eisretr.
   Defined.
 End InverseEquivCoh.
