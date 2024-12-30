@@ -1,10 +1,8 @@
 Require Import Basics Types.
-Require Import Diagrams.Diagram.
-Require Import Diagrams.Graph.
-Require Import Diagrams.Cocone.
-Require Import Diagrams.ConstantDiagram.
-Require Import Diagrams.CommutativeSquares.
+Require Import Diagrams.Diagram Diagrams.Graph Diagrams.Cocone
+  Diagrams.ConstantDiagram Diagrams.CommutativeSquares.
 Require Import Colimits.Coeq.
+Require Import Homotopy.IdentitySystems.
 
 Local Open Scope path_scope.
 Generalizable All Variables.
@@ -70,22 +68,20 @@ Definition colimp {G : Graph} {D : Diagram G} (i j : G) (f : G i j) (x : D i)
   := (cglue ((i; x); j; f))^.
 
 (** The two ways of getting a path [colim j (D _f f x) = colim j (D _f f y)] from an path [x = y] are equivalent. *)
-Definition ap_colim {G : Graph} {D : Diagram G} {i j : G} (f : G i j) {x y : D i} (p : x = y) 
-  : colimp i j f x @ ap (colim i) p @ (colimp i j f y)^
-    = ap (colim j) (ap (D _f f) p).
+Definition ap_colim {G : Graph} {D : Diagram G} {i j : G} (f : G i j) {x y : D i} (p : x = y)
+  : ap (colim j) (ap (D _f f) p)
+    = colimp i j f x @ ap (colim i) p @ (colimp i j f y)^.
 Proof.
-  rhs_V nrapply ap_compose.
-  exact (ap_homotopic (colimp i j f) p)^.
+  lhs_V nrapply ap_compose.
+  exact (ap_homotopic (colimp i j f) p).
 Defined.
 
 (** The two ways of getting a path [colim i x = colim i y] from a path [x = y] are equivalent. *)
 Definition ap_colim' {G : Graph} {D : Diagram G} {i j : G} (f : G i j) {x y : D i} (p : x = y)
-  : (colimp i j f x)^ @ ap (colim j) (ap (D _f f) p) @ colimp i j f y = ap (colim i) p.
+  : ap (colim j) (ap (D _f f) p) @ colimp i j f y
+    = colimp i j f x @ ap (colim i) p.
 Proof.
   apply moveR_pM.
-  apply moveR_Vp.
-  symmetry.
-  lhs nrapply concat_p_pp.
   apply ap_colim.
 Defined.
 
@@ -230,7 +226,7 @@ Definition functor_Colimit_half_beta_colimp {G : Graph} {D1 D2 : Diagram G} (m :
 
 (** Homotopic diagram maps induce homotopic maps. *)
 Definition functor_Colimit_half_homotopy {G : Graph} {D1 D2 : Diagram G}
-  {m1 m2 : DiagramMap D1 D2} (h : DiagramMap_homotopy m1 m2) 
+  {m1 m2 : DiagramMap D1 D2} (h : DiagramMap_homotopy m1 m2)
   {Q} (HQ : Cocone D2 Q)
   : functor_Colimit_half m1 HQ == functor_Colimit_half m2 HQ.
 Proof.
@@ -339,14 +335,14 @@ Section FunctorialityColimit.
       = cocone_precompose m (cocone_postcompose HQ2 t).
     Proof.
       lhs nrapply cocone_postcompose_comp.
-      lhs_V exact (ap (fun x => cocone_postcompose x t) 
+      lhs_V exact (ap (fun x => cocone_postcompose x t)
         (functor_colimit_commute m HQ1 HQ2)).
       nrapply cocone_precompose_postcompose.
     Defined.
 
   (** In order to show that colimits are functorial, we show that this is true after precomposing with the cocone. *)
-  Definition postcompose_functor_colimit_compose {D1 D2 D3 : Diagram G} 
-    (m : DiagramMap D1 D2) (n : DiagramMap D2 D3) 
+  Definition postcompose_functor_colimit_compose {D1 D2 D3 : Diagram G}
+    (m : DiagramMap D1 D2) (n : DiagramMap D2 D3)
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
     : cocone_postcompose HQ1 (functor_colimit n HQ2 HQ3 o functor_colimit m HQ1 HQ2)
@@ -358,14 +354,14 @@ Section FunctorialityColimit.
     nrapply functor_colimit_commute.
   Defined.
 
-  Definition functor_colimit_compose {D1 D2 D3 : Diagram G} 
-    (m : DiagramMap D1 D2) (n : DiagramMap D2 D3) 
+  Definition functor_colimit_compose {D1 D2 D3 : Diagram G}
+    (m : DiagramMap D1 D2) (n : DiagramMap D2 D3)
     {Q1 Q2 Q3} (HQ1 : IsColimit D1 Q1) (HQ2 : IsColimit D2 Q2)
     (HQ3 : IsColimit D3 Q3)
     : functor_colimit n HQ2 HQ3 o functor_colimit m HQ1 HQ2
       = functor_colimit (diagram_comp n m) HQ1 HQ3
-    := @equiv_inj _ _ 
-      (cocone_postcompose HQ1) (iscolimit_unicocone HQ1 Q3) _ _ 
+    := @equiv_inj _ _
+      (cocone_postcompose HQ1) (iscolimit_unicocone HQ1 Q3) _ _
       (postcompose_functor_colimit_compose m n HQ1 HQ2 HQ3).
 
   (** ** Colimits of equivalent diagrams *)
@@ -438,3 +434,333 @@ Proof.
   refine (equiv_colimit_rec C oE _).
   apply equiv_diagram_const_cocone.
 Defined.
+
+(** ** Descent *)
+
+Section Descent.
+
+  Context `{Univalence}.
+
+  (** Descent data over [f g : B -> A] is an "equifibrant" or "cartesian" type family [cd_fam : A -> Type].  This means that if [b : B], then the fibers [cd_fam (f b)] and [cd_fam (g b)] are equivalent, witnessed by [cd_e]. *)
+  Record colDescent `{D : Diagram G} := {
+    cold_fam {i : G} (di : D i) : Type;
+    cold_e {i j : G} (g : G i j) (di : D i) : cold_fam (D _f g di) <~> cold_fam di
+  }.
+
+  Global Arguments colDescent {G} D.
+
+  (** Let [A] and [B] be types, with a parallel pair [f g : B -> A]. *)
+  Context `{D : Diagram G}.
+
+  (** Descent data induces a type family over [Coeq f g]. *)
+  Definition fam_coldescent (Pe : colDescent D)
+    : Colimit D -> Type.
+  Proof.
+    snrapply (Colimit_rec _).
+    - snrapply Build_Cocone.
+      + intro i. exact (cold_fam Pe).
+      + intros i j g di.
+        rapply path_universe.
+        exact (equiv_isequiv (cold_e Pe g di)).
+  Defined.
+
+  (** A type family over [Coeq f g] induces descent data. *)
+  Definition coldescent_fam (P : Colimit D -> Type) : colDescent D.
+  Proof.
+    snrapply Build_colDescent.
+    - intro i. exact (P o colim i).
+    - intros i j g di.
+      exact (equiv_transport P (colimp i j g di)).
+  Defined.
+
+  (** Transporting over [fam_cdescent] along [cglue b] is given by [cd_e]. *)
+  Definition transport_fam_coldescent_colimp
+    (Pe : colDescent D) {i j : G} (g : G i j) (di : D i) (pdg : cold_fam Pe (D _f g di))
+    : transport (fam_coldescent Pe) (colimp i j g di) pdg = (cold_e Pe g di) pdg.
+  Proof.
+    nrapply transport_path_universe'.
+    nrapply Colimit_rec_beta_colimp.
+  Defined.
+
+  (** A section on the descent data is a fiberwise section that respects the equivalences. *)
+  Record colDescentSection {Pe : colDescent D} := {
+    colds_sect {i : G} (di : D i) : cold_fam Pe di;
+    colds_e {i j : G} (g : G i j) (di : D i) : cold_e Pe g di (colds_sect (D _f g di)) = colds_sect di
+  }.
+
+  Global Arguments colDescentSection Pe : clear implicits.
+
+  (** A descent section induces a genuine section of [fam_cdescent Pe]. *)
+  Definition coldescent_ind {Pe : colDescent D}
+    (s : colDescentSection Pe)
+    : forall (x : Colimit D), fam_coldescent Pe x.
+  Proof.
+    snrapply (Colimit_ind _).
+    - intros i di. exact (colds_sect s di).
+    - intros i j g di.
+      exact (transport_fam_coldescent_colimp Pe g di _ @ colds_e s g di).
+  Defined.
+
+  (** We record its computation rule *)
+  Definition coldescent_ind_beta_cglue {Pe : colDescent D}
+    (s : colDescentSection Pe) {i j : G} (g : G i j) (di : D i)
+    : apD (coldescent_ind s) (colimp i j g di) = transport_fam_coldescent_colimp Pe g di _ @ colds_e s g di
+    := Colimit_ind_beta_colimp _ _ _ _ _ _ _.
+
+  (** Dependent descent data over descent data [Pe : cDescent f g] consists of a type family [cdd_fam : forall a : A, cd_fam Pe a -> Type] together with coherences [cdd_e b pf]. *)
+  Record colDepDescent {Pe : colDescent D} := {
+    coldd_fam {i : G} (di : D i) (pdi : cold_fam Pe di) : Type;
+    coldd_e {i j : G} (g : G i j) (di : D i) (pdg : cold_fam Pe (D _f g di))
+      : coldd_fam (D _f g di) pdg <~> coldd_fam di (cold_e Pe g di pdg)
+  }.
+
+  Global Arguments colDepDescent Pe : clear implicits.
+
+  (** A dependent type family over [fam_cdescent Pe] induces dependent descent data over [Pe]. *)
+  Definition coldepdescent_fam {Pe : colDescent D}
+    (Q : forall x : Colimit D, (fam_coldescent Pe) x -> Type)
+    : colDepDescent Pe.
+  Proof.
+    snrapply Build_colDepDescent.
+    - intros i di.
+      exact (Q (colim i di)).
+    - intros i j g di pdg; cbn.
+      exact (equiv_transportDD (fam_coldescent Pe) Q
+               (colimp i j g di) (transport_fam_coldescent_colimp Pe g di pdg)).
+  Defined.
+
+  (** Dependent descent data over [Pe] induces a dependent type family over [fam_cdescent Pe]. *)
+  Definition fam_coldepdescent {Pe : colDescent D} (Qe : colDepDescent Pe)
+    : forall (x : Colimit D), (fam_coldescent Pe x) -> Type.
+  Proof.
+    snrapply Colimit_ind.
+    - intros i di. exact (coldd_fam Qe di).
+    - intros i j g di; cbn.
+      nrapply (moveR_transport_p _ (colimp i j g di)).
+      funext pdg.
+      rhs nrapply transport_arrow_toconst.
+      rhs nrefine (ap (coldd_fam _ _) _).
+      + exact (path_universe (coldd_e _ _ _ _)).
+      + lhs nrapply (ap (fun x => (transport _ x _)) (inv_V (colimp _ _ _ _))).
+        nrapply (transport_fam_coldescent_colimp _ _ _).
+  Defined.
+
+  (** A section of dependent descent data [Qe : cDepDescent Pe] is a fiberwise section [cdds_sect], together with coherences [cdds_e]. *)
+  Record colDepDescentSection {Pe : colDescent D} {Qe : colDepDescent Pe} := {
+    coldds_sect {i : G} (di : D i) (pdi : cold_fam Pe di) : coldd_fam Qe di pdi;
+    coldds_e {i j : G} (g : G i j) (di : D i) (pdg : cold_fam Pe (D _f g di))
+      : coldd_e Qe g di pdg (coldds_sect (D _f g di) pdg)
+        = coldds_sect di (cold_e Pe g di pdg)
+  }.
+
+  Global Arguments colDepDescentSection {Pe} Qe.
+
+  (** A dependent descent section induces a genuine section over the total space of [fam_cdescent Pe]. *)
+  Definition coldepdescent_ind {Pe : colDescent D}
+    {Q : forall (x : Colimit D), (fam_coldescent Pe) x -> Type}
+    (s : colDepDescentSection (coldepdescent_fam Q))
+    : forall (x : Colimit D) (px : fam_coldescent Pe x), Q x px.
+    Proof.
+      nrapply (Colimit_ind _).
+      intros i j g di.
+      apply dpath_forall.
+      intro pdg.
+      apply (equiv_inj (transport (Q (colim i di)) (transport_fam_coldescent_colimp Pe g di pdg))).
+      rhs nrapply (apD (coldds_sect s di) (transport_fam_coldescent_colimp Pe g di pdg)).
+      exact (coldds_e s g di pdg).
+    Defined.
+
+  (** The data for a section into a constant type family. *)
+  Record colDepDescentConstSection {Pe : colDescent D} {Q : Type} := {
+    colddcs_sect {i : G} (di : D i) (pdi : cold_fam Pe di) : Q;
+    colddcs_e {i j : G} (g : G i j) (di : D i) (pdg : cold_fam Pe (D _f g di))
+      : colddcs_sect (D _f g di) pdg = colddcs_sect di (cold_e Pe g di pdg)
+  }.
+
+  Global Arguments colDepDescentConstSection Pe Q : clear implicits.
+
+  (** The data for a section of a constant family induces a section over the total space of [fam_cdescent Pe]. *)
+  Definition coldepdescent_rec {Pe : colDescent D} {Q : Type}
+    (s : colDepDescentConstSection Pe Q)
+    : forall (x : Colimit D), fam_coldescent Pe x -> Q.
+  Proof.
+    nrapply (Colimit_ind _).
+    intros i j g di.
+    nrapply dpath_arrow.
+    intro pdg.
+    lhs nrapply transport_const.
+    rhs nrapply (ap _ (transport_fam_coldescent_colimp Pe g di pdg)).
+    exact (colddcs_e s g di pdg).
+  Defined.
+
+  (** Here is the computation rule on paths. *)
+  Definition coldepdescent_rec_beta_colimp {Pe : colDescent D} {Q : Type}
+    (s : colDepDescentConstSection Pe Q)
+    {i j : G} (g : G i j) (di : D i) {pdi : cold_fam Pe di} {pdg : cold_fam Pe (D _f g di)} (pg : cold_e Pe g di pdg = pdi)
+    : ap (sig_rec (coldepdescent_rec s)) (path_sigma _ (colim j (D _f g di); pdg) (colim i di; pdi) (colimp i j g di) (transport_fam_coldescent_colimp Pe g di pdg @ pg))
+      = colddcs_e s g di pdg @ ap (colddcs_sect s _) pg.
+  Proof.
+    Open Scope long_path_scope.
+    destruct pg.
+    rhs nrapply concat_p1.
+    lhs nrapply ap_sig_rec_path_sigma.
+    lhs nrapply (ap (fun x => _ (ap10 x _) @ _)).
+    1: nrapply Colimit_ind_beta_colimp.
+    do 3 lhs nrapply concat_pp_p.
+    apply moveR_Vp.
+    lhs nrefine (1 @@ (1 @@ (_ @@ 1))).
+    1: nrapply (ap10_dpath_arrow (fam_coldescent Pe) (fun _ => Q) (colimp i j g di)).
+    lhs nrefine (1 @@ _).
+    { lhs nrapply (1 @@ concat_pp_p _ _ _).
+      lhs nrapply (1 @@ concat_pp_p _ _ _).
+      lhs nrapply concat_V_pp.
+      lhs nrapply (1 @@ concat_pp_p _ _ _).
+      rewrite concat_p1.
+      nrapply (1 @@ (1 @@ concat_pV_p _ _)). }
+    nrapply concat_V_pp.
+    Close Scope long_path_scope.
+  Defined.
+
+End Descent.
+
+(** ** Flattening *)
+
+Section Flattening.
+
+  Context `{Univalence} `{D : Diagram G} (Pe : colDescent D).
+
+  (** We mimic the constructors of [Coeq] for the total space.  Here is the point constructor, in curried form. *)
+  Definition flatten_cold {i : G} {di : D i} (pdi : cold_fam Pe di) : sig (fam_coldescent Pe)
+    := (colim i di; pdi).
+
+  (** And here is the path constructor. *)
+  Definition flatten_cold_colimp {i j : G} (g : G i j) (di : D i)
+    {pdg : cold_fam Pe (D _f g di)} {pdi : cold_fam Pe di} (pg : cold_e Pe g di pdg = pdi)
+    : flatten_cold pdg = flatten_cold pdi.
+  Proof.
+    snrapply path_sigma.
+    - by apply colimp.
+    - lhs nrapply transport_fam_coldescent_colimp.
+      exact pg.
+  Defined.
+
+  (** Now that we've shown that [fam_coldescent Pe] acts like a [Colimit] of an appropriate diagram, we can use this to prove the flattening lemma.  The maps back and forth are very easy so this could almost be a formal consequence of the induction principle. *)
+  Definition diagram_coldescent : Diagram G.
+  Proof.
+    snrapply Build_Diagram.
+    - exact (fun x => { dx : D x & cold_fam Pe dx}).
+    - intros i j g [di pdi].
+      exact (D _f g di; (cold_e Pe g di)^-1 pdi).
+  Defined.
+
+  Lemma equiv_cold_flatten : sig (fam_coldescent Pe) <~>
+    Colimit diagram_coldescent.
+  Proof.
+    snrapply equiv_adjointify.
+    - snrapply sig_rec.
+      snrapply coldepdescent_rec.
+      snrapply Build_colDepDescentConstSection.
+      + intros i di pdi.
+        exact (@colim _ diagram_coldescent i (di; pdi)).
+      + intros i j g di pdg; cbn.
+        lhs nrapply (ap (colim j)).
+        * nrapply (ap (fun x => (_; x))).
+          symmetry.
+          rapply (eissect (cold_e _ _ _)).
+        * snrapply (@colimp _ diagram_coldescent i j g (di; cold_e Pe g di pdg)).
+    - snrapply Colimit_rec.
+      + snrapply Build_Cocone.
+        * intros i [di pdi].
+          exact (colim i di; pdi).
+        * intros i j g [di pdi].
+          snrapply path_sigma'.
+          -- nrapply colimp.
+          -- lhs nrapply transport_fam_coldescent_colimp.
+            rapply eisretr.
+    - snrapply Colimit_ind.
+      1: reflexivity.
+      intros i j g [di pdi]; cbn.
+      nrapply transport_paths_FFlr'; apply equiv_p1_1q.
+      lhs nrapply ap.
+      { nrapply (@Colimit_rec_beta_colimp _ diagram_coldescent _ _ i j g (di; pdi)). }
+      lhs nrapply coldepdescent_rec_beta_colimp.
+      lhs nrapply (((ap_compose _ (colim _) _)^ @@ 1) @@ 1).
+      lhs nrapply concat_pp_p.
+      lhs nrapply (ap_V _ (eissect (cold_e Pe g di) _) @@ 1).
+      nrapply moveR_Vp.
+      lhs refine (1 @@ _).
+      { rapply (ap_path_sigma_1p (fun d pd => @colim _ diagram_coldescent i (d; pd)) _ _)^. }
+      lhs nrapply (@ap_colim' _ diagram_coldescent i j g _ _ (@path_sigma' _ _ di di ((cold_e Pe g di) ((cold_e Pe g di)^-1 pdi)) pdi idpath (eisretr (cold_e Pe g di) pdi)))^.
+      f_ap.
+      lhs_V rapply ap_compose.
+      lhs rapply (ap_path_sigma_1p (fun dx x => @colim _ diagram_coldescent j ((D _f g) dx; (cold_e Pe g dx)^-1 x)) di (eisretr (cold_e Pe g di) pdi)).
+      rhs rapply (ap _ (eisadj (cold_e Pe g di)^-1 pdi)).
+      exact (ap_compose _ (fun x => @colim _ diagram_coldescent j (D _f g di; x)) _).
+    - intros [x px]; revert x px.
+      snrapply coldepdescent_ind.
+      snrapply Build_colDepDescentSection.
+      + intros i di pdi. cbn. reflexivity.
+      + intros i j g di pdg; cbn.
+        lhs nrapply transportDD_is_transport.
+        nrapply transport_paths_FFlr'; apply equiv_p1_1q.
+        rewrite <- (concat_p1 (transport_fam_coldescent_colimp _ _ _ _)).
+        lhs refine (ap _ _).
+        { rapply coldepdescent_rec_beta_colimp. (* This needs to be in the form [transport_fam_cdescent_cglue Pe r pa @ p] to work, and the other [@ 1] introduced comes in handy as well. *) }
+        lhs nrapply (ap _ (concat_p1 _)).
+        cbn.
+        lhs nrapply (ap _ ((ap_compose _ _ _)^ @@ 1)).
+        lhs nrapply (ap_pp _ _ (@colimp _ diagram_coldescent i j g (di; cold_e Pe g di pdg))).
+        lhs refine (1 @@ _).
+        { rapply (@Colimit_rec_beta_colimp _ diagram_coldescent _ _ _ _ _ (di; cold_e Pe g di pdg)). }
+        lhs refine (_ @@ 1).
+        { rapply (ap_compose (fun x => @colim _ diagram_coldescent j ((D _f g) di; x)) (Colimit_rec _ _) _)^. }
+        simpl.
+        rhs nrapply (ap _ (concat_p1 _)).
+        lhs refine (1 @@ _).
+        { nrapply (ap (path_sigma' _ _)).
+          nrapply (1 @@ (eisadj _ _)). }
+        lhs nrapply (1 @@ path_sigma_p1_pp' _ _ _ _).
+        lhs refine (1 @@ (1 @@ _)).
+        { lhs_V nrapply (ap_exist _ _ _ _ _).
+          nrapply (ap_compose _ _ _)^. }
+        lhs nrapply (ap_V _ _ @@ 1).
+        nrapply moveR_Vp.
+        symmetry.
+        exact (concat_Ap (fun x => path_sigma' _ _
+          (transport_fam_coldescent_colimp _ _ _ x)) _).
+  Defined.
+
+End Flattening.
+
+(** ** Characterization of path spaces *)
+
+(** A pointed type family over an arbitrary colimit has an identity system structure precisely when its associated descent data satisfies Kraus and von Raumer's induction principle, https://arxiv.org/pdf/1901.06022. *)
+
+Section Paths.
+
+  (** Let [D : Diagram G] be a diagram with shape [G : Graph], together with a distinguished point [di0 : D i0] over [i0 : G].  Let [Pe : colDescent D] be descent data over the diagram [D] with the distinguished point [pdi0 : cold_fam Pe i0].  Assume that any dependent descent data [Qe : colDepDescent Pe] with a distinguished point [qi0 : coldd_fam Qe i0 pdi0] has a section that respects the distinguished points.  This is the induction principle provided by Kraus and von Raumer. *)
+  Context `{Univalence} `{D : Diagram G} (Pe : colDescent D)
+    (i0 : G) (di0 : D i0) (pdi0 : cold_fam Pe di0)
+    (based_coldepdescent_ind : forall (Qe : colDepDescent Pe) (qi0 : coldd_fam Qe di0 pdi0),
+      colDepDescentSection Qe)
+    (based_coldepdescent_ind_beta : forall (Qe : colDepDescent Pe) (qi0 : coldd_fam Qe di0 pdi0),
+      coldds_sect (based_coldepdescent_ind Qe qi0) di0 pdi0 = qi0).
+
+  (** Under these hypotheses, we get an identity system structure on [fam_coldescent Pe]. *)
+  Local Instance idsys_flatten_coldescent
+    : @IsIdentitySystem _ (colim i0 di0) (fam_coldescent Pe) pdi0.
+  Proof.
+    snrapply Build_IsIdentitySystem.
+    - intros Q q0 x p.
+      snrapply coldepdescent_ind.
+      by apply based_coldepdescent_ind.
+    - intros Q q0; cbn.
+      nrapply (based_coldepdescent_ind_beta (coldepdescent_fam Q)).
+  Defined.
+
+  (** It follows that the fibers [fam_coldescent Pe x] are equivalent to path spaces [(colim i0 di0) = x]. *)
+  Definition induced_fam_cold_equiv_path (x : Colimit D)
+    : (colim i0 di0) = x <~> fam_coldescent Pe x
+    := @equiv_transport_identitysystem _ (colim i0 di0) (fam_coldescent Pe) pdi0 _ x.
+
+End Paths.

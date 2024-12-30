@@ -222,6 +222,18 @@ Definition path_sigma_pp_pp' {A : Type} (P : A -> Type)
     = path_sigma' P p1 q1 @ path_sigma' P p2 q2
   := @path_sigma_pp_pp A P (u1;u2) (v1;v2) (w1;w2) p1 q1 p2 q2.
 
+Definition path_sigma_p1_pp' {A : Type} (P : A -> Type)
+  {u1 v1} {u2 : P u1} {v2 w2 : P v1}
+  (p1 : u1 = v1) (q1 : p1 # u2 = v2) (q2 : v2 = w2)
+  : path_sigma' P p1 (q1 @ q2)
+    = path_sigma' P p1 q1 @ path_sigma' P 1 q2.
+Proof.
+  destruct q2. cbn.
+  rhs nrapply concat_p1.
+  f_ap.
+  nrapply concat_p1.
+Defined.
+
 Definition path_sigma_p1_1p' {A : Type} (P : A -> Type)
   {u1 v1 : A} {u2 : P u1} {v2 : P v1}
   (p : u1 = v1) (q : p # u2 = v2)
