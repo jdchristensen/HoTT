@@ -560,15 +560,15 @@ Section Descent.
     {Q : forall (x : Colimit D), (fam_coldescent Pe) x -> Type}
     (s : colDepDescentSection (coldepdescent_fam Q))
     : forall (x : Colimit D) (px : fam_coldescent Pe x), Q x px.
-    Proof.
-      nrapply (Colimit_ind _).
-      intros i j g di.
-      apply dpath_forall.
-      intro pdg.
-      apply (equiv_inj (transport (Q (colim i di)) (transport_fam_coldescent_colimp Pe g di pdg))).
-      rhs nrapply (apD (coldds_sect s di) (transport_fam_coldescent_colimp Pe g di pdg)).
-      exact (coldds_e s g di pdg).
-    Defined.
+  Proof.
+    nrapply (Colimit_ind _).
+    intros i j g di.
+    apply dpath_forall.
+    intro pdg.
+    apply (equiv_inj (transport (Q (colim i di)) (transport_fam_coldescent_colimp Pe g di pdg))).
+    rhs nrapply (apD (coldds_sect s di) (transport_fam_coldescent_colimp Pe g di pdg)).
+    exact (coldds_e s g di pdg).
+  Defined.
 
   (** The data for a section into a constant type family. *)
   Record colDepDescentConstSection {Pe : colDescent D} {Q : Type} := {
@@ -605,23 +605,34 @@ Section Descent.
     rhs nrapply concat_p1.
     lhs nrapply ap_sig_rec_path_sigma.
     lhs nrapply (ap (fun x => _ (ap10 x _) @ _)).
-    1: nrapply Colimit_ind_beta_colimp.
+    { nrapply Colimit_ind_beta_colimp. }
     do 3 lhs nrapply concat_pp_p.
     apply moveR_Vp.
     lhs nrefine (1 @@ (1 @@ (_ @@ 1))).
-    1: nrapply (ap10_dpath_arrow (fam_coldescent Pe) (fun _ => Q) (colimp i j g di)).
+    { nrapply (ap10_dpath_arrow (fam_coldescent Pe) (fun _ => Q) (colimp i j g di)). }
     lhs nrefine (1 @@ _).
     { lhs nrapply (1 @@ concat_pp_p _ _ _).
       lhs nrapply (1 @@ concat_pp_p _ _ _).
       lhs nrapply concat_V_pp.
       lhs nrapply (1 @@ concat_pp_p _ _ _).
-      rewrite concat_p1.
+      lhs nrapply (1 @@ (1 @@ (1 @@ (ap _ (concat_p1 _))))).
       nrapply (1 @@ (1 @@ concat_pV_p _ _)). }
     nrapply concat_V_pp.
     Close Scope long_path_scope.
+  Defined. (** This is a lot slower than the other functions. <0.15s *)
+
+  Definition coldepdescent_rec_beta_colimp' {Pe : colDescent D} {Q : Type}
+  (s : colDepDescentConstSection Pe Q)
+  {i j : G} (g : G i j) (di : D i) {pdg : cold_fam Pe (D _f g di)}
+  : ap (sig_rec (coldepdescent_rec s)) (path_sigma _ (colim j (D _f g di); pdg) (colim i di; cold_e Pe g di pdg) (colimp i j g di) (transport_fam_coldescent_colimp Pe g di pdg))
+    = colddcs_e s g di pdg.
+  Proof.
+    lhs_V nrapply (ap _ (ap _ (concat_p1 _))).
+    rhs nrapply (concat_p1 _)^.
+    nrapply coldepdescent_rec_beta_colimp.
   Defined.
 
-End Descent.
+End Descent. (** <0.15s *)
 
 (** ** Flattening *)
 
@@ -657,8 +668,8 @@ Section Flattening.
     Colimit diagram_coldescent.
   Proof.
     snrapply equiv_adjointify.
-    - snrapply sig_rec.
-      snrapply coldepdescent_rec.
+    - nrapply sig_rec.
+      nrapply coldepdescent_rec.
       snrapply Build_colDepDescentConstSection.
       + intros i di pdi.
         exact (@colim _ diagram_coldescent i (di; pdi)).
@@ -674,63 +685,53 @@ Section Flattening.
           exact (colim i di; pdi).
         * intros i j g [di pdi].
           snrapply path_sigma'.
-          -- nrapply colimp.
-          -- lhs nrapply transport_fam_coldescent_colimp.
-            rapply eisretr.
+          { nrapply colimp. }
+          { lhs nrapply transport_fam_coldescent_colimp.
+            nrapply eisretr. }
     - snrapply Colimit_ind.
-      1: reflexivity.
-      intros i j g [di pdi]; cbn.
-      nrapply transport_paths_FFlr'; apply equiv_p1_1q.
+      { reflexivity. }
+      intros i j g [di pdi].
+      nrapply transport_paths_FFlr'; nrapply equiv_p1_1q.
       lhs nrapply ap.
-      { nrapply (@Colimit_rec_beta_colimp _ diagram_coldescent _ _ i j g (di; pdi)). }
+      {nrapply Colimit_rec_beta_colimp. }
       lhs nrapply coldepdescent_rec_beta_colimp.
-      lhs nrapply (((ap_compose _ (colim _) _)^ @@ 1) @@ 1).
+      lhs_V nrapply (((ap_compose _ (colim _) _) @@ 1) @@ 1).
       lhs nrapply concat_pp_p.
       lhs nrapply (ap_V _ (eissect (cold_e Pe g di) _) @@ 1).
       nrapply moveR_Vp.
-      lhs refine (1 @@ _).
-      { rapply (ap_path_sigma_1p (fun d pd => @colim _ diagram_coldescent i (d; pd)) _ _)^. }
-      lhs nrapply (@ap_colim' _ diagram_coldescent i j g _ _ (@path_sigma' _ _ di di ((cold_e Pe g di) ((cold_e Pe g di)^-1 pdi)) pdi idpath (eisretr (cold_e Pe g di) pdi)))^.
+      lhs_V nrapply (1 @@ (ap_path_sigma_1p (fun d pd => @colim _ diagram_coldescent _ (d; pd)) _ _)).
+      lhs_V nrapply (concat_Ap (@colimp _ diagram_coldescent i j g) (path_sigma' _ _ _)).
       f_ap.
-      lhs_V rapply ap_compose.
-      lhs rapply (ap_path_sigma_1p (fun dx x => @colim _ diagram_coldescent j ((D _f g) dx; (cold_e Pe g dx)^-1 x)) di (eisretr (cold_e Pe g di) pdi)).
+      lhs nrapply (ap_path_sigma_1p (fun dx x => colim j (diagram_coldescent _f g (dx; x)))).
       rhs rapply (ap _ (eisadj (cold_e Pe g di)^-1 pdi)).
       exact (ap_compose _ (fun x => @colim _ diagram_coldescent j (D _f g di; x)) _).
     - intros [x px]; revert x px.
-      snrapply coldepdescent_ind.
-      snrapply Build_colDepDescentSection.
-      + intros i di pdi. cbn. reflexivity.
-      + intros i j g di pdg; cbn.
-        lhs nrapply transportDD_is_transport.
-        nrapply transport_paths_FFlr'; apply equiv_p1_1q.
-        rewrite <- (concat_p1 (transport_fam_coldescent_colimp _ _ _ _)).
-        lhs refine (ap _ _).
-        { rapply coldepdescent_rec_beta_colimp. (* This needs to be in the form [transport_fam_cdescent_cglue Pe r pa @ p] to work, and the other [@ 1] introduced comes in handy as well. *) }
-        lhs nrapply (ap _ (concat_p1 _)).
-        cbn.
-        lhs nrapply (ap _ ((ap_compose _ _ _)^ @@ 1)).
-        lhs nrapply (ap_pp _ _ (@colimp _ diagram_coldescent i j g (di; cold_e Pe g di pdg))).
-        lhs refine (1 @@ _).
-        { rapply (@Colimit_rec_beta_colimp _ diagram_coldescent _ _ _ _ _ (di; cold_e Pe g di pdg)). }
-        lhs refine (_ @@ 1).
-        { rapply (ap_compose (fun x => @colim _ diagram_coldescent j ((D _f g) di; x)) (Colimit_rec _ _) _)^. }
-        simpl.
-        rhs nrapply (ap _ (concat_p1 _)).
-        lhs refine (1 @@ _).
-        { nrapply (ap (path_sigma' _ _)).
-          nrapply (1 @@ (eisadj _ _)). }
-        lhs nrapply (1 @@ path_sigma_p1_pp' _ _ _ _).
-        lhs refine (1 @@ (1 @@ _)).
-        { lhs_V nrapply (ap_exist _ _ _ _ _).
-          nrapply (ap_compose _ _ _)^. }
-        lhs nrapply (ap_V _ _ @@ 1).
-        nrapply moveR_Vp.
-        symmetry.
-        exact (concat_Ap (fun x => path_sigma' _ _
-          (transport_fam_coldescent_colimp _ _ _ x)) _).
-  Defined.
+      nrapply coldepdescent_ind.
+      snrapply (Build_colDepDescentSection).
+      { reflexivity. }
+      intros i j g di pdg; cbn.
+      lhs nrapply transportDD_is_transport.
+      nrapply transport_paths_FFlr'; nrapply equiv_p1_1q.
+      lhs nrapply (ap _ (coldepdescent_rec_beta_colimp' _ _ _)).
+      lhs_V nrapply (ap _ ((ap_compose _ _ _) @@ 1)).
+      lhs nrapply (ap_pp _ _ (@colimp _ diagram_coldescent i j g (di; cold_e Pe g di pdg))).
+      lhs nrapply (1 @@ (@Colimit_rec_beta_colimp _ diagram_coldescent _ _ _ _ _ (di; cold_e Pe g di pdg))).
+      lhs_V nrapply ((ap_compose (fun x => @colim _ diagram_coldescent _ (_ ; x)) (Colimit_rec _ _) _) @@ 1).
+      simpl.
+      lhs nrefine (1 @@ _).
+      { nrapply (ap (path_sigma' _ _)).
+        exact (1 @@ (eisadj _ _)). }
+      lhs nrapply (1 @@ path_sigma_p1_pp' _ _ _ _).
+      lhs nrefine (1 @@ (1 @@ _)).
+      { lhs_V nrapply (ap_exist _ _ _ _ _).
+        exact (ap_compose _ _ _)^. }
+      lhs nrapply (ap_V _ _ @@ 1).
+      nrapply moveR_Vp.
+      exact (concat_Ap (fun x => path_sigma' _ _
+        (transport_fam_coldescent_colimp _ _ _ x)) _)^.
+  Defined. (** This is slow. <0.2s *)
 
-End Flattening.
+End Flattening. (** <0.15s *)
 
 (** ** Characterization of path spaces *)
 
