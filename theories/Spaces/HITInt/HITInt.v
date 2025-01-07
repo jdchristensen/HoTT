@@ -209,8 +209,7 @@ Proof.
     refine ((transport_const (succ_is_retr z) (f (g t))) @ (r t)).
 Defined. 
 
-(** This verison of the recursion principle requires only a half-adjoint equivalence. *)
-(** Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
+(** This verison of the recursion principle requires only a half-adjoint equivalence. Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
 Definition IntHIT_rec_equiv
   (P : Type)
   (t0 : P)
@@ -221,7 +220,7 @@ Proof.
   exact (IntHIT_rec_biinv _ t0 f (e := (isbiinv_isequiv _ e))).
 Defined.
 
-(** We define equivalence interation. *)
+(** We define equivalence iteration. *)
 Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0: A) : A.
 Proof.
   snrapply IntHIT_rec_equiv.
@@ -364,7 +363,7 @@ Section Uniqueness.
       apply (concat_A1p (f := e o s)).
   Defined.
  
-(** The following unqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
+(** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
 Definition uniquenessZ_two_fun_biinv
   (k1: IntHIT -> P)
   (k2: IntHIT -> P)
@@ -484,13 +483,14 @@ Section IntHITEquiv.
         * exact IntITtoIntHIT_is_linv.
   Defined.
 
-  (**Therefore [IntHIT] is a set. *)
+  (** Therefore [IntHIT] is a set. *)
   Global Instance ishset_IntHIT
     : IsHSet IntHIT.
     Proof.
       snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
       exact ishset_int.
     Defined.
+
   (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
   Global Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
 
