@@ -301,10 +301,10 @@ Section Uniqueness.
 
   Context {P : Type} {e: EquivBiInv P P}.
 
-  Local Definition g1 := retr_biinv e.
-  Local Definition g2 := sect_biinv e.
-  Local Definition s := eissect_biinv e.
-  Local Definition r := eisretr_biinv e.
+  Local Definition s := sect_biinv e.
+  Local Definition r := retr_biinv e.
+  Local Definition re:= eissect_biinv e.
+  Local Definition es := eisretr_biinv e.
   
   (** We prove a uniqueness principle expressing the universal property of the recursor, up to propositional equality. *)
   Definition uniquenessZ
@@ -312,7 +312,7 @@ Section Uniqueness.
     (k: IntHIT -> P)
     (p0 : (k zero_i) = t0)
     (pf : forall (z : IntHIT), (e o k) z = (k o succ) z)
-    (rec := IntHIT_rec P t0 e g1 g2 s r)
+    (rec := IntHIT_rec P t0 e r s re es)
     (compat := compat_implies_prBiInv _ _ _ _ biinv_IntHIT e k k pf)
     : forall (z : IntHIT), k z = rec z.
     Proof.
@@ -325,10 +325,10 @@ Section Uniqueness.
       exact (((pe _ _ _ _ _ _ _ _ compat z)^) @ H).
     - simpl.
       intros z H.
-      apply (ap g1) in H.
+      apply (ap r) in H.
       exact (((pr _ _ _ _ _ _ _ _ compat z)^) @ H).
     - intros z H.
-      apply (ap g2) in H.
+      apply (ap s) in H.
       exact (((ps _ _ _ _ _ _ _ _ compat z)^) @ H).
     - simpl.
       intros z t.
@@ -345,7 +345,7 @@ Section Uniqueness.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
       rewrite IntHIT_rec_beta_sec.
-      apply (concat_A1p (f := g1 o e)).
+      apply (concat_A1p (f := r o e)).
     - simpl.
       intros z t.
       rewrite transport_paths_FlFr.
@@ -361,8 +361,8 @@ Section Uniqueness.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
       rewrite IntHIT_rec_beta_ret.
-      apply (concat_A1p (f := e o g2)).
-  Defined.  
+      apply (concat_A1p (f := e o s)).
+  Defined.
  
 (** The following unqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
 Definition uniquenessZ_two_fun_biinv
@@ -767,6 +767,10 @@ Section IntegerArithmetic.
       by rewrite IntHIT_add_1_r.
   Defined.
 
+  (** Integer multiplication with -1 on the left is the identity. *)
+  Definition IntHIT_mul_neg1_l (x : IntHIT) : (-1) * x = - x 
+    := idpath.
+
   (** Multiplying with a negation on the left is the same as negating the product. *)
   Definition IntHIT_mul_neg_l (x y : IntHIT) : - x * y = - (x * y).
   Proof.
@@ -774,8 +778,7 @@ Section IntegerArithmetic.
     rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (-y))); cbn beta.
     - reflexivity.
     - reflexivity.
-    - intro x.
-      rewrite IntHIT_mul_succ_l.
+    - intro x; simpl.
       rewrite IntHIT_neg_add.
       reflexivity.
   Defined.
@@ -788,9 +791,7 @@ Section IntegerArithmetic.
     rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (succ y))); cbn beta.
     - reflexivity.
     - reflexivity.
-    - intro z. 
-      rewrite IntHIT_mul_succ_l.
-      rewrite IntHIT_add_succ_l.
+    - intro z; simpl.
       rewrite IntHIT_add_succ_r.
       by rewrite IntHIT_add_assoc.
   Defined.
