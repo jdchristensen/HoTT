@@ -10,74 +10,74 @@ Module Export IntHIT.
     Private Inductive IntHIT : Type :=
     | zero_i : IntHIT
     | succ : IntHIT -> IntHIT
-    | pred1 : IntHIT -> IntHIT
-    | pred2 : IntHIT -> IntHIT.
+    | pred : IntHIT -> IntHIT
+    | succ_sect : IntHIT -> IntHIT.
 
-    Axiom sec : forall (z : IntHIT),
-      (pred1 (succ z)) = z.
+    Axiom succ_is_sect : forall (z : IntHIT),
+      pred (succ z) = z.
 
-    Axiom ret : forall (z : IntHIT),
-      (succ (pred2 z)) = z.
+    Axiom succ_is_retr : forall (z : IntHIT),
+      succ (succ_sect z) = z.
 
     (** We define the induction principle. We need to use Fixpoint because it is recursive. *)
 
-    Context {P : IntHIT -> Type} {t0 : P zero_i} {f : forall z : IntHIT, P z -> P (succ z)}
-      {g1 : forall z : IntHIT, P z -> P (pred1 z)} {g2 : forall z : IntHIT, P z -> P (pred2 z)}
-      {s : forall (z : IntHIT) (t : P z), sec z # (g1 (succ z) (f z t)) = t}
-      {r : forall (z : IntHIT) (t : P z), ret z # (f (pred2 z) (g2 z t)) = t}.
+    Context {P : IntHIT -> Type} {t0 : P zero_i} {e : forall z : IntHIT, P z -> P (succ z)}
+      {r : forall z : IntHIT, P z -> P (pred z)} {s : forall z : IntHIT, P z -> P (succ_sect z)}
+      {re : forall (z : IntHIT) (t : P z), succ_is_sect z # (r (succ z) (e z t)) = t}
+      {es : forall (z : IntHIT) (t : P z), succ_is_retr z # (e (succ_sect z) (s z t)) = t}.
 
     Fixpoint IntHIT_ind
       (x : IntHIT) 
-      : P x  
-      := match x  with
+      : P x
+      := match x with
       | zero_i => fun _ _ => t0
-      | succ z => fun _ _ => f z (IntHIT_ind z)
-      | pred1 z => fun _ _ => g1 z (IntHIT_ind z)
-      | pred2 z => fun _ _ => g2 z (IntHIT_ind z)
-      end s r.
+      | succ z => fun _ _ => e z (IntHIT_ind z)
+      | pred z => fun _ _ => r z (IntHIT_ind z)
+      | succ_sect z => fun _ _ => s z (IntHIT_ind z)
+      end re es.
       (*We make sure that this is dependent on s and r as well. *)
 
-    (** We define the beta principles for sec and ret. *)
-    Axiom IntHIT_ind_beta_sec
+    (** We define the beta principles for succ_is_sect and succ_is_retr. *)
+    Axiom IntHIT_ind_beta_succ_is_sect
      : forall (z: IntHIT),
-      (apD IntHIT_ind (sec z)) = s z (IntHIT_ind z).
+      (apD IntHIT_ind (succ_is_sect z)) = re z (IntHIT_ind z).
 
-    Axiom IntHIT_ind_beta_ret
+    Axiom IntHIT_ind_beta_succ_is_retr
      : forall (z: IntHIT),
-      (apD IntHIT_ind (ret z)) = r z (IntHIT_ind z).
+      (apD IntHIT_ind (succ_is_retr z)) = es z (IntHIT_ind z).
 
   End IntHIT.
 End IntHIT.
 
-Definition pred1_is_pred2
+Definition pred_is_succ_sect
   (z : IntHIT)
-  : pred1 z = pred2 z
-  := (ap pred1 ((ret z) ^)) @ sec (pred2 z).
+  : pred z = succ_sect z
+  := (ap pred ((succ_is_retr z) ^)) @ succ_is_sect (succ_sect z).
 
-Definition ret_pred1
-  (z: IntHIT)
-  : (succ (pred1 z)) = z.
+Definition ret_pred
+  (z : IntHIT)
+  : succ (pred z) = z.
 Proof.
   intros.
-  exact ((ap succ (pred1_is_pred2 z)) @ (ret z)).
+  exact ((ap succ (pred_is_succ_sect z)) @ (succ_is_retr z)).
 Defined.
 
-Definition sec_pred2
-  (z: IntHIT)
-  : (pred2 (succ z)) = z.
+Definition sec_succ_sect
+  (z : IntHIT)
+  : succ_sect (succ z) = z.
 Proof.
   intros.
-  rewrite (pred1_is_pred2 _)^.
-  exact (sec z).
+  rewrite (pred_is_succ_sect _)^.
+  exact (succ_is_sect z).
 Defined.
 
 Definition IntHIT_ind_hprop
   `{P : IntHIT -> Type}
-  `{h: forall (x : IntHIT), IsHProp (P x)}
+  `{h : forall (x : IntHIT), IsHProp (P x)}
   (t0 : P zero_i) 
   (f : forall z : IntHIT, P z -> P (succ z))
-  (g1 : forall z : IntHIT, P z -> P (pred1 z))
-  (g2 : forall z : IntHIT, P z -> P (pred2 z))
+  (g1 : forall z : IntHIT, P z -> P (pred z))
+  (g2 : forall z : IntHIT, P z -> P (succ_sect z))
   (x: IntHIT)
   : P x.
 Proof.
@@ -94,10 +94,10 @@ Defined.
 
 Definition IntHIT_ind_hprop_pred
   `{P : IntHIT -> Type}
-  `{h: forall (x : IntHIT), IsHProp (P x)}
+  `{h : forall (x : IntHIT), IsHProp (P x)}
   (t0 : P zero_i) 
   (f : forall z : IntHIT, P z -> P (succ z))
-  (g : forall z : IntHIT, P z -> P (pred1 z))
+  (g : forall z : IntHIT, P z -> P (pred z))
   (x: IntHIT)
   : P x.
 Proof.
@@ -106,7 +106,7 @@ Proof.
   - exact f.
   - exact g.
   - intros z t.
-    exact ((pred1_is_pred2 z) # (g z) t).
+    exact ((pred_is_succ_sect z) # (g z) t).
   - intros z t.
     rapply path_ishprop.
   - intros z t.
@@ -115,7 +115,7 @@ Defined.
 
 Definition IntHIT_ind_hprop_succ
   `{P : IntHIT -> Type}
-  `{h: forall (x : IntHIT), IsHProp (P x)}
+  `{h : forall (x : IntHIT), IsHProp (P x)}
   (t0 : P zero_i) 
   (f : forall z : IntHIT, P z <-> P (succ z))
   (x: IntHIT)
@@ -127,11 +127,11 @@ Proof.
     destruct (f z).
     exact fst.
   - intros z t.
-    destruct (f (pred1 z)).
-    exact (snd ((ret_pred1 z)^ # t)).
+    destruct (f (pred z)).
+    exact (snd ((ret_pred z)^ # t)).
   - intros z t.
-    destruct (f (pred1 z)).
-    exact ((pred1_is_pred2 z) # (snd ((ret_pred1 z)^ # t))).
+    destruct (f (pred z)).
+    exact ((pred_is_succ_sect z) # (snd ((ret_pred z)^ # t))).
   - intros z t.
     rapply path_ishprop.
   - intros z t.
@@ -140,13 +140,13 @@ Defined.
 
 (** The recursion principle. *)
 Definition IntHIT_rec
-  (P: Type)
+  (P : Type)
   (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
-  (s : forall  (t : P ), g1 (f t)= t)
-  (r : forall  (t : P ), f (g2 t)= t)
+  (f : P -> P)
+  (g1 : P -> P)
+  (g2 : P -> P)
+  (s : forall (t : P ), g1 (f t)= t)
+  (r : forall (t : P ), f (g2 t)= t)
   : IntHIT -> P.
 Proof.
   srapply IntHIT_ind.
@@ -158,14 +158,14 @@ Proof.
   - intro z.
     exact g2.
   - intros z t.
-    refine ((transport_const (sec z) (g1 (f t))) @ (s t)).
+    refine ((transport_const (succ_is_sect z) (g1 (f t))) @ (s t)).
   - intros z t.
-    refine ((transport_const (ret z) (f (g2 t))) @ (r t)).
+    refine ((transport_const (succ_is_retr z) (f (g2 t))) @ (r t)).
 Defined.
 
 (** This verison of the recursion principle requires only a biinvertible map. *)
 Definition IntHIT_rec_biinv
-  (P: Type)
+  (P : Type)
   (t0 : P)
   (f : P -> P)
   `{e: IsBiInv P P f}
@@ -180,14 +180,14 @@ Proof.
   - intro z.
     exact (sect_biinv f).
   - intros z t.
-    refine ((transport_const (sec z) (retr_biinv f (f t))) @ ((eissect_biinv f) t)).
+    refine ((transport_const (succ_is_sect z) (retr_biinv f (f t))) @ ((eissect_biinv f) t)).
   - intros z t.
-    refine ((transport_const (ret z) (f ((sect_biinv f) t))) @ ((eisretr_biinv f) t)).
+    refine ((transport_const (succ_is_retr z) (f ((sect_biinv f) t))) @ ((eisretr_biinv f) t)).
 Defined.
 
 (** This verison of the recursion principle requires only a quasiinverse rather than a biinvertible map. *)
 Definition IntHIT_rec_qinv
-  (P: Type)
+  (P : Type)
   (t0 : P)
   (f : P -> P)
   (g : P -> P)
@@ -204,15 +204,15 @@ Proof.
   - intro z.
     exact g.
   - intros z t.
-    refine ((transport_const (sec z) (g (f t))) @ (s t)).
+    refine ((transport_const (succ_is_sect z) (g (f t))) @ (s t)).
   - intros z t.
-    refine ((transport_const (ret z) (f (g t))) @ (r t)).
+    refine ((transport_const (succ_is_retr z) (f (g t))) @ (r t)).
 Defined. 
 
 (** This verison of the recursion principle requires only a half-adjoint equivalence. *)
 (** Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
 Definition IntHIT_rec_equiv
-  (P: Type)
+  (P : Type)
   (t0 : P)
   (f : P -> P)
   `{e: IsEquiv P P f}
@@ -231,26 +231,26 @@ Proof.
   - exact n.
 Defined.
   
-Definition IntHIT_rec_beta_sec
-  (P: Type)
+Definition IntHIT_rec_beta_succ_is_sect
+  (P : Type)
   (t0 : P)
-  (f :  P -> P)
-  (g1 :  P -> P)
-  (g2 :  P -> P)
+  (f : P -> P)
+  (g1 : P -> P)
+  (g2 : P -> P)
   (s : forall (t : P ), g1 (f t)= t)
   (r : forall (t : P ), f (g2 t)= t)
   : forall (z: IntHIT),
     (let f':= (IntHIT_rec P t0 f g1 g2 s r) in
-    ((ap f' (sec z)) = s (f' z))).
+    ((ap f' (succ_is_sect z)) = s (f' z))).
 Proof.
   intro z.
   unfold IntHIT_rec.
   refine (cancelL _ _ _ _ ).
   refine ((apD_const _ _)^ @ _).
-  rapply IntHIT_ind_beta_sec.
+  rapply IntHIT_ind_beta_succ_is_sect.
 Defined.
 
-Definition IntHIT_rec_beta_ret
+Definition IntHIT_rec_beta_succ_is_retr
   (P: Type)
   (t0 : P)
   (f : P -> P)
@@ -260,13 +260,13 @@ Definition IntHIT_rec_beta_ret
   (r : forall (t : P ), f (g2 t)= t)
   : forall (z: IntHIT),
     (let f':= (IntHIT_rec P t0 f g1 g2 s r) in
-    ((ap f' (ret z)) = r (f' z))).
+    ((ap f' (succ_is_retr z)) = r (f' z))).
 Proof.
   intro z.
   unfold IntHIT_rec.
   refine (cancelL _ _ _ _ ).
   refine ((apD_const _ _)^ @ _).
-  rapply IntHIT_ind_beta_ret.
+  rapply IntHIT_ind_beta_succ_is_retr.
 Defined.
 
 (** Successor is biinvertible. *)
@@ -274,10 +274,10 @@ Global Instance isbiinv_succ
     : IsBiInv succ.
 Proof.
   - snrapply Build_IsBiInv.
-    + exact pred2.
-    + exact pred1.
-    + exact ret.
-    + exact sec.
+    + exact succ_sect.
+    + exact pred.
+    + exact succ_is_retr.
+    + exact succ_is_sect.
 Defined.
 
 Definition biinv_IntHIT
@@ -291,11 +291,11 @@ Global Instance isequiv_IntHIT_succ : IsEquiv succ
   := isequiv_isbiinv biinv_IntHIT.
 
 (** The predecessor is an equivalence on [IntHIT]. *)
-Global Instance isequiv_IntHIT_pred1 : IsEquiv pred1
+Global Instance isequiv_IntHIT_pred : IsEquiv pred
   := isequiv_inverse succ.
 
-Global Instance isequiv_IntHIT_pred2 : IsEquiv pred2
-  := (isequiv_homotopic _ pred1_is_pred2).
+Global Instance isequiv_IntHIT_succ_sect : IsEquiv succ_sect
+  := (isequiv_homotopic _ pred_is_succ_sect).
 
 Section Uniqueness.
 
@@ -344,7 +344,7 @@ Section Uniqueness.
       rewrite (concat_p_pp _ _ _)^.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
-      rewrite IntHIT_rec_beta_sec.
+      rewrite IntHIT_rec_beta_succ_is_sect.
       apply (concat_A1p (f := r o e)).
     - simpl.
       intros z t.
@@ -360,7 +360,7 @@ Section Uniqueness.
       rewrite (concat_p_pp _ _ _)^.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
-      rewrite IntHIT_rec_beta_ret.
+      rewrite IntHIT_rec_beta_succ_is_retr.
       apply (concat_A1p (f := e o s)).
   Defined.
  
@@ -417,7 +417,7 @@ Section IntHITEquiv.
     induction z.
     - exact zero_i.
     - exact (succ IHz).
-    - exact (pred1 IHz).
+    - exact (pred IHz).
   Defined.
 
   Definition IntITtoIntHIT_is_rinv
@@ -450,9 +450,9 @@ Section IntHITEquiv.
     - simpl.
       reflexivity.
     - simpl.
-      exact (ret_pred1 zero_i).
+      exact (ret_pred zero_i).
     - simpl.
-      exact ((ret_pred1 _)).
+      exact ((ret_pred _)).
   Defined.
 
   Definition IntITtoIntHIT_comp_succ'
@@ -509,7 +509,7 @@ Section IntegerArithmetic.
     : IntHIT.
     Proof.
       revert x.
-      srapply (IntHIT_rec_equiv _ _ pred1).
+      srapply (IntHIT_rec_equiv _ _ pred).
       - exact zero_i.
   Defined.
 
@@ -527,7 +527,7 @@ Section IntegerArithmetic.
   Notation "- x" := (IntHIT_neg x) : IntHIT_scope.
 
   Notation "z .+1" := (succ z) : IntHIT_scope.
-  Notation "z .-1" := (pred1 z) : IntHIT_scope.
+  Notation "z .-1" := (pred z) : IntHIT_scope.
 
   (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
   Definition IntHIT_of_nat (n : nat) : IntHIT.
@@ -577,11 +577,11 @@ Section IntegerArithmetic.
     := equiv_inj IntHIT_neg.
 
   (** The negation of a successor is the predecessor of the negation. *)
-  Definition IntHIT_neg_succ (x : IntHIT) : - succ x = pred1 (-x) 
+  Definition IntHIT_neg_succ (x : IntHIT) : - succ x = pred (-x) 
     := idpath.
 
   (** The negation of a predecessor is the successor of the negation. *)
-  Definition IntHIT_neg_pred (x : IntHIT) : - pred1 x = succ (- x) 
+  Definition IntHIT_neg_pred (x : IntHIT) : - pred x = succ (- x) 
     := idpath.
 
   (** *** Addition *)
@@ -605,7 +605,7 @@ Section IntegerArithmetic.
     := idpath.
 
   (** Adding a predecessor on the left is the predecessor of the sum. *)
-  Definition IntHIT_add_pred_l (x y : IntHIT) : (pred1 x) + y = pred1 (x + y) 
+  Definition IntHIT_add_pred_l (x y : IntHIT) : (pred x) + y = pred (x + y) 
     := idpath.
 
   (** Adding a successor on the right is the successor of the sum. *)
@@ -616,7 +616,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Adding a predecessor on the right is the predecessor of the sum. *)
-  Definition IntHIT_add_pred_r (x y : IntHIT) : x + (pred1 y) = pred1 (x + y).
+  Definition IntHIT_add_pred_r (x y : IntHIT) : x + (pred y) = pred (x + y).
   Proof.
     revert x.
     srapply (uniquenessZ_two_fun_equiv succ); cbn beta.
@@ -624,8 +624,8 @@ Section IntegerArithmetic.
     - reflexivity.
     - intro z.
       rewrite IntHIT_add_succ_l.
-      rewrite sec.
-      by rewrite ret_pred1.
+      rewrite succ_is_sect.
+      by rewrite ret_pred.
   Defined.
 
   (** Integer addition with 1 on the left is the successor. *)
@@ -666,7 +666,7 @@ Section IntegerArithmetic.
     - simpl.
       intro s.
       rewrite IntHIT_add_succ_r.
-      rewrite sec.
+      rewrite succ_is_sect.
       reflexivity.
     - reflexivity.
   Defined. 
@@ -681,7 +681,7 @@ Section IntegerArithmetic.
   Definition IntHIT_neg_add (x y : IntHIT) : - (x + y) = - x - y.
   Proof.
     revert x.
-    by srapply (uniquenessZ_two_fun_equiv pred1).
+    by srapply (uniquenessZ_two_fun_equiv pred).
   Defined.
 
   (** Addition is an equivalence with first argument fixed. *)
@@ -733,7 +733,7 @@ Section IntegerArithmetic.
     := idpath.
 
   (** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
-  Definition IntHIT_mul_pred_l (x y : IntHIT) : (pred1 x) * y = x * y - y 
+  Definition IntHIT_mul_pred_l (x y : IntHIT) : (pred x) * y = x * y - y 
     := idpath.
 
   (** Integer multiplication with zero on the left is zero by definition. *)
@@ -763,7 +763,7 @@ Section IntegerArithmetic.
     rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x 1)); cbn beta.
     - reflexivity.
     - reflexivity.
-    - intro z.  
+    - intro z.
       by rewrite IntHIT_add_1_r.
   Defined.
 
@@ -797,10 +797,10 @@ Section IntegerArithmetic.
   Defined.
 
   (** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
-  Definition IntHIT_mul_pred_r (x y : IntHIT) : x * (pred1 y) = x * y - x.
+  Definition IntHIT_mul_pred_r (x y : IntHIT) : x * (pred y) = x * y - x.
   Proof.
     revert x.
-    rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (pred1 y))); cbn beta.
+    rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (pred y))); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro z.
