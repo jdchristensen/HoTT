@@ -49,27 +49,30 @@ Module Export IntHIT.
   End IntHIT.
 End IntHIT.
 
-Definition pred_is_succ_sect
-  (z : IntHIT)
-  : pred z = succ_sect z
-  := (ap pred ((succ_is_retr z) ^)) @ succ_is_sect (succ_sect z).
-
-Definition ret_pred
-  (z : IntHIT)
-  : succ (pred z) = z.
+(** Successor is biinvertible. *)
+Global Instance isbiinv_succ
+    : IsBiInv succ.
 Proof.
-  intros.
-  exact ((ap succ (pred_is_succ_sect z)) @ (succ_is_retr z)).
+  - srapply Build_IsBiInv.
+    + exact succ_sect.
+    + exact pred.
+    + exact succ_is_retr.
+    + exact succ_is_sect.
 Defined.
 
-Definition sec_succ_sect
-  (z : IntHIT)
-  : succ_sect (succ z) = z.
+Definition biinv_IntHIT
+    : EquivBiInv IntHIT IntHIT.
 Proof.
-  intros.
-  rewrite (pred_is_succ_sect _)^.
-  exact (succ_is_sect z).
+  exact (Build_EquivBiInv _ _ _ isbiinv_succ).
 Defined.
+
+(** The successor is an equivalence on [IntHIT]. *)
+Global Instance isequiv_IntHIT_succ : IsEquiv succ
+  := isequiv_isbiinv biinv_IntHIT.
+
+(** The predecessor is an equivalence on [IntHIT]. *)
+Global Instance isequiv_IntHIT_pred : IsEquiv pred
+  := isequiv_inverse succ.
 
 Definition IntHIT_ind_hprop
   `{P : IntHIT -> Type}
@@ -106,7 +109,7 @@ Proof.
   - exact f.
   - exact g.
   - intros z t.
-    exact ((pred_is_succ_sect z) # (g z) t).
+    exact ((sect_retr_homotopic_biinv succ z)^ # (g z) t).
   - intros z t.
     rapply path_ishprop.
   - intros z t.
@@ -128,10 +131,10 @@ Proof.
     exact fst.
   - intros z t.
     destruct (f (pred z)).
-    exact (snd ((ret_pred z)^ # t)).
+    exact (snd ((retr_is_sect succ z)^ # t)).
   - intros z t.
     destruct (f (pred z)).
-    exact ((pred_is_succ_sect z) # (snd ((ret_pred z)^ # t))).
+    exact ((sect_retr_homotopic_biinv succ z)^ # (snd ((retr_is_sect succ z)^ # t))).
   - intros z t.
     rapply path_ishprop.
   - intros z t.
@@ -267,34 +270,6 @@ Proof.
   refine ((apD_const _ _)^ @ _).
   rapply IntHIT_ind_beta_succ_is_retr.
 Defined.
-
-(** Successor is biinvertible. *)
-Global Instance isbiinv_succ
-    : IsBiInv succ.
-Proof.
-  - snrapply Build_IsBiInv.
-    + exact succ_sect.
-    + exact pred.
-    + exact succ_is_retr.
-    + exact succ_is_sect.
-Defined.
-
-Definition biinv_IntHIT
-    : EquivBiInv IntHIT IntHIT.
-Proof.
-  exact (Build_EquivBiInv _ _ _ isbiinv_succ).
-Defined.
-
-(** The successor is an equivalence on [IntHIT]. *)
-Global Instance isequiv_IntHIT_succ : IsEquiv succ
-  := isequiv_isbiinv biinv_IntHIT.
-
-(** The predecessor is an equivalence on [IntHIT]. *)
-Global Instance isequiv_IntHIT_pred : IsEquiv pred
-  := isequiv_inverse succ.
-
-Global Instance isequiv_IntHIT_succ_sect : IsEquiv succ_sect
-  := (isequiv_homotopic _ pred_is_succ_sect).
 
 Section Uniqueness.
 
@@ -449,9 +424,9 @@ Section IntHITEquiv.
     - simpl.
       reflexivity.
     - simpl.
-      exact (ret_pred zero_i).
+      exact (retr_is_sect succ zero_i).
     - simpl.
-      exact ((ret_pred _)).
+      exact (retr_is_sect succ _).
   Defined.
 
   Definition IntITtoIntHIT_comp_succ'
@@ -625,7 +600,7 @@ Section IntegerArithmetic.
     - intro z.
       rewrite IntHIT_add_succ_l.
       rewrite succ_is_sect.
-      by rewrite ret_pred.
+      by rewrite (fun z => (retr_is_sect succ z)^).
   Defined.
 
   (** Integer addition with 1 on the left is the successor. *)
@@ -767,7 +742,7 @@ Section IntegerArithmetic.
       by rewrite IntHIT_add_1_r.
   Defined.
 
-  (** Integer multiplication with -1 on the left is the identity. *)
+  (** Integer multiplication with -1 on the left is negation. *)
   Definition IntHIT_mul_neg1_l (x : IntHIT) : (-1) * x = - x 
     := idpath.
 
