@@ -29,18 +29,19 @@ Proof.
 Defined.
 
 Definition retr_is_sect {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
-  : f o (retr_biinv f) == idmap.
+  : f o retr_biinv f == idmap.
 Proof.
-  intros.
-  exact (fun z => ((ap f ((sect_retr_homotopic_biinv f) z)^) @ (eisretr_biinv f) z)).
+  intro z.
+  lhs_V nrapply (ap f (sect_retr_homotopic_biinv f z)).
+  apply eisretr_biinv.
 Defined.
 
 Definition sect_is_retr {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
-  : (sect_biinv f) o f == idmap.
+  : sect_biinv f o f == idmap.
 Proof.
   intro z.
-  rewrite (sect_retr_homotopic_biinv f).
-  exact (eissect_biinv f z).
+  lhs nrapply sect_retr_homotopic_biinv.
+  apply eissect_biinv.
 Defined.
 
 (** The record is equivalent to a product type. This is used below in a 'product of contractible types is contractible' argument. *)
