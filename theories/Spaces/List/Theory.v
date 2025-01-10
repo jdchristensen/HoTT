@@ -355,12 +355,6 @@ Defined.
 
 (** Two equal lists have the same elements in the same positions. *)
 Definition nth'_path_list {A : Type} {l1 l2 : list A}
-  (p : l1 = l2) {n : nat} (Hn : n < length l1)
-  : nth' l1 n Hn = nth' l2 n ((ap _ p) # Hn)
-  := match p with idpath => idpath end.
-
-(** Proof-independent version of [nth'_path_list]. *)
-Definition nth'_path_list' {A : Type} {l1 l2 : list A}
   (p : l1 = l2) {n : nat} (Hn1 : n < length l1) (Hn2 : n < length l2)
   : nth' l1 n Hn1 = nth' l2 n Hn2.
 Proof.
