@@ -665,7 +665,7 @@ Defined.
 (** The length of a [take] is less than or equal to the length of the list. *)
 Definition length_take_leq {A : Type} {n : nat} (l : list A)
   : length (take n l) <= length l
-  := transport (fun x => x <= length l) (length_take n l)^ nat_min_leq_r.
+  := transport (fun x => x <= length l) (length_take n l)^ (nat_min_leq_r _ _).
 
 (** An element of a [take] is an element of the original list. *)
 Definition take_inlist@{i|} {A : Type@{i}} (n : nat) (l : list A) (x : A)
