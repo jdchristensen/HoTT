@@ -959,7 +959,6 @@ Definition Build_list {A : Type} (n : nat)
   : list A
   := list_map (fun '(i; Hi) => f i Hi) (seq' n).
 
-(** The length of [Build_list] is the same as the length of the finite sequence. *)
 Definition length_Build_list {A : Type} (n : nat)
   (f : forall (i : nat), (i < n) -> A)
   : length (Build_list n f) = n.
@@ -968,7 +967,7 @@ Proof.
   apply length_seq'.
 Defined.
 
-(** Restriction an infinite sequence to a list of specified length. *)
+(** Restriction of an infinite sequence to a list of specified length. *)
 Definition list_restrict {A : Type} (s : nat -> A) (n : nat) : list A
   := Build_list n (fun m _ => s m).
 
@@ -976,27 +975,14 @@ Definition list_restrict_length {A : Type} (s : nat -> A) (n : nat)
   : length (list_restrict s n) = n
   := length_Build_list _ _.
 
-Definition list_restrict_length' {A : Type} (s t : nat -> A) (n : nat)
-  : length (list_restrict s n) = length (list_restrict t n)
-  := (list_restrict_length s n) @ (list_restrict_length t n)^.
-
 (** [nth'] of the restriction of a sequence is the corresponding term of the sequence.  *)
 Definition entry_list_restrict {A : Type} (s : nat -> A) (n : nat)
   {i : nat} (Hi : i < n)
   : nth' (list_restrict s n) i ((list_restrict_length s n)^ # Hi) = s i.
 Proof.
-  snrefine (nth'_list_map _ _ _ (_^ # Hi) _ @ _).
-  - nrapply length_seq'.
+  lhs snrefine (nth'_list_map _ _ _ (_^ # Hi) _).
   - exact (ap s (nth'_seq' _ _ _)).
-Defined.
-
-Definition entry_list_restrict' {A : Type} (s : nat -> A) (n : nat)
-  {i : nat} (Hi : i < length (list_restrict s n))
-  : nth' (list_restrict s n) i Hi = s i.
-Proof.
-  snrefine (nth'_list_map _ _ _ (_^ # Hi) _ @ _).
-  - nrapply ((length_seq' n) @ (list_restrict_length s n)^).
-  - exact (ap s (nth'_seq' _ _ _)).
+  Unshelve. nrapply length_seq'.
 Defined.
 
 (** ** Repeat *)
