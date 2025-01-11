@@ -969,18 +969,29 @@ Proof.
   apply length_seq'.
 Defined.
 
+Definition nth'_Build_list {A : Type} {n : nat}
+  (f : forall (i : nat), (i < n) -> A) {i : nat} (Hi : (i < n))
+  : nth' (Build_list n f) i ((length_Build_list n f)^ # Hi) = f i Hi.
+Proof.
+  unshelve lhs snrefine (nth'_list_map _ _ _ (_^ # Hi) _).
+  1: nrapply length_seq'.
+  snrapply ap011D.
+  1: nrapply nth'_seq'.
+  rapply path_ishprop.
+Defined.
+
 (** Restriction of an infinite sequence to a list of specified length. *)
 Definition list_restrict {A : Type} (s : nat -> A) (n : nat) : list A
   := Build_list n (fun m _ => s m).
 
-Definition list_restrict_length {A : Type} (s : nat -> A) (n : nat)
+Definition length_list_restrict {A : Type} (s : nat -> A) (n : nat)
   : length (list_restrict s n) = n
   := length_Build_list _ _.
 
 (** [nth'] of the restriction of a sequence is the corresponding term of the sequence.  *)
-Definition entry_list_restrict {A : Type} (s : nat -> A) (n : nat)
+Definition nth'_list_restrict {A : Type} (s : nat -> A) (n : nat)
   {i : nat} (Hi : i < n)
-  : nth' (list_restrict s n) i ((list_restrict_length s n)^ # Hi) = s i.
+  : nth' (list_restrict s n) i ((length_list_restrict s n)^ # Hi) = s i.
 Proof.
   unshelve lhs snrefine (nth'_list_map _ _ _ (_^ # Hi) _).
   - nrapply length_seq'.
