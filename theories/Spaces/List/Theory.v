@@ -970,8 +970,9 @@ Proof.
 Defined.
 
 Definition nth'_Build_list {A : Type} {n : nat}
-  (f : forall (i : nat), (i < n) -> A) {i : nat} (Hi : (i < n))
-  : nth' (Build_list n f) i ((length_Build_list n f)^ # Hi) = f i Hi.
+  (f : forall (i : nat), (i < n) -> A) {i : nat} (Hi : i < n)
+  (Hi' : i < length (Build_list n f))
+  : nth' (Build_list n f) i Hi' = f i Hi.
 Proof.
   unshelve lhs snrefine (nth'_list_map _ _ _ (_^ # Hi) _).
   1: nrapply length_seq'.

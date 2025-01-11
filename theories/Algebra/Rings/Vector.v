@@ -40,7 +40,6 @@ Proof.
   snrapply nth'_Build_list.
 Defined.
 
-
 Global Instance istrunc_vector@{i} (A : Type@{i}) (n : nat) k `{IsTrunc k.+2 A}
   : IsTrunc k.+2 (Vector A n).
 Proof.
