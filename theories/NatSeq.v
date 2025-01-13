@@ -1,0 +1,116 @@
+Require Import Basics Types.
+Require Import Truncations.Core.
+Require Import Spaces.Nat.Core.
+Require Import NatUStructure.
+
+Open Scope nat_scope.
+Open Scope type_scope.
+
+(** The first term of a sequence. *)
+Definition head {X : Type} (u : nat -> X) : X := u 0.
+
+(** Shift of a sequence by 1 to the left. *)
+Definition tail {X : Type} (u : nat -> X) : (nat -> X) := u o S.
+
+(** Add a term to the start of a sequence. *)
+Definition cons {X : Type} : X -> (nat -> X) -> (nat -> X).
+Proof.
+  intros x u [|n].
+  - exact x.
+  - exact (u n).
+Defined.
+
+Definition cons_head_tail {X : Type} (u : nat -> X)
+  : cons (head u) (tail u) == u.
+Proof.
+  by intros [|n].
+Defined.
+
+Definition tail_cons {X : Type} (u : nat -> X) {x : X} : tail (cons x u) == u
+  := fun _ => idpath.
+
+(** * Uniform structure on types of sequences. *)
+
+(** Every type of the form [nat -> X] carries a uniform structure defined by setting [s =[n] t] if and only if their first [n] terms are equal. *)
+
+Definition seq_agree_on {X : Type} (n : nat) : (nat -> X) -> (nat -> X) -> Type.
+Proof.
+  induction n.
+  - intros u v; exact Unit.
+  - intros u v; exact ((head u = head v) * (IHn (tail u) (tail v))).
+Defined.
+
+(** Two sequences are related in the above sense if and only if the corresponding terms up to the corresponding number [n] are equal. *)
+
+Definition seq_agree_terms {X : Type} {n : nat} {s t : nat -> X}
+  : (forall (m : nat), m < n -> s m = t m) -> seq_agree_on n s t.
+Proof.
+  intro h.
+  induction n in s, t, h |- *.
+  - exact tt.
+  - simpl.
+    exact (h 0 _, IHn _ _ (fun m hm => h m.+1 (_ hm))).
+Defined.
+
+Definition seq_agree_homotopic {X : Type} {n : nat}
+  {s t : nat -> X} (h : s == t)
+  : seq_agree_on n s t
+  := seq_agree_terms (fun m _ => h m).
+
+Definition terms_seq_agree {X : Type} {n : nat} {s t : nat -> X}
+  : seq_agree_on n s t -> (forall (m : nat), m < n -> s m = t m).
+Proof.
+  intros h m hm.
+  induction m in n, s, t, h, hm |- *.
+  - revert n hm h; nrapply gt_zero_ind; intros n h.
+    exact (fst h).
+  - induction n.
+    + contradiction (not_lt_zero_r _ hm).
+    + exact (IHm _ (tail s) (tail t) (snd h) _).
+Defined.
+
+Global Instance sequence_type_us {X : Type} : UStructure (nat -> X).
+Proof.
+  snrapply Build_UStructure.
+  - exact seq_agree_on.
+  - intros n u.
+    by apply seq_agree_homotopic.
+  - induction n.
+    + exact (fun _ _ _ => tt).
+    + exact (fun _ _ h => ((fst h)^, IHn _ _ (snd h))).
+  - induction n.
+    + exact (fun _ _ _ _ _ => tt).
+    + exact (fun _ _ _ huv hvw =>
+               ((fst huv) @ (fst hvw), IHn _ _ _ (snd huv) (snd hvw))).
+  - induction n.
+    + exact (fun _ _ _ => tt).
+    + exact (fun _ _ h => (fst h, IHn _ _ (snd h))).
+Defined.
+
+Definition cons_of_eq {X : Type} {n : nat} {u v : nat -> X} {x : X}
+  (h : u =[n] v)
+  : (cons x u) =[n.+1] (cons x v)
+  := (idpath, h).
+
+Definition iff_us_sequence_eq {X : Type} {n : nat} {s t : nat -> X}
+  : (forall (m : nat), m < n -> s m = t m) <-> s =[n] t
+  := (fun h => seq_agree_terms h, fun h => terms_seq_agree h).
+
+(** A uniformly continuous function takes homotopic sequences to outputs that are equivalent with respect to the structure on [Y]. *)
+Definition uniformly_continuous_extensionality
+  {X Y : Type} {usY : UStructure Y} (p : (nat -> X) -> Y) {m : nat}
+  (c : uniformly_continuous p)
+  {u v : nat -> X} (h : u == v)
+  : p u =[m] p v
+  := (c m).2 u v (seq_agree_homotopic h).
+
+(** Composing a uniformly continuous function with the [cons] operation decreases the modulus by 1. I think this can be done with greater generality for the structure on Y. *)
+Definition cons_decreases_modulus {X Y : Type}
+  (p : (nat -> X) -> Y) (n : nat) (b : X)
+  (hSn : is_modulus_of_uniform_continuity n.+1 p)
+  : is_modulus_of_uniform_continuity n (p o cons b).
+Proof.
+  intros u v huv.
+  apply hSn.
+  exact (cons_of_eq huv).
+Defined.
