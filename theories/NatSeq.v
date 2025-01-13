@@ -2,6 +2,7 @@ Require Import Basics Types.
 Require Import Truncations.Core.
 Require Import Spaces.Nat.Core.
 Require Import NatUStructure.
+Require Import List.Core List.Theory.
 
 Open Scope nat_scope.
 Open Scope type_scope.
@@ -92,9 +93,34 @@ Definition cons_of_eq {X : Type} {n : nat} {u v : nat -> X} {x : X}
   : (cons x u) =[n.+1] (cons x v)
   := (idpath, h).
 
-Definition iff_us_sequence_eq {X : Type} {n : nat} {s t : nat -> X}
+Definition seq_lt_eq_iff_seq_agree {X : Type} {n : nat} {s t : nat -> X}
   : (forall (m : nat), m < n -> s m = t m) <-> s =[n] t
   := (fun h => seq_agree_terms h, fun h => terms_seq_agree h).
+
+(** We can also rephrase the definition of [seq_agree_on] using the [list_restrict] function. *)
+Definition list_restrict_eq_iff_seq_lt_eq {A : Type} {n : nat} {s t : nat -> A}
+  : (list_restrict s n = list_restrict t n) <->
+    (forall (m : nat), m < n -> s m = t m).
+Proof.
+Proof.
+  constructor.
+  - intros h m hm.
+    lhs_V srapply (nth'_list_restrict s hm ((length_list_restrict _ _ )^ # hm)).
+    rhs_V srapply (nth'_list_restrict t hm ((length_list_restrict _ _ )^ # hm)).
+    exact (nth'_path_list h _ _).
+  - intro h.
+    apply (path_list_nth' _ _
+            ((length_list_restrict s n) @ (length_list_restrict t n)^)).
+    intros i Hi.
+    lhs srapply (nth'_list_restrict s ((length_list_restrict s n ) # Hi) Hi).
+    rhs srapply (nth'_list_restrict t ((length_list_restrict s n) # Hi)
+                  (length_list_restrict s n @ (length_list_restrict t n)^ # _)).
+    exact (h i ((length_list_restrict s n) # Hi)).
+Defined.
+
+Definition list_restrict_eq_iff_seq_agree {A : Type} {n : nat} {s t : nat -> A}
+  : list_restrict s n = list_restrict t n <-> (s =[n] t)
+  := iff_compose list_restrict_eq_iff_seq_lt_eq seq_lt_eq_iff_seq_agree.
 
 (** A uniformly continuous function takes homotopic sequences to outputs that are equivalent with respect to the structure on [Y]. *)
 Definition uniformly_continuous_extensionality
