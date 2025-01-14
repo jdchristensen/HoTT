@@ -1,4 +1,4 @@
-(** * Uniform Structures. *)
+(** * Uniform Structures *)
 
 Require Import Basics Types.
 Require Import Truncations.Core.
@@ -6,7 +6,7 @@ Require Import Spaces.Nat.Core.
 
 Open Scope nat_scope.
 
-(** ** [nat]-graded uniform structures. *)
+(** ** [nat]-graded uniform structures *)
 
 (** A uniform structure on a type consists of an equivalence relation for every natural number, each one being stronger than its predecessor. *)
 Class UStructure (us_type : Type) := {
@@ -52,7 +52,7 @@ Proof.
     exact (tr h).
 Defined.
 
-(** ** Continuity. *)
+(** ** Continuity *)
 
 (** Definition of a continuous function depending on two uniform structures. *)
 Definition IsContinuous

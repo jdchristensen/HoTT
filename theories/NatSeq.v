@@ -1,4 +1,4 @@
-(** ** Types of Sequences [nat -> X].  *)
+(** * Types of Sequences [nat -> X] *)
 
 Require Import Basics Types.
 Require Import Truncations.Core.
@@ -9,7 +9,7 @@ Require Import List.Core List.Theory.
 Open Scope nat_scope.
 Open Scope type_scope.
 
-(** ** Operations on sequences. *)
+(** ** Operations on sequences *)
 
 (** The first term of a sequence. *)
 Definition head {X : Type} (u : nat -> X) : X := u 0.
@@ -34,7 +34,7 @@ Defined.
 Definition tail_cons {X : Type} (u : nat -> X) {x : X} : tail (cons x u) == u
   := fun _ => idpath.
 
-(** ** Uniform structure on types of sequences. *)
+(** ** Uniform structure on types of sequences *)
 
 (** Every type of the form [nat -> X] carries a uniform structure defined by setting [s =[n] t] if and only if their first [n] terms are equal. *)
 
@@ -125,7 +125,7 @@ Definition list_restrict_eq_iff_seq_agree {A : Type} {n : nat} {s t : nat -> A}
   : list_restrict s n = list_restrict t n <-> s =[n] t
   := iff_compose list_restrict_eq_iff_seq_lt_eq seq_lt_eq_iff_seq_agree.
 
-(** ** Continuity. *)
+(** ** Continuity *)
 
 (** A uniformly continuous function takes homotopic sequences to outputs that are equivalent with respect to the structure on [Y]. *)
 Definition uniformly_continuous_extensionality
