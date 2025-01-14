@@ -3,7 +3,7 @@
 Require Import Basics Types.
 Require Import Truncations.Core.
 Require Import Spaces.Nat.Core.
-Require Import NatUStructure.
+Require Import UStructure.
 Require Import List.Core List.Theory.
 
 Open Scope nat_scope.
