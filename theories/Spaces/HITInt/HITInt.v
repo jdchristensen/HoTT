@@ -287,7 +287,6 @@ Section Uniqueness.
     (p0 : (k zero_i) = t0)
     (pf : forall (z : IntHIT), (e o k) z = (k o succ) z)
     (rec := IntHIT_rec P t0 e r s re es)
-    (compat := compat_implies_prBiInv _ _ _ _ biinv_IntHIT e k k pf)
     : forall (z : IntHIT), k z = rec z.
     Proof.
     snrapply IntHIT_ind. 
@@ -295,15 +294,15 @@ Section Uniqueness.
       exact p0.
     - simpl.
       intros z H.
-      apply (ap e) in H. 
-      exact (((pe _ _ _ _ _ _ _ _ compat z)^) @ H).
+      apply (ap e) in H.
+      exact ((pf z)^ @ H).
     - simpl.
       intros z H.
       apply (ap r) in H.
-      exact (((pr _ _ _ _ _ _ _ _ compat z)^) @ H).
+      exact ((biinv_compat_pr _ _ _ _ biinv_IntHIT e k k pf z)^ @ H).
     - intros z H.
       apply (ap s) in H.
-      exact (((ps _ _ _ _ _ _ _ _ compat z)^) @ H).
+      exact ((biinv_compat_ps _ _ _ _ biinv_IntHIT e k k pf z)^ @ H).
     - simpl.
       intros z t.
       rewrite transport_paths_FlFr.
@@ -314,7 +313,7 @@ Section Uniqueness.
       rewrite ap_V.
       rewrite (inv_pp _ _)^.
       rewrite concat_p_pp.
-      rewrite (pre _ _ _ _ _ _ _ _ compat z)^.
+      rewrite (biinv_compat_pre _ _ _ _ biinv_IntHIT e k k pf z)^.
       rewrite (concat_p_pp _ _ _)^.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
@@ -330,7 +329,7 @@ Section Uniqueness.
       rewrite ap_V.
       rewrite (inv_pp _ _)^.
       rewrite concat_p_pp.
-      rewrite (pes _ _ _ _ _ _ _ _ compat z)^.
+      rewrite (biinv_compat_pes _ _ _ _ biinv_IntHIT e k k pf z)^.
       rewrite (concat_p_pp _ _ _)^.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.

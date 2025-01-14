@@ -143,7 +143,8 @@ Proof.
   apply eisretr.
 Defined.
 
-(** We define what it means for two maps [f] and [g] to be compatible with two equivalences [e] and [e'] in a commutative square. *)
+(** Assume we have a commutative square [e' o f == g o e] in which [e] and [e'] are bi-invertible. Then [f] and [g] also commute with the retractions and sections, and the homotopies in these new squares each satisfy a coherence condition. *)
+
 Section EquivalenceCompatibility.
 
   Context (A B C D : Type).
@@ -170,37 +171,42 @@ Section EquivalenceCompatibility.
     exact (es' (g y) @ (ap g (es y))^ @ (pe (s y))^).
   Defined.
 
-  (** A record that contains all the data witnessing what it means for two maps [f] and [g] between biinvertible maps [e] and [e'] to be compatible with the biinvertible structure. *)
-  Record prBiInv
-  := {
-    pe : forall (x : A), e' (f x) = g (e x);
-    pr : forall (y : B), r' (g y) = f (r y);
-    ps : forall (y : B), s' (g y) = f (s y);
-    pre : forall (x : A), re' (f x) = ap r' (pe x) @ pr (e x) @ ap f (re x);
-    pes : forall (y : B), es' (g y) = ap e' (ps y) @ pe (s y) @ ap g (es y);
-  }.
+  (** The following lemmas express each one of these coherence conditions mentioned above.*)
 
-  (** To be compatible it suffices to commute with [e] and [e']. *)
-  Definition compat_implies_prBiInv (pe : forall (x : A), e' (f x) = g (e x))
-    : prBiInv.
+  Definition biinv_compat_pr (pe : forall (x : A), e' (f x) = g (e x))
+    : forall (y : B), r' (g y) = f (r y).
   Proof.
-    srapply Build_prBiInv.
-    - exact pe.
     - apply (equiv_ind e).
       apply (helper_r pe).
-    - intro y.
-      apply (equiv_inj e'); cbn.
-      apply (helper_s pe).
-    - intro x.
-      rewrite equiv_ind_comp.
-      apply moveL_pM.
-      apply moveL_Mp.
-      reflexivity.
-    - intro y; cbn beta.
-      rewrite equiv_inj_comp.
-      apply moveL_pM.
-      apply moveL_pM.
-      reflexivity.
   Defined.
 
+  Definition biinv_compat_ps (pe : forall (x : A), e' (f x) = g (e x))
+    : forall (y : B), s' (g y) = f (s y).
+  Proof.
+    intro y.
+    apply (equiv_inj e'); cbn.
+    apply (helper_s pe).
+  Defined.
+
+  Definition biinv_compat_pre (pe : forall (x : A), e' (f x) = g (e x))
+    : forall (x : A), re' (f x) = ap r' (pe x) @ (biinv_compat_pr pe) (e x) @ ap f (re x).
+  Proof.
+    intro x.
+    unfold biinv_compat_pr.
+    rewrite equiv_ind_comp.
+    apply moveL_pM.
+    apply moveL_Mp.
+    reflexivity.
+  Defined.
+
+  Definition biinv_compat_pes (pe : forall (x : A), e' (f x) = g (e x))
+    : forall (y : B), es' (g y) = ap e' ((biinv_compat_ps pe) y) @ pe (s y) @ ap g (es y).
+  Proof.
+    intro y; cbn beta.
+    rewrite equiv_inj_comp.
+    apply moveL_pM.
+    apply moveL_pM.
+    reflexivity.
+  Defined.
+  
 End EquivalenceCompatibility.
