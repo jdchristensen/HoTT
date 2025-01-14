@@ -991,11 +991,11 @@ Definition length_list_restrict {A : Type} (s : nat -> A) (n : nat)
 
 (** [nth'] of the restriction of a sequence is the corresponding term of the sequence.  *)
 Definition nth'_list_restrict {A : Type} (s : nat -> A) {n : nat}
-  {i : nat} (Hi : i < n) (Hi' : i < length (list_restrict s n))
-  : nth' (list_restrict s n) i Hi' = s i.
+  {i : nat} (Hi : i < length (list_restrict s n))
+  : nth' (list_restrict s n) i Hi = s i.
 Proof.
-  unshelve lhs snrefine (nth'_list_map _ _ _ (_^ # Hi) _).
-  - nrapply length_seq'.
+  unshelve lhs snrapply nth'_list_map.
+  - exact ((length_list_restrict _ _ @ (length_seq' n)^) # Hi).
   - exact (ap s (nth'_seq' _ _ _)).
 Defined.
 

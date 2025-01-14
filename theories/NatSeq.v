@@ -108,16 +108,15 @@ Definition list_restrict_eq_iff_seq_lt_eq {A : Type} {n : nat} {s t : nat -> A}
 Proof.
   constructor.
   - intros h m hm.
-    lhs_V srapply (nth'_list_restrict s hm ((length_list_restrict _ _)^ # hm)).
-    rhs_V srapply (nth'_list_restrict t hm ((length_list_restrict _ _)^ # hm)).
+    lhs_V srapply (nth'_list_restrict s ((length_list_restrict _ _)^ # hm)).
+    rhs_V srapply (nth'_list_restrict t ((length_list_restrict _ _)^ # hm)).
     exact (nth'_path_list h _ _).
   - intro h.
     apply (path_list_nth' _ _
-            ((length_list_restrict s n) @ (length_list_restrict t n)^)).
+            (length_list_restrict s n @ (length_list_restrict t n)^)).
     intros i Hi.
-    lhs srapply (nth'_list_restrict s ((length_list_restrict s n ) # Hi) Hi).
-    rhs srapply (nth'_list_restrict t ((length_list_restrict s n) # Hi)
-                  (length_list_restrict s n @ (length_list_restrict t n)^ # _)).
+    lhs snrapply nth'_list_restrict.
+    rhs snrapply nth'_list_restrict.
     exact (h i ((length_list_restrict s n) # Hi)).
 Defined.
 
