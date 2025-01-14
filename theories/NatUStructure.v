@@ -1,8 +1,12 @@
+(** * Uniform Structures. *)
+
 Require Import Basics Types.
 Require Import Truncations.Core.
 Require Import Spaces.Nat.Core.
 
 Open Scope nat_scope.
+
+(** ** [nat]-graded uniform structures. *)
 
 (** A uniform structure on a type consists of an equivalence relation for every natural number, each one being stronger than its predecessor. *)
 Class UStructure (us_type : Type) := {
@@ -28,13 +32,13 @@ Proof.
 Defined.
 
 (** Every type admits the trivial uniform structure with the standard identity type on every level. *)
-Global Instance trivial_us {X : Type} : UStructure X.
+Global Instance trivial_us {X : Type} : UStructure X | 100.
 Proof.
   srapply (Build_UStructure _ (fun n x y => (x = y))).
   exact (fun _ _ _ => idmap).
 Defined.
 
-(** Every type admits the uniform structure with the standard identity type on every level. *)
+(** Example of a uniform structures based on truncations, with the relation being the [n-2]-truncation of the identity type. *)
 Definition trunc_us {X : Type} : UStructure X.
 Proof.
   srapply (Build_UStructure X
@@ -48,23 +52,23 @@ Proof.
     exact (tr h).
 Defined.
 
-(** * Continuity  *)
+(** ** Continuity. *)
 
 (** Definition of a continuous function depending on two uniform structures. *)
 Definition IsContinuous
   {X Y : Type} {usX : UStructure X} {usY : UStructure Y} (p : X -> Y)
   := forall (u : X) (m : nat),
-      {n : nat & forall v : X, (u =[n] v) -> p u =[m] p v}.
+      {n : nat & forall v : X, u =[n] v -> p u =[m] p v}.
 
 Definition uniformly_continuous {X Y : Type}
   {usX : UStructure X} {usY : UStructure Y} (p : X -> Y)
   := forall (m : nat),
-      {n : nat & forall u v : X, (u =[n] v) -> p u =[m] p v}.
+      {n : nat & forall u v : X, u =[n] v -> p u =[m] p v}.
 
-(** In the case that the target has the trivial uniform structure, it is useful (for now) to state uniform continuity by providing the specific modulus, which now only depends on the function. I might change the CompactTypes file instead.  *)
+(** In the case that the target has the trivial uniform structure, it is useful to state uniform continuity by providing the specific modulus, which now only depends on the function. *)
 Definition is_modulus_of_uniform_continuity {X Y : Type} {usX : UStructure X}
   (n : nat) (p : X -> Y)
-  := forall u v : X, (u =[n] v) -> p u = p v.
+  := forall u v : X, u =[n] v -> p u = p v.
 
 Definition uniformly_continuous_has_modulus {X Y :Type} {usX : UStructure X}
   {p : X -> Y} {n : nat} (c : is_modulus_of_uniform_continuity n p)
