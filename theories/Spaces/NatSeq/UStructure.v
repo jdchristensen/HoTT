@@ -9,7 +9,9 @@ Require Import Spaces.NatSeq.Core.
 Open Scope nat_scope.
 Open Scope type_scope.
 
-(** Every type of the form [nat -> X] carries a uniform structure defined by the [seq_agree_on] relations. *)
+(** ** [UStructure] defined by [seq_agree_on] *)
+
+(** Every type of the form [nat -> X] carries a uniform structure defined by the [seq_agree_on n] relation for every [n : nat]. *)
 Global Instance sequence_type_us {X : Type} : UStructure (nat -> X) | 10.
 Proof.
   snrapply Build_UStructure.

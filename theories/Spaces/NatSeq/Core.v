@@ -31,6 +31,8 @@ Defined.
 Definition tail_cons {X : Type} (u : nat -> X) {x : X} : tail (cons x u) == u
   := fun _ => idpath.
 
+(** ** Equivalence relations on sequences.  *)
+
 (** For every [n : nat], we define a relation between two sequences that holds if and only if their first [n] terms are equal. We provide an inductive definition and prove that it is equivalent. *)
 
 Definition seq_agree_on {X : Type} (n : nat) : (nat -> X) -> (nat -> X) -> Type.
