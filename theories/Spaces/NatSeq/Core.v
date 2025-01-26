@@ -33,9 +33,12 @@ Definition tail_cons {X : Type} (u : nat -> X) {x : X} : tail (cons x u) == u
 
 (** ** Equivalence relations on sequences.  *)
 
-(** For every [n : nat], we define a relation between two sequences that holds if and only if their first [n] terms are equal. We provide an inductive definition and prove that it is equivalent. *)
+(** For every [n : nat], we define a relation between two sequences that holds if and only if their first [n] terms are equal. *)
+Definition seq_agree_on {X : Type} (n : nat) (s t : nat -> X) : Type
+  := forall (m : nat), m < n -> s m = t m.
 
-Definition seq_agree_on {X : Type} (n : nat) : (nat -> X) -> (nat -> X) -> Type.
+(** [seq_agree_on] has an equivalent inductive definition. *)
+Definition seq_agree_on' {X : Type} (n : nat) : (nat -> X) -> (nat -> X) -> Type.
 Proof.
   induction n.
   - intros u v; exact Unit.
@@ -43,7 +46,7 @@ Proof.
 Defined.
 
 Definition seq_agree_terms {X : Type} {n : nat} {s t : nat -> X}
-  : (forall (m : nat), m < n -> s m = t m) -> seq_agree_on n s t.
+  : seq_agree_on n s t -> seq_agree_on' n s t.
 Proof.
   intro h.
   induction n in s, t, h |- *.
@@ -53,7 +56,7 @@ Proof.
 Defined.
 
 Definition terms_seq_agree {X : Type} {n : nat} {s t : nat -> X}
-  : seq_agree_on n s t -> (forall (m : nat), m < n -> s m = t m).
+  : seq_agree_on' n s t -> seq_agree_on n s t.
 Proof.
   intros h m hm.
   induction m in n, s, t, h, hm |- *.
@@ -65,11 +68,11 @@ Proof.
 Defined.
 
 Definition seq_lt_eq_iff_seq_agree {X : Type} {n : nat} {s t : nat -> X}
-  : (forall (m : nat), m < n -> s m = t m) <-> seq_agree_on n s t
+  : seq_agree_on n s t <-> seq_agree_on' n s t
   := (fun h => seq_agree_terms h, fun h => terms_seq_agree h).
 
 (** Homotopic sequences agree on every number. *)
 Definition seq_agree_homotopic {X : Type} {n : nat}
   {s t : nat -> X} (h : s == t)
   : seq_agree_on n s t
-  := seq_agree_terms (fun m _ => h m).
+  := (fun m _ => h m).

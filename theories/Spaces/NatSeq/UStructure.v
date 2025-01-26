@@ -12,33 +12,28 @@ Open Scope type_scope.
 (** ** [UStructure] defined by [seq_agree_on] *)
 
 (** Every type of the form [nat -> X] carries a uniform structure defined by the [seq_agree_on n] relation for every [n : nat]. *)
-Global Instance sequence_type_us {X : Type} : UStructure (nat -> X) | 10.
+Global Instance sequence_type_us' {X : Type} : UStructure (nat -> X) | 10.
 Proof.
   snrapply Build_UStructure.
   - exact seq_agree_on.
-  - intros n u.
-    by apply seq_agree_homotopic.
-  - induction n.
-    + exact (fun _ _ _ => tt).
-    + exact (fun _ _ h => ((fst h)^, IHn _ _ (snd h))).
-  - induction n.
-    + exact (fun _ _ _ _ _ => tt).
-    + exact (fun _ _ _ h1 h2 =>
-               (fst h1 @ fst h2, IHn _ _ _ (snd h1) (snd h2))).
-  - induction n.
-    + exact (fun _ _ _ => tt).
-    + exact (fun _ _ h => (fst h, IHn _ _ (snd h))).
+  - exact (fun _ _ _ _ => idpath).
+  - exact (fun _ _ _ h _ _ => (h _ _)^).
+  - exact (fun _ _ _ _ h1 h2 _ _ => ((h1 _ _) @ (h2 _ _))).
+  - exact (fun _ _ _ h _ _ => h _ _).
 Defined.
 
 Definition cons_of_eq {X : Type} {n : nat} {s t : nat -> X} {x : X}
   (h : s =[n] t)
-  : (cons x s) =[n.+1] (cons x t)
-  := (idpath, h).
+  : (cons x s) =[n.+1] (cons x t).
+Proof.
+  intros m hm; destruct m.
+  - reflexivity.
+  - exact (h m _).
+Defined.
 
 (** We can also rephrase the definition of [seq_agree_on] using the [list_restrict] function. *)
 Definition list_restrict_eq_iff_seq_lt_eq {A : Type} {n : nat} {s t : nat -> A}
-  : (list_restrict s n = list_restrict t n) <->
-    (forall (m : nat), m < n -> s m = t m).
+  : (list_restrict s n = list_restrict t n) <-> s =[n] t.
 Proof.
   constructor.
   - intros h m hm.
@@ -55,7 +50,7 @@ Proof.
 Defined.
 
 Definition list_restrict_eq_iff_seq_agree {A : Type} {n : nat} {s t : nat -> A}
-  : list_restrict s n = list_restrict t n <-> s =[n] t
+  : list_restrict s n = list_restrict t n <-> seq_agree_on' n s t
   := iff_compose list_restrict_eq_iff_seq_lt_eq seq_lt_eq_iff_seq_agree.
 
 (** ** Continuity *)
