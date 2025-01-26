@@ -37,7 +37,7 @@ Definition tail_cons {X : Type} (u : nat -> X) {x : X} : tail (cons x u) == u
 Definition seq_agree_on {X : Type} (n : nat) (s t : nat -> X) : Type
   := forall (m : nat), m < n -> s m = t m.
 
-(** [seq_agree_on] has an equivalent inductive definition. *)
+(** [seq_agree_on] has an equivalent inductive definition. We don't use this equivalence, but include it in case it is useful in future work. *)
 Definition seq_agree_on' {X : Type} (n : nat) : (nat -> X) -> (nat -> X) -> Type.
 Proof.
   induction n.
@@ -70,9 +70,3 @@ Defined.
 Definition seq_lt_eq_iff_seq_agree {X : Type} {n : nat} {s t : nat -> X}
   : seq_agree_on n s t <-> seq_agree_on' n s t
   := (fun h => seq_agree_terms h, fun h => terms_seq_agree h).
-
-(** Homotopic sequences agree on every number. *)
-Definition seq_agree_homotopic {X : Type} {n : nat}
-  {s t : nat -> X} (h : s == t)
-  : seq_agree_on n s t
-  := (fun m _ => h m).

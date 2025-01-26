@@ -32,7 +32,7 @@ Proof.
 Defined.
 
 (** We can also rephrase the definition of [seq_agree_on] using the [list_restrict] function. *)
-Definition list_restrict_eq_iff_seq_lt_eq {A : Type} {n : nat} {s t : nat -> A}
+Definition list_restrict_eq_iff_seq_agree {A : Type} {n : nat} {s t : nat -> A}
   : (list_restrict s n = list_restrict t n) <-> s =[n] t.
 Proof.
   constructor.
@@ -49,9 +49,9 @@ Proof.
     exact (h i ((length_list_restrict s n) # Hi)).
 Defined.
 
-Definition list_restrict_eq_iff_seq_agree {A : Type} {n : nat} {s t : nat -> A}
+Definition list_restrict_eq_iff_seq_agree' {A : Type} {n : nat} {s t : nat -> A}
   : list_restrict s n = list_restrict t n <-> seq_agree_on' n s t
-  := iff_compose list_restrict_eq_iff_seq_lt_eq seq_lt_eq_iff_seq_agree.
+  := iff_compose list_restrict_eq_iff_seq_agree seq_lt_eq_iff_seq_agree.
 
 (** ** Continuity *)
 
@@ -63,7 +63,7 @@ Definition uniformly_continuous_extensionality
   (c : uniformly_continuous p)
   {u v : nat -> X} (h : u == v)
   : p u =[m] p v
-  := (c m).2 u v (seq_agree_homotopic h).
+  := (c m).2 u v (fun m _ => h m).
 
 (** Composing a uniformly continuous function with the [cons] operation decreases the modulus by 1. Maybe this can be done with greater generality for the structure on [Y]. *)
 Definition cons_decreases_modulus {X Y : Type}
