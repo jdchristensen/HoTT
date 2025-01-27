@@ -2,7 +2,7 @@
 
 Require Import Basics Types.
 Require Import Spaces.Nat.Core.
-Require Import UStructures.
+Require Import Misc.UStructures.
 Require Import List.Core List.Theory.
 Require Import Spaces.NatSeq.Core.
 
