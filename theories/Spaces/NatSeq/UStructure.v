@@ -9,13 +9,13 @@ Require Import Spaces.NatSeq.Core.
 Open Scope nat_scope.
 Open Scope type_scope.
 
-(** ** [UStructure] defined by [seq_agree_on] *)
+(** ** [UStructure] defined by [seq_agree_lt] *)
 
-(** Every type of the form [nat -> X] carries a uniform structure defined by the [seq_agree_on n] relation for every [n : nat]. *)
+(** Every type of the form [nat -> X] carries a uniform structure defined by the [seq_agree_lt n] relation for every [n : nat]. *)
 Global Instance sequence_type_us' {X : Type} : UStructure (nat -> X) | 10.
 Proof.
   snrapply Build_UStructure.
-  - exact seq_agree_on.
+  - exact seq_agree_lt.
   - exact (fun _ _ _ _ => idpath).
   - exact (fun _ _ _ h _ _ => (h _ _)^).
   - exact (fun _ _ _ _ h1 h2 _ _ => ((h1 _ _) @ (h2 _ _))).
@@ -31,8 +31,9 @@ Proof.
   - exact (h m _).
 Defined.
 
-(** We can also rephrase the definition of [seq_agree_on] using the [list_restrict] function. *)
-Definition list_restrict_eq_iff_seq_agree {A : Type} {n : nat} {s t : nat -> A}
+(** We can also rephrase the definition of [seq_agree_lt] using the [list_restrict] function. *)
+Definition list_restrict_eq_iff_seq_agree_lt
+  {A : Type} {n : nat} {s t : nat -> A}
   : (list_restrict s n = list_restrict t n) <-> s =[n] t.
 Proof.
   constructor.
@@ -49,9 +50,10 @@ Proof.
     exact (h i ((length_list_restrict s n) # Hi)).
 Defined.
 
-Definition list_restrict_eq_iff_seq_agree' {A : Type} {n : nat} {s t : nat -> A}
-  : list_restrict s n = list_restrict t n <-> seq_agree_on' n s t
-  := iff_compose list_restrict_eq_iff_seq_agree seq_lt_eq_iff_seq_agree.
+Definition list_restrict_eq_iff_seq_agree_inductive
+  {A : Type} {n : nat} {s t : nat -> A}
+  : list_restrict s n = list_restrict t n <-> seq_agree_inductive n s t
+  := iff_compose list_restrict_eq_iff_seq_agree_lt seq_lt_eq_iff_seq_agree.
 
 (** ** Continuity *)
 
