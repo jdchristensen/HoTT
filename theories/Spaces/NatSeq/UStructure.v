@@ -53,7 +53,9 @@ Defined.
 Definition list_restrict_eq_iff_seq_agree_inductive
   {A : Type} {n : nat} {s t : nat -> A}
   : list_restrict s n = list_restrict t n <-> seq_agree_inductive n s t
-  := iff_compose list_restrict_eq_iff_seq_agree_lt seq_lt_eq_iff_seq_agree.
+  := iff_compose
+      list_restrict_eq_iff_seq_agree_lt
+      seq_agree_lt_iff_seq_agree_inductive.
 
 (** ** Continuity *)
 

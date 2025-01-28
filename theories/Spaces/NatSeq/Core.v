@@ -68,7 +68,8 @@ Proof.
     + exact (IHm _ (tail s) (tail t) (snd h) _).
 Defined.
 
-Definition seq_lt_eq_iff_seq_agree {X : Type} {n : nat} {s t : nat -> X}
+Definition seq_agree_lt_iff_seq_agree_inductive
+  {X : Type} {n : nat} {s t : nat -> X}
   : seq_agree_lt n s t <-> seq_agree_inductive n s t
   := (fun h => seq_agree_inductive_seq_agree_lt h,
       fun h => seq_agree_lt_seq_agree_inductive h).
