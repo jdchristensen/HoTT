@@ -12,7 +12,7 @@ Local Open Scope type_scope.
 (** ** [UStructure] defined by [seq_agree_lt] *)
 
 (** Every type of the form [nat -> X] carries a uniform structure defined by the [seq_agree_lt n] relation for every [n : nat]. *)
-Global Instance sequence_type_us' {X : Type} : UStructure (nat -> X) | 10.
+Global Instance sequence_type_us {X : Type} : UStructure (nat -> X) | 10.
 Proof.
   snrapply Build_UStructure.
   - exact seq_agree_lt.
@@ -21,6 +21,9 @@ Proof.
   - exact (fun _ _ _ _ h1 h2 _ _ => ((h1 _ _) @ (h2 _ _))).
   - exact (fun _ _ _ h _ _ => h _ _).
 Defined.
+
+Definition sequence_type_us_zero {X : Type} (s t : nat -> X) : s =[0] t
+  := fun n hn => Empty_rec (not_lt_zero_r n hn).
 
 Definition cons_of_eq {X : Type} {n : nat} {s t : nat -> X} {x : X}
   (h : s =[n] t)
