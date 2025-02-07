@@ -1,6 +1,7 @@
 (** * Bar induction and the fan theorem *)
 
 Require Import Basics Types.
+Require Import Spaces.Nat.Core.
 Require Import Spaces.Finite.FinNat.
 Require Import Misc.UStructures.
 Require Import Spaces.NatSeq.Core Spaces.NatSeq.UStructure.
