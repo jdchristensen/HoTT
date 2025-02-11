@@ -179,9 +179,25 @@ Definition decidable_bar_induction_monotone_bar_induction (A : Type)
 
 Definition BI_empty : bar_induction Empty.
 Proof.
-  intros P iP _.
-  rapply iP.
+  intros B iB _.
+  rapply iB.
   intro a; contradiction a.
+Defined.
+
+Definition BI_unit : bar_induction Unit.
+Proof.
+  intros B iB bB.
+  pose (c := fun (n : nat) => tt).
+  specialize (bB c) as [n hn]; induction n.
+  1: exact hn.
+  apply IHn, iB.
+  intro x.
+  refine (_ # hn).
+  rewrite (path_ishprop x tt).
+  srapply path_list_nth'.
+  + by rewrite length_app, !length_list_restrict, nat_add_comm.
+  + intros m Hm.
+    apply path_ishprop.
 Defined.
 
 Definition MBI_hprop (A : Type) `{IsHProp A} : monotone_bar_induction A.
@@ -202,6 +218,16 @@ Proof.
     + by rewrite length_app, !length_list_restrict, nat_add_comm.
     + intros m Hm.
       apply path_ishprop.
+Defined.
+
+Definition pointed_MBI (A X : Type) (p : A -> (X = A))
+  (MBI : monotone_bar_induction X)
+  : monotone_bar_induction A.
+Proof.
+  intros B mB iB bB.
+  apply iB.
+  intro a; cbn.
+  exact (mB nil [a] ((p a # MBI) B mB iB bB)).
 Defined.
 
 (** ** Implications of bar induction *)
