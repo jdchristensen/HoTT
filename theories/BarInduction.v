@@ -177,14 +177,14 @@ Definition decidable_bar_induction_monotone_bar_induction (A : Type)
 
 (** ** Examples of types that satisfy forms of bar induction *)
 
-Definition BI_Empty : bar_induction Empty.
+Definition BI_empty : bar_induction Empty.
 Proof.
   intros P iP _.
   rapply iP.
   intro a; contradiction a.
 Defined.
 
-Definition MBI_HProp (A : HProp) : monotone_bar_induction A.
+Definition MBI_hprop (A : Type) `{IsHProp A} : monotone_bar_induction A.
 Proof.
   intros B mB iB bB.
   rapply iB.
@@ -196,14 +196,12 @@ Proof.
     exact hn.
   - apply IHn, iB.
     intro x.
+    refine (_ # hn).
     rewrite (path_ishprop x a).
-    assert (p : list_restrict c n.+1 = list_restrict c n ++ [a]).
-    { unshelve rapply path_list_nth'.
-      + rewrite length_app, !length_list_restrict, nat_add_comm.
-        by cbn.
-      + intros m Hm.
-        apply path_ishprop. }
-    by rewrite p^.
+    srapply path_list_nth'.
+    + by rewrite length_app, !length_list_restrict, nat_add_comm.
+    + intros m Hm.
+      apply path_ishprop.
 Defined.
 
 (** ** Implications of bar induction *)
