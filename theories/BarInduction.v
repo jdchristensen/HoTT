@@ -220,8 +220,7 @@ Proof.
       apply path_ishprop.
 Defined.
 
-Definition pointed_MBI (A X : Type) (p : A -> (X = A))
-  (MBI : monotone_bar_induction X)
+Definition MBI_pointed_MBI (A : Type) (p : A -> monotone_bar_induction A)
   : monotone_bar_induction A.
 Proof.
   intros B mB iB bB.
