@@ -226,7 +226,7 @@ Proof.
   intros B mB iB bB.
   apply iB.
   intro a; cbn.
-  exact (mB nil [a] ((p a # MBI) B mB iB bB)).
+  by apply (mB nil), (p a).
 Defined.
 
 (** ** Implications of bar induction *)
