@@ -175,6 +175,37 @@ Definition decidable_bar_induction_monotone_bar_induction (A : Type)
         (monotone_bar_induction'_monotone_bar_induction A MBI))
       B B (fun _ => idmap) dec ind bar.
 
+(** ** Examples of types that satisfy forms of bar induction *)
+
+Definition BI_Empty : bar_induction Empty.
+Proof.
+  intros P iP _.
+  rapply iP.
+  intro a; contradiction a.
+Defined.
+
+Definition MBI_HProp (A : HProp) : monotone_bar_induction A.
+Proof.
+  intros B mB iB bB.
+  rapply iB.
+  intro a; cbn.
+  pose (c := fun (n : nat) => a).
+  specialize (bB c) as [n hn]; induction n.
+  - enough (B nil) as B0.
+    1: exact (mB _ _ B0).
+    exact hn.
+  - apply IHn, iB.
+    intro x.
+    rewrite (path_ishprop x a).
+    assert (p : list_restrict c n.+1 = list_restrict c n ++ [a]).
+    { unshelve rapply path_list_nth'.
+      + rewrite length_app, !length_list_restrict, nat_add_comm.
+        by cbn.
+      + intros m Hm.
+        apply path_ishprop. }
+    by rewrite p^.
+Defined.
+
 (** ** Implications of bar induction *)
 
 (** Full bar induction for a type [A] implies that it is Sigma-compact, in the sense that any decidable family over [A] has a decidable Sigma-type. To prove this, we begin by defining a type family [P] on [list A] so that [P nil] i s our goal. *)
