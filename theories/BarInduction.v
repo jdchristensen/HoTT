@@ -184,40 +184,51 @@ Proof.
   intro a; contradiction a.
 Defined.
 
-Definition BI_unit : bar_induction Unit.
+Definition BI_contr (A : Type) (contr : Contr A) : bar_induction A.
 Proof.
   intros B iB bB.
-  pose (c := fun (n : nat) => tt).
+  pose (c := fun (n : nat) => center A).
   specialize (bB c) as [n hn]; induction n.
   1: exact hn.
   apply IHn, iB.
   intro x.
   refine (_ # hn).
-  rewrite (path_ishprop x tt).
+  rewrite (path_contr x (center A)).
   srapply path_list_nth'.
   + by rewrite length_app, !length_list_restrict, nat_add_comm.
   + intros m Hm.
-    apply path_ishprop.
+    apply path_contr.
 Defined.
 
-Definition MBI_hprop (A : Type) `{IsHProp A} : monotone_bar_induction A.
+Definition DBI_pointed_DBI (A : Type) (p : A -> decidable_bar_induction A)
+  : decidable_bar_induction A.
 Proof.
-  intros B mB iB bB.
-  rapply iB.
+  intros B dB iB bB.
+  pose (Bnil := B nil).
+  destruct (dec (Bnil)) as [b | n].
+  1: exact b.
+  apply iB.
   intro a; cbn.
-  pose (c := fun (n : nat) => a).
-  specialize (bB c) as [n hn]; induction n.
-  - enough (B nil) as B0.
-    1: exact (mB _ _ B0).
-    exact hn.
-  - apply IHn, iB.
-    intro x.
-    refine (_ # hn).
-    rewrite (path_ishprop x a).
-    srapply path_list_nth'.
-    + by rewrite length_app, !length_list_restrict, nat_add_comm.
-    + intros m Hm.
-      apply path_ishprop.
+  pose (B' l := B (a :: l)).
+  apply (p a B' _).
+  - intros l hl.
+    exact (iB (a :: l) hl).
+  - intro s.
+    destruct (bB (Spaces.NatSeq.Core.cons a s)) as [m r].
+    unfold B'.
+    destruct m.
+    + contradiction (n r).
+    + exists m.
+      refine (_ # r).
+      srapply path_list_nth'.
+      1: cbn; by rewrite !length_list_restrict.
+      intros k hk; induction k.
+      1: cbn; by rewrite nth'_list_restrict.
+      rewrite !nth'_list_restrict; cbn.
+      assert (test : k < length (list_restrict s m)).
+      { rewrite length_list_restrict in *.
+        exact _. }
+      by rewrite (nth'_cons _ _ _ test), nth'_list_restrict.
 Defined.
 
 Definition MBI_pointed_MBI (A : Type) (p : A -> monotone_bar_induction A)
@@ -227,6 +238,15 @@ Proof.
   apply iB.
   intro a; cbn.
   by apply (mB nil), (p a).
+Defined.
+
+Definition MBI_hprop (A : Type) `{IsHProp A} : monotone_bar_induction A.
+Proof.
+  apply MBI_pointed_MBI.
+  intro a.
+  enough (bar_induction A) as BI.
+  1: exact (fun B _ iB bB => BI B iB bB).
+  apply BI_contr, (contr_inhabited_hprop A a).
 Defined.
 
 (** ** Implications of bar induction *)
