@@ -225,13 +225,12 @@ Proof.
       refine (_ # r).
       srapply path_list_nth'.
       1: cbn; by rewrite !length_list_restrict.
-      intros k hk; induction k.
+      intros k hk; destruct k.
       1: cbn; by rewrite nth'_list_restrict.
-      rewrite !nth'_list_restrict; cbn.
-      assert (test : k < length (list_restrict s m)).
+      assert (hk' : k < length (list_restrict s m)).
       { rewrite length_list_restrict in *.
         exact _. }
-      by rewrite (nth'_cons _ _ _ test), nth'_list_restrict.
+      by rewrite (nth'_cons _ _ _ hk'), !nth'_list_restrict.
 Defined.
 
 (** The same is true for monotone bar induction. *)
