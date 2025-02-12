@@ -186,7 +186,7 @@ Proof.
   intro a; contradiction a.
 Defined.
 
-Definition BI_contr (A : Type) (contr : Contr A) : bar_induction A.
+Definition BI_contr (A : Type) `{Contr A} : bar_induction A.
 Proof.
   intros B iB bB.
   pose (c := fun (n : nat) => center A).
@@ -194,7 +194,7 @@ Proof.
   1: exact hn.
   apply IHn, iB.
   intro x.
-  refine (_ # hn).
+  nrefine (_ # hn).
   rewrite (path_contr x (center A)).
   srapply path_list_nth'.
   + by rewrite length_app, !length_list_restrict, nat_add_comm.
@@ -207,23 +207,21 @@ Definition DBI_pointed_DBI (A : Type) (p : A -> decidable_bar_induction A)
   : decidable_bar_induction A.
 Proof.
   intros B dB iB bB.
-  pose (Bnil := B nil).
-  destruct (dec (Bnil)) as [b | n].
+  destruct (dec (B nil)) as [b | n].
   1: exact b.
   apply iB.
   intro a; cbn.
   pose (B' l := B (a :: l)).
   apply (p a B' _).
-  - intros l hl.
-    exact (iB (a :: l) hl).
-  - intro s.
+  - intros l; unfold B'.
+    exact (iB (a :: l)).
+  - intro s; unfold B'.
     destruct (bB (Spaces.NatSeq.Core.cons a s)) as [m r].
-    unfold B'.
     destruct m.
     + contradiction (n r).
     + exists m.
-      refine (_ # r).
-      srapply path_list_nth'.
+      nrefine (_ # r).
+      snrapply path_list_nth'.
       1: cbn; by rewrite !length_list_restrict.
       intros k hk; destruct k.
       1: cbn; by rewrite nth'_list_restrict.
@@ -253,7 +251,7 @@ Proof.
   apply BI_contr, (contr_inhabited_hprop A a).
 Defined.
 
-(** Note that [MBI_pointed_MBI] does not have an analogue for full bar induction: We prove that every type satisfying full bar induction is Sigma-compact and therefore decidable. Then, as in [MBI_hprop], we would be able to prove that any proposition satisfies bar induction and therefore every proposition is decidable. *)
+(** Note that [MBI_pointed_MBI] does not have an analogue for full bar induction. We prove below that every type satisfying full bar induction is Sigma-compact and therefore decidable. Then, as in [MBI_hprop], we would be able to prove that any proposition satisfies bar induction and therefore that every proposition is decidable. *)
 
 (** ** Implications of bar induction *)
 
