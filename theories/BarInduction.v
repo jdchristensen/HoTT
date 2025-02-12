@@ -177,6 +177,8 @@ Definition decidable_bar_induction_monotone_bar_induction (A : Type)
 
 (** ** Examples of types that satisfy forms of bar induction *)
 
+(** The empty type and all contractible types satisfy full bar induction. *)
+
 Definition BI_empty : bar_induction Empty.
 Proof.
   intros B iB _.
@@ -200,6 +202,7 @@ Proof.
     apply path_contr.
 Defined.
 
+(** If a type satisfies decidable bar induction assuming that it is pointed, then it satisfies decidable bar induction. *)
 Definition DBI_pointed_DBI (A : Type) (p : A -> decidable_bar_induction A)
   : decidable_bar_induction A.
 Proof.
@@ -231,6 +234,7 @@ Proof.
       by rewrite (nth'_cons _ _ _ test), nth'_list_restrict.
 Defined.
 
+(** The same is true for monotone bar induction. *)
 Definition MBI_pointed_MBI (A : Type) (p : A -> monotone_bar_induction A)
   : monotone_bar_induction A.
 Proof.
@@ -240,6 +244,7 @@ Proof.
   by apply (mB nil), (p a).
 Defined.
 
+(** Combining [MBI_pointed_MBI] and [BI_contr], we prove that any proposition satisfies monotone bar induction. *)
 Definition MBI_hprop (A : Type) `{IsHProp A} : monotone_bar_induction A.
 Proof.
   apply MBI_pointed_MBI.
@@ -248,6 +253,8 @@ Proof.
   1: exact (fun B _ iB bB => BI B iB bB).
   apply BI_contr, (contr_inhabited_hprop A a).
 Defined.
+
+(** Note that [MBI_pointed_MBI] does not have an analogue for full bar induction: We prove that every type satisfying full bar induction is Sigma-compact and therefore decidable. Then, as in [MBI_hprop], we would be able to prove that any proposition satisfies bar induction and therefore every proposition is decidable. *)
 
 (** ** Implications of bar induction *)
 
