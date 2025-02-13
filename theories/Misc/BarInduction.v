@@ -1,6 +1,7 @@
 (** * Bar induction and the fan theorem *)
 
-Require Import Basics Types.
+Require Import Basics Types. 
+Require Import Truncations.Core.
 Require Import Spaces.Nat.Core.
 Require Import Spaces.Finite.FinNat.
 Require Import Misc.UStructures.
@@ -31,11 +32,11 @@ Definition is_inductive {A : Type} (B : list A -> Type)
 Definition is_monotone {A : Type} (B : list A -> Type)
   := forall (l1 l2 : list A), B l1 -> B (l1 ++ l2).
 
-Definition is_monotone' {A : Type} (B : list A -> Type)
+Definition is_monotone_singleton {A : Type} (B : list A -> Type)
   := forall (l : list A) (a : A), B l -> B (l ++ [a]).
 
-Definition is_monotone_is_monotone' {A : Type} (B : list A -> Type)
-  (mon : is_monotone' B)
+Definition is_monotone_is_monotone_singleton {A : Type} (B : list A -> Type)
+  (mon : is_monotone_singleton B)
   : is_monotone B.
 Proof.
   intros l1 l2; induction l2 as [|a l2 IHl2] in l1 |- *.
@@ -105,7 +106,6 @@ Proof.
   nrapply (MBI P).
   - intros u v H w.
     by rewrite <- app_assoc.
-  (* I'm sure this can be faster. *)
   - intros l1 H [|a l2].
     + apply indB.
       intro a.
@@ -186,7 +186,7 @@ Proof.
   intro a; contradiction a.
 Defined.
 
-Definition BI_contr (A : Type) `{Contr A} : bar_induction A.
+Definition bar_induction_contr (A : Type) `{Contr A} : bar_induction A.
 Proof.
   intros B iB bB.
   pose (c := fun (n : nat) => center A).
@@ -203,7 +203,8 @@ Proof.
 Defined.
 
 (** If a type satisfies decidable bar induction assuming that it is pointed, then it satisfies decidable bar induction. *)
-Definition DBI_pointed_DBI (A : Type) (p : A -> decidable_bar_induction A)
+Definition decidable_bar_induction_pointed_decidable_bar_induction
+  (A : Type) (p : A -> decidable_bar_induction A)
   : decidable_bar_induction A.
 Proof.
   intros B dB iB bB.
@@ -232,7 +233,8 @@ Proof.
 Defined.
 
 (** The same is true for monotone bar induction. *)
-Definition MBI_pointed_MBI (A : Type) (p : A -> monotone_bar_induction A)
+Definition monotone_bar_induction_pointed_monotone_bar_induction 
+  (A : Type) (p : A -> monotone_bar_induction A)
   : monotone_bar_induction A.
 Proof.
   intros B mB iB bB.
@@ -241,17 +243,18 @@ Proof.
   by apply (mB nil), (p a).
 Defined.
 
-(** Combining [MBI_pointed_MBI] and [BI_contr], we prove that any proposition satisfies monotone bar induction. *)
-Definition MBI_hprop (A : Type) `{IsHProp A} : monotone_bar_induction A.
+(** Combining [monotone_bar_induction_pointed_monotone_bar_induction] and [bar_induction_contr], we prove that any proposition satisfies monotone bar induction. *)
+Definition monotone_bar_induction_hprop (A : Type) `{IsHProp A} 
+  : monotone_bar_induction A.
 Proof.
-  apply MBI_pointed_MBI.
+  apply monotone_bar_induction_pointed_monotone_bar_induction.
   intro a.
   enough (bar_induction A) as BI.
   1: exact (fun B _ iB bB => BI B iB bB).
-  apply BI_contr, (contr_inhabited_hprop A a).
+  apply bar_induction_contr, (contr_inhabited_hprop A a).
 Defined.
 
-(** Note that [MBI_pointed_MBI] does not have an analogue for full bar induction. We prove below that every type satisfying full bar induction is Sigma-compact and therefore decidable. Then, as in [MBI_hprop], we would be able to prove that any proposition satisfies bar induction and therefore that every proposition is decidable. *)
+(** Note that [monotone_bar_induction_pointed_monotone_bar_induction] does not have an analogue for full bar induction. We prove below that every type satisfying full bar induction is Sigma-compact and therefore decidable. Then, as in [monotone_bar_induction_hprop], we would be able to prove that any proposition satisfies bar induction and therefore that every proposition is decidable. *)
 
 (** ** Implications of bar induction *)
 
@@ -298,62 +301,4 @@ Proof.
   destruct (is_sig_compact_bar_induction BI (fun n => s n <> 0) _) as [l|r].
   - right; exact l.
   - left; exact (fun n => stable (fun z : s n <> 0 => r (n; z))).
-Defined.
-
-(** ** The fan theorem *)
-
-Definition decidable_fan_theorem (A : Type) :=
-  forall (B : list A -> Type)
-  (dec : forall l : list A, Decidable (B l))
-  (bar : is_bar B),
-  is_uniform_bar B.
-
-Definition monotone_fan_theorem (A : Type) :=
-  forall (B : list A -> Type)
-  (mon : is_monotone B)
-  (bar : is_bar B),
-  is_uniform_bar B.
-
-Definition fan_theorem (A : Type) :=
-  forall (B : list A -> Type)
-  (bar : is_bar B),
-  is_uniform_bar B.
-
-(** The family we use when applying the fan theorem in our proof that continuity implies uniform continuity. *)
-Definition uc_theorem_family {A : Type} (p : (nat -> A) -> Bool)
-  : list A -> Type
-  := fun l =>
-      forall (u v : nat -> A) (h : list_restrict u (length l) = l),
-        u =[length l] v -> p u = p v.
-
-Definition is_bar_uc_theorem_family {A : Type}
-  (p : (nat -> A) -> Bool) (conn : IsContinuous p)
-  : is_bar (uc_theorem_family p).
-Proof.
-  intro s.
-  specialize (conn s 0) as [n H].
-  exists n.
-  intros u v h t.
-  rewrite length_list_restrict in h, t.
-  symmetry in h.
-  apply list_restrict_eq_iff_seq_agree_lt in h.
-  refine ((H _ h)^ @ H _ _).
-  exact (transitivity h t).
-Defined.
-
-(** The fan theorem implies that every continuous function is uniformly continuous. The current proof uses the full fan theorem. Less powerful versions might be enough. *)
-
-Definition uniform_continuity_fan_theorem {A : Type} (fan : fan_theorem A)
-  (p : (nat -> A) -> Bool) (con : IsContinuous p)
-  : uniformly_continuous p.
-Proof.
-  pose proof (fanapp := fan (uc_theorem_family p) (is_bar_uc_theorem_family p con)).
-  destruct fanapp as [n ub].
-  intro m.
-  exists n.
-  intros u v h.
-  apply (ub u).2.
-  - exact (ap _ (length_list_restrict _ _)).
-  - rewrite length_list_restrict.
-    exact ((us_rel_leq (_ (ub u).1.2) h)).
 Defined.
