@@ -4,8 +4,7 @@ Require Import Basics Types.
 Require Import Truncations.Core.
 Require Import Spaces.Nat.Core.
 Require Import Spaces.Finite.FinNat.
-Require Import Misc.UStructures.
-Require Import Spaces.NatSeq.Core Spaces.NatSeq.UStructure.
+Require Import Spaces.NatSeq.Core.
 Require Import Spaces.List.Core Spaces.List.Theory.
 Require Import BoundedSearch.
 
