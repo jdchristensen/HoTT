@@ -1,4 +1,4 @@
-(** * Bar induction and the fan theorem *)
+(** * Bar induction *)
 
 Require Import Basics Types. 
 Require Import Truncations.Core.
@@ -116,6 +116,41 @@ Proof.
     exists (barC s).1.
     intro w.
     apply sub, monC, barC.
+Defined.
+
+(** Since decidable bar induction uses decidable predicates, we can state a logically equivalent form based on families of decidable propositions. This form has the advantage of being a proposition. *)
+
+Definition hprop_decidable_bar_induction (A : Type) :=
+  forall (B : list A -> Type)
+  (prop : forall (l : list A), IsHProp (B l))
+  (dec : forall (l : list A), Decidable (B l))
+  (ind : is_inductive B)
+  (bar : is_bar B),
+  B nil.
+
+Definition ishprop_hprop_decidable_bar_induction `{Funext} (A : Type)
+  : IsHProp (hprop_decidable_bar_induction A)
+  := istrunc_forall.
+
+Definition decidable_bar_induction_hprop_decidable_bar_induction (A : Type)
+  (pDBI : hprop_decidable_bar_induction A)
+  : decidable_bar_induction A.
+Proof.
+  intros P dP iP bP.
+  enough (Tr (-1) (P nil)).
+  { by apply merely_inhabited_iff_inhabited_stable. }
+  rapply (pDBI (fun a => Tr (-1) (P a))).
+  - intro l.
+    destruct (dP l) as [y | n].
+    1: left; exact (tr y).
+    right; intro x.
+    by apply merely_inhabited_iff_inhabited_stable in x.
+  - intros l q.
+    refine (tr (iP _ _)).
+    intro a; apply merely_inhabited_iff_inhabited_stable, (q a).
+  - intros s.
+    exists (bP s).1.
+    exact (tr (bP s).2).
 Defined.
 
 (** ** Relations between the three forms of bar induction *)
