@@ -216,6 +216,13 @@ Proof.
   revert ma; rapply Trunc_ind; exact na.
 Defined.
 
+Global Instance decidable_trunc_decidable {A} {A_decidable : Decidable A}
+  : Decidable (Tr (-1) A).
+Proof.
+  rapply decidable_iff.
+  symmetry; apply merely_inhabited_iff_inhabited_stable.
+Defined.
+
 (** ** Surjections *)
 
 (** Surjections are the (-1)-connected maps, but they can be characterized more simply since an inhabited hprop is automatically contractible. *)

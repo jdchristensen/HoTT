@@ -139,9 +139,6 @@ Proof.
   intros P dP iP bP.
   apply merely_inhabited_iff_inhabited_stable.
   rapply (pDBI (Tr (-1) o P)).
-  - intro l.
-    rapply (decidable_iff (A:=P l)).
-    symmetry; apply merely_inhabited_iff_inhabited_stable.
   - intros l q.
     nrefine (tr (iP _ _)).
     intro a; apply merely_inhabited_iff_inhabited_stable, (q a).
