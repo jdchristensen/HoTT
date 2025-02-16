@@ -1,6 +1,6 @@
 (** * Bar induction *)
 
-Require Import Basics Types. 
+Require Import Basics Types.
 Require Import Truncations.Core.
 Require Import Spaces.Nat.Core.
 Require Import Spaces.Finite.FinNat.
@@ -130,23 +130,20 @@ Definition hprop_decidable_bar_induction (A : Type) :=
 
 Definition ishprop_hprop_decidable_bar_induction `{Funext} (A : Type)
   : IsHProp (hprop_decidable_bar_induction A)
-  := istrunc_forall.
+  := _.
 
 Definition decidable_bar_induction_hprop_decidable_bar_induction (A : Type)
   (pDBI : hprop_decidable_bar_induction A)
   : decidable_bar_induction A.
 Proof.
   intros P dP iP bP.
-  enough (Tr (-1) (P nil)).
-  { by apply merely_inhabited_iff_inhabited_stable. }
-  rapply (pDBI (fun a => Tr (-1) (P a))).
+  apply merely_inhabited_iff_inhabited_stable.
+  rapply (pDBI (Tr (-1) o P)).
   - intro l.
-    destruct (dP l) as [y | n].
-    1: left; exact (tr y).
-    right; intro x.
-    by apply merely_inhabited_iff_inhabited_stable in x.
+    rapply (decidable_iff (A:=P l)).
+    symmetry; apply merely_inhabited_iff_inhabited_stable.
   - intros l q.
-    refine (tr (iP _ _)).
+    nrefine (tr (iP _ _)).
     intro a; apply merely_inhabited_iff_inhabited_stable, (q a).
   - intros s.
     exists (bP s).1.
