@@ -393,6 +393,18 @@ Proof.
   reflexivity.
 Defined.
 
+(** The [nth' n] element of a concatenated list [l ++ l'] where [n < length l] is the [nth'] element of [l]. *)
+Definition nth'_app@{i|} {A : Type@{i}} (l l' : list A) (n : nat)
+  (H : n < length l) (H' : n < length (l ++ l'))
+  : nth' (l ++ l') n H' = nth' l n H.
+Proof.
+  induction l as [|a l IHl] in l', n, H, H' |- * using list_ind@{i i}.
+  1: destruct (not_lt_zero_r _ H).
+  destruct n.
+  1: reflexivity.
+  by apply IHl.
+Defined.
+
 (** The index of an element in a list is the [n] such that the [nth'] element is the element. *)
 Definition index_of@{i|} {A : Type@{i}} (l : list A) (x : A)
   : InList x l
