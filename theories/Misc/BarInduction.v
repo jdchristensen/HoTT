@@ -224,10 +224,7 @@ Proof.
   intro x.
   nrefine (_ # hn).
   rewrite (path_contr x (center A)).
-  srapply path_list_nth'.
-  + by rewrite length_app, !length_list_restrict, nat_add_comm.
-  + intros m Hm.
-    apply path_contr.
+  nrapply list_restrict_succ.
 Defined.
 
 (** If a type satisfies decidable bar induction assuming that it is pointed, then it satisfies decidable bar induction. *)
