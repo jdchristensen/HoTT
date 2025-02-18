@@ -546,6 +546,15 @@ Proof.
   cbn; apply IHl.
 Defined.
 
+Definition nth'_last_app@{i|} {A : Type@{i}} (l : list A) (a : A)
+  (H : length l < length (l ++ [a]))
+  : nth' (l ++ [a]) (length l) H = a.
+Proof.
+  revert a H; simple_list_induction l a' l IHl; intros a H.
+  1: reflexivity.
+  apply IHl.
+Defined.
+
 (** ** Removing elements *)
 
 (** These functions allow surgery to be perfomed on a given list. *)
@@ -1009,6 +1018,32 @@ Proof.
   unshelve lhs snrapply nth'_list_map.
   - exact ((length_list_restrict _ _ @ (length_seq' n)^) # Hi).
   - exact (ap s (nth'_seq' _ _ _)).
+Defined.
+
+(** Restricting a sequence to [n.+1] terms has a computation rule. *)
+Definition list_restrict_succ {A : Type} (s : nat -> A) (n : nat)
+  : list_restrict s n.+1 = list_restrict s n ++ [s n].
+Proof.
+  srapply path_list_nth'.
+  - lhs nrapply length_list_restrict.
+    symmetry.
+    lhs nrapply length_app.
+    cbn; lhs nrapply nat_add_comm.
+    apply ap, length_list_restrict.
+  - intros m Hm.
+    rewrite nth'_list_restrict.
+    destruct (nat_trichotomy m (length (list_restrict s n))) as [[Hm1 | Hm2] | Hm3].
+    + symmetry.
+      lhs rapply (nth'_app _ _ _ Hm1).
+      apply nth'_list_restrict.
+    + symmetry.
+      destruct Hm2^; clear Hm2.
+      lhs nrapply nth'_last_app.
+      by rewrite length_list_restrict.
+    + apply Empty_rec.
+      rewrite length_list_restrict in Hm, Hm3.
+      pose proof (c := leq_trans Hm Hm3).
+      by apply (lt_irrefl _ c).
 Defined.
 
 (** ** Repeat *)
