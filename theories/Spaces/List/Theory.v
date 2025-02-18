@@ -1024,26 +1024,16 @@ Defined.
 Definition list_restrict_succ {A : Type} (s : nat -> A) (n : nat)
   : list_restrict s n.+1 = list_restrict s n ++ [s n].
 Proof.
-  srapply path_list_nth'.
-  - lhs nrapply length_list_restrict.
-    symmetry.
-    lhs nrapply length_app.
-    cbn; lhs nrapply nat_add_comm.
-    apply ap, length_list_restrict.
-  - intros m Hm.
-    rewrite nth'_list_restrict.
-    destruct (nat_trichotomy m (length (list_restrict s n))) as [[Hm1 | Hm2] | Hm3].
-    + symmetry.
-      lhs rapply (nth'_app _ _ _ Hm1).
-      apply nth'_list_restrict.
-    + symmetry.
-      destruct Hm2^; clear Hm2.
-      lhs nrapply nth'_last_app.
-      by rewrite length_list_restrict.
-    + apply Empty_rec.
-      rewrite length_list_restrict in Hm, Hm3.
-      pose proof (c := leq_trans Hm Hm3).
-      by apply (lt_irrefl _ c).
+  unfold list_restrict, Build_list.
+  lhs nrapply list_map_compose.
+  rewrite seq_seq'.
+  rewrite seq_succ.
+  lhs nrapply list_map_app.
+  simpl.
+  apply (ap (fun z => z ++ [s n])).
+  symmetry.
+  lhs nrapply list_map_compose.
+  apply ap, seq_seq'.
 Defined.
 
 (** ** Repeat *)
