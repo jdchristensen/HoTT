@@ -40,7 +40,7 @@ Definition seq_agree_lt {X : Type} (n : nat) (s t : nat -> X) : Type
 (** [seq_agree_lt] has an equivalent inductive definition. We don't use this equivalence, but include it in case it is useful in future work. *)
 Definition seq_agree_inductive {X : Type} (n : nat) (s t : nat -> X) : Type.
 Proof.
-  induction n in s, t |-*.
+  induction n in s, t |- *.
   - exact Unit.
   - exact ((head s = head t) * (IHn (tail s) (tail t))).
 Defined.
