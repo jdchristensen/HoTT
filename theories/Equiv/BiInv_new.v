@@ -14,6 +14,11 @@ Class IsBiInv {A B : Type} (e : A -> B) := {
   eissect_biinv : retr_biinv o e == idmap ;
 }.
 
+Record EquivBiInv A B := {
+  equiv_fun_biinv :> A -> B ;
+  equiv_isbiinv :> IsBiInv equiv_fun_biinv
+}.
+
 Arguments sect_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments retr_biinv {A B}%_type_scope e%_function_scope {_} _.
 Arguments eisretr_biinv {A B}%_type_scope e%_function_scope {_} _.
@@ -50,11 +55,6 @@ Definition prod_isbiinv (A B : Type) `{f: A -> B}
 Proof.
   make_equiv.
 Defined.
-
-Record EquivBiInv A B := {
-  equiv_fun_biinv :> A -> B ;
-  equiv_isbiinv :> IsBiInv equiv_fun_biinv
-}.
 
 Existing Instance equiv_isbiinv.
 

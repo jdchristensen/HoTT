@@ -591,7 +591,7 @@ Section IntegerArithmetic.
     - reflexivity.
     - reflexivity.
     - intro z.
-      rewrite IntHIT_add_succ_l.
+      simpl.
       rewrite succ_is_sect.
       by rewrite (fun z => (retr_is_sect succ z)^).
   Defined.
