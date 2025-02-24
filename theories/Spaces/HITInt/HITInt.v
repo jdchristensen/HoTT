@@ -50,8 +50,7 @@ Module Export IntHIT.
 End IntHIT.
 
 (** Successor is biinvertible. *)
-Global Instance isbiinv_succ
-    : IsBiInv succ.
+Global Instance isbiinv_IntHIT_succ : IsBiInv succ.
 Proof.
   - srapply Build_IsBiInv.
     + exact succ_sect.
@@ -60,19 +59,15 @@ Proof.
     + exact succ_is_sect.
 Defined.
 
-Definition biinv_IntHIT
-    : EquivBiInv IntHIT IntHIT.
+Definition biinv_IntHIT_succ : EquivBiInv IntHIT IntHIT.
 Proof.
-  exact (Build_EquivBiInv _ _ _ isbiinv_succ).
+  exact (Build_EquivBiInv _ _ _ isbiinv_IntHIT_succ).
 Defined.
 
-(** The successor is an equivalence on [IntHIT]. *)
-Global Instance isequiv_IntHIT_succ : IsEquiv succ
-  := isequiv_isbiinv biinv_IntHIT.
-
 (** The predecessor is an equivalence on [IntHIT]. *)
+(** TODO: We should be able to remove this since isequiv_isbiinv_retr is an instance. However type-class search in the proofs below somehow does not find it.*)
 Global Instance isequiv_IntHIT_pred : IsEquiv pred
-  := isequiv_inverse succ.
+  := isequiv_isbiinv_retr succ.
 
 Definition IntHIT_ind_hprop
   `{P : IntHIT -> Type}
@@ -299,10 +294,10 @@ Section Uniqueness.
     - simpl.
       intros z H.
       apply (ap r) in H.
-      exact ((biinv_compat_pr _ _ _ _ biinv_IntHIT e k k pf z)^ @ H).
+      exact ((biinv_compat_pr biinv_IntHIT_succ e k k pf z)^ @ H).
     - intros z H.
       apply (ap s) in H.
-      exact ((biinv_compat_ps _ _ _ _ biinv_IntHIT e k k pf z)^ @ H).
+      exact ((biinv_compat_ps biinv_IntHIT_succ e k k pf z)^ @ H).
     - simpl.
       intros z t.
       rewrite transport_paths_FlFr.
@@ -313,7 +308,7 @@ Section Uniqueness.
       rewrite ap_V.
       rewrite (inv_pp _ _)^.
       rewrite concat_p_pp.
-      rewrite (biinv_compat_pre _ _ _ _ biinv_IntHIT e k k pf z)^.
+      rewrite (biinv_compat_pre biinv_IntHIT_succ e k k pf z)^.
       rewrite (concat_p_pp _ _ _)^.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
@@ -329,7 +324,7 @@ Section Uniqueness.
       rewrite ap_V.
       rewrite (inv_pp _ _)^.
       rewrite concat_p_pp.
-      rewrite (biinv_compat_pes _ _ _ _ biinv_IntHIT e k k pf z)^.
+      rewrite (biinv_compat_pes biinv_IntHIT_succ e k k pf z)^.
       rewrite (concat_p_pp _ _ _)^.
       apply moveR_Vp.
       rewrite (ap_compose _ _ _)^.
@@ -439,8 +434,8 @@ Section IntHITEquiv.
   (z : IntHIT )
   : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
   Proof.
-    exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z) 
-    @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT) zero_i idmap idpath (fun x => idpath)) z)^).
+    exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z) 
+    @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
   Defined.
 
   (** Proof that they are equivalent. *)
@@ -493,9 +488,8 @@ Section IntegerArithmetic.
     : IntHIT.
   Proof.
     revert x.
-    snrapply (IntHIT_rec_equiv _ _ succ).
+    srapply (IntHIT_rec_equiv _ _ succ).
     - exact y.
-    - exact isequiv_IntHIT_succ.
   Defined.
 
   Notation "- x" := (IntHIT_neg x) : IntHIT_scope.

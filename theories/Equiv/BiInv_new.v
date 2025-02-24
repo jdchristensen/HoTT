@@ -74,6 +74,9 @@ Proof.
     s).
 Defined.
 
+Global Instance isequiv_isbiinv_retr {A B : Type} (f : A -> B) `{bi : !IsBiInv f} : IsEquiv (retr_biinv f)
+  := isequiv_inverse f.
+
 (** Here we take the inverse to be the section. *)
 Definition isequiv_isbiinv' {A B : Type} (f : A -> B) `{bi : !IsBiInv f} : IsEquiv f.
 Proof.
@@ -84,6 +87,9 @@ Proof.
     lhs nrapply sect_retr_homotopic_biinv.
     apply eissect_biinv.
 Defined.
+
+Global Instance isequiv_isbiinv_sect {A B : Type} (f : A -> B) `{bi : !IsBiInv f} : IsEquiv (sect_biinv f)
+  := isequiv_inverse f (feq := (isequiv_isbiinv' f)).
 
 Definition isbiinv_isequiv `(f : A -> B)
   : IsEquiv f -> IsBiInv f.
@@ -147,7 +153,7 @@ Defined.
 
 Section EquivalenceCompatibility.
 
-  Context (A B C D : Type).
+  Context {A B C D : Type}.
   Context (e : EquivBiInv A B) (e' : EquivBiInv C D) (f : A -> C) (g : B -> D).
 
   Let s := sect_biinv e.
