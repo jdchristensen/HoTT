@@ -752,9 +752,8 @@ Section IntegerArithmetic.
   Defined.
 
   (** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
-  Definition IntHIT_mul_succ_r (x y : IntHIT) : x * (succ y) = x * y + x.
+  Definition IntHIT_mul_succ_r (x y : IntHIT) : x * (succ y) = x + x * y.
   Proof.
-    rewrite IntHIT_add_comm.
     revert x.
     rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (succ y))); cbn beta.
     - reflexivity.
@@ -786,10 +785,11 @@ Section IntegerArithmetic.
   Proof.
     revert x.
     srapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x y)); cbn beta.
-    - by rewrite IntHIT_mul_0_r.
+    - symmetry; apply IntHIT_mul_0_r.
     - reflexivity.
     - intro z.
-      by rewrite IntHIT_mul_succ_r.
+      rewrite IntHIT_add_comm.
+      symmetry; apply IntHIT_mul_succ_r.
   Defined.
 
   (** Multiplying with a negation on the right is the same as negating the product. *)
