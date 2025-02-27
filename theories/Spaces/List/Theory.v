@@ -393,6 +393,18 @@ Proof.
   reflexivity.
 Defined.
 
+(** The [nth' n] element of a concatenated list [l ++ l'] where [n < length l] is the [nth'] element of [l]. *)
+Definition nth'_app@{i|} {A : Type@{i}} (l l' : list A) (n : nat)
+  (H : n < length l) (H' : n < length (l ++ l'))
+  : nth' (l ++ l') n H' = nth' l n H.
+Proof.
+  induction l as [|a l IHl] in l', n, H, H' |- * using list_ind@{i i}.
+  1: destruct (not_lt_zero_r _ H).
+  destruct n.
+  1: reflexivity.
+  by apply IHl.
+Defined.
+
 (** The index of an element in a list is the [n] such that the [nth'] element is the element. *)
 Definition index_of@{i|} {A : Type@{i}} (l : list A) (x : A)
   : InList x l
@@ -532,6 +544,15 @@ Proof.
   destruct l.
   1: reflexivity.
   cbn; apply IHl.
+Defined.
+
+Definition nth'_last_app@{i|} {A : Type@{i}} (l : list A) (a : A)
+  (H : length l < length (l ++ [a]))
+  : nth' (l ++ [a]) (length l) H = a.
+Proof.
+  revert a H; simple_list_induction l a' l IHl; intros a H.
+  1: reflexivity.
+  apply IHl.
 Defined.
 
 (** ** Removing elements *)
@@ -997,6 +1018,22 @@ Proof.
   unshelve lhs snrapply nth'_list_map.
   - exact ((length_list_restrict _ _ @ (length_seq' n)^) # Hi).
   - exact (ap s (nth'_seq' _ _ _)).
+Defined.
+
+(** Restricting a sequence to [n.+1] terms has a computation rule. *)
+Definition list_restrict_succ {A : Type} (s : nat -> A) (n : nat)
+  : list_restrict s n.+1 = list_restrict s n ++ [s n].
+Proof.
+  unfold list_restrict, Build_list.
+  lhs nrapply list_map_compose.
+  rewrite seq_seq'.
+  rewrite seq_succ.
+  lhs nrapply list_map_app.
+  simpl.
+  apply (ap (fun z => z ++ [s n])).
+  symmetry.
+  lhs nrapply list_map_compose.
+  apply ap, seq_seq'.
 Defined.
 
 (** ** Repeat *)
