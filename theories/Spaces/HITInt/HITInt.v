@@ -4,6 +4,7 @@
 
 Require Import Basics.
 Require Import Types.Paths.
+Require Import Spaces.Nat.Core.
 Require Import Spaces.SInt.
 Require Import Equiv.BiInv_new.
 
@@ -364,41 +365,26 @@ Section IntegerArithmetic.
   Delimit Scope IntHIT_scope with IntHIT.
   Local Open Scope IntHIT_scope.
 
-  (** We define negation by recursion. Negation is defined at this early stage because it will be used in parsing numerals. *)
-  Definition IntHIT_neg (x : IntHIT) 
-    : IntHIT.
-    Proof.
-      revert x.
-      srapply (IntHIT_rec_equiv _ pred).
-      - exact zero_i.
-  Defined.
-
-  (** We define addition by recursion on the first argument. *)
-  Definition IntHIT_add 
-    (x y : IntHIT) 
-    : IntHIT.
-  Proof.
-    revert x.
-    srapply (IntHIT_rec_equiv _ succ).
-    - exact y.
-  Defined.
-
-  Notation "- x" := (IntHIT_neg x) : IntHIT_scope.
-
   Notation "z .+1" := (succ z) : IntHIT_scope.
   Notation "z .-1" := (pred z) : IntHIT_scope.
 
+  (** We define negation by recursion. Negation is defined at this early stage because it will be used in parsing numerals. *)
+  Definition IntHIT_neg (x : IntHIT) : IntHIT
+    := IntHIT_rec_equiv zero_i pred x.
+
+  Notation "- x" := (IntHIT_neg x) : IntHIT_scope.
+
+  (** We define addition by recursion on the first argument. *)
+  Definition IntHIT_add (x y : IntHIT) : IntHIT
+    := IntHIT_rec_equiv y succ x.
+
   (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
-  Definition IntHIT_of_nat (n : nat) : IntHIT.
-  Proof.
-    induction n.
-    - exact zero_i.
-    - exact (succ IHn).
-  Defined.
+  Definition IntHIT_of_nat (n : nat) : IntHIT
+    := nat_iter n succ zero_i.
 
   (** Printing *)
   (** Here we rely for now on the 'old' integers. This can be maybe improved in the future. *)
-  Definition IntHIT_to_number_int  :IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
+  Definition IntHIT_to_number_int : IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
 
   (** Parsing *)
   Definition IntHIT_of_number_int (d : Numeral.int) :=
@@ -412,8 +398,7 @@ Section IntegerArithmetic.
   Number Notation IntHIT IntHIT_of_number_int IntHIT_to_number_int : IntHIT_scope.
 
   (** The following function reduces an expression by cancelling succesive successor and predecessor terms. *)
-  Definition IntHIT_reduce 
-    := IntITtoIntHIT o IntHITtoIntIT.
+  Definition IntHIT_reduce := IntITtoIntHIT o IntHITtoIntIT.
 
   (** ** Properties of Operations *)
 
@@ -576,14 +561,8 @@ Section IntegerArithmetic.
   (** *** Multiplication *)
 
   (** We define multiplication by recursion on the first argument. We can only define it at this stage as it depends on the proof that addition is an equivalence. *)
-  Definition IntHIT_mul
-  (x y : IntHIT) 
-  : IntHIT.
-  Proof.
-    revert x.
-    srapply (IntHIT_rec_equiv _ (fun z => IntHIT_add z y)).
-    - exact 0.
-  Defined.
+  Definition IntHIT_mul (x y : IntHIT) : IntHIT
+    := IntHIT_iter (fun z => IntHIT_add z y) x 0.
 
   Infix "*" := IntHIT_mul : IntHIT_scope.
 
