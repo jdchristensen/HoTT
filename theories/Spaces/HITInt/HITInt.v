@@ -1,6 +1,5 @@
 Require Import Basics.
-Require Import Types.Universe Types.Paths Types.Arrow Types.Sigma Cubical.DPath.
-Require Import Spaces.Nat.Core.
+Require Import Types.Paths.
 Require Import Spaces.SInt.
 Require Import Equiv.BiInv_new.
 
