@@ -7,12 +7,14 @@ Require Import Types.Paths.
 Require Import Spaces.SInt.
 Require Import Equiv.BiInv_new.
 
+Set Universe Minimization ToSet.
+
 Module Export IntHIT.
   Section IntHIT.
 
     (** Here we are modeling the HIT which has a point [zero_i] and a successor map [succ] which is a biinvertible equivalence.  [pred] and [succ_sect] are its left and right inverses. *)
 
-    Private Inductive IntHIT : Type :=
+    Private Inductive IntHIT : Type0 :=
     | zero_i : IntHIT
     | succ : IntHIT -> IntHIT
     | pred : IntHIT -> IntHIT
