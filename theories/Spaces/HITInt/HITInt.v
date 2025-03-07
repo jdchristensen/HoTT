@@ -1,7 +1,7 @@
 Require Import Basics.
 Require Import Types.Universe Types.Paths Types.Arrow Types.Sigma Cubical.DPath.
-Require Import Spaces.IntShort.
 Require Import Spaces.Nat.Core.
+Require Import Spaces.SInt.
 Require Import Equiv.BiInv_new.
 
 Module Export IntHIT.
@@ -367,7 +367,7 @@ Defined.
 
 Section IntHITEquiv.
 
-  Definition IntHITtoIntIT : IntHIT -> Int.
+  Definition IntHITtoIntIT : IntHIT -> SInt.
   Proof.
     srapply IntHIT_rec.
     - exact zero.
@@ -379,7 +379,7 @@ Section IntHITEquiv.
   Defined.
 
   Definition IntITtoIntHIT
-    (z : Int)
+    (z : SInt)
     : IntHIT.
   Proof.
     induction z.
@@ -389,7 +389,7 @@ Section IntHITEquiv.
   Defined.
 
   Definition IntITtoIntHIT_is_rinv
-  (z : Int )
+  (z : SInt)
   : ((IntHITtoIntIT o IntITtoIntHIT) z) = z.
   Proof.
     induction z as [|[|n] IHz|[|n] IHz].
@@ -407,7 +407,7 @@ Section IntHITEquiv.
   Defined.
 
   Definition IntITtoIntHIT_comp_succ
-    (z: Int)
+    (z: SInt)
     : succ (IntITtoIntHIT z) = IntITtoIntHIT ( int_succ z).
     simpl.
     induction z as [|[|n] IHz|[|n] IHz].
@@ -440,7 +440,7 @@ Section IntHITEquiv.
 
   (** Proof that they are equivalent. *)
   Definition isequiv_IntHIT_Int
-    : IntHIT <~> Int.
+    : IntHIT <~> SInt.
   Proof.
     apply equiv_biinv.
     snrapply Build_EquivBiInv.

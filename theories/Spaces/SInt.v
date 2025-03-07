@@ -5,31 +5,33 @@ Require Import Spaces.Nat.Core. (* TODO: Can we remove this?  Currently used for
 Unset Elimination Schemes.
 Set Universe Minimization ToSet.
 
-(** * The Integers *)
+(** * The signed integers *)
+
+(** In this file, we give a simple inductive type that represents the integers.  It is straightforward to show that this type has decidable equality and is therefore a set, and it is also straightforward to print and parse integers using this type.  However, we only use it for these purposes, and treat the HIT integers as our main definition of the integers, since they have an induction principle with better computational behaviour. *)
 
 (** ** Definition *)
 
-(** We define the integers as two copies of [nat] stuck together around a [zero]. *)
-Inductive Int : Type0 :=
-| negS : nat -> Int
-| zero : Int
-| posS : nat -> Int.
+(** We define the signed integers as two copies of [nat] stuck together around a [zero]. *)
+Inductive SInt : Type0 :=
+| negS : nat -> SInt
+| zero : SInt
+| posS : nat -> SInt.
 
-(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [posS n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
+(** We can convert a [nat] to an [SInt] by mapping [0] to [zero] and [S n] to [posS n]. *)
 Definition int_of_nat (n : nat) :=
   match n with
   | O => zero
   | S n => posS n
   end.
 
-Coercion int_of_nat : nat >-> Int.
+Coercion int_of_nat : nat >-> SInt.
 
 (** ** Number Notations *)
 
 (** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [posS 122] and [-123] for [negS 122]. *)
 
 (** Printing *)
-Definition int_to_number_int (n : Int) : Numeral.int :=
+Definition int_to_number_int (n : SInt) : Numeral.int :=
   match n with
   | posS n => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S n)))
   | zero => Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))
@@ -47,7 +49,7 @@ Definition int_of_number_int (d : Numeral.int) :=
 
 (** ** Successor, Predecessor and Negation *)
 
-Definition int_succ (n : Int) : Int :=
+Definition int_succ (n : SInt) : SInt :=
   match n with
   | posS n => posS (S n)
   | zero => posS 0
@@ -55,7 +57,7 @@ Definition int_succ (n : Int) : Int :=
   | negS (S n) => negS n
   end.
 
-Definition int_pred (n : Int) : Int :=
+Definition int_pred (n : SInt) : SInt :=
   match n with
   | posS (S n) => posS n
   | posS 0 => zero 
@@ -63,19 +65,19 @@ Definition int_pred (n : Int) : Int :=
   | negS n => negS (S n)
   end.
 
-Definition int_neg@{} (x : Int) : Int :=
+Definition int_neg@{} (x : SInt) : SInt :=
   match x with
   | posS x => negS x
   | zero => zero
   | negS x => posS x
   end.
 
-(** ** Basic Properties *)
+(** ** Integer induction *)
 
-(** *** Integer induction *)
-
-(** The induction principle for integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from 0. *)
-Definition Int_ind@{i} (P : Int -> Type@{i})
+(** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0]. *)
+(** TODO: This is slightly altered compared to Int.v, and I don't know which was is better. *)
+(** TODO: This is used only in HITInt.v.  It may be possible to completely avoid it, which would then let us drop [int_of_nat] as well. *)
+Definition SInt_ind@{i} (P : SInt -> Type@{i})
   (H0 : P zero)
   (HP : forall n : nat, P n -> P (posS n))
   (HN : forall n : nat, P (int_neg n) -> P (negS n))
@@ -92,13 +94,13 @@ Proof.
 Defined.
 
 (** We record these so that they can be used with the [induction] tactic. *)
-Definition Int_rect := Int_ind.
-Definition Int_rec := Int_ind.
+Definition SInt_rect := SInt_ind.
+Definition SInt_rec := SInt_ind.
 
-(** *** Decidable Equality *)
+(** ** Decidable Equality *)
 
 (** The integers have decidable equality. *)
-Global Instance decidable_paths_int@{} : DecidablePaths Int.
+Global Instance decidable_paths_int@{} : DecidablePaths SInt.
 Proof.
   intros [x | | x] [y | | y].
   2-4,6-8: right; intros; discriminate.
@@ -111,16 +113,16 @@ Proof.
 Defined.
 
 (** By Hedberg's theorem, we have that the integers are a set. *)
-Global Instance ishset_int@{} : IsHSet Int := _.
+Global Instance ishset_int@{} : IsHSet SInt := _.
 
 (** The successor of a predecessor is the identity. *)
-Definition int_pred_succ@{} (x : Int) : int_succ (int_pred x) = x.
+Definition int_pred_succ@{} (x : SInt) : int_succ (int_pred x) = x.
 Proof.
   by destruct x as [ | | []].
-Defined. 
+Defined.
 
 (** The predecessor of a successor is the identity. *)
-Definition int_succ_pred@{} (x : Int) : int_pred (int_succ x) = x.
+Definition int_succ_pred@{} (x : SInt) : int_pred (int_succ x) = x.
 Proof.
   by destruct x as [[] | | ].
 Defined.
