@@ -72,6 +72,36 @@ Definition int_neg@{} (x : SInt) : SInt :=
   | negS x => posS x
   end.
 
+(** The successor of a predecessor is the identity. *)
+Definition int_pred_succ@{} (x : SInt) : int_succ (int_pred x) = x.
+Proof.
+  by destruct x as [ | | []].
+Defined.
+
+(** The predecessor of a successor is the identity. *)
+Definition int_succ_pred@{} (x : SInt) : int_pred (int_succ x) = x.
+Proof.
+  by destruct x as [[] | | ].
+Defined.
+
+(** ** Decidable Equality *)
+
+(** The integers have decidable equality. *)
+Global Instance decidable_paths_int@{} : DecidablePaths SInt.
+Proof.
+  intros [x | | x] [y | | y].
+  2-4,6-8: right; intros; discriminate.
+  2: by left.
+  1,2: nrapply decidable_iff.
+  1,3: split.
+  1,3: nrapply ap.
+  1,2: intros H; by injection H.
+  1,2: exact _.
+Defined.
+
+(** By Hedberg's theorem, we have that the integers are a set. *)
+Global Instance ishset_int@{} : IsHSet SInt := _.
+
 (** ** Integer induction *)
 
 (** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0]. *)
@@ -96,33 +126,3 @@ Defined.
 (** We record these so that they can be used with the [induction] tactic. *)
 Definition SInt_rect := SInt_ind.
 Definition SInt_rec := SInt_ind.
-
-(** ** Decidable Equality *)
-
-(** The integers have decidable equality. *)
-Global Instance decidable_paths_int@{} : DecidablePaths SInt.
-Proof.
-  intros [x | | x] [y | | y].
-  2-4,6-8: right; intros; discriminate.
-  2: by left.
-  1,2: nrapply decidable_iff.
-  1,3: split.
-  1,3: nrapply ap.
-  1,2: intros H; by injection H.
-  1,2: exact _.
-Defined.
-
-(** By Hedberg's theorem, we have that the integers are a set. *)
-Global Instance ishset_int@{} : IsHSet SInt := _.
-
-(** The successor of a predecessor is the identity. *)
-Definition int_pred_succ@{} (x : SInt) : int_succ (int_pred x) = x.
-Proof.
-  by destruct x as [ | | []].
-Defined.
-
-(** The predecessor of a successor is the identity. *)
-Definition int_succ_pred@{} (x : SInt) : int_pred (int_succ x) = x.
-Proof.
-  by destruct x as [[] | | ].
-Defined.
