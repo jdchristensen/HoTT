@@ -1,3 +1,7 @@
+(** * The integers, defined as a HIT *)
+
+(** Following "The integers as a higher inductive type" by Scoccola and Altenkirch, we define the integers as a higher inductive type.  Morally it is the free pointed type with a biinvertible self-map. *)
+
 Require Import Basics.
 Require Import Types.Paths.
 Require Import Spaces.SInt.
@@ -6,102 +10,60 @@ Require Import Equiv.BiInv_new.
 Module Export IntHIT.
   Section IntHIT.
 
+    (** Here we are modeling the HIT which has a point [zero_i] and a successor map [succ] which is a biinvertible equivalence.  [pred] and [succ_sect] are its left and right inverses. *)
+
     Private Inductive IntHIT : Type :=
     | zero_i : IntHIT
     | succ : IntHIT -> IntHIT
     | pred : IntHIT -> IntHIT
     | succ_sect : IntHIT -> IntHIT.
 
-    Axiom succ_is_sect : forall (z : IntHIT),
-      pred (succ z) = z.
+    Axiom succ_is_sect : forall (z : IntHIT), pred (succ z) = z.
 
-    Axiom succ_is_retr : forall (z : IntHIT),
-      succ (succ_sect z) = z.
+    Axiom succ_is_retr : forall (z : IntHIT), succ (succ_sect z) = z.
 
-    (** We define the induction principle. We need to use Fixpoint because it is recursive. *)
+    Context {P : IntHIT -> Type} (t0 : P zero_i) (e : forall z : IntHIT, P z -> P (succ z))
+      (r : forall z : IntHIT, P z -> P (pred z)) (s : forall z : IntHIT, P z -> P (succ_sect z))
+      (re : forall (z : IntHIT) (t : P z), succ_is_sect z # (r (succ z) (e z t)) = t)
+      (es : forall (z : IntHIT) (t : P z), succ_is_retr z # (e (succ_sect z) (s z t)) = t).
 
-    Context {P : IntHIT -> Type} {t0 : P zero_i} {e : forall z : IntHIT, P z -> P (succ z)}
-      {r : forall z : IntHIT, P z -> P (pred z)} {s : forall z : IntHIT, P z -> P (succ_sect z)}
-      {re : forall (z : IntHIT) (t : P z), succ_is_sect z # (r (succ z) (e z t)) = t}
-      {es : forall (z : IntHIT) (t : P z), succ_is_retr z # (e (succ_sect z) (s z t)) = t}.
-
-    Fixpoint IntHIT_ind
-      (x : IntHIT) 
-      : P x
+    Fixpoint IntHIT_ind (x : IntHIT) : P x
       := match x with
       | zero_i => fun _ _ => t0
       | succ z => fun _ _ => e z (IntHIT_ind z)
       | pred z => fun _ _ => r z (IntHIT_ind z)
       | succ_sect z => fun _ _ => s z (IntHIT_ind z)
       end re es.
-      (*We make sure that this is dependent on s and r as well. *)
+      (** We make sure that this is dependent on [re] and [es] as well. *)
 
-    (** We define the beta principles for succ_is_sect and succ_is_retr. *)
+    (** The beta principles for [IntHIT_ind] on [succ_is_sect] and [succ_is_retr]. *)
     Axiom IntHIT_ind_beta_succ_is_sect
-     : forall (z: IntHIT),
-      (apD IntHIT_ind (succ_is_sect z)) = re z (IntHIT_ind z).
+      : forall (z: IntHIT), apD IntHIT_ind (succ_is_sect z) = re z (IntHIT_ind z).
 
     Axiom IntHIT_ind_beta_succ_is_retr
-     : forall (z: IntHIT),
-      (apD IntHIT_ind (succ_is_retr z)) = es z (IntHIT_ind z).
+      : forall (z: IntHIT), apD IntHIT_ind (succ_is_retr z) = es z (IntHIT_ind z).
 
   End IntHIT.
 End IntHIT.
 
-(** Successor is biinvertible. *)
-Global Instance isbiinv_IntHIT_succ : IsBiInv succ.
-Proof.
-  - srapply Build_IsBiInv.
-    + exact succ_sect.
-    + exact pred.
-    + exact succ_is_retr.
-    + exact succ_is_sect.
-Defined.
+(** Successor is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
+Instance isbiinv_IntHIT_succ : IsBiInv succ
+  := Build_IsBiInv _ _ _ succ_sect pred succ_is_retr succ_is_sect.
 
-Definition biinv_IntHIT_succ : EquivBiInv IntHIT IntHIT.
-Proof.
-  exact (Build_EquivBiInv _ _ _ isbiinv_IntHIT_succ).
-Defined.
+Definition biinv_IntHIT_succ : EquivBiInv IntHIT IntHIT
+  := Build_EquivBiInv _ _ _ _.
 
 (** The predecessor is an equivalence on [IntHIT]. *)
-(** TODO: We should be able to remove this since isequiv_isbiinv_retr is an instance. However type-class search in the proofs below somehow does not find it.*)
-Global Instance isequiv_IntHIT_pred : IsEquiv pred
+Instance isequiv_IntHIT_pred : IsEquiv pred
   := isequiv_isbiinv_retr succ.
 
-Definition IntHIT_ind_hprop
-  `{P : IntHIT -> Type}
-  `{h : forall (x : IntHIT), IsHProp (P x)}
-  (t0 : P zero_i) 
-  (f : forall z : IntHIT, P z -> P (succ z))
-  (g1 : forall z : IntHIT, P z -> P (pred z))
-  (g2 : forall z : IntHIT, P z -> P (succ_sect z))
-  (x: IntHIT)
-  : P x.
-Proof.
-  srapply IntHIT_ind.
-  - exact t0.
-  - exact f.
-  - exact g1.
-  - exact g2.
-  - intros z t.
-    rapply path_ishprop.
-  - intros z t.
-    rapply path_ishprop.
-Defined.
-
-Definition IntHIT_ind_hprop_pred
-  `{P : IntHIT -> Type}
-  `{h : forall (x : IntHIT), IsHProp (P x)}
+Definition IntHIT_ind_hprop {P : IntHIT -> Type} `{forall x, IsHProp (P x)}
   (t0 : P zero_i) 
   (f : forall z : IntHIT, P z -> P (succ z))
   (g : forall z : IntHIT, P z -> P (pred z))
-  (x: IntHIT)
-  : P x.
+  : forall x, P x.
 Proof.
-  srapply IntHIT_ind.
-  - exact t0.
-  - exact f.
-  - exact g.
+  snrapply (IntHIT_ind t0 f g).
   - intros z t.
     exact ((sect_retr_homotopic_biinv succ z)^ # (g z) t).
   - intros z t.
@@ -110,122 +72,51 @@ Proof.
     rapply path_ishprop.
 Defined.
 
-Definition IntHIT_ind_hprop_succ
-  `{P : IntHIT -> Type}
-  `{h : forall (x : IntHIT), IsHProp (P x)}
-  (t0 : P zero_i) 
-  (f : forall z : IntHIT, P z <-> P (succ z))
-  (x: IntHIT)
-  : P x.
+Definition IntHIT_ind_hprop_iff {P : IntHIT -> Type} `{forall x, IsHProp (P x)}
+  (t0 : P zero_i) (f : forall z : IntHIT, P z <-> P (succ z))
+  : forall x, P x.
 Proof.
-  srapply IntHIT_ind.
-  - exact t0.
-  - intro z.
-    destruct (f z).
-    exact fst.
-  - intros z t.
-    destruct (f (pred z)).
-    exact (snd ((retr_is_sect succ z)^ # t)).
-  - intros z t.
-    destruct (f (pred z)).
-    exact ((sect_retr_homotopic_biinv succ z)^ # (snd ((retr_is_sect succ z)^ # t))).
-  - intros z t.
-    rapply path_ishprop.
-  - intros z t.
-    rapply path_ishprop.
+  srapply (IntHIT_ind_hprop t0).
+  - intro z.  exact (fst (f z)).
+  - equiv_intro succ z.
+    refine (_ o snd (f z)).
+    exact (transport P (succ_is_sect z)^).
 Defined.
 
 (** The recursion principle. *)
-Definition IntHIT_rec
-  (P : Type)
-  (t0 : P)
-  (f : P -> P)
-  (g1 : P -> P)
-  (g2 : P -> P)
-  (s : forall (t : P ), g1 (f t)= t)
-  (r : forall (t : P ), f (g2 t)= t)
+Definition IntHIT_rec {P : Type} (t0 : P)
+  (f : P -> P) (g1 : P -> P) (g2 : P -> P)
+  (s : forall (t : P ), g1 (f t) = t)
+  (r : forall (t : P ), f (g2 t) = t)
   : IntHIT -> P.
 Proof.
-  srapply IntHIT_ind.
-  - exact t0.
-  - intro z.
-    exact f.
-  - intro z.
-    exact g1.
-  - intro z.
-    exact g2.
-  - intros z t.
-    refine ((transport_const (succ_is_sect z) (g1 (f t))) @ (s t)).
-  - intros z t.
-    refine ((transport_const (succ_is_retr z) (f (g2 t))) @ (r t)).
+  snrapply (IntHIT_ind t0 (fun _ => f) (fun _ => g1) (fun _ => g2)).
+  all: intros z t; cbn.
+  all: lhs nrapply transport_const.
+  - apply s.
+  - apply r.
 Defined.
 
-(** This verison of the recursion principle requires only a biinvertible map. *)
-Definition IntHIT_rec_biinv
-  (P : Type)
-  (t0 : P)
-  (f : P -> P)
-  `{e: IsBiInv P P f}
-  : IntHIT -> P.
-Proof.
-  srapply IntHIT_ind; cbn beta.
-  - exact t0.
-  - intro z.
-    exact f.
-  - intro z.
-    exact (retr_biinv f).
-  - intro z.
-    exact (sect_biinv f).
-  - intros z t.
-    refine ((transport_const (succ_is_sect z) (retr_biinv f (f t))) @ ((eissect_biinv f) t)).
-  - intros z t.
-    refine ((transport_const (succ_is_retr z) (f ((sect_biinv f) t))) @ ((eisretr_biinv f) t)).
-Defined.
+(** This version of the recursion principle requires only a biinvertible map. *)
+Definition IntHIT_rec_biinv {P : Type} (t0 : P) (f : P -> P) `{IsBiInv P P f}
+  : IntHIT -> P
+  := IntHIT_rec t0 f (retr_biinv f) (sect_biinv f) (eissect_biinv f) (eisretr_biinv f).
 
-(** This verison of the recursion principle requires only a quasiinverse rather than a biinvertible map. *)
-Definition IntHIT_rec_qinv
-  (P : Type)
-  (t0 : P)
-  (f : P -> P)
-  (g : P -> P)
-  (s : forall (t : P ), g (f t)= t)
-  (r : forall (t : P ), f (g t)= t)
-  : IntHIT -> P.
-Proof.
-  srapply IntHIT_ind.
-  - exact t0.
-  - intro z.
-    exact f.
-  - intro z.
-    exact g.
-  - intro z.
-    exact g.
-  - intros z t.
-    refine ((transport_const (succ_is_sect z) (g (f t))) @ (s t)).
-  - intros z t.
-    refine ((transport_const (succ_is_retr z) (f (g t))) @ (r t)).
-Defined. 
+(** This version of the recursion principle requires only a quasiinverse rather than a biinvertible map. *)
+(** TODO: decide whether we really need *four* variants of the recursion principle! *)
+Definition IntHIT_rec_qinv {P : Type} (t0 : P) (f : P -> P) (g : P -> P)
+  (s : forall (t : P ), g (f t)= t) (r : forall (t : P ), f (g t)= t)
+  : IntHIT -> P
+  := IntHIT_rec t0 f g g s r.
 
 (** This verison of the recursion principle requires only a half-adjoint equivalence. Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
-Definition IntHIT_rec_equiv
-  (P : Type)
-  (t0 : P)
-  (f : P -> P)
-  `{e: IsEquiv P P f}
-  : IntHIT -> P.
-Proof.
-  exact (IntHIT_rec_biinv _ t0 f (e := (isbiinv_isequiv _ e))).
-Defined.
+Definition IntHIT_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
+  : IntHIT -> P
+  := @IntHIT_rec_biinv P t0 f (isbiinv_isequiv _ _).
 
 (** We define equivalence iteration. *)
-Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0: A) : A.
-Proof.
-  snrapply IntHIT_rec_equiv.
-  - exact a0.
-  - exact f.
-  - exact _.
-  - exact n.
-Defined.
+Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0 : A) : A
+  := IntHIT_rec_equiv a0 f n.
   
 Definition IntHIT_rec_beta_succ_is_sect
   (P : Type)
@@ -233,11 +124,10 @@ Definition IntHIT_rec_beta_succ_is_sect
   (f : P -> P)
   (g1 : P -> P)
   (g2 : P -> P)
-  (s : forall (t : P ), g1 (f t)= t)
-  (r : forall (t : P ), f (g2 t)= t)
-  : forall (z: IntHIT),
-    (let f':= (IntHIT_rec P t0 f g1 g2 s r) in
-    ((ap f' (succ_is_sect z)) = s (f' z))).
+  (s : forall (t : P ), g1 (f t) = t)
+  (r : forall (t : P ), f (g2 t) = t)
+  (f':=IntHIT_rec t0 f g1 g2 s r)
+  : forall z, ap f' (succ_is_sect z) = s (f' z).
 Proof.
   intro z.
   unfold IntHIT_rec.
@@ -254,9 +144,8 @@ Definition IntHIT_rec_beta_succ_is_retr
   (g2 : P -> P)
   (s : forall (t : P ), g1 (f t)= t)
   (r : forall (t : P ), f (g2 t)= t)
-  : forall (z: IntHIT),
-    (let f':= (IntHIT_rec P t0 f g1 g2 s r) in
-    ((ap f' (succ_is_retr z)) = r (f' z))).
+  (f':=IntHIT_rec t0 f g1 g2 s r)
+  : forall z, ap f' (succ_is_retr z) = r (f' z).
 Proof.
   intro z.
   unfold IntHIT_rec.
@@ -280,7 +169,7 @@ Section Uniqueness.
     (k: IntHIT -> P)
     (p0 : (k zero_i) = t0)
     (pf : forall (z : IntHIT), (e o k) z = (k o succ) z)
-    (rec := IntHIT_rec P t0 e r s re es)
+    (rec := IntHIT_rec t0 e r s re es)
     : forall (z : IntHIT), k z = rec z.
     Proof.
     snrapply IntHIT_ind. 
@@ -425,6 +314,7 @@ Section IntHITEquiv.
   Definition IntITtoIntHIT_comp_succ'
     (z: IntHIT)
     : succ (IntITtoIntHIT ( IntHITtoIntIT z)) = IntITtoIntHIT ( IntHITtoIntIT (succ z)).
+  Proof.
     simpl.
     exact ((IntITtoIntHIT_comp_succ o IntHITtoIntIT) z).
   Defined.
@@ -452,7 +342,7 @@ Section IntHITEquiv.
   Defined.
 
   (** Therefore [IntHIT] is a set. *)
-  Global Instance ishset_IntHIT
+  #[export] Instance ishset_IntHIT
     : IsHSet IntHIT.
     Proof.
       snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
@@ -460,7 +350,7 @@ Section IntHITEquiv.
     Defined.
 
   (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
-  Global Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
+  #[export] Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
 
 End IntHITEquiv.
 
@@ -477,7 +367,7 @@ Section IntegerArithmetic.
     : IntHIT.
     Proof.
       revert x.
-      srapply (IntHIT_rec_equiv _ _ pred).
+      srapply (IntHIT_rec_equiv _ pred).
       - exact zero_i.
   Defined.
 
@@ -487,7 +377,7 @@ Section IntegerArithmetic.
     : IntHIT.
   Proof.
     revert x.
-    srapply (IntHIT_rec_equiv _ _ succ).
+    srapply (IntHIT_rec_equiv _ succ).
     - exact y.
   Defined.
 
@@ -533,7 +423,7 @@ Section IntegerArithmetic.
   Defined.
 
   (* * Negation is an equivalence. *)
-  Global Instance isequiv_int_neg : IsEquiv IntHIT_neg.
+  #[export] Instance isequiv_int_neg : IsEquiv IntHIT_neg.
   Proof.
     snrapply (isequiv_adjointify IntHIT_neg IntHIT_neg).
     1,2: nrapply IntHIT_neg_neg.
@@ -652,7 +542,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Addition is an equivalence with first argument fixed. *)
-  Global Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
+  #[export] Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
   Proof.
     srapply (isequiv_adjointify (IntHIT_add x) (IntHIT_add (-x))).
     - simpl.
@@ -666,7 +556,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Addition is an equivalence with second argument fixed. *)
-  Global Instance isequiv_IntHIT_add_r (y : IntHIT): IsEquiv (fun x => IntHIT_add x y).
+  #[export] Instance isequiv_IntHIT_add_r (y : IntHIT): IsEquiv (fun x => IntHIT_add x y).
   Proof.
     snrapply (isequiv_adjointify (fun x => IntHIT_add x y) (fun x => IntHIT_add x (-y))).
     - simpl.
@@ -689,7 +579,7 @@ Section IntegerArithmetic.
   : IntHIT.
   Proof.
     revert x.
-    srapply (IntHIT_rec_equiv _ _ (fun z => IntHIT_add z y)).
+    srapply (IntHIT_rec_equiv _ (fun z => IntHIT_add z y)).
     - exact 0.
   Defined.
 
