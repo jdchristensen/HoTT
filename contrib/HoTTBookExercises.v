@@ -987,7 +987,7 @@ Proof.
   intros isHSet_A allBx_HSet.
   srapply hset_axiomK. intros x xx.
   pose (path_path_sigma B x x xx 1) as useful.
-  apply (useful (axiomK_hset _ _ _) (hset_path2 _ _)).
+  exact (useful (axiomK_hset _ _ _) (hset_path2 _ _)).
 Defined.
 
 (* ================================================== ex:prop-endocontr *)
@@ -1280,7 +1280,7 @@ Section Book_3_14.
     - intro x.
       apply hprop_allpath.
       intros x' y'.
-      etransitivity; [ symmetry; apply (p x x y' x') | ].
+      etransitivity; [ symmetry; exact (p x x y' x') | ].
      (* Without this it somehow proves [H'] using the wrong universe for hprop_Empty and fails when we do [Defined].
         See Coq #4862. *)
       set (path := path_ishprop x x).
@@ -1985,7 +1985,7 @@ Section Book_6_9.
   Proof. apply path_forall. intro b. pose proof (inverse (negb_ne (f b).2)) as fst.
   unfold centerAllExOthBool.
   apply (@path_sigma _ _ (negb b; not_fixed_negb b) (f b) fst); simpl.
-  apply equiv_hprop_allpath. apply istrunc_forall.
+  apply equiv_hprop_allpath. exact istrunc_forall.
   Defined.
 
   Definition contrAllExOthBool `{Funext} : Contr (AllExistsOther Bool) :=
