@@ -1010,7 +1010,7 @@ Definition length_list_restrict {A : Type} (s : nat -> A) (n : nat)
   : length (list_restrict s n) = n
   := length_Build_list _ _.
 
-(** [nth'] of the restriction of a sequence is the corresponding term of the sequence.  *)
+(** [nth'] of the restriction of a sequence is the corresponding term of the sequence. *)
 Definition nth'_list_restrict {A : Type} (s : nat -> A) {n : nat}
   {i : nat} (Hi : i < length (list_restrict s n))
   : nth' (list_restrict s n) i Hi = s i.

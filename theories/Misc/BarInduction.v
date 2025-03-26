@@ -67,7 +67,7 @@ Definition bar_induction (A : Type) :=
   (bar : is_bar B),
   B nil.
 
-(** The three bar induction principles can be more generally stated for two families. It's clear that the two-family versions imply the one-family versions. We show the reverse implications for full bar induction and monotone bar induction. Are the definitions also equivalent in the decidable case? *)
+(** The three bar induction principles can be more generally stated for two families. It's clear that the two-family versions imply the one-family versions. We show the reverse implications for full bar induction and monotone bar induction. We do not know if the definitions are equivalent in the decidable case yet. *)
 
 Definition decidable_bar_induction' (A : Type) :=
   forall (B C : list A -> Type)
@@ -207,7 +207,7 @@ Definition decidable_bar_induction_monotone_bar_induction (A : Type)
 
 (** The empty type and all contractible types satisfy full bar induction. *)
 
-Definition BI_empty : bar_induction Empty.
+Definition bar_induction_empty : bar_induction Empty.
 Proof.
   intros B iB _.
   rapply iB.
@@ -242,7 +242,7 @@ Proof.
   - intros l; unfold B'.
     exact (iB (a :: l)).
   - intro s; unfold B'.
-    destruct (bB (Spaces.NatSeq.Core.cons a s)) as [m r].
+    destruct (bB (seq_cons a s)) as [m r].
     destruct m.
     + contradiction (n r).
     + exists m.
@@ -258,7 +258,7 @@ Proof.
 Defined.
 
 (** The same is true for monotone bar induction. *)
-Definition monotone_bar_induction_pointed_monotone_bar_induction 
+Definition monotone_bar_induction_pointed_monotone_bar_induction
   (A : Type) (p : A -> monotone_bar_induction A)
   : monotone_bar_induction A.
 Proof.
@@ -269,7 +269,7 @@ Proof.
 Defined.
 
 (** Combining [monotone_bar_induction_pointed_monotone_bar_induction] and [bar_induction_contr], we prove that any proposition satisfies monotone bar induction. *)
-Definition monotone_bar_induction_hprop (A : Type) `{IsHProp A} 
+Definition monotone_bar_induction_hprop (A : Type) `{IsHProp A}
   : monotone_bar_induction A.
 Proof.
   apply monotone_bar_induction_pointed_monotone_bar_induction.

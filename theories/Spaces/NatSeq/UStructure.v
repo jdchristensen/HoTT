@@ -25,9 +25,9 @@ Defined.
 Definition sequence_type_us_zero {X : Type} (s t : nat -> X) : s =[0] t
   := fun n hn => Empty_rec (not_lt_zero_r n hn).
 
-Definition cons_of_eq {X : Type} {n : nat} {s t : nat -> X} {x : X}
+Definition seq_cons_of_eq {X : Type} {n : nat} {s t : nat -> X} {x : X}
   (h : s =[n] t)
-  : (cons x s) =[n.+1] (cons x t).
+  : (seq_cons x s) =[n.+1] (seq_cons x t).
 Proof.
   intros m hm; destruct m.
   - reflexivity.
@@ -76,9 +76,9 @@ Definition uniformly_continuous_extensionality
 Definition cons_decreases_modulus {X Y : Type}
   (p : (nat -> X) -> Y) (n : nat) (b : X)
   (hSn : is_modulus_of_uniform_continuity n.+1 p)
-  : is_modulus_of_uniform_continuity n (p o cons b).
+  : is_modulus_of_uniform_continuity n (p o seq_cons b).
 Proof.
   intros u v huv.
   apply hSn.
-  exact (cons_of_eq huv).
+  exact (seq_cons_of_eq huv).
 Defined.
