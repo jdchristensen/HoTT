@@ -1,6 +1,5 @@
 Require Import Basics.
-Require Import Colimits.Pushout.
-Require Import Basics.Tactics.
+Require Import Types.
 Require Import Diagrams.Graph.
 Require Import Diagrams.Diagram.
 Require Import Diagrams.Cocone.
@@ -8,8 +7,7 @@ Require Import Diagrams.Sequence.
 Require Import Diagrams.CommutativeSquares.
 Require Import Colimits.Colimit.
 Require Import Colimits.Sequential.
-Require Import Diagram.
-Require Import Types.
+Require Import Colimits.Pushout.
 
 (** * Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations [f : A_i => B_i] and [g : B_i => A_i+1] such that the following diagram is commutative:
 
