@@ -9,7 +9,19 @@ Require Import Colimits.Colimit.
 Require Import Colimits.Sequential.
 Require Import Colimits.Pushout.
 
-(** * Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations [f : A_i => B_i] and [g : B_i => A_i+1] such that the following diagram is commutative:
+Local Open Scope nat_scope.
+
+(* jdc: add the next few lines to Colimit.v, right after the definition.  Remove existing Arguments line. *)
+Arguments colim {G D} & i x : simpl never.
+
+(** A variant in which [D] is explicit, useful when [x] is not provided. *)
+Definition colim' {G} D := @colim G D.
+Arguments colim' {G} D & i x.
+(** TODO: replace uses of [inj] in Sequential.v with [colim']. *)
+
+(** * Colimits of interleaved sequences *)
+
+(** Suppose we have sequences [A_i] and [B_i]. An interleaving from [A_i] to [B_i] consists of two natural transformations [f : A_i => B_i] and [g : B_i => A_i+1] such that the following diagram is commutative:
 
 <<
     A_0 -------> A_1 ------> A_2 ------>
@@ -22,7 +34,9 @@ Require Import Colimits.Pushout.
 
 Given the setup above, we want to say that the colimits of the upper and lower sequences are equivalent. *)
 
-(** ** Given families of maps [f n : A n -> B n] and [g : B n -> A (n + 1)] with homotopies showing that they form zigzags, construct the actual diagram maps and show that their composition is equal to the successor diagram map. *)
+(** Given families of maps [f n : A n -> B n] and [g : B n -> A (n + 1)] with homotopies showing that they form zigzags, construct the actual diagram maps and show that their composition is equal to the successor diagram map. *)
+
+(* jdc: In many cases, you should be able to assume that the homotopies are reflexivity, i.e. that the maps in the sequences are *definitionally* the composites of the diagonal maps.  (Under Funext, this is easy:  you just destruct the paths corresponding to the homotopies.)  To make this smoother in practice, I suspect that reversing the directions of [U] and [L] below might make it easier to destruct them within proofs. *)
 
 Section Interme.
   Context {A B : Sequence}
@@ -62,7 +76,6 @@ Section Interme.
       exact (U n x)^.
     - intros n _ [] x.
       simpl.
-      unfold comm_square_comp.
       Open Scope long_path_scope.
       rhs nrapply concat_p1.
       apply moveR_pV.
@@ -75,8 +88,9 @@ Section Interme.
   Defined.
 End Interme.
 
-(** ** Assuming that there are [A, B : Sequence] that fits in an interleaving diagram, their colimits are isomorphic. *)
+(** Assuming that there are [A, B : Sequence] that fit in an interleaving diagram, their colimits are isomorphic. *)
 
+(** jdc: I'm not sure why we need a new section, since the Context is exactly the same: *)
 Section Interleaving.
   Context {A B : Sequence} 
     (f : forall (n : nat), A n -> B n)
@@ -94,73 +108,52 @@ Section Interleaving.
   Definition zigzag_glue_map_inv_inf : Colimit B -> Colimit A
     := functor_Colimit_half u (Colimit_succ A).
 
-  (** Show that the two gluing maps are inverse. *)
+  (** We will show that [zigzag_glue_map_inv_inf] is an equivalence with inverse [zigzag_glue_map_inf]. *)
 
-  (** A coherence that comes up in the construction of the section: [(L f g) @ (f g L)^] is the same as [(L x^+) @ ((L x)^+)^]. *)
-  Local Definition Lfg_coherence (n : nat) (x : B n)
-    : L n.+1 (f n.+1 (g n x)) @ (ap ((f n.+2) o (g n.+1)) (L n x))^ @ (L (S n) x^+)^
-      = (ap (fun z => z^+) (L n x))^.
-  Proof.
-    apply moveR_pV.
-    rhs_V nrapply (ap_V _ _ @@ 1).
-    symmetry.
-    rhs_V nrapply (1 @@ ap_V _ _).
-    nrapply concat_Ap.
-  Qed.
-
-  (** Construct a better section for the equivalence which is needed in the proof of the induction principle. *)
-  Local Definition better_section : zigzag_glue_map_inf o zigzag_glue_map_inv_inf == idmap.
+  (** Below, we give a simple proof of [eisretr] using [zigzag_glue_map_tri] and functoriality of the colimit.  We could do the same for [eissect], but then we have trouble showing how it computes.  So we instead give the following proof. *)
+  (* jdc: I rephrased the comment and renamed the result.  It's not a better section, but a better proof that a certain map *is* a section. *)
+  (* jdc: I think it would be worth seeing again if the high-level proof could be made to work. *)
+  Local Definition better_eissect : zigzag_glue_map_inf o zigzag_glue_map_inv_inf == idmap.
   Proof.
     snrapply Colimit_ind.
-    - intros n x.
-      simpl.
-      rhs nrapply (@colimp _ B n (S n) idpath x)^.
-      apply ap.
-      exact (L n x)^.
+    - intros n x; simpl.
+      rhs_V nrapply (glue B n).
+      symmetry.
+      apply ap, L.
     - intros n _ [] x.
-      simpl.
       Open Scope long_path_scope.
-      rewrite 2 inv_V.
-      lhs apply (@transport_paths_FlFr _ _ (zigzag_glue_map_inf o zigzag_glue_map_inv_inf) (idmap) (@colim _ B (S n) x^+) _ (colimp n _ _ x) (ap (colim _) (L n.+1 x ^+)^ @' @colimp _ B _ _ _ x ^+)).
-      rewrite ap_compose.
-      rewrite Colimit_rec_beta_colimp.
-      unfold cocone_precompose.
-      simpl.
+      lhs nrapply transport_paths_FFlr.
+      apply whiskerR.
+      rewrite Colimit_rec_beta_colimp; simpl.
       rewrite ap_pp.
-      rewrite <- ap_compose.
-      simpl.
-      rewrite ap_V.
-      rewrite ap_pp.
-      rewrite Colimit_rec_beta_colimp.
-      unfold cocone_precompose.
-      simpl.
-      rewrite ! concat_p_pp.
-      rewrite ap_idmap.
+      rewrite Colimit_rec_beta_colimp; simpl.
+      rewrite <- ap_compose; simpl.
       rewrite ! ap_V.
       rewrite ! ap_pp.
+      rewrite ap_V.
       rewrite ! inv_pp.
-      rewrite ! concat_p_pp.
+      Opaque colimp.
       rewrite ! inv_V.
-      rewrite 2 (ap_compose (f n.+2%nat) _).
+      rewrite ! concat_p_pp.
+      rewrite 2 (ap_compose (f n.+2) _).
       rewrite ap_V.
       rewrite concat_pV_p.
-      rewrite <- (ap_compose (g n.+1%nat) (f n.+2%nat)).
-      rewrite <- 2 ap_V.
-      rewrite <- ap_p_pp.
-      rewrite <- ap_p_pp.
+      apply moveR_pM.
+      rewrite concat_pp_p.
+      rewrite <- ! ap_V.
+      rewrite concat_pp_p.
+      rewrite <- ap_pp.
+      rewrite <- ap_pp.
       rewrite concat_p_pp.
-      rewrite (Lfg_coherence n x).
-      rewrite ap_V.
-      apply (ap (fun z => z @ (colimp n (S n) idpath x))).
-      rewrite <- (inv_V (cglue _)).
-      rewrite <- 3 ap_V.
-      snrapply (@ap_colim' _ B _ _ idpath (f n.+1 (g n x)) (x^+) (L n x)^).
+      rewrite <- (ap_compose (g n.+1) (f n.+2)).
+      rewrite <- (ap_homotopic (L n.+1)).
+      apply moveL_pV.
+      nrapply ap_colim'.
+      Transparent colimp.
       Close Scope long_path_scope.
   Defined.
 
-  (** The zigzag gluing map is an equivalence.
-
-  The original proof used [Interme] twice; first on the sequence, then shifting the sequence by one (using [B] and [succ_seq A] instead of [A] and [B], respectively). This required some bookkeeping to fix and the section produced by this method didn't have the necessary computation rule for the induction principle. *)
+  (** The zigzag gluing map is an equivalence.  The original proof used [Interme] twice; first on the sequence, then shifting the sequence by one (using [B] and [succ_seq A] instead of [A] and [B], respectively). This required some bookkeeping to fix and the section produced by this method didn't have the necessary computation rule for the induction principle. *)
   Definition zigzag_glue_map_isequiv : IsEquiv zigzag_glue_map_inv_inf.
   Proof.
     snrapply isequiv_adjointify.
@@ -171,7 +164,7 @@ Section Interleaving.
       + transitivity (functor_Colimit_half (seq_to_succ_seq A) (Colimit_succ A)).
         * exact (functor_Colimit_half_homotopy (zigzag_glue_map_tri f g U L) (Colimit_succ A)).
         * exact (Colimit_succ_map_is_idmap A).
-    - exact better_section.
+    - exact better_eissect.
   Defined.
 
   Definition equiv_zigzag_glue : Colimit B <~> Colimit A.
@@ -183,85 +176,54 @@ Section Interleaving.
 
   (** Prove two computation rules needed for the induction principle: the section and retraction of the equivalence are the inverse of the two input homotopies [U] and [L] concatenated with [colimp] when applied to the colimit of sequence elements. *)
 
-  Context (n : nat).
+  (** That [concat_1p] proves this isn't obvious, but results from simplifying the expressions. *)
+  Definition zigzag_comp_eisretr (n : nat) (a : A n)
+    : eisretr equiv_zigzag_glue (colim n a)
+      = ap (colim' A n.+1) (U n a)^ @ glue A n a
+    := concat_1p _.
 
-  Definition zigzag_comp_eisretr (a : A n) : (eisretr equiv_zigzag_glue (@colim _ A n a)) = (ap (@colim _ A n.+1%nat) (U n a)^) @ (@colimp _ A n _ _ a).
-  Proof.
-    simpl eisretr.
-    unfold pointwise_paths_concat.
-    simpl functor_Colimit_half_compose.
-    simpl functor_Colimit_half_homotopy.
-    simpl Colimit_succ_map_is_idmap.
-    nrapply concat_1p.
-  Defined.
-
-  Definition zigzag_comp_eissect (b : B n) : (eissect equiv_zigzag_glue (@colim _ B n b)) = (ap (@colim _ B n.+1%nat) (L n b)^) @ (@colimp _ B n _ _ b).
+  Definition zigzag_comp_eissect (n : nat) (b : B n)
+    : eissect equiv_zigzag_glue (colim n b)
+      = ap (colim' B n.+1) (L n b)^ @ glue B n b.
   Proof.
     (* FIXME: This is trash. Some of this is induced by [isequiv_adjointify], is it easier to do that ourselves?  *)
+    (* jdc: Extra junk does arise because of [isequiv_adjointify].  When restricted to the point constructors here, the extra junk is equal to reflexivity, but I'm not sure if that's true on the whole colimit, which is what you'd need to prove to show that your proofs of isretr and issect satisfy the adjointness condition. (And even if true, it's probably hard to prove.) *)
     Open Scope long_path_scope.
     simpl.
-    unfold pointwise_paths_concat.
-    simpl.
+    rhs nrapply (ap_V _ _ @@ 1).
+    rhs_V nrapply (concat_1p _).
+    apply whiskerR.
+    (* What remains on the LHS is the correction due to [isequiv_adjointify]. Surprisingly, that correction is reflexivity, and least when restricted to the point constructors. *)
+    (* We strip the [ap zigzag_glue_map_inf] from everything. *)
+    match goal with |- ap ?f ?p @ ap ?f ?q = _ => lhs_V exact (ap_pp f p q) end.
+    nrapply (ap (y:=idpath) (ap zigzag_glue_map_inf)).
+    (* Simplify a bit: *)
+    unfold pointwise_paths_concat; simpl.
     rewrite concat_1p.
-    rewrite concat_p_pp.
-    rewrite inv_V.
-    nrapply (ap (fun z => (z @ (colimp _ _ _ b)))).
+    (* Handle [ap zigzag_glue_map_inv_inf ...]. *)
     rewrite ap_V.
     rewrite ap_pp.
-    rewrite <- (ap_compose _ zigzag_glue_map_inv_inf).
+    rewrite 2 ap_V.
+    rewrite <- (ap_compose _ zigzag_glue_map_inv_inf); simpl.
+    rewrite Colimit_rec_beta_colimp; simpl.
+    (* Now everything cancels pairwise. *)
     rewrite ap_V.
-    rewrite ap_pp.
-    rewrite inv_pp.
-    rewrite Colimit_rec_beta_colimp.
-    rewrite ap_pp.
-    rewrite concat_p_pp.
-    rewrite <- (ap_compose _ zigzag_glue_map_inf).
-    simpl.
-    rewrite Colimit_rec_beta_colimp.
-    unfold legs_comm; simpl.
-    rewrite 4 ap_V.
-    rewrite 2 ap_pp.
-    rewrite Colimit_rec_beta_colimp.
-    unfold legs_comm; simpl.
-    rewrite ! concat_p_pp.
-    rewrite 4 inv_pp.
-    rewrite ! ap_pp.
-    rewrite ! concat_p_pp.
     rewrite 2 inv_pp.
-    rewrite inv_V.
-    rewrite concat_p_pp.
-    rewrite ! ap_V.
-    rewrite <- 2 (ap_compose (fun x => @colim _ A n.+2%nat x) zigzag_glue_map_inf).
-    simpl.
-    rewrite ! inv_V.
-    rewrite <- (ap_compose (fun x => @colim _ A n.+2%nat (g n.+1%nat x)) zigzag_glue_map_inf).
-    rewrite (ap_compose (f n.+2) _).
-    simpl.
-    rewrite concat_p_pp.
-    rewrite 2 concat_pV_p.
-    rewrite (ap_compose (f n.+2%nat) (@colim _ B n.+2%nat)).
-    rewrite <- ap_V.
-    rewrite (ap_compose ((f n.+2%nat) o (g n.+1%nat)) (@colim _ B n.+2%nat)).
-    rewrite (ap_homotopic (fun z => (L (S n) z)^)).
-    rewrite 2 ap_pp.
-    rewrite 2 concat_p_pp.
-    rewrite inv_V.
-    rewrite concat_pp_V.
-    rewrite <- ! ap_p_pp.
-    rewrite ! concat_p_pp.
+    rewrite 2 inv_V.
+    rewrite ap_pp. (* can use ap_pV after merging with latest Coq-HoTT *)
+    rewrite ap_V.
     rewrite <- ap_compose.
-    rewrite (Lfg_coherence n b).
-    rewrite concat_Vp.
-    simpl.
-    rewrite concat_p1.
-    rewrite concat_pV.
-    by rewrite concat_1p.
+    rewrite 2 concat_p_pp.
+    rewrite concat_pV_p.
+    rewrite concat_pp_V.
+    apply concat_Vp.
+    Close Scope long_path_scope.
   Defined.
 End Interleaving.
 
 Section InverseEquivCoh.
 
-  (** ** Given type families [P : A -> Type], [Q : B -> Type], an equivalence [e : A <~> B], and a family of equivalences [f : forall (a : A), P a <~> Q (e a)], we get a family of equivalences [finv : forall (b : B), Q b <~> P (e^-1 b)] and some results about compositions of [f] and [finv]. *)
+  (** Given type families [P : A -> Type], [Q : B -> Type], an equivalence [e : A <~> B], and a family of equivalences [f : forall (a : A), P a <~> Q (e a)], we get a family of equivalences [finv : forall (b : B), Q b <~> P (e^-1 b)] and some results about compositions of [f] and [finv]. *)
 
   Context {A B : Type} {P : A -> Type} {Q : B -> Type} (e : A <~> B) (f : forall (a : A), P a <~> Q (e a)).
 
@@ -279,9 +241,11 @@ Section InverseEquivCoh.
   Proof.
     intros a x.
     simpl.
-    lhs nrapply (ap (fun z => (f (e^-1 (e a)))^-1 (transport Q z^ (f a x))) (eisadj e a)).
-    nrapply (moveR_equiv_V' (f (e^-1 (e a)))).
-    lhs_V nrapply (transport2 _ (ap_V e _)).
+    nrapply moveR_equiv_V'.
+    lhs nrapply transport2.
+    { lhs nrapply (ap _ (eisadj e a)).
+      symmetry; apply ap_V. }
+    (** jdc: the last step could be factored out as a lemma to do in PathGroupoids.v *)
     by destruct (eissect e a)^.
   Defined.
 

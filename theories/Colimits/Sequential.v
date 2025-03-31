@@ -108,7 +108,7 @@ Proof.
 Defined.
 
 Notation inj A := (@colim sequence_graph A).
-Notation glue A := (fun n => @colimp sequence_graph A n n.+1 1).
+Notation glue A n := (@colimp sequence_graph A n%nat n.+1 1).
 
 (** The uniqueness principle for sequential colimits; Lemma 3.3. *)
 Definition seq_colimit_uniq {A : Sequence} E (F G : Colimit A -> E)
@@ -223,7 +223,7 @@ Proof.
     + exact _.
   - symmetry; srapply seq_colimit_uniq.
     + intros k a; exact (J (nat_add_zero_r k)).
-    + intros k a; rewrite !Colimit_rec_beta_colimp; srapply (L (glue A)).
+    + intros k a; rewrite !Colimit_rec_beta_colimp; srapply (L (fun n => glue A n)).
   - transitivity (Colimit (succ_seq (shift_seq A n))).
     + srapply equiv_functor_colimit; srapply Build_diagram_equiv.
       * srapply Build_DiagramMap.
@@ -237,7 +237,7 @@ Proof.
       rewrite 2(ap_compose' _ _ (glue _ k a)), Colimit_rec_beta_colimp, 2ap_pp.
       rewrite colim_succ_seq_to_colim_seq_ap_inj, colim_shift_seq_to_colim_seq_ap_inj.
       rewrite (colim_succ_seq_to_colim_seq_beta_glue (shift_seq A n)).
-      rewrite colim_shift_seq_to_colim_seq_beta_glue; srapply (L (glue A)).
+      rewrite colim_shift_seq_to_colim_seq_beta_glue; srapply (L (fun n => glue A n)).
 Defined.
 
 Definition equiv_colim_shift_seq_to_colim_seq `{Funext} A n
