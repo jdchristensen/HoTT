@@ -1,14 +1,16 @@
 Require Import Basics.
-Require Import Colimits.Pushout.
+Require Import Types.
 Require Import Spaces.Nat.
-Require Import Basics.Tactics.
+Require Import Diagrams.Graph.
+Require Import Diagrams.Diagram.
 Require Import Diagrams.Sequence.
 Require Import Colimits.Colimit.
+Require Import Colimits.Pushout.
 Require Import Colimits.Sequential.
-Require Import Diagram.
-Require Import Graph.
-Require Import Types.
 Require Import PushoutPath.Interleaving.
+
+Local Open Scope nat_scope.
+Local Open Scope type_scope.
 
 (** * Work towards characterizing the path types in a pushout of a span [R : A -> B -> Type]. The goal here is to work in half-steps, so that each construction only happens once. [C] will be used to denote a type that might be [A] or [B].  We think of a term of [Family C] as being the family [fun c => a0 squiggle_t c]. *)
 Definition Family (C : Type) := C -> Type.
@@ -104,6 +106,10 @@ Section Zigzag.
     - intro n. simpl. apply iota_step.
   Defined.
 
+  (** Some short forms to keep goals more readable. *)
+  Notation glueL p := (glue (zigzag_P _) _ p).
+  Notation glueR q := (glue (zigzag_Q _) _ q).
+
   (** jdc: I think the next part should be reorganized.  First give names to the four things defined in the "-" bullets below, and then use them to apply all of the results from interleaving.  Two of the four are already named zigzag_gluePQP and QPQ below. *)
   Definition zigzag_gluePQ {a : A} {b : B} (r : R a b) 
     : DiagramMap (zigzag_P a) (succ_seq (zigzag_Q b)).
@@ -139,7 +145,7 @@ Section Zigzag.
 
   (** Our candidate for reflexivity: the colimit of reflexivity. *)
   Definition zigzag_refl : zigzag_Pinf a0
-    := @colim _ (zigzag_P a0) 0%nat idpath.
+    := colim 0 idpath.
 
   (** The colimit of paths starting in [A] and ending in [B]. *)
   Definition zigzag_Qinf (b : B) : Type 
@@ -162,13 +168,13 @@ Section Zigzag.
 
     (** jdc: rename to not shadow existing name. *)
     Definition zigzag_comp_eissect (n : nat) (p : zigzag_P a n)
-      : eissect equiv_zigzag_glueinf (@colim _ (zigzag_P a) n p)
-        = ap (@colim _ (zigzag_P a) (S n)) (zigzag_gluePQP r n p)^ @ @colimp _ (zigzag_P a) n _ _ p
+      : eissect equiv_zigzag_glueinf (colim n p)
+        = ap (colim' (zigzag_P a) (S n)) (zigzag_gluePQP r n p)^ @ glueL p
       := zigzag_comp_eissect (zigzag_glueQP r) (zigzag_gluePQ r) (zigzag_glueQPQ r) (zigzag_gluePQP r) n p.
 
     Definition zigzag_comp_eisretr (n : nat) (q : zigzag_Q b n)
-      : eisretr equiv_zigzag_glueinf (@colim _ (zigzag_Q b) n q)
-        = ap (@colim _ (zigzag_Q b) (S n)) (zigzag_glueQPQ r n q)^ @ @colimp _ (zigzag_Q b) n _ _ q
+      : eisretr equiv_zigzag_glueinf (colim n q)
+        = ap (colim' (zigzag_Q b) (S n)) (zigzag_glueQPQ r n q)^ @ glueR q
       := zigzag_comp_eisretr (zigzag_glueQP r) (zigzag_gluePQ r) (zigzag_glueQPQ r) (zigzag_gluePQP r) n q.
 
   End GluingEquiv.
@@ -197,44 +203,31 @@ Section Zigzag.
     : relation_pushout -> Type
     := fam_podescent (Build_poDescent _ _ _ _ _ zigzag_Pinf zigzag_Qinf (fun x => equiv_zigzag_glueinf (pr2 x))).
 
-  (** Contruct the half-induction principle from Kraus-von Raumer. *)
+  (** Construct the half-induction principle from Kraus-von Raumer. *)
   Context (P : forall (a : A) (p : zigzag_family_half (pushl a)), Type)
     (Q : forall (b : B) (q : zigzag_family_half (pushr b)), Type)
     (refl : P a0 zigzag_refl)
     (e : forall (a : A) (b : B) (r : R a b) (p : zigzag_family_half (pushl a)), P a p <~> Q b (zigzag_gluePQinf r p)).
 
-  (** Coq is very bad at scoping in [colim] and [colimP] when dealing with natural numbers. *)
-  Let colimL {a : A} {n : nat} (p : zigzag_P a n) : zigzag_Pinf a
-    := @colim _ (zigzag_P a) n p.
-
-  Let colimR {b : B} {n : nat} (q : zigzag_Q b n) : zigzag_Qinf b
-    := @colim _ (zigzag_Q b) n q.
-
-  Let colimpL {a : A} {n : nat} (p : zigzag_P a n) 
-    := @colimp _ (zigzag_P a) n (S n) idpath p.
-
-  Let colimpR {b : B} {n : nat} (q : zigzag_Q b n) 
-    := @colimp _ (zigzag_Q b) n (S n) idpath q.
-
-  Let einv (a : A) (b : B) (r : R a b) (q : zigzag_Qinf b) : Q b q <~> P a (zigzag_glueQPinf r q)
+  Local Definition einv (a : A) (b : B) (r : R a b) (q : zigzag_Qinf b) : Q b q <~> P a (zigzag_glueQPinf r q)
     := finv (equiv_zigzag_glueinf r) (e a b r) q.
 
-  Let iotaP {a : A} (n : nat) := seq_to_succ_seq (zigzag_P a) n.
+  Local Definition iotaP {a : A} (n : nat) := seq_to_succ_seq (zigzag_P a) n.
 
-  Let iotaQ {b : B} (n : nat) := seq_to_succ_seq (zigzag_Q b) n.
+  Local Definition iotaQ {b : B} (n : nat) := seq_to_succ_seq (zigzag_Q b) n.
 
   (** The two type families, viewed over the sequences [zigzag_P] and [zigzag_Q] instead of their colimits. *)
-  Let Pn (n : nat) (a : A) (p : zigzag_P a n)
-    := P a (colimL p).
+  Local Definition Pn (n : nat) (a : A) (p : zigzag_P a n)
+    := P a (colim _ p).
 
-  Let Qn (n : nat) (b : B) (q : zigzag_Q b n)
-    := Q b (colimR q).
+  Local Definition Qn (n : nat) (b : B) (q : zigzag_Q b n)
+    := Q b (colim _ q).
 
   (** These are the maps used in the pushout defining [P_{n+1}] in the identity zigzag. *)
-  Let pushfP (a : A) (n : nat) : forall (c : ({b : B | R a b} * (zigzag_P a n))), zigzag_P a n
+  Local Definition pushfP (a : A) (n : nat) : forall (c : ({b : B | R a b} * (zigzag_P a n))), zigzag_P a n
     := snd.
 
-  Let pushgP (a : A) (n : nat)
+  Local Definition pushgP (a : A) (n : nat)
     : forall (c : {b : B | R a b} * (zigzag_P a n)), {b : B & R a b * (zigzag_Q b (S n))}.
   Proof.
     intros [[b r] p].
@@ -242,10 +235,10 @@ Section Zigzag.
   Defined.
 
   (** These are the maps used in the pushout defining [Q_{n+1}] in the identity zigzag. *)
-  Let pushfQ (b : B) (n : nat) : forall (c : {a : A | R a b} * (zigzag_Q b n)), zigzag_Q b n
+  Local Definition pushfQ (b : B) (n : nat) : forall (c : {a : A | R a b} * (zigzag_Q b n)), zigzag_Q b n
     := snd.
 
-  Let pushgQ (b : B) (n : nat)
+  Local Definition pushgQ (b : B) (n : nat)
     : forall (c : {a : A | R a b} * (zigzag_Q b n)), {a : A & R a b * (zigzag_P a n)}.
   Proof.
     intros [[a r] q].
@@ -253,10 +246,10 @@ Section Zigzag.
   Defined.
 
   (* The type of the maps we wish to construct: *)
-  Let indLn (n : nat) := forall (a : A) (p : zigzag_P a n), Pn n a p.
-  Let indRn (n : nat) := forall (b : B) (q : zigzag_Q b n), Qn n b q.
+  Local Definition indLn (n : nat) := forall (a : A) (p : zigzag_P a n), Pn n a p.
+  Local Definition indRn (n : nat) := forall (b : B) (q : zigzag_Q b n), Qn n b q.
 
-  (* The goal of this section is to represent the data needed to produce something of type [indL (S n) a] from something of type [indRn (S n)] and [indLn n]; we are capturing the following situation:
+  (** The goal of this section is to represent the data needed to produce something of type [indL (S n) a] from something of type [indRn (S n)] and [indLn n]; we are capturing the following situation:
 
 <<
     
@@ -281,14 +274,13 @@ Section Zigzag.
 
 We don't care about the bottom left map (which is [indL n a] followed by [transport colimp]) but to define [indR (S n)] it is extremely helpful to have the top right square, i.e. the composition of the right map in the pushout followed by the induced map, commute judgementally without any additional transports.
 
-  The right case changes the square slightly, replacing [e] with [einv] and some indexing changes due to the asymmetricity of the zigzag construction.
-  *)
+  The right case changes the square slightly, replacing [e] with [einv] and some indexing changes due to the asymmetry of the zigzag construction. *)
 
   Section ind_dataL.
     Context (n : nat) (ind_indRn : indRn (S n)) (a : A).
 
     Definition ind_pushcP : forall (c : {b : B & (R a b * (zigzag_Q b (S n)))}), Pn (S n) a (zigzag_glueQP (fst (pr2 c)) (S n) (snd (pr2 c)))
-      := fun c => (einv a (pr1 c) (fst (pr2 c)) (colimR (snd (pr2 c))) (ind_indRn (pr1 c) (snd (pr2 c)))).
+      := fun c => (einv a (pr1 c) (fst (pr2 c)) (colim _ (snd (pr2 c))) (ind_indRn (pr1 c) (snd (pr2 c)))).
 
     Record pushout_ind_data_P : Type := {
       ind_pushbP : (forall (p : zigzag_P a n), Pn (S n) a (iotaP n p));
@@ -311,7 +303,7 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
     Context (n : nat) (ind_indLn : indLn n) (b : B).
 
     Definition ind_pushcQ : forall (c : {a : A & (R a b * (zigzag_P a n))}), Qn (S n) b (zigzag_gluePQ (fst (pr2 c)) n (snd (pr2 c)))
-      := fun c => (e (pr1 c) b (fst (pr2 c)) (colimL (snd (pr2 c))) (ind_indLn (pr1 c) (snd (pr2 c)))).
+      := fun c => (e (pr1 c) b (fst (pr2 c)) (colim _ (snd (pr2 c))) (ind_indLn (pr1 c) (snd (pr2 c)))).
 
     Record pushout_ind_data_Q : Type := {
       ind_pushbQ : (forall (q : zigzag_Q b n), Qn (S n) b (iotaQ n q));
@@ -329,16 +321,10 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
   End ind_dataR.
 
   (** Interaction of iterated transport with composition of the type family. *)
-  Local Definition transportlemma {X X' Y : Type}
-    (f : X -> X') (g : X -> Y) (g' : X' -> Y)
-    (Z : Y -> Type) {x : X} {y : X'} (p : f x = y) (q : g x = g' (f x))
-    : (fun z => transport (Z o g') p (transport Z q z)) == transport Z (q @ ap g' p).
-  Proof.
-    destruct p.
-    simpl.
-    intro z.
-    symmetry; apply (ap (fun a => transport Z a z) (concat_p1 q)).
-  Defined.
+  Local Definition transport_lemma {X Y : Type} (g : X -> Y) (Z : Y -> Type)
+    {y : Y} {x x' : X} (p : x = x') (q : y = g x) (z : Z y)
+    : transport (Z o g) p (transport Z q z) = transport Z (q @ ap g p) z
+    := transport_compose Z g p _ @ (transport_pp Z _ _ z)^.
 
   (* We have the following situation:
 
@@ -377,33 +363,33 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
     snrapply (Build_pushout_ind_data_P n indRp a).
     - intro p.
       (* The left map is exactly what it should be: the previous left induction followed by transport along [colimp]. This makes descent to the colimit immediate later on and MUST NOT BE CHANGED. *)
-      apply (transport (fun z => P a z) (colimpL p)^).
+      apply (transport (P a) (glueL p)^).
       exact (indLp a p).
     - intros [[b r] p].
 
       (* Go on the top path of the diagram instead; using [pushout_ind_data_Q] ensures that this commutes judgementally. *)
       change (ind_pushcP n indRp a (pushgP a n ((b; r), p))) 
-        with (einv a b r (@colimR b (S n) (zigzag_gluePQ r n p)) (e a b r (colimL p) (indLp a p))).
+        with (einv a b r (colim (S n) (zigzag_gluePQ r n p)) (e a b r (colim _ p) (indLp a p))).
 
       (* Compute the [einv o e] bit. *)
-      rhs apply (finv_f (equiv_zigzag_glueinf r) (e a b r) (colimL p) (indLp a p)).
+      rhs apply (finv_f (equiv_zigzag_glueinf r) (e a b r) (colim _ p) (indLp a p)).
 
       (* Use the computation of [eissect equiv_zigzag_glueinf]. *)
       transitivity (transport (fun y : zigzag_family_half (pushl a) => P a y)
-         (ap (inj (zigzag_P a) n.+1%nat)
+         (ap (colim' (zigzag_P a) n.+1)
             (zigzag_gluePQP r n p)^ @ 
-          colimpL p)^ (indLp a p)).
+          glueL p)^ (indLp a p)).
         + rhs nrapply (ap (fun z => transport (P a) z (indLp a p)) _).
           2: {
             lhs nrapply inv_pV.
             lhs nrapply (1 @@ (inverse2 (ap_V _ (zigzag_gluePQP r n p)))).
             lhs nrapply (1 @@ (inv_V _)); reflexivity.
           }
-          refine ((transportlemma _ (@colimL a n) (@colimL a (S n)) (fun y => P a y) (pglue ((b ; r), p)) (@colimpL a n p)^ (indLp a p)) @ _).
+          lhs nrapply transport_lemma.
           nrapply (ap (fun z => transport (P a) z (indLp a p)) ((inv_V _) @@ 1)).
         + change (zigzag_family_half (pushl a)) with (zigzag_Pinf a).
-          nrapply (ap (fun z => transport (P a) z (indLp a p))).
-          nrapply (ap (fun z => z^) (zigzag_comp_eissect r n _))^.
+          nrapply transport2.
+          nrapply (ap inverse (zigzag_comp_eissect r n _))^.
   Defined.
 
   (** FIXME: Reprove once [indL_step] is cleaned up. *)
@@ -414,7 +400,7 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
     pose (indLp := fun a => pushout_ind_P_res n indRp a (indLp_data a)).
     snrapply (Build_pushout_ind_data_Q (S n) indLp b).
     - intro q.
-      apply (transport (fun z => Q b z) (colimpR q)^).
+      apply (transport (Q b) (glueR q)^).
       exact (indRp b q).
     - intros [[a r] q].
 
@@ -425,7 +411,7 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
 
       transparent assert (bigeinv : (forall (c : {b' : B | (R a b') * {q'' : zigzag_Q b' (S n) & Qn (S n) b' q''}}), Pn (S n) a (zigzag_glueQP (fst (pr2 c)) (S n) (pr1 (snd (pr2 c)))))). {
         intros [b' [r' [q'' z]]].
-        exact (einv a b' r' (colimR q'') z).
+        exact (einv a b' r' (colim _ q'') z).
       }
 
       transparent assert (bigindLp : (forall (p : zigzag_P a (S n)), Pn (S n) a p)). {
@@ -442,21 +428,21 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
         exact (b ; (r , q')).
       }
 
-      change (ind_pushcQ (S n) indLp b (pushgQ b (S n) ((a; r), q))) with (e a b r (@colimL a (S n) (zigzag_glueQP r (S n) q)) (bigeinv (bigindRp (incl q)))).
+      change (ind_pushcQ (S n) indLp b (pushgQ b (S n) ((a; r), q))) with (e a b r (colim (S n) (zigzag_glueQP r (S n) q)) (bigeinv (bigindRp (incl q)))).
       simpl pushfP.
-      rhs apply (f_finv (equiv_zigzag_glueinf r) (e a b r) (colimR q) (pr2 (snd (pr2 (bigindRp (incl q)))))).
+      rhs apply (f_finv (equiv_zigzag_glueinf r) (e a b r) (colim _ q) (pr2 (snd (pr2 (bigindRp (incl q)))))).
 
       transitivity (transport (fun y : zigzag_family_half (pushr b) => Q b y)
-         (ap (inj (zigzag_Q b) n.+2%nat)
+         (ap (colim' (zigzag_Q b) n.+2)
             (zigzag_glueQPQ r (S n) q)^ @ 
-          colimpR q)^ (snd (bigindRp (incl q)).2).2).
+          glueR q)^ (snd (bigindRp (incl q)).2).2).
       + unfold zigzag_gluePQP.
         unfold homotopy_step.
         rewrite inv_pV.
         rewrite ap_V.
         rewrite inv_V.
         change (zigzag_family_half (pushr b)) with (zigzag_Qinf b).
-        refine ((transportlemma _ (@colimR b (S n)) (@colimR b n.+2) (fun y => Q b y) (pglue ((a ; r), q)) (@colimpR b (S n) q)^ (indRp b q)) @ _).
+        lhs nrapply transport_lemma.
         by rewrite inv_V.
       + change (zigzag_family_half (pushr b)) with (zigzag_Qinf b).
         apply (ap (fun z => transport (Q b) z (snd (bigindRp (incl q)).2).2)).
@@ -493,10 +479,8 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
   Defined.
 
   (** The sequence of left induction maps. *)
-  Definition indL_seq (a : A) (n : nat) (p : zigzag_P a n) : Pn n a p.
-  Proof.
-    exact (pr1 (double_ind n) a p).
-  Defined.
+  Definition indL_seq (a : A) (n : nat) (p : zigzag_P a n) : Pn n a p
+    := pr1 (double_ind n) a p.
 
   (** The sequence of right induction maps. *)
   Definition indR_seq (b : B) (n : nat) (q : zigzag_Q b n) : Qn n b q.
@@ -534,10 +518,7 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
   Defined.
 
   (** The left colimit map computes on reflexivity. *)
-  Definition indL_comp_refl : (indL_colim a0 zigzag_refl) = refl.
-  Proof.
-    reflexivity.
-  Defined.
+  Definition indL_comp_refl : (indL_colim a0 zigzag_refl) = refl := idpath.
 
   (** The colimit maps compute on gluing. *)
   Definition ind_comp_glue {a : A} {b : B} (r : R a b) (p : zigzag_Pinf a) : indR_colim b (zigzag_gluePQinf r p) = e a b r p (indL_colim a p).
@@ -547,10 +528,10 @@ We don't care about the bottom left map (which is [indL n a] followed by [transp
     - intros n pn.
       reflexivity.
     - intros n _ [] pn.
-      lhs nrapply (transport_paths_FlFr_D (f:=fun z => indR_colim b (_ r z))).
+      lhs nrapply (transport_paths_FlFr_D (f:=fun w => indR_colim b (_ r w))).
       Open Scope long_path_scope.
       rewrite concat_p1.
-      generalize (colimp n (S n) idpath pn).
+      generalize (glueL pn).
       generalize (pn^+).
       (*
       hott_simpl.
