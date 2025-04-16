@@ -40,7 +40,7 @@ Record Adjunction {C D : Type} (F : C -> D) (G : D -> C)
     :: Is1Natural (A := C^op) (yon y o F)
         (** We have to explicitly give a witness to the functoriality of [yon y o F]. *)
         (is0functor_F := is0functor_compose (A:=C^op) (B:=D^op) (C:=Type) _ _)
-        (yon (G y)) (fun x => equiv_adjunction _ y) ;
+        (yon (G y)) (fun x => equiv_adjunction x y) ;
   (** Naturality in the right variable *)
   is1natural_equiv_adjunction_r (x : C)
     :: Is1Natural (opyon (F x)) (opyon x o G) (equiv_adjunction x) ;
@@ -183,9 +183,9 @@ Section AdjunctionData.
         (nattrans_id _).
   Proof.
     intros c.
-    change (?x $-> _) with (x $-> Id (F c)).
+    change (adjunction_unit (F c) $o fmap F (adjunction_counit c) $== Id (F c)).
     rewrite <- (eissect (adj _ _) (Id (F c))).
-    cbv;rewrite <- (triangle_helper2 _ (F c) (adjunction_counit _)).
+    rewrite <- (triangle_helper2 _ (F c) (adjunction_counit _)).
     exact (Id _).
   Qed.
 
@@ -197,9 +197,9 @@ Section AdjunctionData.
         (nattrans_id _).
   Proof.
     intros d.
-    change (?x $-> _) with (x $-> Id (G d)).
+    change (fmap G (adjunction_unit d) $o adjunction_counit (G d) $== Id (G d)).
     rewrite <- (eisretr (adj _ _) (Id (G d))).
-    cbv;rewrite <- (triangle_helper1 (G d) _ (adjunction_unit _)).
+    rewrite <- (triangle_helper1 (G d) _ (adjunction_unit _)).
     exact (Id _).
   Qed.
 
