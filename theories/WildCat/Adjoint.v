@@ -59,6 +59,8 @@ Arguments is1natural_equiv_adjunction_r {C D F G
   isgraph_D is2graph_D is01cat_D is1cat_D
   is0functor_F is0functor_G} adj x : rename.
 
+Coercion equiv_adjunction : Adjunction >-> Funclass.
+
 Notation "F ⊣ G" := (Adjunction F G).
 
 
@@ -110,7 +112,7 @@ Section AdjunctionData.
         (fun01_compose fun01_hom (fun01_profunctor idmap G)).
   Proof.
     snapply Build_NatEquiv.
-    1: intros [x y]; exact (equiv_adjunction adj x y).
+    1: intros [x y]; exact (adj x y).
     snapply Build_Is1Natural.
     intros [a b] [a' b'] [f g] K.
     refine (_ @ ap (fun x : a $-> G b' => x $o f)
@@ -123,7 +125,7 @@ Section AdjunctionData.
   Proof.
     snapply Build_NatTrans.
     { hnf. intros x.
-      exact (equiv_adjunction adj x (F x) (Id _)). }
+      exact (adj x (F x) (Id _)). }
     snapply Build_Is1Natural.
     intros x x' f.
     apply GpdHom_path.
@@ -141,7 +143,7 @@ Section AdjunctionData.
   Proof.
     snapply Build_NatTrans.
     { hnf. intros y.
-      exact ((equiv_adjunction adj (G y) y)^-1 (Id _)). }
+      exact ((adj (G y) y)^-1 (Id _)). }
     snapply Build_Is1Natural.
     intros y y' f.
     apply GpdHom_path.
@@ -157,14 +159,14 @@ Section AdjunctionData.
   Defined.
 
   Lemma triangle_helper1 x y f
-    : equiv_adjunction adj x y f = fmap G f $o adjunction_counit x.
+    : adj x y f = fmap G f $o adjunction_counit x.
   Proof.
     refine (_ @ is1natural_equiv_adjunction_r adj _ _ _ _ _).
     by cbv; rewrite (cat_idr_strong f).
   Qed.
 
   Lemma triangle_helper2 x y g
-    : (equiv_adjunction adj x y)^-1 g = adjunction_unit y $o fmap F g.
+    : (adj x y)^-1 g = adjunction_unit y $o fmap F g.
   Proof.
     epose (n1 := is1natural_natequiv
       (natequiv_inverse (natequiv_adjunction_l _)) _ _ _ _).
@@ -182,7 +184,7 @@ Section AdjunctionData.
   Proof.
     intros c.
     change (?x $-> _) with (x $-> Id (F c)).
-    rewrite <- (eissect (equiv_adjunction adj _ _) (Id (F c))).
+    rewrite <- (eissect (adj _ _) (Id (F c))).
     cbv;rewrite <- (triangle_helper2 _ (F c) (adjunction_counit _)).
     exact (Id _).
   Qed.
@@ -196,7 +198,7 @@ Section AdjunctionData.
   Proof.
     intros d.
     change (?x $-> _) with (x $-> Id (G d)).
-    rewrite <- (eisretr (equiv_adjunction adj _ _) (Id (G d))).
+    rewrite <- (eisretr (adj _ _) (Id (G d))).
     cbv;rewrite <- (triangle_helper1 (G d) _ (adjunction_unit _)).
     exact (Id _).
   Qed.
