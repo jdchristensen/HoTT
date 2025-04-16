@@ -11,7 +11,9 @@ Require Import Types.Prod.
 
 Generalizable Variables C D F G.
 
-(** ** Notions of adjunctions in wild categories. *)
+(** * Adjunctions in wild categories *)
+
+(** ** Notions of adjunctions in wild categories *)
 
 (** We try to capture a wild notion of (oo,1)-adjunctions since these are the ones that commonly appear in practice. Special cases include the standard 1-categorical adjunction.
 
@@ -22,9 +24,9 @@ We will define an adjunction to be an equivalence (in Type) between correspondin
 We should also be able to define "F having a left adjoint" as the initial object of a slice category C / F. However this seems like too much work for now, and it is not immediately obvious how it ties back to the adjunction isomorphism.
 
 In the future, it ought to be possible to generalize this definition to live inside a given bicategory, however due to current structural issues in the WildCat library, writing down a usable definition of bicategory requires a lot of effort.
-*)
 
-(** * Definition of adjunction *)
+Replacing the equivalence [equiv_adjunction] with an equivalence of 0-groupoids may let us avoid [HasMorExt] in this file.
+*)
 
 (** ** Definition of adjunction *)
 
@@ -241,7 +243,7 @@ Defined.
 
 Section UnitCounitAdjunction.
 
-  (** From the data of an adjunction: unit, counit, left triangle, right triangle *)
+  (** Building an adjunction between 1-functors, from the data of a counit, unit, left triangle and right triangle. *)
   Context {C D : Type} (F : C -> D) (G : D -> C)
   `{Is1Cat C, Is1Cat D, !Is0Functor F, !Is0Functor G,
     !Is1Functor F, !Is1Functor G}
