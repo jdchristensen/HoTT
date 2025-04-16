@@ -84,7 +84,7 @@ Definition fun01_hom {C : Type} `{Is01Cat C}
 Section AdjunctionData.
   Context {C D : Type} {F : C -> D} {G : D -> C}
     `{Is1Cat C, Is1Cat D, !HasMorExt C, !HasMorExt D,
-      !Is0Functor F, !Is0Functor G, !Is1Functor F, !Is1Functor G}
+      !Is0Functor F, !Is0Functor G}
     (adj : Adjunction F G).
 
   Definition natequiv_adjunction_l (y : D)
@@ -175,12 +175,13 @@ Section AdjunctionData.
     by rewrite cat_idl_strong.
   Qed.
 
+  (** This result and the next result could be stated with "trans_" replaced by "nattrans_" in four places.  The proof doesn't change, since [Transformation] does not make use of the naturality.  Since [nattrans_postwhisker] requires that [F] be a 1-functor, we state this using just the underlying transformations. The second lines of the proofs show what this unfolds to. *)
   Definition adjunction_triangle1
     : Transformation 
-        (nattrans_comp
-          (nattrans_prewhisker adjunction_unit F)
-          (nattrans_postwhisker F adjunction_counit))
-        (nattrans_id _).
+        (trans_comp
+          (trans_prewhisker adjunction_unit F)
+          (trans_postwhisker F adjunction_counit))
+        (trans_id F).
   Proof.
     intros c.
     change (adjunction_unit (F c) $o fmap F (adjunction_counit c) $== Id (F c)).
@@ -191,10 +192,10 @@ Section AdjunctionData.
 
   Definition adjunction_triangle2
     : Transformation
-        (nattrans_comp
-          (nattrans_postwhisker G adjunction_unit)
-          (nattrans_prewhisker adjunction_counit G))
-        (nattrans_id _).
+        (trans_comp
+          (trans_postwhisker G adjunction_unit)
+          (trans_prewhisker adjunction_counit G))
+        (trans_id G).
   Proof.
     intros d.
     change (fmap G (adjunction_unit d) $o adjunction_counit (G d) $== Id (G d)).
