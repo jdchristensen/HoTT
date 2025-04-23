@@ -231,28 +231,26 @@ Section Uniqueness.
     (pf1 : forall (z : IntHIT), (e o k1) z = (k1 o succ) z)
     (pf2 : forall (z : IntHIT), (e o k2) z = (k2 o succ) z)
     : forall (z : IntHIT), k1 z = k2 z.
-    Proof.
+  Proof.
     intro z.
     exact ((uniquenessZ (k2 zero_i) k1 p0 pf1 z) 
     @ (uniquenessZ (k2 zero_i) k2 idpath pf2 z)^).
   Defined.
 
-  End Uniqueness.
+End Uniqueness.
 
-  (** The same uniqueness principle but for half-adjoint equivalences. *)
-  Definition uniquenessZ_two_fun_equiv 
-    {P : Type} 
-    (f : P -> P)
-    `{e': IsEquiv P P f}
-    (k1: IntHIT -> P)
-    (k2: IntHIT -> P)
-    (p0 : k1 zero_i = k2 zero_i)
-    (pf1 : forall (z : IntHIT), (f o k1) z = (k1 o succ) z)
-    (pf2 : forall (z : IntHIT), (f o k2) z = (k2 o succ) z)
-    : forall (z : IntHIT), k1 z = k2 z.
-    Proof.
-    exact (uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2).
-  Defined.
+(** The same uniqueness principle but for half-adjoint equivalences. *)
+Definition uniquenessZ_two_fun_equiv
+  {P : Type}
+  (f : P -> P)
+  {e': IsEquiv f}
+  (k1: IntHIT -> P)
+  (k2: IntHIT -> P)
+  (p0 : k1 zero_i = k2 zero_i)
+  (pf1 : forall (z : IntHIT), (f o k1) z = (k1 o succ) z)
+  (pf2 : forall (z : IntHIT), (f o k2) z = (k2 o succ) z)
+  : forall (z : IntHIT), k1 z = k2 z
+  := uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
 (** Next we prove that [IntHIT] is equivalent to [SInt]. *)
 
@@ -278,7 +276,7 @@ Section IntHITEquiv.
   Defined.
 
   Definition IntITtoIntHIT_is_rinv (z : SInt)
-    : ((IntHITtoIntIT o IntITtoIntHIT) z) = z.
+    : (IntHITtoIntIT o IntITtoIntHIT) z = z.
   Proof.
     induction z as [|[|n] IHz|[|n] IHz].
     - simpl.
@@ -328,14 +326,12 @@ Section IntHITEquiv.
   (** [IntITtoIntHIT] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [IntHIT] are equivalent. *)
   Global Instance isbiinv_IntITtoIntHIT
     : IsBiInv IntITtoIntHIT
-    := (Build_IsBiInv _ _ _ _ _ IntITtoIntHIT_is_linv IntITtoIntHIT_is_rinv).
+    := Build_IsBiInv _ _ _ _ _ IntITtoIntHIT_is_linv IntITtoIntHIT_is_rinv.
 
   (** Since [SInt] is a set, therefore also [IntHIT] is a set. *)
   #[export] Instance ishset_IntHIT
-    : IsHSet IntHIT.
-    Proof.
-      srapply (istrunc_isequiv_istrunc SInt _).
-    Defined.
+    : IsHSet IntHIT
+    := istrunc_isequiv_istrunc SInt _.
 
   (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
   #[export] Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
