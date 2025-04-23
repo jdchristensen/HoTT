@@ -223,36 +223,36 @@ Section Uniqueness.
       apply (concat_A1p (f := e o s)).
   Defined.
 
-(** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
-Definition uniquenessZ_two_fun_biinv
-  (k1: IntHIT -> P)
-  (k2: IntHIT -> P)
-  (p0 : k1 zero_i = k2 zero_i)
-  (pf1 : forall (z : IntHIT), (e o k1) z = (k1 o succ) z)
-  (pf2 : forall (z : IntHIT), (e o k2) z = (k2 o succ) z)
-  : forall (z : IntHIT), k1 z = k2 z.
-  Proof.
-  intro z.
-  exact ((uniquenessZ (k2 zero_i) k1 p0 pf1 z) 
-  @ (uniquenessZ (k2 zero_i) k2 idpath pf2 z)^).
-Defined.
+  (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
+  Definition uniquenessZ_two_fun_biinv
+    (k1: IntHIT -> P)
+    (k2: IntHIT -> P)
+    (p0 : k1 zero_i = k2 zero_i)
+    (pf1 : forall (z : IntHIT), (e o k1) z = (k1 o succ) z)
+    (pf2 : forall (z : IntHIT), (e o k2) z = (k2 o succ) z)
+    : forall (z : IntHIT), k1 z = k2 z.
+    Proof.
+    intro z.
+    exact ((uniquenessZ (k2 zero_i) k1 p0 pf1 z) 
+    @ (uniquenessZ (k2 zero_i) k2 idpath pf2 z)^).
+  Defined.
 
-End Uniqueness.
+  End Uniqueness.
 
-(** The same uniqueness principle but for half-adjoint equivalences. *)
-Definition uniquenessZ_two_fun_equiv 
-  {P : Type} 
-  (f : P -> P)
-  `{e': IsEquiv P P f}
-  (k1: IntHIT -> P)
-  (k2: IntHIT -> P)
-  (p0 : k1 zero_i = k2 zero_i)
-  (pf1 : forall (z : IntHIT), (f o k1) z = (k1 o succ) z)
-  (pf2 : forall (z : IntHIT), (f o k2) z = (k2 o succ) z)
-  : forall (z : IntHIT), k1 z = k2 z.
-  Proof.
-  exact (uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2).
-Defined.
+  (** The same uniqueness principle but for half-adjoint equivalences. *)
+  Definition uniquenessZ_two_fun_equiv 
+    {P : Type} 
+    (f : P -> P)
+    `{e': IsEquiv P P f}
+    (k1: IntHIT -> P)
+    (k2: IntHIT -> P)
+    (p0 : k1 zero_i = k2 zero_i)
+    (pf1 : forall (z : IntHIT), (f o k1) z = (k1 o succ) z)
+    (pf2 : forall (z : IntHIT), (f o k2) z = (k2 o succ) z)
+    : forall (z : IntHIT), k1 z = k2 z.
+    Proof.
+    exact (uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2).
+  Defined.
 
 (** Next we prove that [IntHIT] is equivalent to [SInt]. *)
 
