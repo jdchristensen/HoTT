@@ -89,8 +89,8 @@ Defined.
 (** The recursion principle. *)
 Definition IntHIT_rec {P : Type} (t0 : P)
   (f : P -> P) (g1 : P -> P) (g2 : P -> P)
-  (s : forall (t : P ), g1 (f t) = t)
-  (r : forall (t : P ), f (g2 t) = t)
+  (s : forall (t : P), g1 (f t) = t)
+  (r : forall (t : P), f (g2 t) = t)
   : IntHIT -> P.
 Proof.
   snrapply (IntHIT_ind t0 (fun _ => f) (fun _ => g1) (fun _ => g2)).
@@ -108,11 +108,11 @@ Definition IntHIT_rec_biinv {P : Type} (t0 : P) (f : P -> P) `{IsBiInv P P f}
 (** This version of the recursion principle requires only a quasiinverse rather than a biinvertible map. *)
 (** TODO: decide whether we really need *four* variants of the recursion principle! *)
 Definition IntHIT_rec_qinv {P : Type} (t0 : P) (f : P -> P) (g : P -> P)
-  (s : forall (t : P ), g (f t)= t) (r : forall (t : P ), f (g t)= t)
+  (s : forall (t : P), g (f t)= t) (r : forall (t : P), f (g t)= t)
   : IntHIT -> P
   := IntHIT_rec t0 f g g s r.
 
-(** This verison of the recursion principle requires only a half-adjoint equivalence. Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
+(** This verison of the recursion principle requires only a half-adjoint equivalence.  Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
 Definition IntHIT_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
   : IntHIT -> P
   := @IntHIT_rec_biinv P t0 f (isbiinv_isequiv _ _).
@@ -127,14 +127,14 @@ Definition IntHIT_rec_beta_succ_is_sect
   (f : P -> P)
   (g1 : P -> P)
   (g2 : P -> P)
-  (s : forall (t : P ), g1 (f t) = t)
-  (r : forall (t : P ), f (g2 t) = t)
+  (s : forall (t : P), g1 (f t) = t)
+  (r : forall (t : P), f (g2 t) = t)
   (f':=IntHIT_rec t0 f g1 g2 s r)
   : forall z, ap f' (succ_is_sect z) = s (f' z).
 Proof.
   intro z.
   unfold IntHIT_rec.
-  refine (cancelL _ _ _ _ ).
+  refine (cancelL _ _ _ _).
   refine ((apD_const _ _)^ @ _).
   rapply IntHIT_ind_beta_succ_is_sect.
 Defined.
@@ -145,14 +145,14 @@ Definition IntHIT_rec_beta_succ_is_retr
   (f : P -> P)
   (g1 : P -> P)
   (g2 : P -> P)
-  (s : forall (t : P ), g1 (f t)= t)
-  (r : forall (t : P ), f (g2 t)= t)
+  (s : forall (t : P), g1 (f t)= t)
+  (r : forall (t : P), f (g2 t)= t)
   (f':=IntHIT_rec t0 f g1 g2 s r)
   : forall z, ap f' (succ_is_retr z) = r (f' z).
 Proof.
   intro z.
   unfold IntHIT_rec.
-  refine (cancelL _ _ _ _ ).
+  refine (cancelL _ _ _ _).
   refine ((apD_const _ _)^ @ _).
   rapply IntHIT_ind_beta_succ_is_retr.
 Defined.
@@ -175,7 +175,7 @@ Section Uniqueness.
     (rec := IntHIT_rec t0 e r s re es)
     : forall (z : IntHIT), k z = rec z.
     Proof.
-    snrapply IntHIT_ind. 
+    snrapply IntHIT_ind.
     - simpl.
       exact p0.
     - simpl.
@@ -222,7 +222,7 @@ Section Uniqueness.
       rewrite IntHIT_rec_beta_succ_is_retr.
       apply (concat_A1p (f := e o s)).
   Defined.
- 
+
 (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
 Definition uniquenessZ_two_fun_biinv
   (k1: IntHIT -> P)
@@ -254,7 +254,7 @@ Definition uniquenessZ_two_fun_equiv
   exact (uniquenessZ_two_fun_biinv (e := Build_EquivBiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2).
 Defined.
 
-(** Next we prove that [IntHIT] is equivalent to [Int]. *)
+(** Next we prove that [IntHIT] is equivalent to [SInt]. *)
 
 Section IntHITEquiv.
 
@@ -269,9 +269,7 @@ Section IntHITEquiv.
     - exact int_pred_succ.
   Defined.
 
-  Definition IntITtoIntHIT
-    (z : SInt)
-    : IntHIT.
+  Definition IntITtoIntHIT (z : SInt) : IntHIT.
   Proof.
     induction z.
     - exact zero_i.
@@ -279,9 +277,8 @@ Section IntHITEquiv.
     - exact (pred IHz).
   Defined.
 
-  Definition IntITtoIntHIT_is_rinv
-  (z : SInt)
-  : ((IntHITtoIntIT o IntITtoIntHIT) z) = z.
+  Definition IntITtoIntHIT_is_rinv (z : SInt)
+    : ((IntHITtoIntIT o IntITtoIntHIT) z) = z.
   Proof.
     induction z as [|[|n] IHz|[|n] IHz].
     - simpl.
@@ -289,7 +286,7 @@ Section IntHITEquiv.
     - simpl.
       reflexivity.
     - apply (ap int_succ) in IHz.
-      apply IHz. 
+      apply IHz.
     - simpl.
       reflexivity.
     - simpl.
@@ -297,9 +294,9 @@ Section IntHITEquiv.
       apply IHz.
   Defined.
 
-  Definition IntITtoIntHIT_comp_succ
-    (z: SInt)
-    : succ (IntITtoIntHIT z) = IntITtoIntHIT ( int_succ z).
+  Definition IntITtoIntHIT_comp_succ (z: SInt)
+    : succ (IntITtoIntHIT z) = IntITtoIntHIT (int_succ z).
+  Proof.
     simpl.
     induction z as [|[|n] IHz|[|n] IHz].
     - simpl.
@@ -314,42 +311,30 @@ Section IntHITEquiv.
       exact (retr_is_sect succ _).
   Defined.
 
-  Definition IntITtoIntHIT_comp_succ'
-    (z: IntHIT)
-    : succ (IntITtoIntHIT ( IntHITtoIntIT z)) = IntITtoIntHIT ( IntHITtoIntIT (succ z)).
+  Definition IntITtoIntHIT_comp_succ' (z: IntHIT)
+    : succ (IntITtoIntHIT (IntHITtoIntIT z)) = IntITtoIntHIT (IntHITtoIntIT (succ z)).
   Proof.
     simpl.
     exact ((IntITtoIntHIT_comp_succ o IntHITtoIntIT) z).
   Defined.
 
-  Definition IntITtoIntHIT_is_linv
-  (z : IntHIT )
-  : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
+  Definition IntITtoIntHIT_is_linv (z : IntHIT)
+    : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
     exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z) 
     @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
   Defined.
 
-  (** Proof that they are equivalent. *)
-  Definition isequiv_IntHIT_Int
-    : IntHIT <~> SInt.
-  Proof.
-    apply equiv_biinv.
-    snrapply Build_EquivBiInv.
-      - exact IntHITtoIntIT.
-      - srapply Build_IsBiInv.
-        * exact IntITtoIntHIT.
-        * exact IntITtoIntHIT.
-        * exact IntITtoIntHIT_is_rinv.
-        * exact IntITtoIntHIT_is_linv.
-  Defined.
+  (** [IntITtoIntHIT] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [IntHIT] are equivalent. *)
+  Global Instance isbiinv_IntITtoIntHIT
+    : IsBiInv IntITtoIntHIT
+    := (Build_IsBiInv _ _ _ _ _ IntITtoIntHIT_is_linv IntITtoIntHIT_is_rinv).
 
-  (** Therefore [IntHIT] is a set. *)
+  (** Since [SInt] is a set, therefore also [IntHIT] is a set. *)
   #[export] Instance ishset_IntHIT
     : IsHSet IntHIT.
     Proof.
-      snrapply (istrunc_equiv_istrunc _ (equiv_inverse isequiv_IntHIT_Int)).
-      exact ishset_int.
+      srapply (istrunc_isequiv_istrunc SInt _).
     Defined.
 
   (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
@@ -368,7 +353,7 @@ Section IntegerArithmetic.
   Notation "z .+1" := (succ z) : IntHIT_scope.
   Notation "z .-1" := (pred z) : IntHIT_scope.
 
-  (** We define negation by recursion. Negation is defined at this early stage because it will be used in parsing numerals. *)
+  (** We define negation by recursion.  Negation is defined at this early stage because it will be used in parsing numerals. *)
   Definition IntHIT_neg (x : IntHIT) : IntHIT
     := IntHIT_rec_equiv zero_i pred x.
 
@@ -378,7 +363,7 @@ Section IntegerArithmetic.
   Definition IntHIT_add (x y : IntHIT) : IntHIT
     := IntHIT_rec_equiv y succ x.
 
-  (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n]. Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
+  (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n].  Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
   Definition IntHIT_of_nat (n : nat) : IntHIT
     := nat_iter n succ zero_i.
 
@@ -390,14 +375,14 @@ Section IntegerArithmetic.
   Definition IntHIT_of_number_int (d : Numeral.int) :=
     match d with
     | Numeral.IntDec (Decimal.Pos d) => IntHIT_of_nat (Nat.of_uint d)
-    | Numeral.IntDec (Decimal.Neg d) => IntHIT_neg ( IntHIT_of_nat(Nat.of_uint d))
+    | Numeral.IntDec (Decimal.Neg d) => IntHIT_neg (IntHIT_of_nat (Nat.of_uint d))
     | Numeral.IntHex (Hexadecimal.Pos u) => IntHIT_of_nat (Nat.of_hex_uint u)
-    | Numeral.IntHex (Hexadecimal.Neg u) => IntHIT_neg (IntHIT_of_nat ((Nat.of_hex_uint u)))
+    | Numeral.IntHex (Hexadecimal.Neg u) => IntHIT_neg (IntHIT_of_nat (Nat.of_hex_uint u))
     end.
 
   Number Notation IntHIT IntHIT_of_number_int IntHIT_to_number_int : IntHIT_scope.
 
-  (** The following function reduces an expression by cancelling succesive successor and predecessor terms. *)
+  (** The following function reduces an integer expression by cancelling succesive successor and predecessor terms. *)
   Definition IntHIT_reduce := IntITtoIntHIT o IntHITtoIntIT.
 
   (** ** Properties of Operations *)
@@ -492,19 +477,19 @@ Section IntegerArithmetic.
     - reflexivity.
     - intro z.
       by rewrite IntHIT_add_succ_r.
-  Defined. 
+  Defined.
 
   (** Integer addition is associative. *)
   Definition IntHIT_add_assoc (x y z : IntHIT) : x + (y + z) = x + y + z.
   Proof.
-    revert x. 
+    revert x.
     by srapply (uniquenessZ_two_fun_equiv succ).
   Defined.
 
   (** Negation is a left inverse with respect to integer addition. *)
   Definition IntHIT_add_neg_l (x : IntHIT) : - x + x = 0.
   Proof.
-    revert x. 
+    revert x.
     srapply (uniquenessZ_two_fun_equiv idmap); cbn beta.
     - reflexivity.
     - simpl.
@@ -513,7 +498,7 @@ Section IntegerArithmetic.
       rewrite succ_is_sect.
       reflexivity.
     - reflexivity.
-  Defined. 
+  Defined.
 
   (** Negation is a right inverse with respect to integer addition. *)
   Definition IntHIT_add_neg_r (x : IntHIT) : x - x = 0.
@@ -560,7 +545,7 @@ Section IntegerArithmetic.
 
   (** *** Multiplication *)
 
-  (** We define multiplication by recursion on the first argument. We can only define it at this stage as it depends on the proof that addition is an equivalence. *)
+  (** We define multiplication by recursion on the first argument.  We can only define it at this stage as it depends on the proof that addition is an equivalence. *)
   Definition IntHIT_mul (x y : IntHIT) : IntHIT
     := IntHIT_iter (fun z => IntHIT_add z y) x 0.
 
@@ -682,7 +667,7 @@ Section IntegerArithmetic.
       rewrite (IntHIT_add_comm y (x*z + z)).
       rewrite <- (IntHIT_add_assoc _ z y).
       rewrite (IntHIT_add_comm z y).
-      by rewrite 3 IntHIT_add_assoc.
+      by rewrite (IntHIT_add_assoc (x*y) _ _).
   Defined.
 
   (** Multiplication distributes over addition on the right. *)
@@ -703,16 +688,15 @@ Section IntegerArithmetic.
       by rewrite IntHIT_dist_r.
   Defined.
 
-  (** This is a shorter proof of linv, but it requires that we already know that IntHIT is as set. This might be useful in the future, if we can show that [IntHIT] a set independently of its equivalence to [Int]. *)
-  Definition IntITtoIntHIT_is_linv'
-  (z : IntHIT )
-  : (( IntITtoIntHIT o IntHITtoIntIT) z) = z.
+  (** This is a shorter proof of [IntITtoIntHIT_is_linv], but it requires that we already know that [IntHIT] is as set.  This might be useful in the future, if we can show that [IntHIT] a set independently of its equivalence to [SInt]. *)
+  Definition IntITtoIntHIT_is_linv' (z : IntHIT)
+  : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
     srapply (uniquenessZ_two_fun_equiv succ).
     - reflexivity.
     - simpl.
       exact IntITtoIntHIT_comp_succ'.
-    - reflexivity. 
+    - reflexivity.
   Defined.
 
 End IntegerArithmetic.

@@ -120,7 +120,7 @@ Proof.
   apply equiv_iff_hprop_uncurried, iff_isbiinv_isequiv.
 Defined.
 
-(* Some lemmas to send equivalences and biinvertible maps back and forth. *)
+(** Some lemmas to send equivalences and biinvertible maps back and forth. *)
 
 Definition equiv_biinv A B (f : EquivBiInv A B) : A <~> B 
   := Build_Equiv A B f _.
