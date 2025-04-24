@@ -206,6 +206,72 @@ Section AdjunctionData.
 
 End AdjunctionData.
 
+(** ** Adjunctions are automatically 1-functors. *)
+Section AdjunctionsAre1Functors.
+  Context {C D : Type} {F : C -> D} {G : D -> C}
+    `{Is1Cat C, Is1Cat D, !HasMorExt C, !HasMorExt D,
+      !Is0Functor F, !Is0Functor G}
+    (adj : Adjunction F G).
+
+  (* TODO: rename, relocate.  Use $==? *)
+  (* Note: since [adj] is an equivalence, this shows that there is a unique way to define [fmap F f] given that [F] is a left adjoint via [adj]. *)
+  Definition helper {a b : C} (f : a $-> b)
+    : adj _ _ (fmap F f) = adjunction_counit adj b $o f.
+  Proof.
+    (* apply GpdHom_path. *)
+    rhs_V rapply (is1natural_equiv_adjunction_l adj _ _ _ f (Id (A:=D^op) (F b))).
+    simpl.
+    apply ap.
+    symmetry. apply path_hom, cat_idl.
+  Defined.
+
+  Definition is1functor_left_adjoint : Is1Functor F.
+  Proof.
+    snapply Build_Is1Functor.
+    - (* [fmap2] follows from [HasMorExt]. *)
+      intros a b f g p.
+      apply GpdHom_path.
+      apply ap, path_hom, p.
+    - (* [fmap_id] *)
+      intros a.
+      refine ((cat_idl _)^$ $@ _).
+      apply GpdHom_path, (equiv_inj (adj _ _)).
+      lhs rapply (is1natural_equiv_adjunction_l adj).
+      simpl.
+      apply path_hom; rapply cat_idr.
+    - (* [fmap_comp] *)
+      intros a b c f g.
+      symmetry. (* Mainly for symmetry with the previous case. *)
+      apply GpdHom_path, (equiv_inj (adj _ _)).
+      lhs rapply (is1natural_equiv_adjunction_l adj).
+      simpl.
+      rhs rapply helper.
+      apply path_hom.
+      refine (cat_prewhisker (GpdHom_path (helper g)) f $@ _).
+      apply cat_assoc.
+  Defined.
+  (** The above is probably the same as Hart's 2-coh diagram, with h_1 = id, and with one use of associativity replaced with two identity laws. *)
+
+(**
+TODO:
+- Do the same for the right adjoint.
+- prove that L is 2-coherent, in Hart's terminology.
+
+Note that the requirement that [F] preserve colimits *uses*
+[fmap_comp], while the requirement that [F] is a left adjoint only
+uses the 0-functor structure.  [fmap_comp] is needed so that applying
+[F] to a cocone produces a cocone.
+
+Also note that a natural equivalence between functors F and G
+only uses their 0-functor structure.  So if we change the 1-functor
+structure, we get an equivalent functor.
+
+Strangely, that means that we could have F and G naturally equivalent,
+with F preserving colimits but G not?!?  That sounds fishy.
+*)
+
+End AdjunctionsAre1Functors.
+
 (** ** Building adjunctions *)
 
 (** There are various ways to build an adjunction. *)
