@@ -148,15 +148,12 @@ Proof.
   exact (cat_in i).
 Defined.
 
-Set Typeclasses Depth 3.
-Set Typeclasses Debug.
-
 (** A biproduct is a product. *)
 
 (** An inclusion followed by a projection of the same index is the identity. *)
 Definition cat_biprod_pr_in (I : Type) {A : Type} (x : I -> A)
   `{Biproduct I A x} (i : I)
-  : Hom (A := x i $-> x i) (cat_pr i $o (cat_in i)) (Id (A:=A) (x i)). (* Typeclass search hangs when Is there a way to make Coq be able to infer the parameter H0 by itself? *)
+  : cat_pr i $o cat_in i $== Id (x i).
 Proof.
   unfold cat_in.
   lhs' refine (_ $@L _).
