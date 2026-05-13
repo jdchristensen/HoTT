@@ -160,7 +160,7 @@ Section EquivalenceCompatibility.
   Let re' := eissect_biinv e' : r' o e' == idmap.
   Let es' := eisretr_biinv e' : e' o s' == idmap.
 
-  Definition helper_r (pe :g o e == e' o f) : r' o g o e == f o r o e.
+  Definition helper_r (pe : g o e == e' o f) : r' o g o e == f o r o e.
   Proof.
     intro x.
     exact (ap r' (pe x) @ (re' (f x) @ (ap f (re x))^)).
@@ -208,6 +208,6 @@ Section EquivalenceCompatibility.
     apply moveL_pM.
     rewrite inv_V.
     reflexivity.
-  Defined. 
-  
+  Defined.
+
 End EquivalenceCompatibility.

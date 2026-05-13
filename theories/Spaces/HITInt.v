@@ -177,7 +177,7 @@ Section Uniqueness.
     - simpl.
       intros z H.
       apply (ap e) in H.
-      exact ((pf z) @ H).
+      exact (pf z @ H).
     - simpl.
       intros z H.
       apply (ap r) in H.
@@ -191,7 +191,7 @@ Section Uniqueness.
       rewrite ap_pp.
       rewrite 2 concat_p_pp.
       rewrite <- (inv_V (ap r (pf z))).
-      rewrite <- 2  inv_pp.
+      rewrite <- 2 inv_pp.
       rewrite concat_p_pp.
       rewrite (biinv_compat_pre biinv_IntHIT_succ e k k pf z)^.
       rewrite (concat_p_pp _ _ _)^.
@@ -215,7 +215,7 @@ Section Uniqueness.
       rewrite (ap_compose _ _ _)^.
       rewrite IntHIT_rec_beta_succ_is_retr.
       apply (concat_A1p (f := e o s)).
-  Defined. 
+  Defined.
 
   (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
   Definition uniquenessZ_two_fun_biinv
