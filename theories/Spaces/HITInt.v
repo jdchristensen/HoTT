@@ -193,10 +193,10 @@ Section Uniqueness.
       rewrite <- (inv_V (ap r (pf z))).
       rewrite <- 2 inv_pp.
       rewrite concat_p_pp.
-      rewrite (biinv_compat_pre biinv_IntHIT_succ e k k pf z)^.
-      rewrite (concat_p_pp _ _ _)^.
+      rewrite <- (biinv_compat_pre biinv_IntHIT_succ).
+      rewrite concat_pp_p.
       apply moveR_Vp.
-      rewrite (ap_compose _ _ _)^.
+      rewrite <- ap_compose.
       rewrite IntHIT_rec_beta_succ_is_sect.
       apply (concat_A1p (f := r o e)).
     - simpl.
@@ -291,24 +291,13 @@ Section IntHITEquiv.
   Proof.
     simpl.
     induction z as [|[|n] IHz|[|n] IHz].
-    - simpl.
-      reflexivity.
-    - simpl.
-      reflexivity.
-    - simpl.
-      reflexivity.
-    - simpl.
-      exact (retr_is_sect_isbiinv succ zero_i)^.
-    - simpl.
-      exact (retr_is_sect_isbiinv succ _)^.
+    1, 2, 3: reflexivity.
+    all: symmetry; exact (retr_is_sect_isbiinv succ _).
   Defined.
 
   Definition IntITtoIntHIT_comp_succ' (z: IntHIT)
-    : IntITtoIntHIT (IntHITtoIntIT (succ z)) = succ (IntITtoIntHIT (IntHITtoIntIT z)).
-  Proof.
-    simpl.
-    exact ((IntITtoIntHIT_comp_succ o IntHITtoIntIT) z).
-  Defined.
+    : IntITtoIntHIT (IntHITtoIntIT (succ z)) = succ (IntITtoIntHIT (IntHITtoIntIT z))
+    := IntITtoIntHIT_comp_succ (IntHITtoIntIT z).
 
   Definition IntITtoIntHIT_is_linv (z : IntHIT)
     : (IntITtoIntHIT o IntHITtoIntIT) z = z.

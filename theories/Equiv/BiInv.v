@@ -195,8 +195,7 @@ Section EquivalenceCompatibility.
     unfold biinv_compat_pr.
     rewrite equiv_ind_comp.
     apply moveL_pM.
-    apply moveL_Mp.
-    rewrite inv_V.
+    apply moveL_Vp.
     reflexivity.
   Defined.
 
@@ -205,8 +204,7 @@ Section EquivalenceCompatibility.
   Proof.
     rewrite ap_equiv_inj.
     apply moveL_pM.
-    apply moveL_pM.
-    rewrite inv_V.
+    apply moveL_pV.
     reflexivity.
   Defined.
 
