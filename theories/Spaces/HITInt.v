@@ -33,7 +33,7 @@ Module Export IntHIT.
       | pred z => fun _ _ => r z (IntHIT_ind z)
       | succ_sect z => fun _ _ => s z (IntHIT_ind z)
       end re es.
-      (** We make sure that this is dependent on [re] and [es] as well. *)
+      (** We make sure that this depends on [re] and [es] as well. *)
 
     (** The beta principles for [IntHIT_ind] on [succ_is_sect] and [succ_is_retr]. *)
     Axiom IntHIT_ind_beta_succ_is_sect
@@ -46,14 +46,14 @@ Module Export IntHIT.
 End IntHIT.
 
 (** Successor is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
-Instance isbiinv_IntHIT_succ : IsBiInv succ
+#[export] Instance isbiinv_IntHIT_succ : IsBiInv succ
   := Build_IsBiInv _ _ _ succ_sect pred succ_is_retr succ_is_sect.
 
 Definition biinv_IntHIT_succ : BiInv IntHIT IntHIT
   := Build_BiInv _ _ succ _.
 
 (** The predecessor is an equivalence on [IntHIT]. *)
-Instance isequiv_IntHIT_pred : IsEquiv pred
+#[export] Instance isequiv_IntHIT_pred : IsEquiv pred
   := isequiv_isbiinv_retr succ.
 
 Definition IntHIT_ind_hprop {P : IntHIT -> Type} `{forall x, IsHProp (P x)}
@@ -101,7 +101,7 @@ Definition IntHIT_rec_biinv {P : Type} (t0 : P) (f : P -> P) `{IsBiInv P P f}
   : IntHIT -> P
   := IntHIT_rec t0 f (retr_biinv f) (sect_biinv f) (eissect_biinv f) (eisretr_biinv f).
 
-(** This version of the recursion principle requires only a quasiinverse rather than a biinvertible map. *)
+(** This version of the recursion principle requires only a quasi-inverse rather than a biinvertible map. *)
 (** TODO: decide whether we really need *four* variants of the recursion principle! *)
 Definition IntHIT_rec_qinv {P : Type} (t0 : P) (f : P -> P) (g : P -> P)
   (s : forall (t : P), g (f t)= t) (r : forall (t : P), f (g t)= t)
@@ -202,7 +202,7 @@ Section Uniqueness.
     - simpl.
       intros z t.
       rewrite transport_paths_FlFr.
-      rewrite ap_pp. 
+      rewrite ap_pp.
       rewrite 2 concat_p_pp.
       rewrite <- (inv_V (pf (succ_sect z))).
       rewrite <- inv_pp.
