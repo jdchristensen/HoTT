@@ -129,7 +129,6 @@ Definition IntHIT_rec_beta_succ_is_sect
   : forall z, ap f' (succ_is_sect z) = s (f' z).
 Proof.
   intro z.
-  unfold IntHIT_rec.
   refine (cancelL _ _ _ _).
   refine ((apD_const _ _)^ @ _).
   rapply IntHIT_ind_beta_succ_is_sect.
@@ -147,7 +146,6 @@ Definition IntHIT_rec_beta_succ_is_retr
   : forall z, ap f' (succ_is_retr z) = r (f' z).
 Proof.
   intro z.
-  unfold IntHIT_rec.
   refine (cancelL _ _ _ _).
   refine ((apD_const _ _)^ @ _).
   rapply IntHIT_ind_beta_succ_is_retr.
@@ -210,9 +208,9 @@ Section Uniqueness.
       rewrite <- inv_pp.
       rewrite concat_p_pp.
       rewrite (biinv_compat_pes biinv_IntHIT_succ e k k pf z)^.
-      rewrite (concat_p_pp _ _ _)^.
+      rewrite <- concat_p_pp.
       apply moveR_Vp.
-      rewrite (ap_compose _ _ _)^.
+      rewrite <- ap_compose.
       rewrite IntHIT_rec_beta_succ_is_retr.
       apply (concat_A1p (f := e o s)).
   Defined.
@@ -250,16 +248,8 @@ Definition uniquenessZ_two_fun_equiv
 
 Section IntHITEquiv.
 
-  Definition IntHITtoIntIT : IntHIT -> SInt.
-  Proof.
-    srapply IntHIT_rec.
-    - exact zero.
-    - exact int_succ.
-    - exact int_pred.
-    - exact int_pred.
-    - exact int_succ_pred.
-    - exact int_pred_succ.
-  Defined.
+  Definition IntHITtoIntIT : IntHIT -> SInt
+  := IntHIT_rec zero int_succ int_pred int_pred int_succ_pred int_pred_succ.
 
   Definition IntITtoIntHIT (z : SInt) : IntHIT.
   Proof.
