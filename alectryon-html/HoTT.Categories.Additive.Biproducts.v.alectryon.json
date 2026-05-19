@@ -1,0 +1,424 @@
+[
+  [
+    {
+      "_type": "sentence",
+      "contents": "(** * Biproducts in categories with zero objects",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n    Objects that are simultaneously products and coproducts, fundamental\n    to additive category theory.\n*)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "From HoTT Require Import Basics Types.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "From HoTT.Categories Require Import Category Functor.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "From HoTT.Categories.Additive Require Import ZeroObjects.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Local Notation fst_type := Basics.Overture.fst.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Local Notation snd_type := Basics.Overture.snd.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n(** * Biproduct structures *)\n\n(** ** Biproduct data\n    \n    The data of a biproduct consists of an object together with injection\n    and projection morphisms.\n*)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Record BiproductData {C : PreCategory} (X Y : object C) := {\n  biproduct_obj : object C;\n  \n  (* Coproduct structure: injections *)\n  inl : morphism C X biproduct_obj;\n  inr : morphism C Y biproduct_obj;\n  \n  (* Product structure: projections *)\n  outl : morphism C biproduct_obj X;\n  outr : morphism C biproduct_obj Y\n}.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Coercion biproduct_obj : BiproductData >-> object.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments biproduct_obj {C X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments inl {C X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments inr {C X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments outl {C X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments outr {C X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n(** ** Biproduct axioms\n    \n    The axioms that make biproduct data into an actual biproduct.\n    These ensure the projection-injection pairs behave correctly.\n*)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Record IsBiproduct {C : PreCategory} `{Z : ZeroObject C} {X Y : object C} \n                   (B : BiproductData X Y) := {\n  (* Projection-injection identities *)\n  beta_l : (outl B o inl B = 1)%morphism;\n  beta_r : (outr B o inr B = 1)%morphism;\n  \n  (* Mixed terms are zero *)\n  mixed_l : (outl B o inr B)%morphism = zero_morphism Y X;\n  mixed_r : (outr B o inl B)%morphism = zero_morphism X Y\n}.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments beta_l {C Z X Y B} i : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments beta_r {C Z X Y B} i : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments mixed_l {C Z X Y B} i : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments mixed_r {C Z X Y B} i : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n(** ** Universal property of biproducts\n    \n    The universal property states that morphisms into/out of the biproduct\n    are uniquely determined by their components.\n*)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Record HasBiproductUniversal {C : PreCategory} {X Y : object C}\n  (B : BiproductData X Y) := {\n  (* Universal property as a coproduct *)\n  coprod_universal : forall (W : object C) \n    (f : morphism C X W) (g : morphism C Y W),\n    Contr {h : morphism C B W & \n           ((h o inl B = f)%morphism * (h o inr B = g)%morphism)};\n  \n  (* Universal property as a product *)\n  prod_universal : forall (W : object C) \n    (f : morphism C W X) (g : morphism C W Y),\n    Contr {h : morphism C W B & \n           ((outl B o h = f)%morphism * (outr B o h = g)%morphism)}\n}.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments coprod_universal {C X Y B} u W f g : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments prod_universal {C X Y B} u W f g : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n(** ** Complete biproduct structure\n    \n    A biproduct is biproduct data together with the proof that it satisfies\n    the biproduct axioms and universal property.\n*)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Class Biproduct {C : PreCategory} `{Z : ZeroObject C} (X Y : object C) := {\n  biproduct_data : BiproductData X Y;\n  biproduct_is : IsBiproduct biproduct_data;\n  biproduct_universal : HasBiproductUniversal biproduct_data\n}.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Coercion biproduct_data : Biproduct >-> BiproductData.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments biproduct_data {C Z X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments biproduct_is {C Z X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Arguments biproduct_universal {C Z X Y} b : rename.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n(** * Biproduct operations *)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Section BiproductOperations.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Context {C : PreCategory} `{Z : ZeroObject C} {X Y : object C}.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Variable (B : Biproduct X Y).",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  (** ** Uniqueness from universal property *)\n\n  (** The coproduct universal morphism and its properties. *)\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_coprod_universal (W : object C) \n    (f : morphism C X W) (g : morphism C Y W)\n    : {h : morphism C B W & ((h o inl B = f)%morphism * (h o inr B = g)%morphism)}\n    := @center _ (coprod_universal (biproduct_universal B) W f g).",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  (** Extract the unique morphism from the coproduct universal property. *)\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_coprod_mor (W : object C) \n    (f : morphism C X W) (g : morphism C Y W)\n    : morphism C B W\n    := (biproduct_coprod_universal W f g).1.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_coprod_beta_l (W : object C)\n    (f : morphism C X W) (g : morphism C Y W)\n    : (biproduct_coprod_mor W f g o inl B = f)%morphism\n    := fst_type (biproduct_coprod_universal W f g).2.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_coprod_beta_r (W : object C)\n    (f : morphism C X W) (g : morphism C Y W)\n    : (biproduct_coprod_mor W f g o inr B = g)%morphism\n    := snd_type (biproduct_coprod_universal W f g).2.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_coprod_unique (W : object C)\n    (f : morphism C X W) (g : morphism C Y W)\n    (h : morphism C B W)\n    (Hl : (h o inl B = f)%morphism)\n    (Hr : (h o inr B = g)%morphism)\n    : h = biproduct_coprod_mor W f g\n    := ap pr1 (contr (h; (Hl, Hr)))^.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  (** The product universal morphism and its properties. *)\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_prod_universal (W : object C) \n    (f : morphism C W X) (g : morphism C W Y)\n    : {h : morphism C W B & ((outl B o h = f)%morphism * (outr B o h = g)%morphism)}\n    := @center _ (prod_universal (biproduct_universal B) W f g).",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  (** Extract the unique morphism from the product universal property. *)\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_prod_mor (W : object C) \n    (f : morphism C W X) (g : morphism C W Y)\n    : morphism C W B\n    := (biproduct_prod_universal W f g).1.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_prod_beta_l (W : object C)\n    (f : morphism C W X) (g : morphism C W Y)\n    : (outl B o biproduct_prod_mor W f g = f)%morphism\n    := fst_type (biproduct_prod_universal W f g).2.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_prod_beta_r (W : object C)\n    (f : morphism C W X) (g : morphism C W Y)\n    : (outr B o biproduct_prod_mor W f g = g)%morphism\n    := snd_type (biproduct_prod_universal W f g).2.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n  \n  "
+    },
+    {
+      "_type": "sentence",
+      "contents": "Definition biproduct_prod_unique (W : object C)\n    (f : morphism C W X) (g : morphism C W Y)\n    (h : morphism C W B)\n    (Hl : (outl B o h = f)%morphism)\n    (Hr : (outr B o h = g)%morphism)\n    : h = biproduct_prod_mor W f g\n    := ap pr1 (contr (h; (Hl, Hr)))^.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "End BiproductOperations.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n(** * Export hints *)\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Hint Resolve \n  biproduct_coprod_beta_l biproduct_coprod_beta_r\n  biproduct_prod_beta_l biproduct_prod_beta_r\n  : biproduct.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n\n"
+    },
+    {
+      "_type": "sentence",
+      "contents": "Hint Rewrite \n  @zero_morphism_left @zero_morphism_right\n  : biproduct_simplify.",
+      "messages": [],
+      "goals": []
+    },
+    {
+      "_type": "text",
+      "contents": "\n"
+    }
+  ]
+]
