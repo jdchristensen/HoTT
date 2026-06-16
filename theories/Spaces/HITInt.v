@@ -101,13 +101,6 @@ Definition IntHIT_rec_biinv {P : Type} (t0 : P) (f : P -> P) `{IsBiInv P P f}
   : IntHIT -> P
   := IntHIT_rec t0 f (retr_biinv f) (sect_biinv f) (eissect_biinv f) (eisretr_biinv f).
 
-(** This version of the recursion principle requires only a quasi-inverse rather than a biinvertible map. *)
-(** TODO: decide whether we really need *four* variants of the recursion principle! *)
-Definition IntHIT_rec_qinv {P : Type} (t0 : P) (f : P -> P) (g : P -> P)
-  (s : forall (t : P), g (f t)= t) (r : forall (t : P), f (g t)= t)
-  : IntHIT -> P
-  := IntHIT_rec t0 f g g s r.
-
 (** This version of the recursion principle requires only a half-adjoint equivalence.  Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
 Definition IntHIT_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
   : IntHIT -> P
