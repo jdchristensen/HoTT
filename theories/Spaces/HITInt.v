@@ -96,12 +96,12 @@ Proof.
   - apply r.
 Defined.
 
-(** This version of the recursion principle requires only a biinvertible map. *)
+(** The recursion principle phrased using a biinvertible map. *)
 Definition IntHIT_rec_biinv {P : Type} (t0 : P) (f : P -> P) `{IsBiInv P P f}
   : IntHIT -> P
   := IntHIT_rec t0 f (retr_biinv f) (sect_biinv f) (eissect_biinv f) (eisretr_biinv f).
 
-(** This version of the recursion principle requires only a half-adjoint equivalence.  Since it is an Instance that biinvertible maps are equivalent to half-adjoint equivalences using type class search one could also use IntHIT_rec_biinv instead. *)
+(** The recursion principle phrased using a half-adjoint equivalence. *)
 Definition IntHIT_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
   : IntHIT -> P
   := @IntHIT_rec_biinv P t0 f (isbiinv_isequiv _ _).
