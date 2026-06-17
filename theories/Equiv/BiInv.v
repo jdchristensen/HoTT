@@ -190,7 +190,7 @@ Section EquivalenceCompatibility.
   Defined.
 
   Definition biinv_compat_pre (pe : forall (x : A), g (e x) = e' (f x)) (x : A)
-    : re' (f x) = (ap r' (pe x))^ @ (biinv_compat_pr pe) (e x) @ ap f (re x).
+    : re' (f x) = (ap r' (pe x))^ @ biinv_compat_pr pe (e x) @ ap f (re x).
   Proof.
     unfold biinv_compat_pr.
     rewrite equiv_ind_comp.
@@ -200,7 +200,7 @@ Section EquivalenceCompatibility.
   Defined.
 
   Definition biinv_compat_pes (pe : forall (x : A), g (e x) = e' (f x)) (y : B)
-    : es' (g y) = ap e' ((biinv_compat_ps pe) y) @ (pe (s y))^ @ ap g (es y).
+    : es' (g y) = ap e' (biinv_compat_ps pe y) @ (pe (s y))^ @ ap g (es y).
   Proof.
     rewrite ap_equiv_inj.
     apply moveL_pM.

@@ -128,7 +128,7 @@ Proof.
 Defined.
 
 Definition IntHIT_rec_beta_succ_is_retr
-  (P: Type)
+  (P : Type)
   (t0 : P)
   (f : P -> P)
   (g1 : P -> P)
@@ -146,22 +146,22 @@ Defined.
 
 Section Uniqueness.
 
-  Context {P : Type} {e: BiInv P P}.
+  Context {P : Type} {e : BiInv P P}.
 
   Local Definition s := sect_biinv e.
   Local Definition r := retr_biinv e.
-  Local Definition re:= eissect_biinv e.
+  Local Definition re := eissect_biinv e.
   Local Definition es := eisretr_biinv e.
 
   (** We prove a uniqueness principle expressing the universal property of the recursor, up to propositional equality. *)
   Definition uniquenessZ
     (t0 : P)
-    (k: IntHIT -> P)
-    (p0 : (k zero_i) = t0)
+    (k : IntHIT -> P)
+    (p0 : k zero_i = t0)
     (pf : forall (z : IntHIT), (k o succ) z = (e o k) z)
     (rec := IntHIT_rec t0 e r s re es)
     : forall (z : IntHIT), k z = rec z.
-    Proof.
+  Proof.
     snapply IntHIT_ind.
     - simpl.
       exact p0.
@@ -210,16 +210,16 @@ Section Uniqueness.
 
   (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
   Definition uniquenessZ_two_fun_biinv
-    (k1: IntHIT -> P)
-    (k2: IntHIT -> P)
+    (k1 : IntHIT -> P)
+    (k2 : IntHIT -> P)
     (p0 : k1 zero_i = k2 zero_i)
     (pf1 : forall (z : IntHIT), (k1 o succ) z = (e o k1) z)
     (pf2 : forall (z : IntHIT), (k2 o succ) z = (e o k2) z)
     : forall (z : IntHIT), k1 z = k2 z.
   Proof.
     intro z.
-    exact ((uniquenessZ (k2 zero_i) k1 p0 pf1 z)
-    @ (uniquenessZ (k2 zero_i) k2 idpath pf2 z)^).
+    exact (uniquenessZ (k2 zero_i) k1 p0 pf1 z
+             @ (uniquenessZ (k2 zero_i) k2 idpath pf2 z)^).
   Defined.
 
 End Uniqueness.
@@ -228,9 +228,9 @@ End Uniqueness.
 Definition uniquenessZ_two_fun_equiv
   {P : Type}
   (f : P -> P)
-  {e': IsEquiv f}
-  (k1: IntHIT -> P)
-  (k2: IntHIT -> P)
+  {e' : IsEquiv f}
+  (k1 : IntHIT -> P)
+  (k2 : IntHIT -> P)
   (p0 : k1 zero_i = k2 zero_i)
   (pf1 : forall (z : IntHIT), (k1 o succ) z = (f o k1) z)
   (pf2 : forall (z : IntHIT), (k2 o succ) z = (f o k2) z)
@@ -242,7 +242,7 @@ Definition uniquenessZ_two_fun_equiv
 Section IntHITEquiv.
 
   Definition IntHITtoIntIT : IntHIT -> SInt
-  := IntHIT_rec zero int_succ int_pred int_pred int_succ_pred int_pred_succ.
+    := IntHIT_rec zero int_succ int_pred int_pred int_succ_pred int_pred_succ.
 
   Definition IntITtoIntHIT (z : SInt) : IntHIT.
   Proof.
