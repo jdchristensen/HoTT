@@ -150,6 +150,7 @@ Section EquivalenceCompatibility.
 
   Context {A B C D : Type}.
   Context (e : BiInv A B) (e' : BiInv C D) (f : A -> C) (g : B -> D).
+  Context (pe : g o e == e' o f).
 
   Let s := sect_biinv e.
   Let r := retr_biinv e.
@@ -160,13 +161,13 @@ Section EquivalenceCompatibility.
   Let re' := eissect_biinv e' : r' o e' == idmap.
   Let es' := eisretr_biinv e' : e' o s' == idmap.
 
-  Definition helper_r (pe : g o e == e' o f) : r' o g o e == f o r o e.
+  Definition helper_r : r' o g o e == f o r o e.
   Proof.
     intro x.
     exact (ap r' (pe x) @ (re' (f x) @ (ap f (re x))^)).
   Defined.
 
-  Definition helper_s (pe : g o e == e' o f) : e' o s' o g == e' o f o s.
+  Definition helper_s : e' o s' o g == e' o f o s.
   Proof.
     intro y.
     exact (es' (g y) @ (ap g (es y))^ @ pe (s y)).
@@ -174,23 +175,21 @@ Section EquivalenceCompatibility.
 
   (** The following lemmas express the coherence conditions mentioned above. *)
 
-  Definition biinv_compat_pr (pe : forall (x : A), g (e x) = e' (f x))
-    : r' o g == f o r.
+  Definition biinv_compat_pr : r' o g == f o r.
   Proof.
     rapply (equiv_ind e).
-    apply (helper_r pe).
+    exact helper_r.
   Defined.
 
-  Definition biinv_compat_ps (pe : forall (x : A), g (e x) = e' (f x))
-    : s' o g == f o s.
+  Definition biinv_compat_ps : s' o g == f o s.
   Proof.
     intro y.
     apply (equiv_inj e').
-    apply (helper_s pe).
+    apply helper_s.
   Defined.
 
-  Definition biinv_compat_pre (pe : forall (x : A), g (e x) = e' (f x)) (x : A)
-    : re' (f x) = (ap r' (pe x))^ @ biinv_compat_pr pe (e x) @ ap f (re x).
+  Definition biinv_compat_pre (x : A)
+    : re' (f x) = (ap r' (pe x))^ @ biinv_compat_pr (e x) @ ap f (re x).
   Proof.
     unfold biinv_compat_pr.
     rewrite equiv_ind_comp.
@@ -199,8 +198,8 @@ Section EquivalenceCompatibility.
     reflexivity.
   Defined.
 
-  Definition biinv_compat_pes (pe : forall (x : A), g (e x) = e' (f x)) (y : B)
-    : es' (g y) = ap e' (biinv_compat_ps pe y) @ (pe (s y))^ @ ap g (es y).
+  Definition biinv_compat_pes (y : B)
+    : es' (g y) = ap e' (biinv_compat_ps y) @ (pe (s y))^ @ ap g (es y).
   Proof.
     rewrite ap_equiv_inj.
     apply moveL_pM.
