@@ -153,31 +153,24 @@ Section Uniqueness.
   Local Definition re := eissect_biinv e.
   Local Definition es := eisretr_biinv e.
 
-  (** We prove a uniqueness principle expressing the universal property of the recursor, up to propositional equality. *)
+  (** We prove a uniqueness principle expressing the universal property of the recursor, up to homotopy. *)
   Definition uniquenessZ
     (t0 : P)
     (k : IntHIT -> P)
     (p0 : k zero_i = t0)
-    (pf : forall (z : IntHIT), (k o succ) z = (e o k) z)
+    (pf : k o succ == e o k)
     (rec := IntHIT_rec t0 e r s re es)
-    : forall (z : IntHIT), k z = rec z.
+    : k == rec.
   Proof.
-    snapply IntHIT_ind.
-    - simpl.
-      exact p0.
-    - simpl.
-      intros z H.
-      apply (ap e) in H.
-      exact (pf z @ H).
-    - simpl.
-      intros z H.
-      apply (ap r) in H.
-      exact ((biinv_compat_pr biinv_IntHIT_succ e k k pf z)^ @ H).
+    snapply IntHIT_ind; cbn.
+    - exact p0.
     - intros z H.
-      apply (ap s) in H.
-      exact ((biinv_compat_ps biinv_IntHIT_succ e k k pf z)^ @ H).
-    - simpl.
-      intros z t.
+      exact (pf z @ ap e H).
+    - intros z H.
+      exact ((biinv_compat_pr biinv_IntHIT_succ e k k pf z)^ @ ap r H).
+    - intros z H.
+      exact ((biinv_compat_ps biinv_IntHIT_succ e k k pf z)^ @ ap s H).
+    - intros z t.
       rewrite transport_paths_FlFr.
       rewrite ap_pp.
       rewrite 2 concat_p_pp.
@@ -190,8 +183,7 @@ Section Uniqueness.
       rewrite <- ap_compose.
       rewrite IntHIT_rec_beta_succ_is_sect.
       apply (concat_A1p (f := r o e)).
-    - simpl.
-      intros z t.
+    - intros z t.
       rewrite transport_paths_FlFr.
       rewrite ap_pp.
       rewrite 2 concat_p_pp.
@@ -200,22 +192,22 @@ Section Uniqueness.
       rewrite ap_V.
       rewrite <- inv_pp.
       rewrite concat_p_pp.
-      rewrite (biinv_compat_pes biinv_IntHIT_succ e k k pf z)^.
-      rewrite <- concat_p_pp.
+      rewrite <- (biinv_compat_pes biinv_IntHIT_succ).
+      rewrite concat_pp_p.
       apply moveR_Vp.
       rewrite <- ap_compose.
       rewrite IntHIT_rec_beta_succ_is_retr.
       apply (concat_A1p (f := e o s)).
   Defined.
 
-  (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are equal. *)
+  (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are homotopic. *)
   Definition uniquenessZ_two_fun_biinv
     (k1 : IntHIT -> P)
     (k2 : IntHIT -> P)
     (p0 : k1 zero_i = k2 zero_i)
-    (pf1 : forall (z : IntHIT), (k1 o succ) z = (e o k1) z)
-    (pf2 : forall (z : IntHIT), (k2 o succ) z = (e o k2) z)
-    : forall (z : IntHIT), k1 z = k2 z.
+    (pf1 : k1 o succ == e o k1)
+    (pf2 : k2 o succ == e o k2)
+    : k1 == k2.
   Proof.
     intro z.
     exact (uniquenessZ (k2 zero_i) k1 p0 pf1 z
@@ -286,7 +278,7 @@ Section IntHITEquiv.
     : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
     exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z)
-    @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
+             @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
   Defined.
 
   (** [IntITtoIntHIT] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [IntHIT] are equivalent. *)
