@@ -29,6 +29,16 @@ Coercion biinv_fun : BiInv >-> Funclass.
 Arguments biinv_fun {A B} _ _.
 Arguments biinv_isbiinv {A B} _.
 
+(** The record is equivalent to a product type.  This is used below in a 'product of contractible types is contractible' argument. *)
+Definition prod_isbiinv (A B : Type) `{f : A -> B}
+  : {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap} <~> IsBiInv f.
+Proof.
+  make_equiv.
+Defined.
+
+Definition issig_biinv (A B : Type) : {f : A -> B & IsBiInv f} <~> BiInv A B
+  := ltac:(issig).
+
 (** If [e] is bi-invertible, then the retraction and the section of [e] are equal. *)
 Definition sect_retr_homotopic_isbiinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
   : sect_biinv f == retr_biinv f.
@@ -53,16 +63,6 @@ Proof.
   lhs napply sect_retr_homotopic_isbiinv.
   apply eissect_biinv.
 Defined.
-
-(** The record is equivalent to a product type.  This is used below in a 'product of contractible types is contractible' argument. *)
-Definition prod_isbiinv (A B : Type) `{f : A -> B}
-  : {g : B -> A & g o f == idmap} * {h : B -> A & f o h == idmap} <~> IsBiInv f.
-Proof.
-  make_equiv.
-Defined.
-
-Definition issig_biinv (A B : Type) : {f : A -> B & IsBiInv f} <~> BiInv A B
-  := ltac:(issig).
 
 (** From a bi-invertible map, we can construct a half-adjoint equivalence in two ways.  Here we take the inverse to be the retraction. *)
 #[export] Instance isequiv_isbiinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
