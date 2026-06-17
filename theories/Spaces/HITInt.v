@@ -122,9 +122,9 @@ Definition IntHIT_rec_beta_succ_is_sect
   : forall z, ap f' (succ_is_sect z) = s (f' z).
 Proof.
   intro z.
-  refine (cancelL _ _ _ _).
-  refine ((apD_const _ _)^ @ _).
-  rapply IntHIT_ind_beta_succ_is_sect.
+  napply (cancelL (transport_const (succ_is_sect z) _)).
+  lhs_V napply apD_const.
+  napply IntHIT_ind_beta_succ_is_sect.
 Defined.
 
 Definition IntHIT_rec_beta_succ_is_retr
@@ -139,9 +139,9 @@ Definition IntHIT_rec_beta_succ_is_retr
   : forall z, ap f' (succ_is_retr z) = r (f' z).
 Proof.
   intro z.
-  refine (cancelL _ _ _ _).
-  refine ((apD_const _ _)^ @ _).
-  rapply IntHIT_ind_beta_succ_is_retr.
+  napply (cancelL (transport_const (succ_is_retr z) _)).
+  lhs_V napply apD_const.
+  napply IntHIT_ind_beta_succ_is_retr.
 Defined.
 
 Section Uniqueness.
