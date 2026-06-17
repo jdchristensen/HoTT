@@ -56,6 +56,32 @@ Definition biinv_IntHIT_succ : BiInv IntHIT IntHIT
 #[export] Instance isequiv_IntHIT_pred : IsEquiv pred
   := isequiv_isbiinv_retr succ.
 
+Definition IntHIT_ind_equiv {P : IntHIT -> Type}
+  (t0 : P zero_i)
+  (e : forall z : IntHIT, P z -> P (succ z))
+  {iseq : forall z, IsEquiv (e z)}
+  : forall z, P z.
+Proof.
+  snapply (IntHIT_ind t0 e).
+  - intro z.
+    exact ((e (pred z))^-1 o transport P (retr_is_sect_isbiinv biinv_IntHIT_succ z)^).
+  - intro z.
+    exact ((e (succ_sect z))^-1 o transport P (succ_is_retr z)^).
+  - intros z p; cbn beta.
+    lhs_V napply (ap_transport _ (fun z => (e z)^-1)).
+    lhs napply (ap (e z)^-1).
+    { lhs napply transport_compose.
+      symmetry; napply transport_pp. }
+    unfold retr_is_sect_isbiinv.
+    (* In the next line we use that our chosen proof of [retr_is_sect_isbiinv] satisfies the adjoint law. *)
+    rewrite (eisadj succ); cbn.
+    rewrite concat_Vp; cbn.
+    apply eissect.
+  - intros z p; cbn beta.
+    rewrite eisretr.
+    apply transport_pV.
+Defined.
+
 Definition IntHIT_ind_hprop {P : IntHIT -> Type} `{forall x, IsHProp (P x)}
   (t0 : P zero_i)
   (f : forall z : IntHIT, P z -> P (succ z))
@@ -148,71 +174,24 @@ Section Uniqueness.
 
   Context {P : Type} {e : BiInv P P}.
 
-  Local Definition s := sect_biinv e.
-  Local Definition r := retr_biinv e.
-  Local Definition re := eissect_biinv e.
-  Local Definition es := eisretr_biinv e.
-
-  (** We prove a uniqueness principle expressing the universal property of the recursor, up to homotopy. *)
-  Definition uniquenessZ
-    (t0 : P)
-    (k : IntHIT -> P)
-    (p0 : k zero_i = t0)
-    (pf : k o succ == e o k)
-    (rec := IntHIT_rec t0 e r s re es)
-    : k == rec.
-  Proof.
-    snapply IntHIT_ind; cbn.
-    - exact p0.
-    - intros z H.
-      exact (pf z @ ap e H).
-    - intros z H.
-      exact ((biinv_compat_pr biinv_IntHIT_succ e k k pf z)^ @ ap r H).
-    - intros z H.
-      exact ((biinv_compat_ps biinv_IntHIT_succ e k k pf z)^ @ ap s H).
-    - intros z t.
-      rewrite transport_paths_FlFr.
-      rewrite ap_pp.
-      rewrite 2 concat_p_pp.
-      rewrite <- (inv_V (ap r (pf z))).
-      rewrite <- 2 inv_pp.
-      rewrite concat_p_pp.
-      rewrite <- (biinv_compat_pre biinv_IntHIT_succ).
-      rewrite concat_pp_p.
-      apply moveR_Vp.
-      rewrite <- ap_compose.
-      rewrite IntHIT_rec_beta_succ_is_sect.
-      apply (concat_A1p (f := r o e)).
-    - intros z t.
-      rewrite transport_paths_FlFr.
-      rewrite ap_pp.
-      rewrite 2 concat_p_pp.
-      rewrite <- (inv_V (pf (succ_sect z))).
-      rewrite <- inv_pp.
-      rewrite ap_V.
-      rewrite <- inv_pp.
-      rewrite concat_p_pp.
-      rewrite <- (biinv_compat_pes biinv_IntHIT_succ).
-      rewrite concat_pp_p.
-      apply moveR_Vp.
-      rewrite <- ap_compose.
-      rewrite IntHIT_rec_beta_succ_is_retr.
-      apply (concat_A1p (f := e o s)).
-  Defined.
-
-  (** The following uniqueness principle states that if two maps out of [IntHIT] commute with 0 and the successor, then they are homotopic. *)
-  Definition uniquenessZ_two_fun_biinv
-    (k1 : IntHIT -> P)
-    (k2 : IntHIT -> P)
-    (p0 : k1 zero_i = k2 zero_i)
-    (pf1 : k1 o succ == e o k1)
-    (pf2 : k2 o succ == e o k2)
+  (** The following uniqueness principle states that if two maps out of [IntHIT] agree on 0 and commute with the successor, then they are homotopic. *)
+  Definition uniquenessZ_two_fun_biinv (k1 : IntHIT -> P) (k2 : IntHIT -> P)
+    (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == e o k1) (pf2 : k2 o succ == e o k2)
     : k1 == k2.
   Proof.
-    intro z.
-    exact (uniquenessZ (k2 zero_i) k1 p0 pf1 z
-             @ (uniquenessZ (k2 zero_i) k2 idpath pf2 z)^).
+    snapply IntHIT_ind_equiv; cbn beta.
+    - exact p0.
+    - intro z.
+      exact (equiv_concat_l (pf1 z) _ oE equiv_concat_r (pf2 z)^ _ oE equiv_ap e _ _).
+    - exact _.
   Defined.
+
+  (** As a special case, we can characterize the recursor. *)
+  Definition uniquenessZ (t0 : P) (k : IntHIT -> P)
+    (p0 : k zero_i = t0) (pf : k o succ == e o k)
+    (rec := IntHIT_rec_biinv t0 e)
+    : k == rec
+    := uniquenessZ_two_fun_biinv k rec p0 pf (fun _ => idpath).
 
 End Uniqueness.
 
