@@ -774,6 +774,12 @@ Proof.
   by path_induction.
 Defined.
 
+Definition ap11_is_ap01_ap10 {A B} {f g : A -> B} (h : g = f) {x y : A} (p : x = y)
+  : ap11 h p = ap g p @ ap10 h y.
+Proof.
+  by path_induction.
+Defined.
+
 (** Dependent transport in doubly dependent types and more. *)
 
 (** Singly dependent transport over doubly dependent types. *)
