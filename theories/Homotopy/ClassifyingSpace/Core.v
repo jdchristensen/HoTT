@@ -170,7 +170,7 @@ Section Eliminators.
     - exact p.
     - intro g.
       unfold DPath.
-      transport_paths transport_paths_FlFr_D.
+      transport_paths FlFr_D.
       rewrite 2 ClassifyingSpace_ind_beta_bloop.
       apply bloop_comm.
   Defined.
@@ -425,7 +425,6 @@ Definition ap_fmap_b {G H : Group} (u : G $-> H) (g : G)
   : ap (fmap B u) (bloop g) = bloop (u g)
   := ClassifyingSpace_rec_beta_bloop _ _ _ _ _.
 
-
 Definition bloop_natural (G H : Group) (f : G $-> H)
   : fmap loops (fmap B f) o bloop == bloop o f.
 Proof.
@@ -664,10 +663,8 @@ Defined.
 Definition fmap11_B_bbase {G H K : Group}
   (f1 : G $-> K) (f2 : H $-> K)
   (comm: forall g h, f1 g * f2 h = f2 h * f1 g)
-  : fmap11_B f1 f2 comm bbase = fmap B f2.
-Proof.
-  reflexivity.
-Defined.
+  : fmap11_B f1 f2 comm bbase = fmap B f2
+  := idpath.
 
 Definition fmap11_B_bbase' `{funext : Funext} {G H K : Group}
   (f1 : G $-> K) (f2 : H $-> K)
@@ -688,14 +685,6 @@ Section HSpace_bg.
   (** The multiplication follows from [fmap11_B].  One can also construct it directly, which replaces some subterms that are essentially [fmap B pmap_idmap] with [idmap].  The approach using [fmap11_B] actually makes the proof of [bg_mul_symm] simpler, but [bg_mul_right_id] no longer holds definitionally. *)
   Definition bg_mul : B G -> B G -> B G
     := fmap11_B grp_homo_id grp_homo_id commutativity.
-
-  (** When the same function appears twice, there is a special computation rule for transporting [idpath]. *)
-  Definition transport_paths_FlFr_1 {A B : Type} {f : A -> B} {x1 x2 : A}
-    (p : x1 = x2)
-    : transport (fun x => f x = f x) p 1 = 1.
-  Proof.
-    by destruct p.
-  Defined.
 
   Definition bg_mul_symm : forall x y, bg_mul x y = bg_mul y x.
   Proof.
