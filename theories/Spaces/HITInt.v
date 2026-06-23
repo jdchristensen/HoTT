@@ -440,7 +440,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Addition is an equivalence with second argument fixed. *)
-  #[export] Instance isequiv_IntHIT_add_r (y : IntHIT): IsEquiv (fun x => IntHIT_add x y).
+  #[export] Instance isequiv_IntHIT_add_r (y : IntHIT) : IsEquiv (fun x => IntHIT_add x y).
   Proof.
     snapply (isequiv_adjointify (fun x => IntHIT_add x y) (fun x => IntHIT_add x (-y))).
     - simpl.

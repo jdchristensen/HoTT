@@ -154,14 +154,14 @@ Section EquivalenceCompatibility.
   Definition biinv_compat_pr : r' o g == f o r.
   Proof.
     rapply (equiv_ind e).
-    exact (fun x => (ap r' (pe x) @ (re' (f x) @ (ap f (re x))^))).
+    exact (fun a => (ap r' (pe a) @ (re' (f a) @ (ap f (re a))^))).
   Defined.
 
   Definition biinv_compat_ps : s' o g == f o s.
   Proof.
-    intro y.
+    intro b.
     apply (equiv_inj e').
-    exact (es' (g y) @ (ap g (es y))^ @ pe (s y)).
+    exact (es' (g b) @ (ap g (es b))^ @ pe (s b)).
   Defined.
 
   Definition biinv_compat_pre (x : A)
