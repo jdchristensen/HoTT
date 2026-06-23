@@ -713,13 +713,12 @@ Section HSpace_bg.
     exact (transport_paths_FlFr_1 (bloop y)).
   Defined.
 
-  (** This is not definitionally true, but [bg_mul b bbase] is definitionally equal to [fmap B pmap_idmap], so we can use [fmap_id] to prove this. *)
-  Definition bg_mul_right_id
-    : forall b : B G, bg_mul b bbase = b
+  (** This is not definitionally true, but [bg_mul b bbase] is definitionally equal to [fmap B grp_homo_id], so we can use [fmap_id] to prove this. *)
+  Definition bg_mul_right_id : forall b : B G, bg_mul b bbase = b
     := fmap_id B G.
 
-  Definition bg_mul_left_id
-    : forall b : B G, bg_mul bbase b = b
+  (** It may be surprising, but the lhs here is *also* definitionally equal to [fmap B grp_homo_id]. *)
+  Definition bg_mul_left_id : forall b : B G, bg_mul bbase b = b
     := fmap_id B G.
 
   #[export] Instance ishspace_bg : IsHSpace (B G)
