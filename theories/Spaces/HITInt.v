@@ -26,8 +26,8 @@ Module Export IntHIT.
       (re : forall (z : IntHIT) (t : P z), succ_is_sect z # (r (succ z) (e z t)) = t)
       (es : forall (z : IntHIT) (t : P z), succ_is_retr z # (e (succ_sect z) (s z t)) = t).
 
-    Fixpoint IntHIT_ind (x : IntHIT) : P x
-      := match x with
+    Fixpoint IntHIT_ind (z : IntHIT) : P z
+      := match z with
       | zero_i => fun _ _ => t0
       | succ z => fun _ _ => e z (IntHIT_ind z)
       | pred z => fun _ _ => r z (IntHIT_ind z)
@@ -37,10 +37,10 @@ Module Export IntHIT.
 
     (** The beta principles for [IntHIT_ind] on [succ_is_sect] and [succ_is_retr]. *)
     Axiom IntHIT_ind_beta_succ_is_sect
-      : forall (z: IntHIT), apD IntHIT_ind (succ_is_sect z) = re z (IntHIT_ind z).
+      : forall (z : IntHIT), apD IntHIT_ind (succ_is_sect z) = re z (IntHIT_ind z).
 
     Axiom IntHIT_ind_beta_succ_is_retr
-      : forall (z: IntHIT), apD IntHIT_ind (succ_is_retr z) = es z (IntHIT_ind z).
+      : forall (z : IntHIT), apD IntHIT_ind (succ_is_retr z) = es z (IntHIT_ind z).
 
   End IntHIT.
 End IntHIT.
@@ -80,11 +80,10 @@ Proof.
     apply transport_pV.
 Defined.
 
-Definition IntHIT_ind_hprop {P : IntHIT -> Type} `{forall x, IsHProp (P x)}
-  (t0 : P zero_i)
-  (f : forall z : IntHIT, P z -> P (succ z))
+Definition IntHIT_ind_hprop {P : IntHIT -> Type} `{forall z, IsHProp (P z)}
+  (t0 : P zero_i) (f : forall z : IntHIT, P z -> P (succ z))
   (g : forall z : IntHIT, P z -> P (pred z))
-  : forall x, P x.
+  : forall z, P z.
 Proof.
   snapply (IntHIT_ind t0 f g).
   - intros z t.
@@ -95,9 +94,9 @@ Proof.
     rapply path_ishprop.
 Defined.
 
-Definition IntHIT_ind_hprop_iff {P : IntHIT -> Type} `{forall x, IsHProp (P x)}
+Definition IntHIT_ind_hprop_iff {P : IntHIT -> Type} `{forall z, IsHProp (P z)}
   (t0 : P zero_i) (f : forall z : IntHIT, P z <-> P (succ z))
-  : forall x, P x.
+  : forall z, P z.
 Proof.
   srapply (IntHIT_ind_hprop t0).
   - intro z.  exact (fst (f z)).
@@ -220,7 +219,7 @@ Section IntHITEquiv.
       apply IHz.
   Defined.
 
-  Definition IntITtoIntHIT_comp_succ (z: SInt)
+  Definition IntITtoIntHIT_comp_succ (z : SInt)
     : IntITtoIntHIT (int_succ z) = succ (IntITtoIntHIT z).
   Proof.
     simpl.
@@ -229,7 +228,7 @@ Section IntHITEquiv.
     all: symmetry; exact (retr_is_sect_isbiinv succ _).
   Defined.
 
-  Definition IntITtoIntHIT_comp_succ' (z: IntHIT)
+  Definition IntITtoIntHIT_comp_succ' (z : IntHIT)
     : IntITtoIntHIT (IntHITtoIntIT (succ z)) = succ (IntITtoIntHIT (IntHITtoIntIT z))
     := IntITtoIntHIT_comp_succ (IntHITtoIntIT z).
 
@@ -301,7 +300,7 @@ Section IntegerArithmetic.
   (** ** Properties of Operations *)
 
   (** Negation is involutive. *)
-  Definition IntHIT_neg_neg (x: IntHIT): - - x = x.
+  Definition IntHIT_neg_neg (x : IntHIT): - - x = x.
   Proof.
     revert x.
     by srapply (uniquenessZ_two_fun_equiv succ).
@@ -445,12 +444,12 @@ Section IntegerArithmetic.
   Proof.
     snapply (isequiv_adjointify (fun x => IntHIT_add x y) (fun x => IntHIT_add x (-y))).
     - simpl.
-      intro x.
+      intro z.
       rewrite <- IntHIT_add_assoc.
       rewrite IntHIT_add_neg_l.
       by rewrite IntHIT_add_0_r.
     - simpl.
-      intro x.
+      intro z.
       rewrite <- IntHIT_add_assoc.
       rewrite IntHIT_add_neg_r.
       by rewrite IntHIT_add_0_r.
