@@ -56,10 +56,8 @@ Definition biinv_IntHIT_succ : BiInv IntHIT IntHIT
 #[export] Instance isequiv_IntHIT_pred : IsEquiv pred
   := isequiv_isbiinv_retr succ.
 
-Definition IntHIT_ind_equiv {P : IntHIT -> Type}
-  (t0 : P zero_i)
-  (e : forall z : IntHIT, P z -> P (succ z))
-  {iseq : forall z, IsEquiv (e z)}
+Definition IntHIT_ind_equiv {P : IntHIT -> Type} (t0 : P zero_i)
+  (e : forall z : IntHIT, P z -> P (succ z)) {iseq : forall z, IsEquiv (e z)}
   : forall z, P z.
 Proof.
   snapply (IntHIT_ind t0 e).
@@ -108,19 +106,40 @@ Proof.
     exact (transport P (succ_is_sect z)^).
 Defined.
 
-(** The recursion principle. *)
-Definition IntHIT_rec {P : Type} (t0 : P)
-  (f : P -> P) (g1 : P -> P) (g2 : P -> P)
-  (s : forall (t : P), g1 (f t) = t)
-  (r : forall (t : P), f (g2 t) = t)
-  : IntHIT -> P.
-Proof.
-  snapply (IntHIT_ind t0 (fun _ => f) (fun _ => g1) (fun _ => g2)).
-  all: intros z t; cbn.
-  all: lhs napply transport_const.
-  - apply s.
-  - apply r.
-Defined.
+Section RecursionPrinciple.
+
+  Context {P : Type} (t0 : P) (f : P -> P) (g1 g2 : P -> P)
+    (s : g1 o f == idmap) (r : f o g2 == idmap).
+
+  (** The recursion principle. *)
+  Definition IntHIT_rec : IntHIT -> P.
+  Proof.
+    snapply (IntHIT_ind t0 (fun _ => f) (fun _ => g1) (fun _ => g2)).
+    all: intros z t; cbn.
+    all: lhs napply transport_const.
+    - apply s.
+    - apply r.
+  Defined.
+
+  Definition IntHIT_rec_beta_succ_is_sect
+    : forall z, ap IntHIT_rec (succ_is_sect z) = s (IntHIT_rec z).
+  Proof.
+    intro z.
+    napply (cancelL (transport_const (succ_is_sect z) _)).
+    lhs_V napply apD_const.
+    napply IntHIT_ind_beta_succ_is_sect.
+  Defined.
+
+  Definition IntHIT_rec_beta_succ_is_retr
+    : forall z, ap IntHIT_rec (succ_is_retr z) = r (IntHIT_rec z).
+  Proof.
+    intro z.
+    napply (cancelL (transport_const (succ_is_retr z) _)).
+    lhs_V napply apD_const.
+    napply IntHIT_ind_beta_succ_is_retr.
+  Defined.
+
+End RecursionPrinciple.
 
 (** The recursion principle phrased using a biinvertible map. *)
 Definition IntHIT_rec_biinv {P : Type} (t0 : P) (f : P -> P) `{IsBiInv P P f}
@@ -135,40 +154,6 @@ Definition IntHIT_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
 (** We define equivalence iteration. *)
 Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0 : A) : A
   := IntHIT_rec_equiv a0 f n.
-
-Definition IntHIT_rec_beta_succ_is_sect
-  (P : Type)
-  (t0 : P)
-  (f : P -> P)
-  (g1 : P -> P)
-  (g2 : P -> P)
-  (s : forall (t : P), g1 (f t) = t)
-  (r : forall (t : P), f (g2 t) = t)
-  (f':=IntHIT_rec t0 f g1 g2 s r)
-  : forall z, ap f' (succ_is_sect z) = s (f' z).
-Proof.
-  intro z.
-  napply (cancelL (transport_const (succ_is_sect z) _)).
-  lhs_V napply apD_const.
-  napply IntHIT_ind_beta_succ_is_sect.
-Defined.
-
-Definition IntHIT_rec_beta_succ_is_retr
-  (P : Type)
-  (t0 : P)
-  (f : P -> P)
-  (g1 : P -> P)
-  (g2 : P -> P)
-  (s : forall (t : P), g1 (f t)= t)
-  (r : forall (t : P), f (g2 t)= t)
-  (f':=IntHIT_rec t0 f g1 g2 s r)
-  : forall z, ap f' (succ_is_retr z) = r (f' z).
-Proof.
-  intro z.
-  napply (cancelL (transport_const (succ_is_retr z) _)).
-  lhs_V napply apD_const.
-  napply IntHIT_ind_beta_succ_is_retr.
-Defined.
 
 Section Uniqueness.
 
@@ -196,15 +181,10 @@ Section Uniqueness.
 End Uniqueness.
 
 (** The same uniqueness principle but for half-adjoint equivalences. *)
-Definition uniquenessZ_two_fun_equiv
-  {P : Type}
-  (f : P -> P)
-  {e' : IsEquiv f}
-  (k1 : IntHIT -> P)
-  (k2 : IntHIT -> P)
-  (p0 : k1 zero_i = k2 zero_i)
-  (pf1 : forall (z : IntHIT), (k1 o succ) z = (f o k1) z)
-  (pf2 : forall (z : IntHIT), (k2 o succ) z = (f o k2) z)
+Definition uniquenessZ_two_fun_equiv {P : Type} (f : P -> P)
+  {e' : IsEquiv f} (k1 : IntHIT -> P) (k2 : IntHIT -> P)
+  (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == f o k1)
+  (pf2 : k2 o succ == f o k2)
   : forall (z : IntHIT), k1 z = k2 z
   := uniquenessZ_two_fun_biinv (e := Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
