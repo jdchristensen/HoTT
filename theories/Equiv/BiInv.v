@@ -149,31 +149,19 @@ Section EquivalenceCompatibility.
   Let re' := eissect_biinv e' : r' o e' == idmap.
   Let es' := eisretr_biinv e' : e' o s' == idmap.
 
-  Definition helper_r : r' o g o e == f o r o e.
-  Proof.
-    intro x.
-    exact (ap r' (pe x) @ (re' (f x) @ (ap f (re x))^)).
-  Defined.
-
-  Definition helper_s : e' o s' o g == e' o f o s.
-  Proof.
-    intro y.
-    exact (es' (g y) @ (ap g (es y))^ @ pe (s y)).
-  Defined.
-
   (** The following lemmas express the coherence conditions mentioned above. *)
 
   Definition biinv_compat_pr : r' o g == f o r.
   Proof.
     rapply (equiv_ind e).
-    exact helper_r.
+    exact (fun x => (ap r' (pe x) @ (re' (f x) @ (ap f (re x))^))).
   Defined.
 
   Definition biinv_compat_ps : s' o g == f o s.
   Proof.
     intro y.
     apply (equiv_inj e').
-    apply helper_s.
+    exact (es' (g y) @ (ap g (es y))^ @ pe (s y)).
   Defined.
 
   Definition biinv_compat_pre (x : A)
