@@ -206,25 +206,16 @@ Section IntHITEquiv.
     : (IntHITtoIntIT o IntITtoIntHIT) z = z.
   Proof.
     induction z as [|[|n] IHz|[|n] IHz].
-    - simpl.
-      reflexivity.
-    - simpl.
-      reflexivity.
-    - apply (ap int_succ) in IHz.
-      apply IHz.
-    - simpl.
-      reflexivity.
-    - simpl.
-      apply (ap int_pred) in IHz.
-      apply IHz.
+    1, 2, 4: reflexivity.
+    - exact (ap int_succ IHz).
+    - exact (ap int_pred IHz).
   Defined.
 
   Definition IntITtoIntHIT_comp_succ (z : SInt)
     : IntITtoIntHIT (int_succ z) = succ (IntITtoIntHIT z).
   Proof.
-    simpl.
     induction z as [|[|n] IHz|[|n] IHz].
-    1, 2, 3: reflexivity.
+    1-3: reflexivity.
     all: symmetry; exact (retr_is_sect_isbiinv succ _).
   Defined.
 
@@ -404,8 +395,7 @@ Section IntegerArithmetic.
     revert z.
     srapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
     - reflexivity.
-    - simpl.
-      intro s.
+    - simpl; intro s.
       rewrite IntHIT_add_succ_r.
       rewrite succ_is_sect.
       reflexivity.
@@ -426,33 +416,25 @@ Section IntegerArithmetic.
   Defined.
 
   (** Addition is an equivalence with first argument fixed. *)
-  #[export] Instance isequiv_IntHIT_add_l (z : IntHIT): IsEquiv (IntHIT_add z).
+  #[export] Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
   Proof.
-    srapply (isequiv_adjointify (IntHIT_add z) (IntHIT_add (-z))).
-    - simpl.
-      intro y.
-      rewrite IntHIT_add_assoc.
-      by rewrite IntHIT_add_neg_r.
-    - simpl.
-      intro y.
-      rewrite IntHIT_add_assoc.
-      by rewrite IntHIT_add_neg_l.
+    srapply (isequiv_adjointify _ (IntHIT_add (-x))).
+    all: simpl; intro y.
+    all: lhs napply IntHIT_add_assoc.
+    - by rewrite IntHIT_add_neg_r.
+    - by rewrite IntHIT_add_neg_l.
   Defined.
 
-  (** Addition is an equivalence with second argument fixed. *)
+  (** Addition is an equivalence with second argument fixed.  This also follows from the previous result and [IntHIT_add_comm], but this proof computes better. *)
   #[export] Instance isequiv_IntHIT_add_r (y : IntHIT) : IsEquiv (fun x => IntHIT_add x y).
   Proof.
-    snapply (isequiv_adjointify (fun x => IntHIT_add x y) (fun x => IntHIT_add x (-y))).
-    - simpl.
-      intro z.
-      rewrite <- IntHIT_add_assoc.
-      rewrite IntHIT_add_neg_l.
-      by rewrite IntHIT_add_0_r.
-    - simpl.
-      intro z.
-      rewrite <- IntHIT_add_assoc.
-      rewrite IntHIT_add_neg_r.
-      by rewrite IntHIT_add_0_r.
+    snapply (isequiv_adjointify _ (fun x => IntHIT_add x (-y))).
+    all: simpl; intro x.
+    all: lhs_V napply IntHIT_add_assoc.
+    - rewrite IntHIT_add_neg_l.
+      apply IntHIT_add_0_r.
+    - rewrite IntHIT_add_neg_r.
+      apply IntHIT_add_0_r.
   Defined.
 
   (** *** Multiplication *)
