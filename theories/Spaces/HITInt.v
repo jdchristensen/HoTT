@@ -235,8 +235,8 @@ Section IntHITEquiv.
   Definition IntITtoIntHIT_is_linv (z : IntHIT)
     : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
-    exact (((IntHIT_homotopic (P := IntHIT) (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z)
-             @ ((IntHIT_homotopic (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
+    exact (IntHIT_homotopic (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ' z
+             @ (IntHIT_homotopic (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath) z)^).
   Defined.
 
   (** [IntITtoIntHIT] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [IntHIT] are equivalent. *)
