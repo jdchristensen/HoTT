@@ -156,7 +156,7 @@ Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0 : A) : A
 
 Section Uniqueness.
 
-  Context {P : Type} {e : BiInv P P}.
+  Context {P : Type} (e : BiInv P P).
 
   (** The following uniqueness principle states that if two maps out of [IntHIT] agree on 0 and commute with the successor, then they are homotopic. *)
   Definition IntHIT_homotopic_two_fun_biinv (k1 : IntHIT -> P) (k2 : IntHIT -> P)
@@ -185,7 +185,7 @@ Definition IntHIT_homotopic_two_fun_equiv {P : Type} (f : P -> P)
   (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == f o k1)
   (pf2 : k2 o succ == f o k2)
   : forall (z : IntHIT), k1 z = k2 z
-  := IntHIT_homotopic_two_fun_biinv (e := Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
+  := IntHIT_homotopic_two_fun_biinv (Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
 (** Next we prove that [IntHIT] is equivalent to [SInt]. *)
 
@@ -226,8 +226,8 @@ Section IntHITEquiv.
   Definition IntITtoIntHIT_is_linv (z : IntHIT)
     : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
-    exact (IntHIT_homotopic (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ' z
-             @ (IntHIT_homotopic (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath) z)^).
+    exact (IntHIT_homotopic (biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ' z
+             @ (IntHIT_homotopic (biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath) z)^).
   Defined.
 
   (** [IntITtoIntHIT] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [IntHIT] are equivalent. *)
