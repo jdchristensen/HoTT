@@ -21,20 +21,15 @@ Local Open Scope trunc_scope.
 Local Open Scope mc_mult_scope.
 Local Open Scope path_scope.
 
-Local Open Scope pointed_scope.
-Local Open Scope trunc_scope.
-Local Open Scope mc_mult_scope.
-Local Open Scope path_scope.
-
 (** ** Centralizers of general subtypes *)
 
+(** The centralizer of the elements of [G] for which [H] holds. *)
 Definition subtype_centralizer {G : Group} (H : G -> Type)
   : G -> Type
-  (* Note the order of operations here, we do this to match the original proofs for the centraliser of an element. *)
+  (* Note the order of operations here.  We do this to match the original proofs for the centraliser of an element. *)
   := fun g => merely (forall h : G, H h -> centralizer h g).
 
-Instance issubgroup_subtype_centralizer
-  {G : Group} (H : G -> Type)
+Instance issubgroup_subtype_centralizer {G : Group} (H : G -> Type)
   : IsSubgroup (subtype_centralizer H).
 Proof.
   srapply Build_IsSubgroup.
@@ -56,8 +51,7 @@ Definition subtype_centralizer_subgroup
   := Build_Subgroup G (subtype_centralizer H) _.
 
 Definition grp_hom_centralizer_image_grp_hom {G H : Group} (f : G $-> H)
-  : grp_prod (subtype_centralizer_subgroup (grp_image f)) G
-    $-> H.
+  : grp_prod (subtype_centralizer_subgroup (grp_image f)) G $-> H.
 Proof.
   snapply Build_GroupHomomorphism.
   1,2: intros [[x cx] y].
@@ -80,10 +74,8 @@ Definition grp_image_homotopic_grp_homo
   : subgroup_group (grp_image u) $-> subgroup_group (grp_image v).
 Proof.
   srapply subgroup_corec.
-  + snapply Build_GroupHomomorphism.
-    - exact pr1.
-    - intros x y; reflexivity.
-  + intros [h uh].
+  - apply subgroup_incl.
+  - intros [h uh].
     strip_truncations; apply tr.
     exact (uh.1; (p _)^ @ uh.2).
 Defined.
@@ -101,9 +93,9 @@ Definition grp_iso_grp_image_homotopic_grp_homo
   {G H : Group} {u v : G $-> H} (p : u $== v)
   : subgroup_group (grp_image u) $<~> subgroup_group (grp_image v).
 Proof.
-  srapply Build_GroupIsomorphism.
+  snapply Build_GroupIsomorphism.
   1: exact (grp_image_homotopic_grp_homo p).
-  srapply isequiv_adjointify.
+  snapply isequiv_adjointify.
   1: exact (grp_image_homotopic_grp_homo (fun x => (p x)^)).
   1,2: by apply inv_grp_image_homotopic_grp_homo.
 Defined.
@@ -117,7 +109,7 @@ Proof.
   intro u.
   apply tr.
   exists group_unit.
-  intro g; by rhs exact (grp_conj_unit (u g)).
+  intro g; exact (grp_conj_unit (u g))^.
 Defined.
 
 Instance symmetric_conj_grp_homo {G H : Group}
@@ -128,12 +120,9 @@ Proof.
   destruct cuv as [h ch].
   exists (inv h).
   intro g.
-  unfold grp_conj; cbn.
-  rewrite grp_inv_inv.
-  refine (grp_moveL_gM _).
-  refine (grp_moveL_Vg _).
-  lhs apply (grp_assoc h (v g) (inv h)).
-  exact (ch g)^.
+  rewrite (ch g).
+  symmetry.
+  napply grp_conj_inv_l.
 Defined.
 
 Instance transitive_conj_grp_homo {G H : Group}
@@ -144,13 +133,9 @@ Proof.
   destruct cuv as [h1 ch1]; destruct cvw as [h2 ch2].
   exists (h1 * h2).
   intro g.
-  specialize (ch1 g); specialize (ch2 g).
-  rewrite ch2 in ch1.
-  unfold grp_conj in ch1; cbn in ch1.
-  repeat rewrite (grp_assoc h1 _) in ch1.
-  rewrite <- (grp_assoc _ (inv h1)) in ch1.
-  rewrite <- grp_inv_op in ch1.
-  exact ch1.
+  lhs apply ch1.
+  rewrite ch2.
+  symmetry; napply grp_conj_op.
 Defined.
 
 Definition groupreps (G H : Group) : Type
@@ -160,7 +145,7 @@ Definition idmap_fmap_grp_conj {G : Group} (g : G)
   : fmap B (grp_conj g) == idmap.
 Proof.
   srapply ClassifyingSpace_ind_hset.
-  - exact (bloop g).
+  - cbn. exact (bloop g).
   - intro x.
     rapply equiv_sq_dp^-1.
     snapply equiv_sq_path.
@@ -168,7 +153,7 @@ Proof.
     rhs_V rapply bloop_pp.
     rewrite ap_idmap.
     lhs_V rapply bloop_pp.
-    by rhs rapply (ap bloop (grp_inv_gV_g _ g)).
+    symmetry; exact (ap bloop (grp_inv_gV_g _ g)).
 Defined.
 
 (** ** Connected components of [B G -> B H] *)
@@ -176,10 +161,10 @@ Defined.
 Definition pi0_map_bg_groupreps `{ua : Univalence} (G H : Group)
   : groupreps G H -> Trunc 0 (B G -> B H).
 Proof.
-  unshelve refine (Quotient_rec _ _ _ _).
+  srefine (Quotient_rec _ _ _ _); cbn beta.
   - intro f.
     apply tr.
-    exact (fmap B (a := G) (b := H) f).
+    exact (fmap B f).
   - intros a b h.
     strip_truncations; destruct h as [h r].
     apply ap.
