@@ -196,7 +196,7 @@ Section IntHITEquiv.
 
   Definition IntITtoIntHIT (z : SInt) : IntHIT.
   Proof.
-    induction z.
+    induction z as [|n IHz|n IHz].
     - exact zero_i.
     - exact (succ IHz).
     - exact (pred IHz).
