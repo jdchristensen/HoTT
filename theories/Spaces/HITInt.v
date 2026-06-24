@@ -17,9 +17,9 @@ Module Export IntHIT.
     | pred : IntHIT -> IntHIT
     | succ_sect : IntHIT -> IntHIT.
 
-    Axiom succ_is_sect : forall (z : IntHIT), pred (succ z) = z.
+    Axiom succ_is_sect : pred o succ == idmap.
 
-    Axiom succ_is_retr : forall (z : IntHIT), succ (succ_sect z) = z.
+    Axiom succ_is_retr : succ o succ_sect == idmap.
 
     Context {P : IntHIT -> Type} (t0 : P zero_i) (e : forall z : IntHIT, P z -> P (succ z))
       (r : forall z : IntHIT, P z -> P (pred z)) (s : forall z : IntHIT, P z -> P (succ_sect z))
@@ -159,7 +159,7 @@ Section Uniqueness.
   Context {P : Type} {e : BiInv P P}.
 
   (** The following uniqueness principle states that if two maps out of [IntHIT] agree on 0 and commute with the successor, then they are homotopic. *)
-  Definition uniquenessZ_two_fun_biinv (k1 : IntHIT -> P) (k2 : IntHIT -> P)
+  Definition IntHIT_homotopic_two_fun_biinv (k1 : IntHIT -> P) (k2 : IntHIT -> P)
     (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == e o k1) (pf2 : k2 o succ == e o k2)
     : k1 == k2.
   Proof.
@@ -171,21 +171,21 @@ Section Uniqueness.
   Defined.
 
   (** As a special case, we can characterize the recursor. *)
-  Definition uniquenessZ (t0 : P) (k : IntHIT -> P)
+  Definition IntHIT_homotopic (t0 : P) (k : IntHIT -> P)
     (p0 : k zero_i = t0) (pf : k o succ == e o k)
     (rec := IntHIT_rec_biinv t0 e)
     : k == rec
-    := uniquenessZ_two_fun_biinv k rec p0 pf (fun _ => idpath).
+    := IntHIT_homotopic_two_fun_biinv k rec p0 pf (fun _ => idpath).
 
 End Uniqueness.
 
 (** The same uniqueness principle but for half-adjoint equivalences. *)
-Definition uniquenessZ_two_fun_equiv {P : Type} (f : P -> P)
+Definition IntHIT_homotopic_two_fun_equiv {P : Type} (f : P -> P)
   {e' : IsEquiv f} (k1 : IntHIT -> P) (k2 : IntHIT -> P)
   (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == f o k1)
   (pf2 : k2 o succ == f o k2)
   : forall (z : IntHIT), k1 z = k2 z
-  := uniquenessZ_two_fun_biinv (e := Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
+  := IntHIT_homotopic_two_fun_biinv (e := Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
 (** Next we prove that [IntHIT] is equivalent to [SInt]. *)
 
@@ -235,8 +235,8 @@ Section IntHITEquiv.
   Definition IntITtoIntHIT_is_linv (z : IntHIT)
     : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
-    exact (((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z)
-             @ ((uniquenessZ (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
+    exact (((IntHIT_homotopic (P := IntHIT) (e := biinv_IntHIT_succ) zero_i (IntITtoIntHIT o IntHITtoIntIT) idpath IntITtoIntHIT_comp_succ') z)
+             @ ((IntHIT_homotopic (P := IntHIT) (e := biinv_IntHIT_succ) zero_i idmap idpath (fun x => idpath)) z)^).
   Defined.
 
   (** [IntITtoIntHIT] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [IntHIT] are equivalent. *)
@@ -266,10 +266,10 @@ Section IntegerArithmetic.
   Notation "z .-1" := (pred z) : IntHIT_scope.
 
   (** We define negation by recursion.  Negation is defined at this early stage because it will be used in parsing numerals. *)
-  Definition IntHIT_neg (x : IntHIT) : IntHIT
-    := IntHIT_rec_equiv zero_i pred x.
+  Definition IntHIT_neg (z : IntHIT) : IntHIT
+    := IntHIT_rec_equiv zero_i pred z.
 
-  Notation "- x" := (IntHIT_neg x) : IntHIT_scope.
+  Notation "- z" := (IntHIT_neg z) : IntHIT_scope.
 
   (** We define addition by recursion on the first argument. *)
   Definition IntHIT_add (x y : IntHIT) : IntHIT
@@ -300,10 +300,10 @@ Section IntegerArithmetic.
   (** ** Properties of Operations *)
 
   (** Negation is involutive. *)
-  Definition IntHIT_neg_neg (x : IntHIT): - - x = x.
+  Definition IntHIT_neg_neg (z : IntHIT): - - z = z.
   Proof.
-    revert x.
-    by srapply (uniquenessZ_two_fun_equiv succ).
+    revert z.
+    by srapply (IntHIT_homotopic_two_fun_equiv succ).
   Defined.
 
   (* * Negation is an equivalence. *)
@@ -318,11 +318,11 @@ Section IntegerArithmetic.
     := equiv_inj IntHIT_neg.
 
   (** The negation of a successor is the predecessor of the negation. *)
-  Definition IntHIT_neg_succ (x : IntHIT) : - succ x = pred (-x)
+  Definition IntHIT_neg_succ (z : IntHIT) : - succ z = pred (-z)
     := idpath.
 
   (** The negation of a predecessor is the successor of the negation. *)
-  Definition IntHIT_neg_pred (x : IntHIT) : - pred x = succ (- x)
+  Definition IntHIT_neg_pred (z : IntHIT) : - pred z = succ (- z)
     := idpath.
 
   (** *** Addition *)
@@ -331,14 +331,14 @@ Section IntegerArithmetic.
   Infix "-" := (fun x y => x + -y) : IntHIT_scope.
 
   (** Integer addition with zero on the left is the identity by definition. *)
-  Definition IntHIT_add_0_l (x : IntHIT) : 0 + x = x
+  Definition IntHIT_add_0_l (z : IntHIT) : 0 + z = z
     := idpath.
 
   (** Integer addition with zero on the right is the identity. *)
-  Definition IntHIT_add_0_r (x : IntHIT) : x + 0 = x.
+  Definition IntHIT_add_0_r (z : IntHIT) : z + 0 = z.
   Proof.
-    revert x.
-    by srapply (uniquenessZ_two_fun_equiv succ).
+    revert z.
+    by srapply (IntHIT_homotopic_two_fun_equiv succ).
   Defined.
 
   (** Adding a successor on the left is the successor of the sum. *)
@@ -353,14 +353,14 @@ Section IntegerArithmetic.
   Definition IntHIT_add_succ_r (x y : IntHIT) : x + (succ y) = succ (x + y).
   Proof.
     revert x.
-    by srapply (uniquenessZ_two_fun_equiv succ).
+    by srapply (IntHIT_homotopic_two_fun_equiv succ).
   Defined.
 
   (** Adding a predecessor on the right is the predecessor of the sum. *)
   Definition IntHIT_add_pred_r (x y : IntHIT) : x + (pred y) = pred (x + y).
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv succ); cbn beta.
+    srapply (IntHIT_homotopic_two_fun_equiv succ); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro z.
@@ -370,21 +370,21 @@ Section IntegerArithmetic.
   Defined.
 
   (** Integer addition with 1 on the left is the successor. *)
-  Definition IntHIT_add_1_l (x : IntHIT) : 1 + x = succ x
+  Definition IntHIT_add_1_l (z : IntHIT) : 1 + z = succ z
     := idpath.
 
   (** Integer addition with 1 on the right is the successor. *)
-  Definition IntHIT_add_1_r (x : IntHIT) : x + 1 = succ x.
+  Definition IntHIT_add_1_r (z : IntHIT) : z + 1 = succ z.
   Proof.
-    revert x.
-    by srapply (uniquenessZ_two_fun_equiv succ).
+    revert z.
+    by srapply (IntHIT_homotopic_two_fun_equiv succ).
   Defined.
 
   (** Integer addition is commutative. *)
   Definition IntHIT_add_comm (x y : IntHIT) : x + y = y + x.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv succ); cbn beta.
+    srapply (IntHIT_homotopic_two_fun_equiv succ); cbn beta.
     - by rewrite IntHIT_add_0_r.
     - reflexivity.
     - intro z.
@@ -395,14 +395,14 @@ Section IntegerArithmetic.
   Definition IntHIT_add_assoc (x y z : IntHIT) : x + (y + z) = x + y + z.
   Proof.
     revert x.
-    by srapply (uniquenessZ_two_fun_equiv succ).
+    by srapply (IntHIT_homotopic_two_fun_equiv succ).
   Defined.
 
   (** Negation is a left inverse with respect to integer addition. *)
-  Definition IntHIT_add_neg_l (x : IntHIT) : - x + x = 0.
+  Definition IntHIT_add_neg_l (z : IntHIT) : - z + z = 0.
   Proof.
-    revert x.
-    srapply (uniquenessZ_two_fun_equiv idmap); cbn beta.
+    revert z.
+    srapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
     - reflexivity.
     - simpl.
       intro s.
@@ -413,7 +413,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Negation is a right inverse with respect to integer addition. *)
-  Definition IntHIT_add_neg_r (x : IntHIT) : x - x = 0.
+  Definition IntHIT_add_neg_r (z : IntHIT) : z - z = 0.
   Proof.
     unfold "-"; by rewrite IntHIT_add_comm, IntHIT_add_neg_l.
   Defined.
@@ -422,13 +422,13 @@ Section IntegerArithmetic.
   Definition IntHIT_neg_add (x y : IntHIT) : - (x + y) = - x - y.
   Proof.
     revert x.
-    by srapply (uniquenessZ_two_fun_equiv pred).
+    by srapply (IntHIT_homotopic_two_fun_equiv pred).
   Defined.
 
   (** Addition is an equivalence with first argument fixed. *)
-  #[export] Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
+  #[export] Instance isequiv_IntHIT_add_l (z : IntHIT): IsEquiv (IntHIT_add z).
   Proof.
-    srapply (isequiv_adjointify (IntHIT_add x) (IntHIT_add (-x))).
+    srapply (isequiv_adjointify (IntHIT_add z) (IntHIT_add (-z))).
     - simpl.
       intro y.
       rewrite IntHIT_add_assoc.
@@ -472,14 +472,14 @@ Section IntegerArithmetic.
     := idpath.
 
   (** Integer multiplication with zero on the left is zero by definition. *)
-  Definition IntHIT_mul_0_l (x : IntHIT) : 0 * x = 0
+  Definition IntHIT_mul_0_l (z : IntHIT) : 0 * z = 0
     := idpath.
 
   (** Integer multiplication with zero on the right is zero. *)
-  Definition IntHIT_mul_0_r (x : IntHIT) : x * 0 = 0.
+  Definition IntHIT_mul_0_r (z : IntHIT) : z * 0 = 0.
   Proof.
-    revert x.
-    rapply (uniquenessZ_two_fun_equiv idmap); cbn beta.
+    revert z.
+    rapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
     - reflexivity.
     - simpl.
       intro z.
@@ -488,14 +488,14 @@ Section IntegerArithmetic.
   Defined.
 
   (** Integer multiplication with one on the left is the identity. *)
-  Definition IntHIT_mul_1_l (x : IntHIT) : 1 * x = x
+  Definition IntHIT_mul_1_l (z : IntHIT) : 1 * z = z
     := idpath.
 
   (** Integer multiplication with one on the right is the identity. *)
-  Definition IntHIT_mul_1_r (x : IntHIT) : x * 1 = x.
+  Definition IntHIT_mul_1_r (z : IntHIT) : z * 1 = z.
   Proof.
-    revert x.
-    rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x 1)); cbn beta.
+    revert z.
+    rapply (IntHIT_homotopic_two_fun_equiv (fun z => IntHIT_add z 1)); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro z.
@@ -503,14 +503,14 @@ Section IntegerArithmetic.
   Defined.
 
   (** Integer multiplication with -1 on the left is negation. *)
-  Definition IntHIT_mul_neg1_l (x : IntHIT) : (-1) * x = - x
+  Definition IntHIT_mul_neg1_l (z : IntHIT) : (-1) * z = - z
     := idpath.
 
   (** Multiplying with a negation on the left is the same as negating the product. *)
   Definition IntHIT_mul_neg_l (x y : IntHIT) : - x * y = - (x * y).
   Proof.
     revert x.
-    rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (-y))); cbn beta.
+    rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (-y))); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro x; simpl.
@@ -522,7 +522,7 @@ Section IntegerArithmetic.
   Definition IntHIT_mul_succ_r (x y : IntHIT) : x * (succ y) = x + x * y.
   Proof.
     revert x.
-    rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (succ y))); cbn beta.
+    rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (succ y))); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro z; simpl.
@@ -534,7 +534,7 @@ Section IntegerArithmetic.
   Definition IntHIT_mul_pred_r (x y : IntHIT) : x * (pred y) = x * y - x.
   Proof.
     revert x.
-    rapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (pred y))); cbn beta.
+    rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (pred y))); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro z.
@@ -551,7 +551,7 @@ Section IntegerArithmetic.
   Definition IntHIT_mul_comm (x y : IntHIT) : x * y = y * x.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x y)); cbn beta.
+    srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x y)); cbn beta.
     - symmetry; apply IntHIT_mul_0_r.
     - reflexivity.
     - intro z.
@@ -570,7 +570,7 @@ Section IntegerArithmetic.
   Definition IntHIT_dist_l (x y z : IntHIT) : x * (y + z) = x * y + x * z.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (y + z))); cbn beta.
+    srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (y + z))); cbn beta.
     - reflexivity.
     - reflexivity.
     - intro x.
@@ -592,7 +592,7 @@ Section IntegerArithmetic.
   Definition IntHIT_mul_assoc (x y z : IntHIT) : x * (y * z) = x * y * z.
   Proof.
     revert x.
-    srapply (uniquenessZ_two_fun_equiv (fun x => IntHIT_add x (y * z))); cbn beta.
+    srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (y * z))); cbn beta.
     - reflexivity.
     - reflexivity.
     - simpl.
@@ -604,7 +604,7 @@ Section IntegerArithmetic.
   Definition IntITtoIntHIT_is_linv' (z : IntHIT)
   : (IntITtoIntHIT o IntHITtoIntIT) z = z.
   Proof.
-    srapply (uniquenessZ_two_fun_equiv succ).
+    srapply (IntHIT_homotopic_two_fun_equiv succ).
     - reflexivity.
     - simpl.
       exact IntITtoIntHIT_comp_succ'.
