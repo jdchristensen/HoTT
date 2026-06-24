@@ -397,8 +397,7 @@ Section IntegerArithmetic.
     - reflexivity.
     - simpl; intro s.
       rewrite IntHIT_add_succ_r.
-      rewrite succ_is_sect.
-      reflexivity.
+      apply succ_is_sect.
     - reflexivity.
   Defined.
 
