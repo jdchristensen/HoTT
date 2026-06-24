@@ -291,7 +291,7 @@ Section IntegerArithmetic.
   (** ** Properties of Operations *)
 
   (** Negation is involutive. *)
-  Definition IntHIT_neg_neg (z : IntHIT): - - z = z.
+  Definition IntHIT_neg_neg (z : IntHIT) : - - z = z.
   Proof.
     revert z.
     by srapply (IntHIT_homotopic_two_fun_equiv succ).
@@ -415,7 +415,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Addition is an equivalence with first argument fixed. *)
-  #[export] Instance isequiv_IntHIT_add_l (x : IntHIT): IsEquiv (IntHIT_add x).
+  #[export] Instance isequiv_IntHIT_add_l (x : IntHIT) : IsEquiv (IntHIT_add x).
   Proof.
     srapply (isequiv_adjointify _ (IntHIT_add (-x))).
     all: simpl; intro y.
