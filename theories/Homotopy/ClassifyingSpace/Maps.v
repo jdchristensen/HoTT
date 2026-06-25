@@ -339,46 +339,33 @@ Definition pi1_map_bg_centralizer_grp_image {G H : Group} (f : G $-> H)
       -> Pi 1 [B G -> B H, fmap B f]
   := tr o (loops_map_bg_centralizer_grp_image f).
 
-Definition encode_test `{ua : Univalence} {G : Group}
-  {p q : bbase = bbase}
-  : Core.encode bbase (p @ q)
-      = (Core.encode (G:=G) bbase p)
-        * (Core.encode bbase q).
-Proof.
-  revert p q.
-  equiv_intro (bloop (G:=G)) g1; equiv_intro (bloop (G:=G)) g2.
-  unfold Core.encode.
-  rewrite transport_pp.
-  rewrite 3 Core.codes_transport.
-  by rewrite 2 grp_unit_l.
-Defined.
-
 Definition centralizer_grp_image_pi1_map_bg `{ua : Univalence}
   {G H : Group} (f : G $-> H)
   : Pi 1 [B G -> B H, fmap B f]
     $-> subtype_centralizer_subgroup (grp_image f).
 Proof.
-  unshelve napply Build_GroupHomomorphism.
+  snapply Build_GroupHomomorphism.
   { intro p.
     strip_truncations; change (pointed_fun (fmap B f) = (fmap B f)) in p.
     exists (bloop^-1 (ap10 p bbase)).
     unfold subtype_centralizer_subgroup, subgroup_pred, subtype_centralizer.
     apply tr.
     intros h sh.
-    strip_truncations.
     unfold centralizer.
     apply (equiv_inj bloop).
     rewrite 2 bloop_pp.
     rewrite (eisretr bloop (ap10 p bbase)).
+    strip_truncations.
     destruct sh as [g []]; clear h.
     rewrite <- ap_fmap_b.
-    rhs_V napply (ap11_is_ap10_ap01 p (bloop g)).
-    symmetry; napply ap11_is_ap01_ap10. }
+    napply concat_Ap. }
   { intros p q; srapply path_sigma_hprop.
-    strip_truncations; simpl.
+    strip_truncations; cbn.
     change (pointed_fun (fmap B f) = fmap B f) in p, q.
-    rewrite ap10_pp.
-    srapply encode_test. }
+    apply (equiv_inj bloop).
+    rewrite bloop_pp.
+    rewrite 3 (eisretr bloop).
+    exact (ap10_pp p q bbase). }
 Defined.
 
 Definition centralizer_grp_image_pi1_map_bg_pi1_map_bg_centralizer_grp_image
@@ -386,8 +373,7 @@ Definition centralizer_grp_image_pi1_map_bg_pi1_map_bg_centralizer_grp_image
   : centralizer_grp_image_pi1_map_bg f o pi1_map_bg_centralizer_grp_image f == idmap.
 Proof.
   intros [h ch]; strip_truncations.
-  apply path_sigma_hprop.
-  cbn -[isequiv_bloop].
+  apply path_sigma_hprop; cbn.
   apply (moveR_equiv_V (f:=bloop)).
   napply ClassifyingSpace_rec2_beta_bloop1_bbase.
 Defined.
@@ -406,7 +392,7 @@ Proof.
   apply path_forall.
   rapply ClassifyingSpace_ind_hprop.
   lhs napply ClassifyingSpace_rec2_beta_bloop1_bbase.
-  cbn -[isequiv_bloop].
+  cbn.
   apply eisretr.
 Defined.
 

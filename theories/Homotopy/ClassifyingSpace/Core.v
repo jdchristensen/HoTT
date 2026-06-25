@@ -407,6 +407,9 @@ Section EncodeDecode.
 
 End EncodeDecode.
 
+(** We generally don't want [bloop^-1] to unfold to [encode bbase], so we make this instance opaque. *)
+Global Opaque isequiv_bloop.
+
 (** Functoriality of B(-) *)
 
 Instance is0functor_pclassifyingspace : Is0Functor B.
