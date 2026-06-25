@@ -1,19 +1,14 @@
 (** * Mapping spaces between classifying spaces *)
 
 From HoTT Require Import Basics Types.
-Require Import Universes.HProp Universes.HSet.
-Require Import Truncations.Core Truncations.Connectedness Truncations.Constant SeparatedTrunc.
+Require Import Universes.HSet.
+Require Import Truncations.Core Connectedness Constant SeparatedTrunc.
 Require Import Algebra.Groups.Group Subgroup Algebra.AbGroups.Centralizer.
 Require Import Pointed WildCat WildCat.Core.
 Require Import Homotopy.ClassifyingSpace.Core.
 Require Import Colimits.Quotient GraphQuotient.
-Require Import Cubical.DPath PathSquare.
+Require Import Cubical.PathSquare.
 Require Import Homotopy.HomotopyGroup.
-Require Export Classes.interfaces.canonical_names (SgOp, sg_op,
-    MonUnit, mon_unit, LeftIdentity, left_identity, RightIdentity, right_identity,
-    Negate, negate, Associative, simple_associativity, associativity,
-    LeftInverse, left_inverse, RightInverse, right_inverse, Commutative, commutativity).
-Export canonical_names.BinOpNotations.
 Export Homotopy.ClassifyingSpace.Core.ClassifyingSpaceNotation.
 
 Local Open Scope pointed_scope.
@@ -200,38 +195,10 @@ Definition isemb_pi0_map_bg_groupreps `{ua : Univalence} {G H : Group}
   : IsEmbedding (pi0_map_bg_groupreps G H).
 Proof.
   apply isembedding_isinj_hset.
-  intros u.
-  rapply (conn_map_elim (-1) (class_of _)).
-  intro v; revert u.
-  rapply (conn_map_elim (-1) (class_of _)).
-  intros u p.
-  rapply path_quotient.
-  exact (isinjective_pi0_map_bg_groupreps _ _ p).
-Defined.
-
-Definition isemb_pi0_map_bg_groupreps' `{ua : Univalence} {G H : Group}
-  : IsEmbedding (pi0_map_bg_groupreps G H).
-Proof.
-  apply isembedding_isinj_hset.
   rapply Quotient_ind2_hprop.
   intros u v p.
   srapply path_quotient.
   exact (isinjective_pi0_map_bg_groupreps _ _ p).
-Defined.
-
-(** TODO: The above argument generalizes.  This can go at the end of Universes/HSet.v and be used above. *)
-(** TODO: Can [Funext] be avoided? *)
-Definition cancelR_isinjective_surj `{Funext} {A B C : Type} `{IsHSet B}
-  (f : A -> B) (g : B -> C)
-  (inj_gf : IsInjective (g o f)) (surj_f : IsSurjection f)
-  : IsInjective g.
-Proof.
-  intros u.
-  rapply (conn_map_elim (-1) f).
-  intro v; revert u.
-  rapply (conn_map_elim (-1) f).
-  intros u p.
-  apply ap, inj_gf, p.
 Defined.
 
 (** When [Y] is connected, every function [X -> Y] is merely pointed, so [pointed_fun] is a surjection. *)
