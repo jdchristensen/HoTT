@@ -244,15 +244,15 @@ Defined.
 
 (** It follows that [pi0_map_bg_groupreps] is surjective.  By definition, we have a commutative diagram
 <<
-         fmap B             pointed_fun
-  G $-> H   <~>   (BG ->* BH)  ---------->  (BG -> BH)
-     |                                      |
-  gq |                                      | tr
-     v                                      v
-  groupreps G H ------------------> Tr 0 (BG -> BH)
-                pi0_map_bg_groupreps
+               fmap B             pointed_fun
+        G $-> H   <~>   (BG ->* BH)  ---------->  (BG -> BH)
+           |                                      |
+  class_of |                                      | tr
+           v                                      v
+        groupreps G H ------------------> Tr 0 (BG -> BH)
+                     pi0_map_bg_groupreps
 >>
-    To show that [pi0_map_bg_groupreps] is surjective, it suffices to show that this is true after precomposition with [gq], and so we just need to show that the other three maps are surjective.  Rocq can prove these by typeclass search, with one hint for [tr]. *)
+    To show that [pi0_map_bg_groupreps] is surjective, it suffices to show that this is true after precomposition with [class_of] and so we just need to show that the other three maps are surjective.  Rocq can prove these by typeclass search, with one hint for [tr]. *)
 Definition issurj_pi0_map_bg_groupreps `{ua : Univalence} {G H : Group}
   : IsSurjection (pi0_map_bg_groupreps G H).
 Proof.
@@ -262,7 +262,7 @@ Proof.
   exact _.
 Defined.
 
-Definition isequiv_pi0_map_bg_groupreps `{ua : Univalence} (G H : Group)
+Instance isequiv_pi0_map_bg_groupreps `{ua : Univalence} (G H : Group)
   : IsEquiv (pi0_map_bg_groupreps G H).
 Proof.
   apply isequiv_surj_emb.
@@ -271,7 +271,7 @@ Proof.
 Defined.
 
 Definition equiv_groupreps_pi0_map_bg `{ua : Univalence} (G H : Group)
-  : (groupreps G H) <~> Pi 0 [(B G -> B H), (fun x => bbase)]
+  : (groupreps G H) <~> Pi 0 [B G -> B H, fun x => bbase]
   := Build_Equiv _ _ _ (isequiv_pi0_map_bg_groupreps G H).
 
 (** ** The fundamental group of [B G -> B H] *)
@@ -379,7 +379,7 @@ Definition centralizer_grp_image_pi1_map_bg_pi1_map_bg_centralizer_grp_image
 Proof.
   intros [h ch]; strip_truncations.
   apply path_sigma_hprop; cbn.
-  apply (moveR_equiv_V (f:=bloop)).
+  apply moveR_equiv_V.
   napply ClassifyingSpace_rec2_beta_bloop1_bbase.
 Defined.
 
@@ -401,7 +401,7 @@ Proof.
   apply eisretr.
 Defined.
 
-Definition isequiv_centralizer_grp_image_pi1_map_bg `{ua : Univalence}
+Instance isequiv_centralizer_grp_image_pi1_map_bg `{ua : Univalence}
   {G H : Group} (f : G $-> H)
   : IsEquiv (centralizer_grp_image_pi1_map_bg f).
 Proof.
@@ -429,7 +429,7 @@ Defined.
 Definition pi1_map_bg_groupreps_pi1 `{Univalence}
   (X : pType) (G : Group) `{IsConnected 0 X} (f : Pi 1 X $-> G)
   : GroupIsomorphism
-      (Pi 1 [(X -> B G), equiv_bg_pi1_adjoint X G f])
+      (Pi 1 [X -> B G, equiv_bg_pi1_adjoint X G f])
       (subtype_centralizer_subgroup (grp_image f)).
 Proof.
   refine (grp_iso_compose (equiv_pi1_map_bg_centralizer_grp_image f) _).
