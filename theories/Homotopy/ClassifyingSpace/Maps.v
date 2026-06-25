@@ -344,28 +344,33 @@ Definition centralizer_grp_image_pi1_map_bg `{ua : Univalence}
   : Pi 1 [B G -> B H, fmap B f]
     $-> subtype_centralizer_subgroup (grp_image f).
 Proof.
-  snapply Build_GroupHomomorphism.
-  { intro p.
+  (* It's enough to define a group homomorphism to [H] whose image is in the centralizer. *)
+  snapply subgroup_corec.
+  - refine (_^-1$ $o _).
+    (* For the homomorphism to [H], it's enough to define a homomorphism to [LoopGroup (B H)]. *)
+    1: exact grp_iso_g_loopgroup_bg.
+    (* And for that, [ap10] does the trick. *)
+    snapply Build_GroupHomomorphism.
+    + intro p.
+      strip_truncations; change (pointed_fun (fmap B f) = (fmap B f)) in p.
+      exact (ap10 p bbase).
+    + intros p q.
+      strip_truncations; change (pointed_fun (fmap B f) = fmap B f) in p, q.
+      cbn.
+      exact (ap10_pp p q bbase).
+  (* Now we need to show that the image of our homomorphism is in the centralizer. *)
+  - intro p.
     strip_truncations; change (pointed_fun (fmap B f) = (fmap B f)) in p.
-    exists (bloop^-1 (ap10 p bbase)).
-    unfold subtype_centralizer_subgroup, subgroup_pred, subtype_centralizer.
+    cbn.
     apply tr.
     intros h sh.
-    unfold centralizer.
-    apply (equiv_inj bloop).
-    rewrite 2 bloop_pp.
-    rewrite (eisretr bloop (ap10 p bbase)).
+    snapply (centralizer_iso grp_iso_g_loopgroup_bg); cbn.
+    rewrite (eisretr bloop).
     strip_truncations.
     destruct sh as [g []]; clear h.
     rewrite <- ap_fmap_b.
-    napply concat_Ap. }
-  { intros p q; srapply path_sigma_hprop.
-    strip_truncations; cbn.
-    change (pointed_fun (fmap B f) = fmap B f) in p, q.
-    apply (equiv_inj bloop).
-    rewrite bloop_pp.
-    rewrite 3 (eisretr bloop).
-    exact (ap10_pp p q bbase). }
+    unfold centralizer.
+    cbn; napply concat_Ap.
 Defined.
 
 Definition centralizer_grp_image_pi1_map_bg_pi1_map_bg_centralizer_grp_image
