@@ -248,30 +248,30 @@ Proof.
   rapply ClassifyingSpace_rec_beta_bloop.
 Defined.
 
-Definition map_bg_b_centralizer_grp_image {G H : Group} (f : G $-> H)
-  : B (subtype_centralizer_subgroup (grp_image f)) -> (B G -> B H).
+Definition map_bg_b_centralizer_grp_image {G H : Group} (v : G $-> H)
+  : B (subtype_centralizer_subgroup (grp_image v)) -> (B G -> B H).
 Proof.
-  napply (fmap11_B (subgroup_incl _) f).
+  napply (fmap11_B (subgroup_incl _) v).
   intros [h ch] g; cbn.
   symmetry.
   strip_truncations.
-  exact (ch (f g) (tr (g; idpath))).
+  exact (ch (v g) (tr (g; idpath))).
 Defined.
 
-Definition loops_map_bg_centralizer_grp_image {G H : Group} (f : G $-> H)
-  : subtype_centralizer_subgroup (grp_image f)
-      -> loops [B G -> B H, fmap B f]
-  := fun x => ap (map_bg_b_centralizer_grp_image f) (bloop x).
+Definition loops_map_bg_centralizer_grp_image {G H : Group} (v : G $-> H)
+  : subtype_centralizer_subgroup (grp_image v)
+      -> loops [B G -> B H, fmap B v]
+  := fun x => ap (map_bg_b_centralizer_grp_image v) (bloop x).
 
-Definition pi1_map_bg_centralizer_grp_image {G H : Group} (f : G $-> H)
-  : subtype_centralizer_subgroup (grp_image f)
-      -> Pi 1 [B G -> B H, fmap B f]
-  := tr o (loops_map_bg_centralizer_grp_image f).
+Definition pi1_map_bg_centralizer_grp_image {G H : Group} (v : G $-> H)
+  : subtype_centralizer_subgroup (grp_image v)
+      -> Pi 1 [B G -> B H, fmap B v]
+  := tr o (loops_map_bg_centralizer_grp_image v).
 
 Definition centralizer_grp_image_pi1_map_bg `{ua : Univalence}
-  {G H : Group} (f : G $-> H)
-  : Pi 1 [B G -> B H, fmap B f]
-    $-> subtype_centralizer_subgroup (grp_image f).
+  {G H : Group} (v : G $-> H)
+  : Pi 1 [B G -> B H, fmap B v]
+    $-> subtype_centralizer_subgroup (grp_image v).
 Proof.
   (* It's enough to define a group homomorphism to [H] whose image is in the centralizer. *)
   snapply subgroup_corec.
@@ -281,15 +281,15 @@ Proof.
     (* And for that, [ap10] does the trick. *)
     snapply Build_GroupHomomorphism.
     + intro p.
-      strip_truncations; change (pointed_fun (fmap B f) = (fmap B f)) in p.
+      strip_truncations; change (pointed_fun (fmap B v) = (fmap B v)) in p.
       exact (ap10 p bbase).
     + intros p q.
-      strip_truncations; change (pointed_fun (fmap B f) = fmap B f) in p, q.
+      strip_truncations; change (pointed_fun (fmap B v) = fmap B v) in p, q.
       cbn.
       exact (ap10_pp p q bbase).
   (* Now we need to show that the image of our homomorphism is in the centralizer. *)
   - intro p.
-    strip_truncations; change (pointed_fun (fmap B f) = (fmap B f)) in p.
+    strip_truncations; change (pointed_fun (fmap B v) = (fmap B v)) in p.
     cbn.
     apply tr.
     intros h sh.
@@ -303,18 +303,18 @@ Proof.
 Defined.
 
 Instance isequiv_centralizer_grp_image_pi1_map_bg `{ua : Univalence}
-  {G H : Group} (f : G $-> H)
-  : IsEquiv (centralizer_grp_image_pi1_map_bg f).
+  {G H : Group} (v : G $-> H)
+  : IsEquiv (centralizer_grp_image_pi1_map_bg v).
 Proof.
   srapply isequiv_adjointify.
-  - exact (pi1_map_bg_centralizer_grp_image f).
+  - exact (pi1_map_bg_centralizer_grp_image v).
   - intros [h ch]; strip_truncations.
     apply path_sigma_hprop; cbn.
     apply moveR_equiv_V.
     napply ClassifyingSpace_rec2_beta_bloop1_bbase.
   - intro u.
     strip_truncations.
-    change (pointed_fun (fmap B f) = (fmap B f)) in u.
+    change (pointed_fun (fmap B v) = (fmap B v)) in u.
     unfold pi1_map_bg_centralizer_grp_image.
     apply ap.
     unfold loops_map_bg_centralizer_grp_image.
@@ -327,8 +327,11 @@ Proof.
 Defined.
 
 Definition equiv_pi1_map_bg_centralizer_grp_image `{ua : Univalence}
-  {G H : Group} (f : G $-> H)
+  {G H : Group} (v : G $-> H)
   : GroupIsomorphism
+    (Pi 1 [B G -> B H, fmap B v])
+    (subtype_centralizer_subgroup (grp_image v))
+  := Build_GroupIsomorphism _ _ _ (isequiv_centralizer_grp_image_pi1_map_bg v).
     (Pi 1 [B G -> B H, fmap B f])
     (subtype_centralizer_subgroup (grp_image f))
   := Build_GroupIsomorphism _ _ _ (isequiv_centralizer_grp_image_pi1_map_bg f).
@@ -342,12 +345,12 @@ Proof.
 Defined.
 
 Definition pi1_map_bg_groupreps_pi1 `{Univalence}
-  (X : pType) (G : Group) `{IsConnected 0 X} (f : Pi 1 X $-> G)
+  (X : pType) (G : Group) `{IsConnected 0 X} (v : Pi 1 X $-> G)
   : GroupIsomorphism
-      (Pi 1 [X -> B G, equiv_bg_pi1_adjoint X G f])
-      (subtype_centralizer_subgroup (grp_image f)).
+      (Pi 1 [X -> B G, equiv_bg_pi1_adjoint X G v])
+      (subtype_centralizer_subgroup (grp_image v)).
 Proof.
-  refine (grp_iso_compose (equiv_pi1_map_bg_centralizer_grp_image f) _).
+  refine (grp_iso_compose (equiv_pi1_map_bg_centralizer_grp_image v) _).
   srapply groupiso_pi_functor.
   symmetry.
   srapply Build_pEquiv'.
