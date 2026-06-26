@@ -155,11 +155,14 @@ Proof.
     exact (idmap_fmap_grp_conj h _).
 Defined.
 
-Definition isinjective_pi0_map_bg_groupreps `{ua : Univalence}
-  {G H : Group} (u v : G $-> H)
-  (p : pi0_map_bg_groupreps G H (class_of _ u) = pi0_map_bg_groupreps G H (class_of _ v))
-  : merely {h : H & u == grp_conj h $o v}.
+(** We first show that [pi0_map_bg_groupreps] is an embedding. *)
+Definition isemb_pi0_map_bg_groupreps `{ua : Univalence} {G H : Group}
+  : IsEmbedding (pi0_map_bg_groupreps G H).
 Proof.
+  apply isembedding_isinj_hset.
+  rapply Quotient_ind2_hprop.
+  intros u v p.
+  srapply path_quotient.
   apply (equiv_path_Tr _ _)^-1 in p.
   strip_truncations; apply tr.
   pose (h := equiv_g_loops_bg^-1 (ap10 p bbase)).
