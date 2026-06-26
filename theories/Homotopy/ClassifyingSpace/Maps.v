@@ -2,7 +2,7 @@
 
 From HoTT Require Import Basics Types.
 Require Import Universes.HSet.
-Require Import Truncations.Core Connectedness Constant SeparatedTrunc.
+Require Import Truncations.Core Connectedness SeparatedTrunc.
 Require Import Algebra.Groups.Group Subgroup Algebra.AbGroups.Centralizer.
 Require Import Pointed WildCat WildCat.Core.
 Require Import Homotopy.ClassifyingSpace.Core.
@@ -44,21 +44,6 @@ Defined.
 Definition subtype_centralizer_subgroup
   {G : Group} (H : G -> Type)
   := Build_Subgroup G (subtype_centralizer H) _.
-
-Definition grp_hom_centralizer_image_grp_hom {G H : Group} (f : G $-> H)
-  : grp_prod (subtype_centralizer_subgroup (grp_image f)) G $-> H.
-Proof.
-  snapply Build_GroupHomomorphism.
-  1,2: intros [[x cx] y].
-  - exact (x * f y).
-  - intros [[z cz] w]; cbn.
-    strip_truncations.
-    refine (grp_assoc _ (f y) (f w) @ _ # ap _ (grp_homo_op _ _ _)).
-    lhs_V exact (ap (.* f w) (grp_assoc x z (f y))).
-    lhs_V exact (ap (fun r => x * r * (f w)) (cz (f y) (tr (y; 1)))).
-    lhs exact (ap (.* f w) (grp_assoc x (f y) z)).
-    exact (grp_assoc (x * (f y)) z (f w))^.
-Defined.
 
 Definition grp_image_factorization {G H K : Group} (u : G $-> H) (v : H $-> K)
   : (v $o u) $== (grp_homo_restr v _) $o grp_homo_image_in u
@@ -243,16 +228,6 @@ Definition equiv_groupreps_pi0_map_bg `{ua : Univalence} (G H : Group)
 
 (** ** The fundamental group of [B G -> B H] *)
 
-Definition ClassifyingSpace_rec_loop {G : Group}
-  (P : Type) `{IsTrunc 1 P} (bbase' : P)
-  (bloop' : G -> bbase' = bbase')
-  (bloop_pp' : forall x y : G, bloop' (x * y) = bloop' x @ bloop' y)
-  (p : bbase' = bbase')
-  (bloop_comm : forall h, p @ bloop' h = bloop' h @ p)
-  : ClassifyingSpace_rec P bbase' bloop' bloop_pp'
-    == ClassifyingSpace_rec P bbase' bloop' bloop_pp'
-  := ClassifyingSpace_rec_homotopy _ _ _ _ _ _ _ p bloop_comm.
-
 Definition ClassifyingSpace_rec2_beta_bloop1_bbase {G H : Group}
   (P : Type) `{IsTrunc 1 P} (bbase' : P)
   (bloop1 : G -> bbase' = bbase')
@@ -268,22 +243,6 @@ Proof.
   lhs_V napply ap_apply_Fl.
   unfold ClassifyingSpace_rec2, ClassifyingSpace_rec_forall; cbn.
   rapply ClassifyingSpace_rec_beta_bloop.
-Defined.
-
-Definition ClassifyingSpace_rec2_beta_bloop1 {G H : Group}
-  (P : Type) `{IsTrunc 1 P} (bbase' : P)
-  (bloop1 : G -> bbase' = bbase')
-  (bloop1_pp : forall x y : G, bloop1 (x * y) = bloop1 x @ bloop1 y)
-  (bloop2 : H -> bbase' = bbase')
-  (bloop2_pp : forall x y : H, bloop2 (x * y) = bloop2 x @ bloop2 y)
-  (bloop_comm : forall g h, bloop1 g @ bloop2 h = bloop2 h @ bloop1 g)
-  (g : G)
-  : ap10 (ap (ClassifyingSpace_rec2 P bbase' bloop1 bloop1_pp bloop2 bloop2_pp bloop_comm)
-          (bloop g))
-    == ClassifyingSpace_rec_loop P bbase' bloop2 bloop2_pp (bloop1 g) (bloop_comm g).
-Proof.
-  rapply ClassifyingSpace_ind_hprop.
-  napply ClassifyingSpace_rec2_beta_bloop1_bbase.
 Defined.
 
 Definition map_bg_b_centralizer_grp_image {G H : Group} (f : G $-> H)
@@ -340,42 +299,28 @@ Proof.
     cbn; napply concat_Ap.
 Defined.
 
-Definition centralizer_grp_image_pi1_map_bg_pi1_map_bg_centralizer_grp_image
-  `{ua : Univalence} {G H : Group} (f : G $-> H)
-  : centralizer_grp_image_pi1_map_bg f o pi1_map_bg_centralizer_grp_image f == idmap.
-Proof.
-  intros [h ch]; strip_truncations.
-  apply path_sigma_hprop; cbn.
-  apply moveR_equiv_V.
-  napply ClassifyingSpace_rec2_beta_bloop1_bbase.
-Defined.
-
-Definition pi1_map_bg_centralizer_grp_image_centralizer_grp_image_pi1_map_bg
-  `{ua : Univalence} {G H : Group} (f : G $-> H)
-  : pi1_map_bg_centralizer_grp_image f o centralizer_grp_image_pi1_map_bg f == idmap.
-Proof.
-  intro u.
-  strip_truncations.
-  change (pointed_fun (fmap B f) = (fmap B f)) in u.
-  unfold pi1_map_bg_centralizer_grp_image.
-  apply ap.
-  unfold loops_map_bg_centralizer_grp_image.
-  apply (equiv_inj ap10).
-  apply path_forall.
-  rapply ClassifyingSpace_ind_hprop.
-  lhs napply ClassifyingSpace_rec2_beta_bloop1_bbase.
-  cbn.
-  apply eisretr.
-Defined.
-
 Instance isequiv_centralizer_grp_image_pi1_map_bg `{ua : Univalence}
   {G H : Group} (f : G $-> H)
   : IsEquiv (centralizer_grp_image_pi1_map_bg f).
 Proof.
   srapply isequiv_adjointify.
   - exact (pi1_map_bg_centralizer_grp_image f).
-  - exact (centralizer_grp_image_pi1_map_bg_pi1_map_bg_centralizer_grp_image f).
-  - exact (pi1_map_bg_centralizer_grp_image_centralizer_grp_image_pi1_map_bg f).
+  - intros [h ch]; strip_truncations.
+    apply path_sigma_hprop; cbn.
+    apply moveR_equiv_V.
+    napply ClassifyingSpace_rec2_beta_bloop1_bbase.
+  - intro u.
+    strip_truncations.
+    change (pointed_fun (fmap B f) = (fmap B f)) in u.
+    unfold pi1_map_bg_centralizer_grp_image.
+    apply ap.
+    unfold loops_map_bg_centralizer_grp_image.
+    apply (equiv_inj ap10).
+    apply path_forall.
+    rapply ClassifyingSpace_ind_hprop.
+    lhs napply ClassifyingSpace_rec2_beta_bloop1_bbase.
+    cbn.
+    apply eisretr.
 Defined.
 
 Definition equiv_pi1_map_bg_centralizer_grp_image `{ua : Univalence}
