@@ -87,6 +87,8 @@ End ClassifyingSpace.
 (** Other eliminators *)
 Section Eliminators.
 
+  Local Open Scope dpath_scope.
+
   Context {G : Group}.
 
   (** The non-dependent eliminator *)
@@ -129,14 +131,6 @@ Section Eliminators.
     apply path_ishprop.
   Defined.
 
-  Definition ClassifyingSpace_rec_hset
-    (P : Type) `{IsTrunc 0 P} (bbase' : P) (bloop' : G -> bbase' = bbase')
-    : ClassifyingSpace G -> P.
-  Proof.
-    srapply (ClassifyingSpace_rec P bbase' bloop' _).
-    intros; apply path_ishprop.
-  Defined.
-
   (** Similarly, when eliminating into an hprop, we only have to handle the basepoint. *)
   Definition ClassifyingSpace_ind_hprop (P : ClassifyingSpace G -> Type)
     `{forall b, IsTrunc (-1) (P b)} (bbase' : P bbase)
@@ -146,7 +140,86 @@ Section Eliminators.
     intros; rapply dp_ishprop.
   Defined.
 
+  (** To eliminate into a Pi-type [forall x, P x], you might expect to need [Funext] twice, once to show that the Pi-type is 1-truncated, and once to provide the path [bbase' = bbase'].  But by using the usual intro-revert trick, one can completely avoid [Funext].  This computes definitionally on [bbase]: [ClassifyingSpace_rec_forall P bbase' bloop' bloop_pp' bbase = bbase']. *)
+  Definition ClassifyingSpace_rec_forall
+    {X : Type} (P : X -> Type) `{forall x, IsTrunc 1 (P x)}
+    (bbase' : forall x, P x)
+    (bloop' : G -> bbase' == bbase')
+    (bloop_pp' : forall x : X, forall g h : G, bloop' (g * h) x = bloop' g x @ bloop' h x)
+    : ClassifyingSpace G -> (forall x, P x).
+  Proof.
+    intros bg x; revert bg.
+    exact (ClassifyingSpace_rec (P x) (bbase' x) (fun g => bloop' g x) (bloop_pp' x)).
+  Defined.
+
+  (** To give a homotopy between two functions defined using induction we need to provide [p] and [bloop_comm] below; note that [bloop1_pp] and [bloop2_pp] are not involved. *)
+  Definition ClassifyingSpace_ind_homotopy
+    (P : ClassifyingSpace G -> Type) `{forall b, IsTrunc 1 (P b)}
+    (bbase1 : P bbase) (bloop1 : forall x, DPath P (bloop x) bbase1 bbase1)
+    (bloop1_pp : forall x y,  DPathSquare P (sq_G1 (bloop_pp x y))
+      (bloop1 (x * y)) ((bloop1 x) @Dp (bloop1 y)) 1 1)
+    (bbase2 : P bbase) (bloop2 : forall x, DPath P (bloop x) bbase2 bbase2)
+    (bloop2_pp : forall x y,  DPathSquare P (sq_G1 (bloop_pp x y))
+      (bloop2 (x * y)) ((bloop2 x) @Dp (bloop2 y)) 1 1)
+    (p : bbase1 = bbase2)
+    (bloop_comm : forall g, bloop1 g @ p = ap (transport P (bloop g)) p @ bloop2 g)
+    : ClassifyingSpace_ind P bbase1 bloop1 bloop1_pp
+      == ClassifyingSpace_ind P bbase2 bloop2 bloop2_pp.
+  Proof.
+    srapply ClassifyingSpace_ind_hset; cbn beta.
+    - exact p.
+    - intro g.
+      unfold DPath.
+      transport_paths FlFr_D.
+      rewrite 2 ClassifyingSpace_ind_beta_bloop.
+      apply bloop_comm.
+  Defined.
+
+  (** And here is the same result for functions defined using the recursion principle. *)
+  Definition ClassifyingSpace_rec_homotopy
+    (P : Type) `{IsTrunc 1 P}
+    (bbase1 : P) (bloop1 : G -> bbase1 = bbase1)
+    (bloop1_pp : forall x y : G, bloop1 (x * y) = bloop1 x @ bloop1 y)
+    (bbase2 : P) (bloop2 : G -> bbase2 = bbase2)
+    (bloop2_pp : forall x y : G, bloop2 (x * y) = bloop2 x @ bloop2 y)
+    (p : bbase1 = bbase2)
+    (bloop_comm : forall g, p @ bloop2 g = bloop1 g @ p)
+    : ClassifyingSpace_rec P bbase1 bloop1 bloop1_pp
+      == ClassifyingSpace_rec P bbase2 bloop2 bloop2_pp.
+  Proof.
+    (* It's just as easy to prove this directly as it is to use the dependent version. *)
+    srapply ClassifyingSpace_ind_hset; cbn beta.
+    - exact p.
+    - intro g.
+      transport_paths FlFr.
+      rewrite 2 ClassifyingSpace_rec_beta_bloop.
+      symmetry; apply bloop_comm.
+  Defined.
+
 End Eliminators.
+
+(** We close the section, so we can use the above eliminators for different groups. *)
+
+(** A two-variable version of the non-dependent eliminator.  We could also have a dependent version, but since it is harder to state, we'll omit it for now. This definitionally computes to the expected recursors *as functions* when either variable is fixed to [bbase]: [ClassifyingSpace_rec2 P bbase' bloop1 bloop1_pp bloop2 bloop2_pp bloop_comm bbase = ClassifyingSpace_rec P bbase' bloop2 bloop2_pp] and [(fun bg => ClassifyingSpace_rec2 P bbase' bloop1 bloop1_pp bloop2 bloop2_pp bloop_comm bg bbase) = ClassifyingSpace_rec P bbase' bloop1 bloop1_pp]. *)
+Definition ClassifyingSpace_rec2 {G H : Group}
+  (P : Type) `{IsTrunc 1 P} (bbase' : P)
+  (bloop1 : G -> bbase' = bbase')
+  (bloop1_pp : forall x y : G, bloop1 (x * y) = bloop1 x @ bloop1 y)
+  (bloop2 : H -> bbase' = bbase')
+  (bloop2_pp : forall x y : H, bloop2 (x * y) = bloop2 x @ bloop2 y)
+  (bloop_comm : forall g h, bloop1 g @ bloop2 h = bloop2 h @ bloop1 g)
+  : ClassifyingSpace G -> ClassifyingSpace H -> P.
+Proof.
+  srapply ClassifyingSpace_rec_forall.
+  - exact (ClassifyingSpace_rec P bbase' bloop2 bloop2_pp).
+  - intro g.
+    snapply ClassifyingSpace_rec_homotopy.
+    + exact (bloop1 g).
+    + exact (bloop_comm g).
+  - intros x g h; revert x.
+    srapply ClassifyingSpace_ind_hprop; simpl.
+    apply bloop1_pp.
+Defined.
 
 (** The classifying space is 0-connected. *)
 Instance isconnected_classifyingspace {G : Group}
@@ -334,75 +407,8 @@ Section EncodeDecode.
 
 End EncodeDecode.
 
-(** When [G] is an abelian group, [BG] is an H-space. *)
-Section HSpace_bg.
-
-  Context {G : AbGroup}.
-
-  Definition bg_mul : B G -> B G -> B G.
-  Proof.
-    intro b.
-    snapply ClassifyingSpace_rec.
-    1: exact _.
-    1: exact b.
-    { intro x.
-      revert b.
-      snapply ClassifyingSpace_ind_hset.
-      1: exact _.
-      1: exact (bloop x).
-      cbn; intro y.
-      apply dp_paths_lr.
-      refine (concat_pp_p _ _ _ @ _).
-      apply moveR_Vp.
-      refine ((bloop_pp _ _)^ @ _ @ bloop_pp _ _).
-      apply ap, commutativity. }
-    intros x y.
-    revert b.
-    srapply ClassifyingSpace_ind_hprop.
-    exact (bloop_pp x y).
-  Defined.
-
-  Definition bg_mul_symm : forall x y, bg_mul x y = bg_mul y x.
-  Proof.
-    intros x.
-    srapply ClassifyingSpace_ind_hset.
-    { simpl.
-      revert x.
-      srapply ClassifyingSpace_ind_hset.
-      1: reflexivity.
-      intros x.
-      apply sq_dp^-1, sq_1G.
-      refine (ap_idmap _ @ _^).
-      napply ClassifyingSpace_rec_beta_bloop. }
-    intros y; revert x.
-    simpl.
-    snapply ClassifyingSpace_ind_hprop.
-    1: exact _.
-    simpl.
-    transport_paths Flr.
-    apply equiv_p1_1q.
-    napply ClassifyingSpace_rec_beta_bloop.
-  Defined.
-
-  Definition bg_mul_left_id
-    : forall b : B G, bg_mul bbase b = b.
-  Proof.
-    apply bg_mul_symm.
-  Defined.
-
-  Definition bg_mul_right_id
-    : forall b : B G, bg_mul b bbase = b.
-  Proof.
-    reflexivity.
-  Defined.
-
-  #[export] Instance ishspace_bg : IsHSpace (B G)
-    := Build_IsHSpace _
-          bg_mul
-          bg_mul_left_id
-          bg_mul_right_id.
-
-End HSpace_bg.
+(** We generally don't want [bloop^-1] to unfold to [encode bbase], so we make this instance opaque. *)
+Global Opaque isequiv_bloop.
 
 (** Functoriality of B(-) *)
 
@@ -417,6 +423,10 @@ Proof.
     refine (ap bloop (grp_homo_op f x y) @ _).
     apply bloop_pp.
 Defined.
+
+Definition ap_fmap_b {G H : Group} (u : G $-> H) (g : G)
+  : ap (fmap B u) (bloop g) = bloop (u g)
+  := ClassifyingSpace_rec_beta_bloop _ _ _ _ _.
 
 Definition bloop_natural (G H : Group) (f : G $-> H)
   : fmap loops (fmap B f) o bloop == bloop o f.
@@ -459,19 +469,16 @@ Proof.
       apply ap.
       exact (p x). }
     reflexivity.
-  (** Preservation of identity *)
+  (** Preservation of identity map *)
   - intros G.
     snapply Build_pHomotopy.
     { snapply ClassifyingSpace_ind_hset.
       1: exact _.
       1: reflexivity.
-      intro x.
-      rapply equiv_sq_dp^-1.
-      simpl.
-      rewrite ClassifyingSpace_rec_beta_bloop.
-      apply sq_1G.
-      symmetry.
-      apply ap_idmap. }
+      intro g; cbn.
+      transport_paths (transport_paths_Flr (f:=ClassifyingSpace_rec _ _ _ _) (bloop g) _).
+      apply equiv_p1_1q.
+      apply ClassifyingSpace_rec_beta_bloop. }
     reflexivity.
   (** Preservation of composition *)
   - intros G H K g f.
@@ -572,22 +579,21 @@ Proof.
   napply pClassifyingSpace_rec_beta_bloop.
 Defined.
 
+(** The classifying space functor and the fundamental group functor form an adjunction ([pType] needs to be restricted to the subcategory of 0-connected pointed types). Note that the full adjunction should also be natural in [X], but this was not needed yet. *)
 Lemma natequiv_bg_pi1_adjoint `{Univalence} (X : pType) `{IsConnected 0 X}
   : NatEquiv (opyon (Pi1 X)) (opyon X o B).
 Proof.
-  nrefine (natequiv_compose (G := opyon (Pi1 (pTr 1 X))) _ _).
-  2: exact (natequiv_opyon_equiv (A:=Group) (grp_iso_inverse (grp_iso_pi_Tr 0 X))).
   refine (natequiv_compose _ (natequiv_grp_homo_pmap_bg _)).
-  refine (natequiv_compose (G := opyon (pTr 1 X) o B) _ _); revgoals.
+  refine (natequiv_compose (G := opyon (pTr 1 X) o B) _ _).
+  { snapply Build_NatEquiv.
+    1: intro; exact pequiv_ptr_rec.
+    exact (is1natural_prewhisker (G:=opyon X) B (opyoneda _ _ _)). }
   { refine (natequiv_prewhisker _ _).
     refine (natequiv_opyon_equiv _^-1$).
-    rapply pequiv_pclassifyingspace_pi1. }
-  snapply Build_NatEquiv.
-  1: intro; exact pequiv_ptr_rec.
-  exact (is1natural_prewhisker (G:=opyon X) B (opyoneda _ _ _)).
+    refine (pequiv_pclassifyingspace_pi1 (pTr 1 X) o*E (emap B _)).
+    exact (grp_iso_pi_Tr 0 X). }
 Defined.
 
-(** The classifying space functor and the fundamental group functor form an adjunction ([pType] needs to be restricted to the subcategory of 0-connected pointed types). Note that the full adjunction should also be natural in [X], but this was not needed yet. *)
 Theorem equiv_bg_pi1_adjoint `{Univalence} (X : pType)
   `{IsConnected 0 X} (G : Group)
   : (Pi 1 X $-> G) <~> (X $-> B G).
@@ -605,3 +611,112 @@ Proof.
   Opaque equiv_bg_pi1_adjoint.
 Defined.
 Transparent equiv_bg_pi1_adjoint.
+
+(** There is also a natural equivalence for unpointed function types, which computes to the map defined above on pointed functions. *)
+Definition natequiv_map_bg `{Univalence}
+  (X : pType) `{IsConnected 0 X}
+  : NatEquiv (opyon (A:=Type) (B (Pi 1 X)) o B) (opyon (A:=Type) X o B).
+Proof.
+  unfold opyon.
+  refine (natequiv_compose (G := opyon (Tr 1 X) o B) _ _).
+  { snapply Build_NatEquiv.
+    1: intro; rapply (equiv_o_to_O (Tr 1) X).
+    by srapply Build_Is1Natural. }
+  { refine (natequiv_prewhisker _ _).
+    refine (natequiv_opyon_equiv _^-1$).
+    refine (pequiv_pclassifyingspace_pi1 (pTr 1 X) o*E (emap B _)).
+    exact (grp_iso_pi_Tr 0 X). }
+Defined.
+
+Definition equiv_map_bg `{Univalence}
+  (X : pType) `{IsConnected 0 X} (G : Group)
+  : (B (Pi 1 X) -> B G) <~> (X -> B G).
+Proof.
+  rapply natequiv_map_bg.
+Defined.
+
+Definition equiv_map_bg_pointed `{Univalence}
+  (X : pType) `{IsConnected 0 X} (G : Group) (f : Pi 1 X $-> G)
+  : equiv_map_bg X G (fmap B f) = equiv_bg_pi1_adjoint X G f
+  := @idpath (X -> B G) (equiv_bg_pi1_adjoint X G f).
+
+(** ** H-space structure on [B G] when [G] is abelian *)
+
+(** This will be used to prove that [B G] is an H-space when [G] is abelian, and has other uses as well. *)
+Definition fmap11_B {G H K : Group}
+  (f1 : G $-> K) (f2 : H $-> K)
+  (comm: forall g h, f1 g * f2 h = f2 h * f1 g)
+  : B G -> B H -> B K.
+Proof.
+  srapply ClassifyingSpace_rec2.
+  - exact bbase.
+  - exact (bloop o f1).
+  - intros g1 g2.
+    rhs_V napply bloop_pp.
+    apply ap, grp_homo_op.
+  - exact (bloop o f2).
+  - intros h1 h2.
+    rhs_V napply bloop_pp.
+    apply ap, grp_homo_op.
+  - intros g h.
+    refine ((bloop_pp _ _)^ @ _ @ bloop_pp _ _).
+    apply ap, comm.
+Defined.
+
+Definition fmap11_B_bbase {G H K : Group}
+  (f1 : G $-> K) (f2 : H $-> K)
+  (comm: forall g h, f1 g * f2 h = f2 h * f1 g)
+  : fmap11_B f1 f2 comm bbase = fmap B f2
+  := idpath.
+
+Definition fmap11_B_bbase' `{funext : Funext} {G H K : Group}
+  (f1 : G $-> K) (f2 : H $-> K)
+  (comm: forall g h, f1 g * f2 h = f2 h * f1 g)
+  : (fun x => fmap11_B f1 f2 comm x bbase) == fmap B f1.
+Proof.
+  srapply ClassifyingSpace_ind_homotopy.
+  1: reflexivity.
+  intro x.
+  cbn; apply concat_p1_1p.
+Defined.
+
+(** When [G] is an abelian group, [BG] is an H-space. *)
+Section HSpace_bg.
+
+  Context {G : AbGroup}.
+
+  (** The multiplication follows from [fmap11_B].  One can also construct it directly, which replaces some subterms that are essentially [fmap B pmap_idmap] with [idmap].  The approach using [fmap11_B] actually makes the proof of [bg_mul_symm] simpler, but [bg_mul_right_id] no longer holds definitionally. *)
+  Definition bg_mul : B G -> B G -> B G
+    := fmap11_B grp_homo_id grp_homo_id commutativity.
+
+  Definition bg_mul_symm : forall x y, bg_mul x y = bg_mul y x.
+  Proof.
+    intros x.
+    srapply ClassifyingSpace_ind_hset.
+    { simpl.
+      revert x.
+      srapply ClassifyingSpace_ind_hset; cbn.
+      1: reflexivity.
+      intros x.
+      exact (transport_paths_FlFr_1 (bloop x)). }
+    intros y; revert x.
+    srapply ClassifyingSpace_ind_hprop.
+    simpl.
+    exact (transport_paths_FlFr_1 (bloop y)).
+  Defined.
+
+  (** This is not definitionally true, but [bg_mul b bbase] is definitionally equal to [fmap B grp_homo_id], so we can use [fmap_id] to prove this. *)
+  Definition bg_mul_right_id : forall b : B G, bg_mul b bbase = b
+    := fmap_id B G.
+
+  (** It may be surprising, but the lhs here is *also* definitionally equal to [fmap B grp_homo_id]. *)
+  Definition bg_mul_left_id : forall b : B G, bg_mul bbase b = b
+    := fmap_id B G.
+
+  #[export] Instance ishspace_bg : IsHSpace (B G)
+    := Build_IsHSpace _
+          bg_mul
+          bg_mul_left_id
+          bg_mul_right_id.
+
+End HSpace_bg.
