@@ -1,5 +1,3 @@
-(** * Mapping spaces between classifying spaces *)
-
 From HoTT Require Import Basics Types.
 Require Import Universes.HSet.
 Require Import Truncations.Core Connectedness SeparatedTrunc.
@@ -16,7 +14,11 @@ Local Open Scope trunc_scope.
 Local Open Scope mc_mult_scope.
 Local Open Scope path_scope.
 
-(** ** Centralizers of general subtypes *)
+(** * Mapping spaces between classifying spaces *)
+
+(** The type of pointed maps [B G ->* B H] is known to be equivalent to the set [G $-> H]. In this file, we compute [Pi 0] and [Pi 1] of the general function type [B G -> B H]. *)
+
+(** ** Centralizers of general subsets *)
 
 (** The centralizer of the elements of [G] for which [H] holds. *)
 Definition subtype_centralizer {G : Group} (H : G -> Type)
@@ -24,6 +26,7 @@ Definition subtype_centralizer {G : Group} (H : G -> Type)
   (* Note the order of operations here.  We do this to match the original proofs for the centraliser of an element. *)
   := fun g => merely (forall h : G, H h -> centralizer h g).
 
+(** The centralizer of any subset of [G] is a subgroup of [G]. *)
 Instance issubgroup_subtype_centralizer {G : Group} (H : G -> Type)
   : IsSubgroup (subtype_centralizer H).
 Proof.
@@ -45,6 +48,8 @@ Definition subtype_centralizer_subgroup
   {G : Group} (H : G -> Type)
   := Build_Subgroup G (subtype_centralizer H) _.
 
+(** Homotopic group homomorphisms have isomorphic images. *)
+
 Definition grp_image_factorization {G H K : Group} (u : G $-> H) (v : H $-> K)
   : (v $o u) $== (grp_homo_restr v _) $o grp_homo_image_in u
   := fun x => idpath.
@@ -62,6 +67,7 @@ Defined.
 
 Definition inv_grp_image_homotopic_grp_homo
   {G H : Group} {u v : G $-> H} (p : u $== v) (q : v $== u)
+  (* This result is later used for [q = p^], but we record that it holds more generally. *)
   : (grp_image_homotopic_grp_homo p) o (grp_image_homotopic_grp_homo q) == idmap.
 Proof.
   intro x.
@@ -80,9 +86,12 @@ Proof.
   1,2: by apply inv_grp_image_homotopic_grp_homo.
 Defined.
 
+(** ** Conjugate group homomorphisms *)
+
 Definition conj_grp_homo {G H : Group} (u v : G $-> H)
   := merely {h : H & forall g : G, u g = grp_conj h (v g)}.
 
+(** Conjugacy is an equivalence relation. *)
 Instance reflexive_conj_grp_homo {G H : Group}
   : Reflexive (conj_grp_homo (G:=G) (H:=H)).
 Proof.
@@ -118,9 +127,15 @@ Proof.
   symmetry; napply grp_conj_op.
 Defined.
 
+(** The set of representations is the set of conjugacy classes of group homomorphisms. *)
 Definition groupreps (G H : Group) : Type
   := @Quotient (G $-> H) (conj_grp_homo).
 
+(** ** Connected components of [B G -> B H] *)
+
+(** We show that the set of connected components of [B G -> B H] is in bijection with [groupreps G H]. *)
+
+(** [fmap B] sends conjugation to the identity map. Therefore, it induces a map [groupreps G H -> Trunc 0 (B G -> B H)]. *)
 Definition idmap_fmap_grp_conj {G : Group} (g : G)
   : fmap B (grp_conj g) == idmap.
 Proof.
@@ -135,8 +150,6 @@ Proof.
     lhs_V rapply bloop_pp.
     symmetry; exact (ap bloop (grp_inv_gV_g _ g)).
 Defined.
-
-(** ** Connected components of [B G -> B H] *)
 
 Definition pi0_map_bg_groupreps `{ua : Univalence} (G H : Group)
   : groupreps G H -> Trunc 0 (B G -> B H).
@@ -177,16 +190,6 @@ Proof.
   rewrite eisretr.
   rewrite <- 2 ap_fmap_b.
   exact (ap_homotopic (ap10 p) (bloop x)).
-Defined.
-
-Definition isemb_pi0_map_bg_groupreps `{ua : Univalence} {G H : Group}
-  : IsEmbedding (pi0_map_bg_groupreps G H).
-Proof.
-  apply isembedding_isinj_hset.
-  rapply Quotient_ind2_hprop.
-  intros u v p.
-  srapply path_quotient.
-  exact (isinjective_pi0_map_bg_groupreps _ _ p).
 Defined.
 
 (** When [Y] is connected, every function [X -> Y] is merely pointed, so [pointed_fun] is a surjection. *)
@@ -231,6 +234,9 @@ Definition equiv_groupreps_pi0_map_bg `{ua : Univalence} (G H : Group)
 
 (** ** The fundamental group of [B G -> B H] *)
 
+(** We show that [Pi 1 [B G -> B H, fmap B v]] is equivalent to the centralizer of the image of [v]. *)
+
+(* Computation rule for ClassifyingSpace_rec2. *)
 Definition ClassifyingSpace_rec2_beta_bloop1_bbase {G H : Group}
   (P : Type) `{IsTrunc 1 P} (bbase' : P)
   (bloop1 : G -> bbase' = bbase')
@@ -248,6 +254,7 @@ Proof.
   rapply ClassifyingSpace_rec_beta_bloop.
 Defined.
 
+(** The map in one direction is induced by [fmap11_B] applied to the subgroup inclusion and [v]. *)
 Definition map_bg_b_centralizer_grp_image {G H : Group} (v : G $-> H)
   : B (subtype_centralizer_subgroup (grp_image v)) -> (B G -> B H).
 Proof.
@@ -268,6 +275,7 @@ Definition pi1_map_bg_centralizer_grp_image {G H : Group} (v : G $-> H)
       -> Pi 1 [B G -> B H, fmap B v]
   := tr o (loops_map_bg_centralizer_grp_image v).
 
+(** We now define the inverse. *)
 Definition centralizer_grp_image_pi1_map_bg `{ua : Univalence}
   {G H : Group} (v : G $-> H)
   : Pi 1 [B G -> B H, fmap B v]
@@ -332,9 +340,8 @@ Definition equiv_pi1_map_bg_centralizer_grp_image `{ua : Univalence}
     (Pi 1 [B G -> B H, fmap B v])
     (subtype_centralizer_subgroup (grp_image v))
   := Build_GroupIsomorphism _ _ _ (isequiv_centralizer_grp_image_pi1_map_bg v).
-    (Pi 1 [B G -> B H, fmap B f])
-    (subtype_centralizer_subgroup (grp_image f))
-  := Build_GroupIsomorphism _ _ _ (isequiv_centralizer_grp_image_pi1_map_bg f).
+
+(** As a corollary, we can compute the homotopy groups of any function type of the form [X -> B G], where [X] is a pointed connected type. *)
 
 Definition pi0_map_bg_groupreps_pi1 `{Univalence}
   (X : pType) (G : Group) `{IsConnected 0 X}
