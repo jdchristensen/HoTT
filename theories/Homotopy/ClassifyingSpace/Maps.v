@@ -127,24 +127,6 @@ Definition equiv_groupreps_to_pi0_map_bg `{ua : Univalence} (G H : Group)
 
 (** We show that [Pi 1 [B G -> B H, fmap B v]] is equivalent to the centralizer of the image of [v]. *)
 
-(* Computation rule for ClassifyingSpace_rec2. *)
-Definition ClassifyingSpace_rec2_beta_bloop1_bbase {G H : Group}
-  (P : Type) `{IsTrunc 1 P} (bbase' : P)
-  (bloop1 : G -> bbase' = bbase')
-  (bloop1_pp : forall x y : G, bloop1 (x * y) = bloop1 x @ bloop1 y)
-  (bloop2 : H -> bbase' = bbase')
-  (bloop2_pp : forall x y : H, bloop2 (x * y) = bloop2 x @ bloop2 y)
-  (bloop_comm : forall g h, bloop1 g @ bloop2 h = bloop2 h @ bloop1 g)
-  (g : G)
-  : ap10 (ap (ClassifyingSpace_rec2 P bbase' bloop1 bloop1_pp bloop2 bloop2_pp bloop_comm)
-          (bloop g))
-      bbase = bloop1 g.
-Proof.
-  lhs_V napply ap_apply_Fl.
-  unfold ClassifyingSpace_rec2, ClassifyingSpace_rec_forall; cbn.
-  rapply ClassifyingSpace_rec_beta_bloop.
-Defined.
-
 (** The map in one direction is induced by [fmap11_B] applied to the subgroup inclusion and [v]. *)
 Definition b_centralizer_grp_image_to_map_bg {G H : Group} (v : G $-> H)
   : B (subtype_centralizer_subgroup (grp_image v)) -> (B G -> B H).
