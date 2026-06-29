@@ -65,9 +65,9 @@ Proof.
     exact (uh.1; (p _)^ @ uh.2).
 Defined.
 
+(** This result is later used for [q = p^], but we record that it holds more generally. *)
 Definition inv_grp_image_homotopic_grp_homo
   {G H : Group} {u v : G $-> H} (p : u $== v) (q : v $== u)
-  (* This result is later used for [q = p^], but we record that it holds more generally. *)
   : (grp_image_homotopic_grp_homo p) o (grp_image_homotopic_grp_homo q) == idmap.
 Proof.
   intro x.
@@ -151,7 +151,7 @@ Proof.
     symmetry; exact (ap bloop (grp_inv_gV_g _ g)).
 Defined.
 
-Definition pi0_map_bg_groupreps `{ua : Univalence} (G H : Group)
+Definition groupreps_to_pi0_map_bg `{ua : Univalence} (G H : Group)
   : groupreps G H -> Trunc 0 (B G -> B H).
 Proof.
   srefine (Quotient_rec _ _ _ _); cbn beta.
@@ -168,9 +168,9 @@ Proof.
     exact (idmap_fmap_grp_conj h _).
 Defined.
 
-(** We first show that [pi0_map_bg_groupreps] is an embedding. *)
-Definition isemb_pi0_map_bg_groupreps `{ua : Univalence} {G H : Group}
-  : IsEmbedding (pi0_map_bg_groupreps G H).
+(** We first show that [groupreps_to_pi0_map_bg] is an embedding. *)
+Definition isemb_groupreps_to_pi0_map_bg `{ua : Univalence} {G H : Group}
+  : IsEmbedding (groupreps_to_pi0_map_bg G H).
 Proof.
   apply isembedding_isinj_hset.
   rapply Quotient_ind2_hprop.
@@ -200,7 +200,7 @@ Proof.
   rapply conn_map_pr1.
 Defined.
 
-(** It follows that [pi0_map_bg_groupreps] is surjective.  By definition, we have a commutative diagram
+(** It follows that [groupreps_to_pi0_map_bg] is surjective.  By definition, we have a commutative diagram
 <<
                fmap B             pointed_fun
         G $-> H   <~>   (BG ->* BH)  ---------->  (BG -> BH)
@@ -208,11 +208,11 @@ Defined.
   class_of |                                      | tr
            v                                      v
         groupreps G H ------------------> Tr 0 (BG -> BH)
-                     pi0_map_bg_groupreps
+                     groupreps_to_pi0_map_bg
 >>
-    To show that [pi0_map_bg_groupreps] is surjective, it suffices to show that this is true after precomposition with [class_of] and so we just need to show that the other three maps are surjective.  Rocq can prove these by typeclass search, with one hint for [tr]. *)
-Definition issurj_pi0_map_bg_groupreps `{ua : Univalence} {G H : Group}
-  : IsSurjection (pi0_map_bg_groupreps G H).
+    To show that [groupreps_to_pi0_map_bg] is surjective, it suffices to show that this is true after precomposition with [class_of] and so we just need to show that the other three maps are surjective.  Rocq can prove these by typeclass search, with one hint for [tr]. *)
+Definition issurj_groupreps_to_pi0_map_bg `{ua : Univalence} {G H : Group}
+  : IsSurjection (groupreps_to_pi0_map_bg G H).
 Proof.
   apply (cancelR_issurjection (class_of _)).
   change (IsConnMap (Tr (-1)) (tr (n:=0) o pointed_fun o fmap (a:=G) (b:=H) B)).
@@ -220,17 +220,17 @@ Proof.
   exact _.
 Defined.
 
-Instance isequiv_pi0_map_bg_groupreps `{ua : Univalence} (G H : Group)
-  : IsEquiv (pi0_map_bg_groupreps G H).
+Instance isequiv_groupreps_to_pi0_map_bg `{ua : Univalence} (G H : Group)
+  : IsEquiv (groupreps_to_pi0_map_bg G H).
 Proof.
   apply isequiv_surj_emb.
-  - exact issurj_pi0_map_bg_groupreps.
-  - exact isemb_pi0_map_bg_groupreps.
+  - exact issurj_groupreps_to_pi0_map_bg.
+  - exact isemb_groupreps_to_pi0_map_bg.
 Defined.
 
-Definition equiv_groupreps_pi0_map_bg `{ua : Univalence} (G H : Group)
+Definition equiv_groupreps_to_pi0_map_bg `{ua : Univalence} (G H : Group)
   : (groupreps G H) <~> Pi 0 [B G -> B H, fun x => bbase]
-  := Build_Equiv _ _ _ (isequiv_pi0_map_bg_groupreps G H).
+  := Build_Equiv _ _ _ (isequiv_groupreps_to_pi0_map_bg G H).
 
 (** ** The fundamental group of [B G -> B H] *)
 
@@ -255,7 +255,7 @@ Proof.
 Defined.
 
 (** The map in one direction is induced by [fmap11_B] applied to the subgroup inclusion and [v]. *)
-Definition map_bg_b_centralizer_grp_image {G H : Group} (v : G $-> H)
+Definition b_centralizer_grp_image_to_map_bg {G H : Group} (v : G $-> H)
   : B (subtype_centralizer_subgroup (grp_image v)) -> (B G -> B H).
 Proof.
   napply (fmap11_B (subgroup_incl _) v).
@@ -265,18 +265,18 @@ Proof.
   exact (ch (v g) (tr (g; idpath))).
 Defined.
 
-Definition loops_map_bg_centralizer_grp_image {G H : Group} (v : G $-> H)
+Definition centralizer_grp_image_to_loops_map_bg {G H : Group} (v : G $-> H)
   : subtype_centralizer_subgroup (grp_image v)
       -> loops [B G -> B H, fmap B v]
-  := fun x => ap (map_bg_b_centralizer_grp_image v) (bloop x).
+  := fun x => ap (b_centralizer_grp_image_to_map_bg v) (bloop x).
 
-Definition pi1_map_bg_centralizer_grp_image {G H : Group} (v : G $-> H)
+Definition centralizer_grp_image_to_pi1_map_bg {G H : Group} (v : G $-> H)
   : subtype_centralizer_subgroup (grp_image v)
       -> Pi 1 [B G -> B H, fmap B v]
-  := tr o (loops_map_bg_centralizer_grp_image v).
+  := tr o (centralizer_grp_image_to_loops_map_bg v).
 
 (** We now define the inverse. *)
-Definition centralizer_grp_image_pi1_map_bg `{ua : Univalence}
+Definition pi1_map_bg_to_centralizer_group_image `{ua : Univalence}
   {G H : Group} (v : G $-> H)
   : Pi 1 [B G -> B H, fmap B v]
     $-> subtype_centralizer_subgroup (grp_image v).
@@ -310,12 +310,12 @@ Proof.
     cbn; napply concat_Ap.
 Defined.
 
-Instance isequiv_centralizer_grp_image_pi1_map_bg `{ua : Univalence}
+Instance isequiv_pi1_map_bg_to_centralizer_group_image `{ua : Univalence}
   {G H : Group} (v : G $-> H)
-  : IsEquiv (centralizer_grp_image_pi1_map_bg v).
+  : IsEquiv (pi1_map_bg_to_centralizer_group_image v).
 Proof.
   srapply isequiv_adjointify.
-  - exact (pi1_map_bg_centralizer_grp_image v).
+  - exact (centralizer_grp_image_to_pi1_map_bg v).
   - intros [h ch]; strip_truncations.
     apply path_sigma_hprop; cbn.
     apply moveR_equiv_V.
@@ -323,9 +323,9 @@ Proof.
   - intro u.
     strip_truncations.
     change (pointed_fun (fmap B v) = (fmap B v)) in u.
-    unfold pi1_map_bg_centralizer_grp_image.
+    unfold centralizer_grp_image_to_pi1_map_bg.
     apply ap.
-    unfold loops_map_bg_centralizer_grp_image.
+    unfold centralizer_grp_image_to_loops_map_bg.
     apply (equiv_inj ap10).
     apply path_forall.
     rapply ClassifyingSpace_ind_hprop.
@@ -334,12 +334,12 @@ Proof.
     apply eisretr.
 Defined.
 
-Definition equiv_pi1_map_bg_centralizer_grp_image `{ua : Univalence}
+Definition equiv_pi1_map_bg_to_centralizer_group_image `{ua : Univalence}
   {G H : Group} (v : G $-> H)
   : GroupIsomorphism
     (Pi 1 [B G -> B H, fmap B v])
     (subtype_centralizer_subgroup (grp_image v))
-  := Build_GroupIsomorphism _ _ _ (isequiv_centralizer_grp_image_pi1_map_bg v).
+  := Build_GroupIsomorphism _ _ _ (isequiv_pi1_map_bg_to_centralizer_group_image v).
 
 (** As a corollary, we can compute the homotopy groups of any function type of the form [X -> B G], where [X] is a pointed connected type. *)
 
@@ -348,7 +348,7 @@ Definition pi0_map_bg_groupreps_pi1 `{Univalence}
   : groupreps (Pi 1 X) G <~> Tr 0 (X -> B G).
 Proof.
   refine (Trunc_functor_equiv 0 (equiv_map_bg X G) oE _).
-  srapply equiv_groupreps_pi0_map_bg.
+  srapply equiv_groupreps_to_pi0_map_bg.
 Defined.
 
 Definition pi1_map_bg_groupreps_pi1 `{Univalence}
@@ -357,7 +357,7 @@ Definition pi1_map_bg_groupreps_pi1 `{Univalence}
       (Pi 1 [X -> B G, equiv_bg_pi1_adjoint X G v])
       (subtype_centralizer_subgroup (grp_image v)).
 Proof.
-  refine (grp_iso_compose (equiv_pi1_map_bg_centralizer_grp_image v) _).
+  refine (grp_iso_compose (equiv_pi1_map_bg_to_centralizer_group_image v) _).
   srapply groupiso_pi_functor.
   symmetry.
   srapply Build_pEquiv'.
