@@ -106,3 +106,33 @@ Defined.
 
 Definition abgroup_cyclic_subgroup {G : Group} (g : G) : AbGroup
   := Build_AbGroup (cyclic_subgroup g) _.
+
+(** ** Centralizers of general subsets *)
+
+(** The centralizer of the elements of [G] for which [H] holds. *)
+Definition subtype_centralizer {G : Group} (H : G -> Type)
+  : G -> Type
+  (* Note the order of operations here.  We do this to match the original proofs for the centraliser of an element. *)
+  := fun g => merely (forall h : G, H h -> centralizer h g).
+
+(** The centralizer of any subset of [G] is a subgroup of [G]. *)
+Instance issubgroup_subtype_centralizer {G : Group} (H : G -> Type)
+  : IsSubgroup (subtype_centralizer H).
+Proof.
+  srapply Build_IsSubgroup.
+  - apply tr.
+    intros h Hh.
+    exact (centralizer_unit h).
+  - intros x y cx cy.
+    strip_truncations; apply tr.
+    intros h Hh.
+    exact (centralizer_sgop _ _ _ (cx h Hh) (cy h Hh)).
+  - intros x Hx.
+    strip_truncations; apply tr.
+    intros h Hh.
+    exact (centralizer_inverse h x (Hx h Hh)).
+Defined.
+
+Definition subtype_centralizer_subgroup
+  {G : Group} (H : G -> Type)
+  := Build_Subgroup G (subtype_centralizer H) _.
