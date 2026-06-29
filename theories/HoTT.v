@@ -158,7 +158,7 @@ Require Export HoTT.Homotopy.Smash.
 Require Export HoTT.Homotopy.Wedge.
 Require Export HoTT.Homotopy.Join.
 Require Export HoTT.Homotopy.HSpace.
-Require Export HoTT.Homotopy.ClassifyingSpace.
+Require Export HoTT.Homotopy.ClassifyingSpace.Core.
 Require Export HoTT.Homotopy.CayleyDickson.
 Require Export HoTT.Homotopy.EMSpace.
 Require Export HoTT.Homotopy.ExactSequence.
