@@ -456,8 +456,7 @@ Section IntegerArithmetic.
     revert z.
     rapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
     1,3: reflexivity.
-    - simpl.
-      intro z.
+    - simpl; intro z.
       by rewrite IntHIT_add_0_r.
   Defined.
 
@@ -485,7 +484,7 @@ Section IntegerArithmetic.
     revert x.
     rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (-y))); cbn beta.
     1,2: reflexivity.
-    - intro x; simpl.
+    - simpl; intro x.
       apply IntHIT_neg_add.
   Defined.
 
@@ -495,7 +494,7 @@ Section IntegerArithmetic.
     revert x.
     rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (succ y))); cbn beta.
     1,2: reflexivity.
-    - intro z; simpl.
+    - simpl; intro z.
       rewrite IntHIT_add_succ_r.
       by rewrite IntHIT_add_assoc.
   Defined.
@@ -541,8 +540,7 @@ Section IntegerArithmetic.
     revert x.
     srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (y + z))); cbn beta.
     1,2: reflexivity.
-    - intro x.
-      simpl.
+    - simpl; intro x.
       rewrite <- (IntHIT_add_assoc (x*y) y).
       rewrite (IntHIT_add_comm y (x*z + z)).
       rewrite <- (IntHIT_add_assoc _ z y).
@@ -562,8 +560,7 @@ Section IntegerArithmetic.
     revert x.
     srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (y * z))); cbn beta.
     1,2: reflexivity.
-    - simpl.
-      intro x.
+    - simpl; intro x.
       by rewrite IntHIT_dist_r.
   Defined.
 
