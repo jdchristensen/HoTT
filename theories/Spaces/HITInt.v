@@ -86,12 +86,9 @@ Definition IntHIT_ind_hprop {P : IntHIT -> Type} `{forall z, IsHProp (P z)}
   : forall z, P z.
 Proof.
   snapply (IntHIT_ind t0 f g).
-  - intros z t.
-    exact ((sect_retr_homotopic_isbiinv succ z)^ # (g z) t).
-  - intros z t.
-    rapply path_ishprop.
-  - intros z t.
-    rapply path_ishprop.
+  all: intros z t.
+  2,3: rapply path_ishprop.
+  - exact ((sect_retr_homotopic_isbiinv succ z)^ # (g z) t).
 Defined.
 
 Definition IntHIT_ind_hprop_iff {P : IntHIT -> Type} `{forall z, IsHProp (P z)}
@@ -353,8 +350,7 @@ Section IntegerArithmetic.
     revert x.
     srapply (IntHIT_homotopic_two_fun_equiv succ); cbn beta.
     1,2: reflexivity.
-    - intro z.
-      simpl.
+    - simpl; intro z.
       rewrite succ_is_sect.
       exact (retr_is_sect_isbiinv succ _)^.
   Defined.
@@ -459,11 +455,10 @@ Section IntegerArithmetic.
   Proof.
     revert z.
     rapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
-    - reflexivity.
+    1,3: reflexivity.
     - simpl.
       intro z.
       by rewrite IntHIT_add_0_r.
-    - reflexivity.
   Defined.
 
   (** Integer multiplication with one on the left is the identity. *)
