@@ -6,6 +6,8 @@ Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Equiv.BiInv.
 
 Set Universe Minimization ToSet.
 
+Declare Scope IntHIT_scope.
+
 Module Export IntHIT.
   Section IntHIT.
 
