@@ -8,6 +8,8 @@ Set Universe Minimization ToSet.
 
 Declare Scope IntHIT_scope.
 
+(** ** The definition of [IntHIT] *)
+
 Module Export IntHIT.
   Section IntHIT.
 
@@ -57,6 +59,8 @@ Definition biinv_IntHIT_succ : BiInv IntHIT IntHIT
 (** The predecessor is an equivalence on [IntHIT]. *)
 #[export] Instance isequiv_IntHIT_pred : IsEquiv pred
   := isequiv_isbiinv_retr succ.
+
+(** ** Induction and recursion principles for IntHIT *)
 
 Definition IntHIT_ind_equiv {P : IntHIT -> Type} (t0 : P zero_i)
   (e : forall z : IntHIT, P z -> P (succ z)) {iseq : forall z, IsEquiv (e z)}
@@ -149,7 +153,7 @@ Definition IntHIT_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
   : IntHIT -> P
   := @IntHIT_rec_biinv P t0 f (isbiinv_isequiv _ _).
 
-(** We define equivalence iteration. *)
+(** Equivalence iteration. *)
 Definition IntHIT_iter {A} (f : A -> A) `{!IsEquiv f} (n : IntHIT) (a0 : A) : A
   := IntHIT_rec_equiv a0 f n.
 
@@ -186,7 +190,7 @@ Definition IntHIT_homotopic_two_fun_equiv {P : Type} (f : P -> P)
   : forall (z : IntHIT), k1 z = k2 z
   := IntHIT_homotopic_two_fun_biinv (Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
-(** Next we prove that [IntHIT] is equivalent to [SInt]. *)
+(** ** [IntHIT] is equivalent to [SInt] *)
 
 Section IntHITEquiv.
 
@@ -244,7 +248,19 @@ Section IntHITEquiv.
 
 End IntHITEquiv.
 
-(** * Integer Arithmetic using [IntHIT] *)
+(** ** Printing and parsing *)
+
+(** For now we pass through [SInt] for printing and parsing. *)
+Definition IntHIT_to_number_int : IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
+
+Definition IntHIT_of_number_int : Numeral.int -> IntHIT := IntITtoIntHIT o int_of_number_int.
+
+Number Notation IntHIT IntHIT_of_number_int IntHIT_to_number_int : IntHIT_scope.
+
+(** The following function reduces an integer expression by cancelling succesive successor and predecessor terms. *)
+Definition IntHIT_reduce := IntITtoIntHIT o IntHITtoIntIT.
+
+(** ** Integer arithmetic using [IntHIT] *)
 
 Section IntegerArithmetic.
 
@@ -255,39 +271,16 @@ Section IntegerArithmetic.
   Notation "z .+1" := (succ z) : IntHIT_scope.
   Notation "z .-1" := (pred z) : IntHIT_scope.
 
-  (** We define negation by recursion.  Negation is defined at this early stage because it will be used in parsing numerals. *)
+  (** *** Negation *)
+
   Definition IntHIT_neg (z : IntHIT) : IntHIT
     := IntHIT_rec_equiv zero_i pred z.
 
   Notation "- z" := (IntHIT_neg z) : IntHIT_scope.
 
-  (** We define addition by recursion on the first argument. *)
-  Definition IntHIT_add (x y : IntHIT) : IntHIT
-    := IntHIT_rec_equiv y succ x.
-
   (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n].  Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
   Definition IntHIT_of_nat (n : nat) : IntHIT
     := nat_iter n succ zero_i.
-
-  (** Printing *)
-  (** Here we rely for now on the 'old' integers. This can be maybe improved in the future. *)
-  Definition IntHIT_to_number_int : IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
-
-  (** Parsing *)
-  Definition IntHIT_of_number_int (d : Numeral.int) :=
-    match d with
-    | Numeral.IntDec (Decimal.Pos d) => IntHIT_of_nat (Nat.of_uint d)
-    | Numeral.IntDec (Decimal.Neg d) => IntHIT_neg (IntHIT_of_nat (Nat.of_uint d))
-    | Numeral.IntHex (Hexadecimal.Pos u) => IntHIT_of_nat (Nat.of_hex_uint u)
-    | Numeral.IntHex (Hexadecimal.Neg u) => IntHIT_neg (IntHIT_of_nat (Nat.of_hex_uint u))
-    end.
-
-  Number Notation IntHIT IntHIT_of_number_int IntHIT_to_number_int : IntHIT_scope.
-
-  (** The following function reduces an integer expression by cancelling succesive successor and predecessor terms. *)
-  Definition IntHIT_reduce := IntITtoIntHIT o IntHITtoIntIT.
-
-  (** ** Properties of Operations *)
 
   (** Negation is involutive. *)
   Definition IntHIT_neg_neg (z : IntHIT) : - - z = z.
@@ -296,7 +289,7 @@ Section IntegerArithmetic.
     by srapply (IntHIT_homotopic_two_fun_equiv succ).
   Defined.
 
-  (* * Negation is an equivalence. *)
+  (** Negation is an equivalence. *)
   #[export] Instance isequiv_int_neg : IsEquiv IntHIT_neg.
   Proof.
     snapply (isequiv_adjointify IntHIT_neg IntHIT_neg).
@@ -316,6 +309,10 @@ Section IntegerArithmetic.
     := idpath.
 
   (** *** Addition *)
+
+  (** We define addition by recursion on the first argument. *)
+  Definition IntHIT_add (x y : IntHIT) : IntHIT
+    := IntHIT_rec_equiv y succ x.
 
   Infix "+" := IntHIT_add : IntHIT_scope.
   Infix "-" := (fun x y => x + -y) : IntHIT_scope.
