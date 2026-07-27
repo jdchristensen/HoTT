@@ -250,6 +250,10 @@ End IntHITEquiv.
 
 (** ** Printing and parsing *)
 
+(** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n].  Various operations on [nat] are preserved by this function. *)
+Coercion IntHIT_of_nat (n : nat) : IntHIT
+  := nat_iter n succ zero_i.
+
 (** For now we pass through [SInt] for printing and parsing. *)
 Definition IntHIT_to_number_int : IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
 
@@ -277,10 +281,6 @@ Section IntegerArithmetic.
     := IntHIT_rec_equiv zero_i pred z.
 
   Notation "- z" := (IntHIT_neg z) : IntHIT_scope.
-
-  (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n].  Various operations on [nat] are preserved by this function. See the section on conversion functions starting with [int_nat_succ]. *)
-  Definition IntHIT_of_nat (n : nat) : IntHIT
-    := nat_iter n succ zero_i.
 
   (** Negation is involutive. *)
   Definition IntHIT_neg_neg (z : IntHIT) : - - z = z.
