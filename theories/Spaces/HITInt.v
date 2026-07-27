@@ -25,6 +25,9 @@ Module Export IntHIT.
 
     Axiom succ_is_retr : succ o succ_sect == idmap.
 
+    (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
+    #[export] Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
+
     Context {P : IntHIT -> Type} (t0 : P zero_i) (e : forall z : IntHIT, P z -> P (succ z))
       (r : forall z : IntHIT, P z -> P (pred z)) (s : forall z : IntHIT, P z -> P (succ_sect z))
       (re : forall (z : IntHIT) (t : P z), succ_is_sect z # (r (succ z) (e z t)) = t)
@@ -242,9 +245,6 @@ Section IntHITEquiv.
   #[export] Instance ishset_IntHIT
     : IsHSet IntHIT
     := istrunc_isequiv_istrunc SInt _.
-
-  (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
-  #[export] Instance ispointed_IntHIT : IsPointed IntHIT := zero_i.
 
 End IntHITEquiv.
 
