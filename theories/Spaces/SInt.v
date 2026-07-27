@@ -24,8 +24,6 @@ Definition int_of_nat (n : nat) :=
   | S n => posS n
   end.
 
-Coercion int_of_nat : nat >-> SInt.
-
 (** ** Number Notations *)
 
 (** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [posS 122] and [-123] for [negS 122]. *)
@@ -105,12 +103,12 @@ Global Instance ishset_int@{} : IsHSet SInt := _.
 (** ** Integer induction *)
 
 (** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0]. *)
-(** TODO: This is slightly altered compared to Int.v, and I don't know which was is better. *)
+(** TODO: This is slightly altered compared to Int.v, and I don't know which one is better. *)
 (** TODO: This is used only in HITInt.v.  It may be possible to completely avoid it, which would then let us drop [int_of_nat] as well. *)
 Definition SInt_ind@{i} (P : SInt -> Type@{i})
   (H0 : P zero)
-  (HP : forall n : nat, P n -> P (posS n))
-  (HN : forall n : nat, P (int_neg n) -> P (negS n))
+  (HP : forall n : nat, P (int_of_nat n) -> P (posS n))
+  (HN : forall n : nat, P (int_neg (int_of_nat n)) -> P (negS n))
   : forall x, P x.
 Proof.
   intros [x | | x].
