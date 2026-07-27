@@ -349,9 +349,9 @@ Section IntegerArithmetic.
     revert x.
     srapply (IntHIT_homotopic_two_fun_equiv succ); cbn beta.
     1,2: reflexivity.
-    - simpl; intro z.
-      rewrite succ_is_sect.
-      exact (retr_is_sect_isbiinv succ _)^.
+    simpl; intro z.
+    rewrite succ_is_sect.
+    exact (retr_is_sect_isbiinv succ _)^.
   Defined.
 
   (** Integer addition with 1 on the left is the successor. *)
@@ -389,9 +389,9 @@ Section IntegerArithmetic.
     revert z.
     srapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
     1,3: reflexivity.
-    - simpl; intro s.
-      rewrite IntHIT_add_succ_r.
-      apply succ_is_sect.
+    simpl; intro s.
+    rewrite IntHIT_add_succ_r.
+    apply succ_is_sect.
   Defined.
 
   (** Negation is a right inverse with respect to integer addition. *)
@@ -455,8 +455,8 @@ Section IntegerArithmetic.
     revert z.
     rapply (IntHIT_homotopic_two_fun_equiv idmap); cbn beta.
     1,3: reflexivity.
-    - simpl; intro z.
-      by rewrite IntHIT_add_0_r.
+    simpl; intro z.
+    by rewrite IntHIT_add_0_r.
   Defined.
 
   (** Integer multiplication with one on the left is the identity. *)
@@ -469,8 +469,8 @@ Section IntegerArithmetic.
     revert z.
     rapply (IntHIT_homotopic_two_fun_equiv (fun z => IntHIT_add z 1)); cbn beta.
     1,2: reflexivity.
-    - intro z.
-      by rewrite IntHIT_add_1_r.
+    intro z.
+    by rewrite IntHIT_add_1_r.
   Defined.
 
   (** Integer multiplication with -1 on the left is negation. *)
@@ -483,8 +483,8 @@ Section IntegerArithmetic.
     revert x.
     rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (-y))); cbn beta.
     1,2: reflexivity.
-    - simpl; intro x.
-      apply IntHIT_neg_add.
+    simpl; intro x.
+    apply IntHIT_neg_add.
   Defined.
 
   (** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
@@ -493,9 +493,9 @@ Section IntegerArithmetic.
     revert x.
     rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (succ y))); cbn beta.
     1,2: reflexivity.
-    - simpl; intro z.
-      rewrite IntHIT_add_succ_r.
-      by rewrite IntHIT_add_assoc.
+    simpl; intro z.
+    rewrite IntHIT_add_succ_r.
+    by rewrite IntHIT_add_assoc.
   Defined.
 
   (** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
@@ -504,14 +504,14 @@ Section IntegerArithmetic.
     revert x.
     rapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (pred y))); cbn beta.
     1,2: reflexivity.
-    - intro z.
-      rewrite IntHIT_mul_succ_l.
-      rewrite <- IntHIT_add_assoc.
-      simpl.
-      rewrite (IntHIT_add_comm y _).
-      rewrite IntHIT_add_pred_l.
-      rewrite <- IntHIT_add_assoc.
-      by rewrite (IntHIT_add_pred_r _ y).
+    intro z.
+    rewrite IntHIT_mul_succ_l.
+    rewrite <- IntHIT_add_assoc.
+    simpl.
+    rewrite (IntHIT_add_comm y _).
+    rewrite IntHIT_add_pred_l.
+    rewrite <- IntHIT_add_assoc.
+    by rewrite (IntHIT_add_pred_r _ y).
   Defined.
 
   (** Integer multiplication is commutative. *)
@@ -539,12 +539,12 @@ Section IntegerArithmetic.
     revert x.
     srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (y + z))); cbn beta.
     1,2: reflexivity.
-    - simpl; intro x.
-      rewrite <- (IntHIT_add_assoc (x*y) y).
-      rewrite (IntHIT_add_comm y (x*z + z)).
-      rewrite <- (IntHIT_add_assoc _ z y).
-      rewrite (IntHIT_add_comm z y).
-      by rewrite (IntHIT_add_assoc (x*y) _ _).
+    simpl; intro x.
+    rewrite <- (IntHIT_add_assoc (x*y) y).
+    rewrite (IntHIT_add_comm y (x*z + z)).
+    rewrite <- (IntHIT_add_assoc _ z y).
+    rewrite (IntHIT_add_comm z y).
+    by rewrite (IntHIT_add_assoc (x*y) _ _).
   Defined.
 
   (** Multiplication distributes over addition on the right. *)
@@ -559,18 +559,8 @@ Section IntegerArithmetic.
     revert x.
     srapply (IntHIT_homotopic_two_fun_equiv (fun x => IntHIT_add x (y * z))); cbn beta.
     1,2: reflexivity.
-    - simpl; intro x.
-      by rewrite IntHIT_dist_r.
-  Defined.
-
-  (** This is a shorter proof of [IntITtoIntHIT_is_linv], but it requires that we already know that [IntHIT] is as set.  This might be useful in the future, if we can show that [IntHIT] a set independently of its equivalence to [SInt]. *)
-  Definition IntITtoIntHIT_is_linv' (z : IntHIT)
-  : (IntITtoIntHIT o IntHITtoIntIT) z = z.
-  Proof.
-    srapply (IntHIT_homotopic_two_fun_equiv succ).
-    1,3: reflexivity.
-    - simpl.
-      exact IntITtoIntHIT_comp_succ'.
+    simpl; intro x.
+    by rewrite IntHIT_dist_r.
   Defined.
 
 End IntegerArithmetic.
