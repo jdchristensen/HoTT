@@ -1,6 +1,6 @@
 Require Import Basics.Overture Basics.Nat Basics.Tactics Basics.Decidable.
 Require Import Basics.Numerals.Decimal Basics.Numeral.
-Require Import Spaces.Nat.Core. (* TODO: Can we remove this?  Currently used for [nat_pred] below. *)
+Require Import Spaces.Nat.Core.
 
 Unset Elimination Schemes.
 Set Universe Minimization ToSet.
@@ -99,7 +99,7 @@ Proof.
   1,3: split.
   1,3: napply ap.
   1,2: intros H; by injection H.
-  1,2: exact _.
+  1,2: exact _. (* Uses decideable equality of [nat]. *)
 Defined.
 
 (** By Hedberg's theorem, we have that the integers are a set. *)
@@ -107,9 +107,7 @@ Global Instance ishset_int@{} : IsHSet SInt := _.
 
 (** ** Integer induction *)
 
-(** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0]. *)
-(** TODO: This is slightly altered compared to Int.v, and I don't know which one is better. *)
-(** TODO: This is used only in HITInt.v.  It may be possible to completely avoid it, which would then let us drop [int_of_nat] as well. *)
+(** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0].  This is used only in HITInt.v. *)
 Definition SInt_ind@{i} (P : SInt -> Type@{i})
   (H0 : P zero)
   (HP : forall n : nat, P (int_of_nat n) -> P (posS n))
