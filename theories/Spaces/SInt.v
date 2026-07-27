@@ -31,16 +31,16 @@ Definition int_of_nat (n : nat) :=
 (** Printing *)
 Definition int_to_number_int (n : SInt) : Numeral.int :=
   match n with
-  | posS n => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S n)))
+  | posS m => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S m)))
   | zero => Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))
-  | negS n => Numeral.IntDec (Decimal.Neg (Nat.to_uint (S n)))
+  | negS m => Numeral.IntDec (Decimal.Neg (Nat.to_uint (S m)))
   end.
 
 (** Parsing *)
-Definition int_of_number_int (d : Numeral.int) :=
+Definition int_of_number_int (d : Numeral.int) : SInt :=
   match d with
-  | Numeral.IntDec (Decimal.Pos d) => int_of_nat (Nat.of_uint d)
-  | Numeral.IntDec (Decimal.Neg d) => negS (nat_pred (Nat.of_uint d))
+  | Numeral.IntDec (Decimal.Pos u) => int_of_nat (Nat.of_uint u)
+  | Numeral.IntDec (Decimal.Neg u) => negS (nat_pred (Nat.of_uint u))
   | Numeral.IntHex (Hexadecimal.Pos u) => int_of_nat (Nat.of_hex_uint u)
   | Numeral.IntHex (Hexadecimal.Neg u) => negS (nat_pred (Nat.of_hex_uint u))
   end.
