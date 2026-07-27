@@ -18,10 +18,17 @@ Inductive SInt : Type0 :=
 | posS : nat -> SInt.
 
 (** We can convert a [nat] to an [SInt] by mapping [0] to [zero] and [S n] to [posS n]. *)
-Definition int_of_nat (n : nat) :=
+Definition int_of_nat (n : nat) : SInt :=
   match n with
   | O => zero
   | S n => posS n
+  end.
+
+(** Symmetrically, we can send [n] to "-n" in this way: *)
+Definition negint_of_nat (n : nat) : SInt :=
+  match n with
+  | O => zero
+  | S n => negS n
   end.
 
 (** ** Number Notations *)
@@ -40,25 +47,23 @@ Definition int_to_number_int (n : SInt) : Numeral.int :=
 Definition int_of_number_int (d : Numeral.int) : SInt :=
   match d with
   | IntDec (Pos u) => int_of_nat (of_uint u)
-  | IntDec (Neg u) => negS (nat_pred (of_uint u))
+  | IntDec (Neg u) => negint_of_nat (of_uint u)
   | IntHex (Hexadecimal.Pos u) => int_of_nat (of_hex_uint u)
-  | IntHex (Hexadecimal.Neg u) => negS (nat_pred (of_hex_uint u))
+  | IntHex (Hexadecimal.Neg u) => negint_of_nat (of_hex_uint u)
   end.
 
-(** ** Successor, Predecessor and Negation *)
+(** ** Successor, predecessor and negation *)
 
 Definition int_succ (n : SInt) : SInt :=
   match n with
   | posS n => posS (S n)
   | zero => posS 0
-  | negS 0 => zero
-  | negS (S n) => negS n
+  | negS n => negint_of_nat n
   end.
 
 Definition int_pred (n : SInt) : SInt :=
   match n with
-  | posS (S n) => posS n
-  | posS 0 => zero 
+  | posS n => int_of_nat n
   | zero => negS 0
   | negS n => negS (S n)
   end.
