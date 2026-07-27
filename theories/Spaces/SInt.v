@@ -1,5 +1,5 @@
 Require Import Basics.Overture Basics.Nat Basics.Tactics Basics.Decidable.
-Require Basics.Numerals.Decimal.
+Require Import Basics.Numerals.Decimal Basics.Numeral.
 Require Import Spaces.Nat.Core. (* TODO: Can we remove this?  Currently used for [nat_pred] below. *)
 
 Unset Elimination Schemes.
@@ -31,18 +31,18 @@ Definition int_of_nat (n : nat) :=
 (** Printing *)
 Definition int_to_number_int (n : SInt) : Numeral.int :=
   match n with
-  | posS m => Numeral.IntDec (Decimal.Pos (Nat.to_uint (S m)))
-  | zero => Numeral.IntDec (Decimal.Pos (Nat.to_uint 0))
-  | negS m => Numeral.IntDec (Decimal.Neg (Nat.to_uint (S m)))
+  | posS m => IntDec (Pos (to_uint (S m)))
+  | zero => IntDec (Pos (to_uint 0))
+  | negS m => IntDec (Neg (to_uint (S m)))
   end.
 
 (** Parsing *)
 Definition int_of_number_int (d : Numeral.int) : SInt :=
   match d with
-  | Numeral.IntDec (Decimal.Pos u) => int_of_nat (Nat.of_uint u)
-  | Numeral.IntDec (Decimal.Neg u) => negS (nat_pred (Nat.of_uint u))
-  | Numeral.IntHex (Hexadecimal.Pos u) => int_of_nat (Nat.of_hex_uint u)
-  | Numeral.IntHex (Hexadecimal.Neg u) => negS (nat_pred (Nat.of_hex_uint u))
+  | IntDec (Pos u) => int_of_nat (of_uint u)
+  | IntDec (Neg u) => negS (nat_pred (of_uint u))
+  | IntHex (Hexadecimal.Pos u) => int_of_nat (of_hex_uint u)
+  | IntHex (Hexadecimal.Neg u) => negS (nat_pred (of_hex_uint u))
   end.
 
 (** ** Successor, Predecessor and Negation *)
