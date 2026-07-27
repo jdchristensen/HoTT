@@ -251,8 +251,10 @@ End IntHITEquiv.
 (** ** Printing and parsing *)
 
 (** We can convert a [nat] to an [IntHIT] by mapping [0] to [zero] and [S n] to [succ n].  Various operations on [nat] are preserved by this function. *)
-Coercion IntHIT_of_nat (n : nat) : IntHIT
+Definition IntHIT_of_nat (n : nat) : IntHIT
   := nat_iter n succ zero_i.
+
+Coercion IntHIT_of_nat : nat >-> IntHIT.
 
 (** For now we pass through [SInt] for printing and parsing. *)
 Definition IntHIT_to_number_int : IntHIT -> Numeral.int := int_to_number_int o IntHITtoIntIT.
