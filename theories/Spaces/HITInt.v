@@ -292,7 +292,7 @@ Section IntegerArithmetic.
   Defined.
 
   (** Negation is an equivalence. *)
-  #[export] Instance isequiv_int_neg : IsEquiv IntHIT_neg.
+  #[export] Instance isequiv_IntHIT_neg : IsEquiv IntHIT_neg.
   Proof.
     snapply (isequiv_adjointify IntHIT_neg IntHIT_neg).
     1,2: napply IntHIT_neg_neg.
