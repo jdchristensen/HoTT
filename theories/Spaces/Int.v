@@ -202,45 +202,39 @@ Section IntEquiv.
   Definition InttoIntIT : Int -> SInt
     := int_rec zero int_succ int_pred int_pred int_succ_pred int_pred_succ.
 
-  Definition IntITtoInt (z : SInt) : Int.
+  Definition IntITtoInt : SInt -> Int.
   Proof.
-    induction z as [|n IHz|n IHz].
+    intro s; induction s as [|n IHz|n IHz].
     - exact zero_i.
     - exact (succ IHz).
     - exact (pred IHz).
   Defined.
 
-  Definition IntITtoint_is_rinv (z : SInt)
-    : (InttoIntIT o IntITtoInt) z = z.
+  Definition IntITtoint_is_rinv : InttoIntIT o IntITtoInt == idmap.
   Proof.
-    induction z as [|[|n] IHz|[|n] IHz].
+    intro s; induction s as [|[|n] IHz|[|n] IHz].
     1, 2, 4: reflexivity.
     - exact (ap int_succ IHz).
     - exact (ap int_pred IHz).
   Defined.
 
-  Definition IntITtoint_comp_succ (z : SInt)
-    : IntITtoInt (int_succ z) = succ (IntITtoInt z).
+  Definition IntITtoint_comp_succ : IntITtoInt o int_succ == succ o IntITtoInt.
   Proof.
-    induction z as [|[|n] IHz|[|n] IHz].
+    intro s; induction s as [|[|n] IHz|[|n] IHz].
     1-3: reflexivity.
     all: symmetry; exact (retr_is_sect_isbiinv succ _).
   Defined.
 
-  Definition IntITtoint_comp_succ' (z : Int)
-    : IntITtoInt (InttoIntIT (succ z)) = succ (IntITtoInt (InttoIntIT z))
-    := IntITtoint_comp_succ (InttoIntIT z).
-
-  Definition IntITtoint_is_linv (z : Int)
-    : (IntITtoInt o InttoIntIT) z = z.
+  Definition IntITtoint_is_linv : IntITtoInt o InttoIntIT == idmap.
   Proof.
-    exact (int_homotopic (biinv_int_succ) zero_i (IntITtoInt o InttoIntIT) idpath IntITtoint_comp_succ' z
-             @ (int_homotopic (biinv_int_succ) zero_i idmap idpath (fun x => idpath) z)^).
+    napply (int_homotopic_two_fun_biinv biinv_int_succ).
+    1,3: reflexivity.
+    intro z; simpl.
+    apply IntITtoint_comp_succ.
   Defined.
 
-  (** [IntITtoInt] is biinvertible.  It follows from typeclass inference that it is an equivalence and that [SInt] and [Int] are equivalent. *)
-  #[export] Instance isbiinv_IntITtoInt
-    : IsBiInv IntITtoInt
+  (** [IntITtoInt] is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
+  #[export] Instance isbiinv_IntITtoInt : IsBiInv IntITtoInt
     := Build_IsBiInv _ _ _ _ _ IntITtoint_is_linv IntITtoint_is_rinv.
 
   (** Since [SInt] is a set, therefore also [Int] is a set. *)
