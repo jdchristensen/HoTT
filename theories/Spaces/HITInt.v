@@ -1,4 +1,4 @@
-Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Equiv.BiInv.
+Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Equiv.BiInv Types.Paths Types.Universe.
 
 (** * The integers, defined as a HIT *)
 
@@ -8,6 +8,8 @@ Set Universe Minimization ToSet.
 
 Declare Scope IntHIT_scope.
 Delimit Scope IntHIT_scope with int.
+Local Open Scope IntHIT_scope.
+
 
 (** ** The definition of [IntHIT] *)
 
@@ -272,7 +274,7 @@ Coercion IntHIT_of_nat : nat >-> IntHIT.
 Section IntegerArithmetic.
 
   Declare Scope IntHIT_scope.
-  Delimit Scope IntHIT_scope with IntHIT.
+  Delimit Scope IntHIT_scope with int.
   Local Open Scope IntHIT_scope.
 
   Notation "z .+1" := (succ z) : IntHIT_scope.
@@ -567,3 +569,236 @@ Section IntegerArithmetic.
   Defined.
 
 End IntegerArithmetic.
+
+(** TODO: Fix the notation and infix issues and remove the lines below. Currently, it seems that these are not accessible from other files without being place outside of the section here.*)
+
+Notation "z .+1" := (succ z) : IntHIT_scope.
+Notation "z .-1" := (pred z) : IntHIT_scope.
+
+Notation "- z" := (IntHIT_neg z) : IntHIT_scope.
+
+Infix "+" := IntHIT_add : IntHIT_scope.
+Infix "-" := (fun x y => x + - y) : IntHIT_scope.
+
+Infix "*" := IntHIT_mul : IntHIT_scope.
+
+(** ** Results about iteration of equivalences *)
+
+Definition IntHIT_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (z : IntHIT) (a : A)
+  : IntHIT_iter f (IntHIT_neg z) a = IntHIT_iter f^-1 z a.
+Proof.
+  revert z.
+  rapply (IntHIT_homotopic_two_fun_equiv f^-1); cbn beta.
+  1-3: reflexivity.
+Defined.
+
+Definition IntHIT_iter_succ_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : IntHIT) (a : A)
+  : IntHIT_iter f (succ z) a = f (IntHIT_iter f z a)
+  := idpath.
+
+Definition IntHIT_iter_succ_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : IntHIT) (a : A)
+  : IntHIT_iter f (succ z) a = IntHIT_iter f z (f a).
+Proof.
+  revert z.
+  rapply (IntHIT_homotopic_two_fun_equiv f); cbn beta.
+  all: reflexivity.
+Defined.
+
+Definition IntHIT_iter_pred_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : IntHIT) (a : A)
+  : IntHIT_iter f (pred z) a = f^-1 (IntHIT_iter f z a)
+  := idpath.
+
+Definition IntHIT_iter_pred_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : IntHIT) (a : A)
+  : IntHIT_iter f (pred z) a = IntHIT_iter f z (f^-1 a).
+Proof.
+  revert z.
+  rapply (IntHIT_homotopic_two_fun_equiv f); cbn beta.
+  1,3: reflexivity.
+  - intro z; simpl; destruct H.
+    exact ((eissect (IntHIT_iter f z a)) @ (eisretr (IntHIT_iter f z a))^).
+Defined.
+
+Definition IntHIT_iter_add {A} (f : A -> A) `{IsEquiv _ _ f} (x y : IntHIT)
+  : IntHIT_iter f (IntHIT_add x y) == IntHIT_iter f x o IntHIT_iter f y.
+Proof.
+  intro a; revert x.
+  rapply (IntHIT_homotopic_two_fun_equiv f _ _); cbn beta.
+  1-3: reflexivity.
+Defined.
+
+(** If [g : A -> A'] commutes with automorphisms of [A] and [A'], then it commutes with iteration. *)
+Definition IntHIT_iter_commute_map {A A'} (f : A -> A) `{!IsEquiv f}
+  (f' : A' -> A') `{!IsEquiv f'}
+  (g : A -> A') (p : g o f == f' o g) (z : IntHIT)(a : A)
+  : g (IntHIT_iter f z a) = IntHIT_iter f' z (g a).
+Proof.
+  revert z.
+  rapply (IntHIT_homotopic_two_fun_equiv f' _ _); cbn beta.
+  1,3: reflexivity.
+  exact (fun x => (p (IntHIT_iter f x a))).
+Defined.
+
+(** In particular, homotopic maps have homotopic iterations. *)
+Definition IntHIT_iter_homotopic (z : IntHIT) {A} (f f' : A -> A) `{!IsEquiv f} `{!IsEquiv f'}
+  (h : f == f')
+  : IntHIT_iter f z == IntHIT_iter f' z
+  := IntHIT_iter_commute_map f f' idmap h z.
+
+(** [IntHIT_iter f n x] doesn't depend on the proof that [f] is an equivalence. *)
+Definition IntHIT_iter_agree (z : IntHIT) {A} (f : A -> A) {ief ief' : IsEquiv f}
+  : forall x, @IntHIT_iter A f ief z x = @IntHIT_iter A f ief' z x
+  := IntHIT_iter_homotopic z f f (fun _ => idpath).
+
+Definition IntHIT_iter_invariant (z : IntHIT) {A} (f : A -> A) `{!IsEquiv f}
+  (P : A -> Type)
+  (Psucc : forall x, P x -> P (f x))
+  (Ppred : forall x, P x -> P (f^-1 x))
+  : forall x, P x -> P (IntHIT_iter f z x).
+Proof.
+  revert z.
+  snapply IntHIT_ind_equiv; cbn beta.
+  - intro x.
+    exact idmap.
+  - intros z IHz a H.
+    rewrite IntHIT_iter_succ_l.
+    apply Psucc, IHz, H.
+  - (** TODO: Finish the proof*)
+Admitted.
+  (*
+  induction n as [|n IHn|n IHn]; intro x.
+  - exact idmap.
+  - intro H.
+    rewrite IntHIT_iter_succ_l.
+    apply Psucc, IHn, H.
+  - intro H.
+    rewrite IntHIT_iter_pred_l.
+    apply Ppred, IHn, H.
+Defined. *)
+
+(** ** Exponentiation of loops *)
+
+Definition loopexp {A : Type} {a : A} (p : a = a) (z : IntHIT) : (a = a)
+  := IntHIT_iter (equiv_concat_r p a) z idpath.
+
+Definition loopexp_succ_r {A : Type} {a : A} (p : a = a) (z : IntHIT)
+  : loopexp p (succ z) = loopexp p z @ p
+  := IntHIT_iter_succ_l _ _ _.
+
+Definition loopexp_pred_r {A : Type} {a : A} (p : a = a) (z : IntHIT)
+  : loopexp p (pred z) = loopexp p z @ p^
+  := IntHIT_iter_pred_l _ _ _.
+
+Definition loopexp_succ_l {A : Type} {a : A} (p : a = a) (z : IntHIT)
+  : loopexp p (succ z) = p @ loopexp p z.
+Proof.
+  lhs napply loopexp_succ_r.
+  revert z.
+  rapply (IntHIT_homotopic_two_fun_equiv (equiv_concat_r p a) _ _); cbn beta.
+  - napply concat_1p_p1.
+  - reflexivity.
+  - intro z; simpl.
+    by rewrite concat_p_pp.
+Defined.
+
+Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : IntHIT)
+  : loopexp p (pred z) = p^ @ loopexp p z.
+Proof.
+  rewrite loopexp_pred_r.
+  revert z.
+  rapply (IntHIT_homotopic_two_fun_equiv (equiv_concat_r p a) _ _); cbn beta.
+  - napply concat_1p_p1.
+  - intro z; simpl.
+    rewrite 2 concat_pp_p.
+    rewrite concat_Vp.
+    by rewrite concat_pV.
+  - intro z; simpl.
+    by rewrite concat_p_pp.
+Defined.
+
+Definition ap_loopexp {A B} (f : A -> B) {a : A} (p : a = a) (z : IntHIT)
+  : ap f (loopexp p z) = loopexp (ap f p) z.
+Proof.
+  napply IntHIT_iter_commute_map.
+  intro q; apply ap_pp.
+Defined.
+
+Definition loopexp_add {A : Type} {a : A} (p : a = a) x y
+  : loopexp p (IntHIT_add x y) = loopexp p x @ loopexp p y. (*TODO: fix IntHIT_add*)
+Proof.
+  revert x.
+  rapply (IntHIT_homotopic_two_fun_equiv (equiv_concat_r p a) _ _); cbn beta.
+  - symmetry; apply concat_1p.
+  - reflexivity.
+  - intro z; simpl.
+    rewrite 2 concat_pp_p.
+    rewrite <- loopexp_succ_l.
+    by rewrite <- loopexp_succ_r.
+Defined.
+
+(** Under univalence, exponentiation of loops corresponds to iteration of auto-equivalences. *)
+
+Definition equiv_path_loopexp {A : Type} (p : A = A) (z : IntHIT) (a : A)
+  : equiv_path A A (loopexp p z) a = IntHIT_iter (equiv_path A A p) z a.
+Proof.
+  refine (IntHIT_iter_commute_map _ _ (fun p => equiv_path A A p a) _ _ _).
+  intro q; cbn.
+  napply transport_pp.
+Defined.
+
+Definition loopexp_path_universe `{Univalence} {A : Type} (f : A <~> A)
+  (z : IntHIT) (a : A)
+  : transport idmap (loopexp (path_universe f) z) a = IntHIT_iter f z a.
+Proof.
+  revert f. equiv_intro (equiv_path A A) p.
+  refine (_ @ equiv_path_loopexp p z a).
+  refine (ap (fun q => equiv_path A A (loopexp q z) a) _).
+  apply eissect.
+Defined.
+
+(** ** Converting between integers and naturals *)
+
+(** [IntHIT_of_nat] preserves successors. *)
+Definition IntHIT_nat_succ (n : nat)
+  : (succ n)%int = (n.+1)%nat :> IntHIT.
+Proof.
+  by induction n.
+Defined.
+
+(** [IntHIT_of_nat] preserves addition. Hence is a monoid homomorphism. *)
+Definition IntHIT_nat_add (n m : nat)
+  : (n + m)%int = (n + m)%nat :> IntHIT.
+Proof.
+  induction n as [|n IHn].
+  - reflexivity.
+  - rewrite <- 2 IntHIT_nat_succ.
+    rewrite IntHIT_add_succ_l.
+    exact (ap _ IHn).
+Defined.
+
+(** [IntHIT_of_nat] preserves subtraction when not truncated. *)
+Definition IntHIT_nat_sub (n m : nat)
+  : (m <= n)%nat -> (n - m)%int = (n - m)%nat :> IntHIT.
+Proof.
+  intros H.
+  induction H as [|n H IHn].
+  - lhs napply IntHIT_add_neg_r.
+    by rewrite nat_sub_cancel.
+  - rewrite nat_sub_succ_l; only 2: exact _.
+    rewrite <- 2 IntHIT_nat_succ.
+    rewrite IntHIT_add_succ_l.
+    exact (ap _ IHn).
+Defined.
+
+(** [IntHIT_of_nat] preserves multiplication. This makes [IntHIT_of_nat] a semiring homomorphism. *)
+Definition IntHIT_nat_mul (n m : nat)
+  :  (n * m)%int = (n * m)%nat :> IntHIT.
+Proof.
+  induction n as [|n IHn].
+  - reflexivity.
+  - rewrite <- IntHIT_nat_succ.
+    rewrite IntHIT_mul_succ_l.
+    rewrite nat_mul_succ_l.
+    rhs_V napply IntHIT_nat_add.
+    rewrite IHn.
+    by rewrite IntHIT_add_comm.
+Defined.
