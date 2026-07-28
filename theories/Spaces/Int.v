@@ -91,28 +91,6 @@ Proof.
     apply transport_pV.
 Defined.
 
-Definition int_ind_hprop {P : Int -> Type} `{forall z, IsHProp (P z)}
-  (t0 : P zero_i) (f : forall z : Int, P z -> P (succ z))
-  (g : forall z : Int, P z -> P (pred z))
-  : forall z, P z.
-Proof.
-  snapply (int_ind t0 f g).
-  all: intros z t.
-  2,3: rapply path_ishprop.
-  - exact ((sect_retr_homotopic_isbiinv succ z)^ # (g z) t).
-Defined.
-
-Definition int_ind_hprop_iff {P : Int -> Type} `{forall z, IsHProp (P z)}
-  (t0 : P zero_i) (f : forall z : Int, P z <-> P (succ z))
-  : forall z, P z.
-Proof.
-  srapply (int_ind_hprop t0).
-  - intro z.  exact (fst (f z)).
-  - equiv_intro succ z.
-    refine (_ o snd (f z)).
-    exact (transport P (succ_is_sect z)^).
-Defined.
-
 Section RecursionPrinciple.
 
   Context {P : Type} (t0 : P) (f : P -> P) (g1 g2 : P -> P)
@@ -243,6 +221,33 @@ Section IntEquiv.
     := istrunc_isequiv_istrunc SInt _.
 
 End IntEquiv.
+
+(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [succ_is_sect 0], it is impossible for it to compute well on general [pred] and [succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
+Definition int_ind_sint (P : Int -> Type)
+  (H0 : P zero_i)
+  (HP : forall z, P z -> P (succ z))
+  (HN : forall z, P z -> P (pred z))
+  : forall z, P z.
+Proof.
+  equiv_intro IntITtoInt s.
+  induction s as [|n IHz|n IHz].
+  - exact H0.
+  - destruct n as [|n].
+    all: apply HP, IHz.
+  - destruct n as [|n].
+    all: apply HN, IHz.
+Defined.
+
+Definition int_ind_iff (P : Int -> Type)
+  (t0 : P zero_i) (f : forall z : Int, P z <-> P (succ z))
+  : forall z, P z.
+Proof.
+  srapply (int_ind_sint P t0).
+  - intro z.  exact (fst (f z)).
+  - equiv_intro succ z.
+    refine (_ o snd (f z)).
+    exact (transport P (succ_is_sect z)^).
+Defined.
 
 (** ** Printing and parsing *)
 
@@ -635,7 +640,7 @@ Definition int_iter_agree (z : Int) {A} (f : A -> A) {ief ief' : IsEquiv f}
   : forall x, @int_iter A f ief z x = @int_iter A f ief' z x
   := int_iter_homotopic z f f (fun _ => idpath).
 
-(** An important invariance property of iteration.  The most obvious proof attempts fail.  For example, you might think that the output should simply send [succ] to [Psucc] and [pred] to [Ppred], but it is not necessarily true that [Ppred (f a0) (Psucc a0 Pa0)] transports to [Pa0] along the path [eissect f a0], which would be needed for this to be well-defined (since [pred (succ 0) = 0]).  Instead, we work via the equivalence to [SInt], which normalizes the terms giving us a canonical choice. *)
+(** An important invariance property of iteration.  The most obvious proof attempts fail, for the reasons described in the comment for [int_ind_sint]. *)
 Definition int_iter_invariant {A} (f : A -> A) `{!IsEquiv f}
   (P : A -> Type)
   (Psucc : forall a, P a -> P (f a))
@@ -643,13 +648,10 @@ Definition int_iter_invariant {A} (f : A -> A) `{!IsEquiv f}
   (a0 : A) (Pa0 : P a0)
   : forall z, P (int_iter f z a0).
 Proof.
-  equiv_intro IntITtoInt s.
-  induction s as [|[|n] IHz|[|n] IHz]; cbn.
+  snapply int_ind_sint; cbn.
   - exact Pa0.
-  - apply Psucc, Pa0.
-  - apply Psucc, IHz.
-  - apply Ppred, Pa0.
-  - apply Ppred, IHz.
+  - intros n IH. apply Psucc, IH.
+  - intros n IH. apply Ppred, IH.
 Defined.
 
 (** ** Exponentiation of loops *)
