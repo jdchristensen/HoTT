@@ -11,7 +11,7 @@ Definition cyclic_in (n : nat) : abgroup_Z $-> cyclic n
   := grp_quotient_map. 
 
 Definition ab_mul_cyclic_in (n : nat) (x y : abgroup_Z)
-  : ab_mul y (cyclic_in n x) = cyclic_in n (y * x)%int.
+  : ab_mul y (cyclic_in n x) = cyclic_in n (int_mul y x)%int. (*TODO: fix int_mul*)
 Proof.
   lhs_V napply ab_mul_natural.
   apply ap, abgroup_Z_ab_mul.

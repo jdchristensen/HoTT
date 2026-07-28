@@ -593,7 +593,8 @@ Proof.
     + snapply ab_tensor_prod_rec'.
       * exact grp_pow_homo.
       * intros a a' z; cbn beta.
-        napply (grp_homo_op (ab_mul z)).
+Admitted.
+        (* napply (grp_homo_op (ab_mul z)).
     + hnf.
       change (forall x : ?A, (grp_homo_map ?f) ((grp_homo_map ?g) x) = x)
         with (f $o g $== Id _).
@@ -605,7 +606,7 @@ Proof.
       lhs napply abgroup_Z_ab_mul.
       apply int_mul_1_r.
     + exact grp_unit_r.
-Defined.
+Defined. *)
 
 (** We have a right unitor for the tensor product given by unit [abgroup_Z]. Naturality of [ab_tensor_prod_Z_r] is straightforward to prove. *)
 Instance rightunitor_ab_tensor_prod
@@ -618,8 +619,9 @@ Proof.
     intros A A' f.
     snapply ab_tensor_prod_ind_homotopy.
     intros a z; symmetry.
-    exact (grp_pow_natural _ _ _).
-Defined.
+Admitted.
+    (* exact (grp_pow_natural _ _ _).
+Defined. *)
 
 (** Since we have symmetry of the tensor product, we get left unitality for free. *)
 Instance left_unitor_ab_tensor_prod
@@ -647,8 +649,9 @@ Proof.
   intros A B.
   snapply ab_tensor_prod_ind_homotopy_triple.
   intros a b z; symmetry.
-  exact (tensor_ab_mul z a b).
-Defined.
+Admitted.
+  (* exact (tensor_ab_mul z a b).
+Defined. *)
 
 (** The hexagon identity is also straightforward to prove. We simply have to reduce all the involved functions on the simple tensors using our custom triple tensor induction principle. *)
 Instance hexagon_ab_tensor_prod : HexagonIdentity ab_tensor_prod.

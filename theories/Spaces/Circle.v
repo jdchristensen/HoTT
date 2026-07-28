@@ -2,6 +2,7 @@ From HoTT Require Import Basics Types.
 Require Import Pointed.Core Pointed.Loops Pointed.pEquiv.
 Require Import HSet.
 Require Import Spaces.Int.
+Require Import Equiv.BiInv.
 Require Import Colimits.Coeq.
 Require Import Truncations.Core Truncations.Connectedness.
 
@@ -87,13 +88,15 @@ Section EncodeDecode.
   (** We assume univalence throughout this section. *)
   Context `{Univalence}.
 
+  (** The successor function is an equivalence, so we can apply univalence to get a path in the universe. *)
+
   (** First we define the type of codes, this is a type family over the circle. This can be thought of as the covering space by the homotopical real numbers. It is defined by mapping loop to the path given by univalence applied to the automorphism of the integers. We will show that the section of this family at [base] is equivalent to the loop space of the circle. Giving us an equivalence [base = base <~> Int]. *)
   Definition Circle_code : Circle -> Type
-    := Circle_rec Type Int (path_universe int_succ).
+    := Circle_rec Type Int (path_universe succ).
 
   (** Transporting along [loop] gives us the successor automorphism on [Int]. *)
   Definition transport_Circle_code_loop (z : Int)
-    : transport Circle_code loop z = int_succ z.
+    : transport Circle_code loop z = succ z.
   Proof.
     refine (transport_compose idmap Circle_code loop z @ _).
     unfold Circle_code; rewrite Circle_rec_beta_loop.
@@ -102,18 +105,18 @@ Section EncodeDecode.
 
   (** Transporting along [loop^] gives us the predecessor on [Int]. *)
   Definition transport_Circle_code_loopV (z : Int)
-    : transport Circle_code loop^ z = int_pred z.
+    : transport Circle_code loop^ z = pred z.
   Proof.
     refine (transport_compose idmap Circle_code loop^ z @ _).
     rewrite ap_V.
     unfold Circle_code; rewrite Circle_rec_beta_loop.
-    rewrite <- (path_universe_V int_succ).
+    rewrite <- (path_universe_V succ).
     apply transport_path_universe.
   Defined.
 
   (** To turn a path in [Circle] based at [base] into a code we transport along it. We call this encoding. *)
   Definition Circle_encode (x:Circle) : (base = x) -> Circle_code x
-    := fun p => p # zero.
+    := fun p => p # zero_i.
 
   (** TODO: explain this proof in more detail. *)
   (** Turning a code into a path based at [base]. We call this decoding. *)
@@ -132,19 +135,15 @@ Section EncodeDecode.
   Definition Circle_encode_loopexp (z : Int)
     : Circle_encode base (loopexp loop z) = z.
   Proof.
-    induction z as [|n | n].
-    - reflexivity.
-    - rewrite loopexp_succ_r.
-      unfold Circle_encode in IHz |- *.
-      rewrite transport_pp.
-      rewrite IHz.
-      apply transport_Circle_code_loop.
-    - rewrite loopexp_pred_r.
-      unfold Circle_encode in IHz |- *.
-      rewrite transport_pp.
-      rewrite IHz.
-      apply transport_Circle_code_loopV.
-  Defined.
+    revert z.
+    (* exact (equiv_concat_r loop base). *)
+    rapply (int_homotopic_two_fun_equiv succ _ _); cbn beta.
+    1,3: reflexivity.
+    simpl; intro z.
+    unfold Circle_encode.
+    rewrite <- transport_Circle_code_loop.
+    by rewrite transport_pp.
+Defined.
 
   (** Now we put it together. *)
   Definition Circle_encode_isequiv (x:Circle) : IsEquiv (Circle_encode x).

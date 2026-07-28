@@ -628,6 +628,8 @@ Definition grp_pow {G : Group} (g : G) (n : Int) : G
 Lemma grp_pow_natural {G H : Group} (f : GroupHomomorphism G H) (n : Int) (g : G)
   : f (grp_pow g n) = grp_pow (f g) n.
 Proof.
+  (* revert n.
+  snapply int_ind_equiv; cbn beta. *)
   lhs snapply (int_iter_commute_map _ ((f g) *.)).
   1: napply grp_homo_op.
   apply (ap (int_iter _ n)), grp_homo_unit.
@@ -648,29 +650,46 @@ Defined.
 
 (** The next two results tell us how [grp_pow] unfolds. *)
 Definition grp_pow_succ {G : Group} (n : Int) (g : G)
-  : grp_pow g (n.+1)%int = g * grp_pow g n
+  : grp_pow g (succ n)%int = g * grp_pow g n
   := int_iter_succ_l _ _ _.
 
+(** The next two results tell us how [grp_pow] unfolds. *)
+Definition grp_pow_succ' {G : Group} (n : Int) (g : G)
+  : grp_pow g (succ n)%int = grp_pow g n * g.
+Proof.
+  simpl.
+  revert n.
+  rapply (int_homotopic_two_fun_equiv (fun h => g * h) _ _); cbn beta.
+  - unfold grp_pow.
+    lhs napply grp_unit_r.
+    by rhs napply grp_unit_l.
+  - reflexivity.
+  - intro n.
+    by rewrite simple_associativity.
+Defined.
+
 Definition grp_pow_pred {G : Group} (n : Int) (g : G)
-  : grp_pow g (n.-1)%int = g^ * grp_pow g n
+  : grp_pow g (pred n)%int = g^ * grp_pow g n
   := int_iter_pred_l _ _ _.
 
 (** [grp_pow] satisfies an additive law of exponents. *)
 Definition grp_pow_add {G : Group} (m n : Int) (g : G)
   : grp_pow g (n + m)%int = grp_pow g n * grp_pow g m.
 Proof.
-  lhs napply int_iter_add.
-  induction n; cbn.
-  1: symmetry; exact (grp_unit_l _).
-  1: rewrite int_iter_succ_l, grp_pow_succ.
-  2: rewrite int_iter_pred_l, grp_pow_pred; cbn.
-  1,2 : rhs_V srapply associativity;
-        apply ap, IHn.
+  (* lhs napply int_iter_add. *)
+  revert n.
+  rapply (int_homotopic_two_fun_equiv (fun h => g * h) _ _); cbn beta.
+  - symmetry; exact (grp_unit_l _).
+  - intro n. 
+    reflexivity.
+  - intro n.
+    rewrite grp_pow_succ.
+    by rhs rapply simple_associativity.
 Defined.
 
 (** [grp_pow] commutes negative exponents to powers of the inverse *)
 Definition grp_pow_neg {G : Group} (n : Int) (g : G)
-  : grp_pow g (int_neg n) = grp_pow g^ n.
+  : grp_pow g (int_neg n) = grp_pow g^ n. (*TODO: fix int_neg*)
 Proof.
   lhs napply int_iter_neg.
   cbn; unfold grp_pow.
@@ -680,7 +699,7 @@ Defined.
 
 (** Using a negative power in [grp_pow] is the same as first using a positive power and then inverting the result. *)
 Definition grp_pow_neg_inv {G: Group} (m : Int) (g : G)
-  : grp_pow g (- m)%int = (grp_pow g m)^.
+  : grp_pow g (int_neg m)%int = (grp_pow g m)^.
 Proof.
   apply grp_moveL_1V.
   lhs_V napply grp_pow_add.
@@ -697,20 +716,16 @@ Defined.
 
 (** [grp_pow] satisfies a multiplicative law of exponents. *)
 Definition grp_pow_int_mul {G : Group} (m n : Int) (g : G)
-  : grp_pow g (m * n)%int = grp_pow (grp_pow g m) n.
+  : grp_pow g (int_mul m n)%int = grp_pow (grp_pow g m) n. (*TODO: fix int_mul*)
 Proof.
-  induction n.
+  revert n.
+  rapply (int_homotopic_two_fun_equiv (fun h => grp_pow g m * h) _ _); cbn beta; cbn beta.
   - simpl.
     by rewrite int_mul_0_r.
-  - rewrite int_mul_succ_r.
-    rewrite grp_pow_add.
-    rewrite grp_pow_succ.
-    apply grp_cancelL, IHn.
-  - rewrite int_mul_pred_r.
-    rewrite grp_pow_add.
-    rewrite grp_pow_neg_inv.
-    rewrite grp_pow_pred.
-    apply grp_cancelL, IHn.
+  - intro n.
+    rewrite int_mul_succ_r.
+    by rewrite grp_pow_add.
+  - reflexivity.
 Defined.
 
 (** If [h] commutes with [g], then [h] commutes with [grp_pow g n]. *)
@@ -718,14 +733,17 @@ Definition grp_pow_commutes {G : Group} (n : Int) (g h : G)
   (p : h * g = g * h)
   : h * (grp_pow g n) = (grp_pow g n) * h.
 Proof.
-  induction n.
+  revert n.
+  rapply (int_homotopic_two_fun_equiv (fun h => h * g) _ _); cbn beta; cbn beta.
   - by apply grp_g1_1g.
-  - rewrite grp_pow_succ.
-    napply grp_commutes_op; assumption.
-  - rewrite grp_pow_pred.
-    napply grp_commutes_op.
-    2: assumption.
-    apply grp_commutes_inv, p.
+  - intro n.
+    rewrite <- simple_associativity.
+    by rewrite <- grp_pow_succ'.
+  - intro n; simpl.
+    rewrite <- grp_pow_succ.
+    rewrite grp_pow_succ'.
+    rewrite <- 2 simple_associativity.
+    by rewrite p.
 Defined.
 
 (** [grp_pow g n] commutes with [g]. *)
@@ -740,28 +758,17 @@ Definition grp_pow_mul {G : Group} (n : Int) (g h : G)
   (c : g * h = h * g)
   : grp_pow (g * h) n = (grp_pow g n) * (grp_pow h n).
 Proof.
-  induction n.
+  revert n.
+  rapply (int_homotopic_two_fun_equiv (fun k => (g * h) * k) _ _); cbn beta.
   - simpl.
     symmetry; napply grp_unit_r.
-  - rewrite 3 grp_pow_succ.
-    rewrite IHn.
-    rewrite 2 grp_assoc.
-    apply grp_cancelR.
-    rewrite <- 2 grp_assoc.
-    apply grp_cancelL.
-    apply grp_pow_commutes.
-    exact c^%path.
-  - simpl.
-    rewrite 3 grp_pow_pred.
-    rewrite IHn.
-    rewrite 2 grp_assoc.
-    apply grp_cancelR.
-    rewrite c.
-    rewrite grp_inv_op.
-    rewrite <- 2 grp_assoc.
-    apply grp_cancelL.
-    apply grp_pow_commutes.
-    symmetry; apply grp_commutes_inv, c.
+  - reflexivity.
+  - intro n; simpl.
+    (* rewrite <- simple_associativity. *)
+    rewrite simple_associativity.
+    rewrite <- (simple_associativity g (grp_pow g n) h).
+    rewrite <- (grp_pow_commutes _ _ _ c^).
+    by rewrite 2 simple_associativity.
 Defined.
 
 (** ** The category of Groups *)
