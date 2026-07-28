@@ -29,7 +29,7 @@ Section Pi1S1.
       exact equiv_loopCircle_int. }
     intros a b.
     cbn; apply ap.
-    apply loopexp_add.
+    rapply loopexp_add.
   Defined.
 
   Theorem pi1_s1 : Pi 1 (psphere 1) ≅ abgroup_Z.
