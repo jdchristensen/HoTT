@@ -266,9 +266,6 @@ Coercion int_of_nat : nat >-> Int.
 
 Section IntegerArithmetic.
 
-  Declare Scope int_scope.
-  Delimit Scope int_scope with int.
-
   Notation "z .+1" := (succ z) : int_scope.
   Notation "z .-1" := (pred z) : int_scope.
 
@@ -309,7 +306,7 @@ Section IntegerArithmetic.
 
   (** We define addition by recursion on the first argument. *)
   Definition int_add (x y : Int) : Int
-    := int_rec_equiv y succ x.
+    := int_iter succ x y.
 
   Infix "+" := int_add : int_scope.
   Infix "-" := (fun x y => x + -y) : int_scope.
@@ -580,8 +577,7 @@ Definition int_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
   : int_iter f (int_neg z) a = int_iter f^-1 z a.
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv f^-1); cbn beta.
-  1-3: reflexivity.
+  by srapply (int_homotopic_two_fun_equiv f^-1).
 Defined.
 
 Definition int_iter_succ_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
@@ -592,8 +588,7 @@ Definition int_iter_succ_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
   : int_iter f (succ z) a = int_iter f z (f a).
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv f); cbn beta.
-  all: reflexivity.
+  by srapply (int_homotopic_two_fun_equiv f).
 Defined.
 
 Definition int_iter_pred_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
@@ -604,30 +599,29 @@ Definition int_iter_pred_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
   : int_iter f (pred z) a = int_iter f z (f^-1 a).
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv f); cbn beta.
+  srapply (int_homotopic_two_fun_equiv f); cbn beta.
   1,3: reflexivity.
-  - intro z; simpl; destruct H.
-    exact ((eissect (int_iter f z a)) @ (eisretr (int_iter f z a))^).
+  intro z; simpl.
+  exact (eissect f (int_iter f z a) @ (eisretr f (int_iter f z a))^).
 Defined.
 
 Definition int_iter_add {A} (f : A -> A) `{IsEquiv _ _ f} (x y : Int)
   : int_iter f (int_add x y) == int_iter f x o int_iter f y.
 Proof.
   intro a; revert x.
-  rapply (int_homotopic_two_fun_equiv f _ _); cbn beta.
-  1-3: reflexivity.
+  by srapply (int_homotopic_two_fun_equiv f _ _).
 Defined.
 
 (** If [g : A -> A'] commutes with automorphisms of [A] and [A'], then it commutes with iteration. *)
 Definition int_iter_commute_map {A A'} (f : A -> A) `{!IsEquiv f}
   (f' : A' -> A') `{!IsEquiv f'}
-  (g : A -> A') (p : g o f == f' o g) (z : Int)(a : A)
+  (g : A -> A') (p : g o f == f' o g) (z : Int) (a : A)
   : g (int_iter f z a) = int_iter f' z (g a).
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv f' _ _); cbn beta.
+  srapply (int_homotopic_two_fun_equiv f' _ _); cbn beta.
   1,3: reflexivity.
-  exact (fun x => (p (int_iter f x a))).
+  intro x; apply p.
 Defined.
 
 (** In particular, homotopic maps have homotopic iterations. *)
