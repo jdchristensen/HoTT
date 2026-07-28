@@ -639,7 +639,7 @@ Defined.
 Definition grp_pow_unit {G : Group} (n : Int)
   : grp_pow (G:=G) mon_unit n = mon_unit.
 Proof.
-  snapply (int_iter_invariant n _ (fun g => g = mon_unit)); cbn.
+  snapply (int_iter_invariant _ (fun g => g = mon_unit)); cbn.
   1, 2: apply paths_ind_r.
   - apply grp_unit_r.
   - lhs napply grp_unit_r. exact grp_inv_unit.

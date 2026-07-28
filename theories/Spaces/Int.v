@@ -641,31 +641,22 @@ Definition int_iter_agree (z : Int) {A} (f : A -> A) {ief ief' : IsEquiv f}
   : forall x, @int_iter A f ief z x = @int_iter A f ief' z x
   := int_iter_homotopic z f f (fun _ => idpath).
 
-Definition int_iter_invariant (z : Int) {A} (f : A -> A) `{!IsEquiv f}
+(** An important invariance property of iteration.  The most obvious proof attempts fail.  For example, you might think that the output should simply send [succ] to [Psucc] and [pred] to [Ppred], but it is not necessarily true that [Ppred (f a0) (Psucc a0 Pa0)] transports to [Pa0] along the path [eissect f a0], which would be needed for this to be well-defined (since [pred (succ 0) = 0]).  Instead, we work via the equivalence to [SInt], which normalizes the terms giving us a canonical choice. *)
+Definition int_iter_invariant {A} (f : A -> A) `{!IsEquiv f}
   (P : A -> Type)
-  (Psucc : forall x, P x -> P (f x))
-  (Ppred : forall x, P x -> P (f^-1 x))
-  : forall x, P x -> P (int_iter f z x).
+  (Psucc : forall a, P a -> P (f a))
+  (Ppred : forall a, P a -> P (f^-1 a))
+  (a0 : A) (Pa0 : P a0)
+  : forall z, P (int_iter f z a0).
 Proof.
-  revert z.
-  snapply int_ind_equiv; cbn beta.
-  - intro x.
-    exact idmap.
-  - intros z IHz a H.
-    rewrite int_iter_succ_l.
-    apply Psucc, IHz, H.
-  - (** TODO: Finish the proof*)
-Admitted.
-  (*
-  induction n as [|n IHn|n IHn]; intro x.
-  - exact idmap.
-  - intro H.
-    rewrite int_iter_succ_l.
-    apply Psucc, IHn, H.
-  - intro H.
-    rewrite int_iter_pred_l.
-    apply Ppred, IHn, H.
-Defined. *)
+  equiv_intro IntITtoInt s.
+  induction s as [|[|n] IHz|[|n] IHz]; cbn.
+  - exact Pa0.
+  - apply Psucc, Pa0.
+  - apply Psucc, IHz.
+  - apply Ppred, Pa0.
+  - apply Ppred, IHz.
+Defined.
 
 (** ** Exponentiation of loops *)
 
