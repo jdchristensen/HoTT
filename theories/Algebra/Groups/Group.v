@@ -651,21 +651,6 @@ Definition grp_pow_succ {G : Group} (n : Int) (g : G)
   : grp_pow g (n.+1)%int = g * grp_pow g n
   := idpath.
 
-(** The next two results tell us how [grp_pow] unfolds. *)
-Definition grp_pow_succ' {G : Group} (n : Int) (g : G)
-  : grp_pow g (n.+1)%int = grp_pow g n * g.
-Proof.
-  simpl.
-  revert n.
-  rapply (int_homotopic_two_fun_equiv (g *.)); cbn beta.
-  - unfold grp_pow.
-    lhs napply grp_unit_r.
-    by rhs napply grp_unit_l.
-  - reflexivity.
-  - intro n.
-    by rewrite simple_associativity.
-Defined.
-
 Definition grp_pow_pred {G : Group} (n : Int) (g : G)
   : grp_pow g (n.-1)%int = g^ * grp_pow g n
   := idpath.
@@ -728,16 +713,13 @@ Definition grp_pow_commutes {G : Group} (n : Int) (g h : G)
   : h * (grp_pow g n) = (grp_pow g n) * h.
 Proof.
   revert n.
-  rapply (int_homotopic_two_fun_equiv (.* g)); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (g *.)); cbn beta.
   - by apply grp_g1_1g.
-  - intro n.
-    rewrite <- simple_associativity.
-    by rewrite <- grp_pow_succ'.
   - intro n; simpl.
-    rewrite <- grp_pow_succ.
-    rewrite grp_pow_succ'.
-    rewrite <- 2 simple_associativity.
+    rewrite 2 simple_associativity.
     by rewrite p.
+  - intro n; simpl.
+    by rewrite simple_associativity.
 Defined.
 
 (** [grp_pow g n] commutes with [g]. *)
