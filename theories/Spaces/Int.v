@@ -65,7 +65,7 @@ Definition biinv_int_succ : BiInv Int Int
 
 (** The predecessor is an equivalence on [Int]. *)
 #[export] Instance isequiv_int_pred : IsEquiv int_pred
-  := isequiv_isbiinv_retr int_succ.
+  := isequiv_retr_biinv int_succ.
 
 (** ** Induction and recursion principles for Int *)
 

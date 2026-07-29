@@ -49,7 +49,7 @@ Proof.
 Defined.
 
 (** From a bi-invertible map, we can construct a half-adjoint equivalence in two ways.  Here we take the inverse to be the retraction.  Note that [isequiv_adjointify] modifies the last field provided.  So in order that [eissect_biinv f] not be modified, we first use [isequiv_adjointify] to prove that [retr_biinv f] is an equivalence, and then use [isequiv_inverse] to deduce that [f] is an equivalence. *)
-#[export] Instance isequiv_isbiinv_retr {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
+#[export] Instance isequiv_retr_biinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
   : IsEquiv (retr_biinv f).
 Proof.
   srefine (isequiv_adjointify (retr_biinv f) f (eissect_biinv f) _); intro b.
@@ -78,7 +78,7 @@ Definition sect_is_retr_isbiinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
   : sect_biinv f o f == idmap
   := eissect f (IsEquiv:=isequiv_isbiinv' f).
 
-#[export] Instance isequiv_isbiinv_sect {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
+#[export] Instance isequiv_sect_biinv {A B : Type} (f : A -> B) `{bi : !IsBiInv f}
   : IsEquiv (sect_biinv f)
   := isequiv_inverse f (feq:=isequiv_isbiinv' f).
 
