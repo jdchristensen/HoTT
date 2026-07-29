@@ -40,7 +40,7 @@ Admitted.
 
 (** [ab_mul] (and [grp_pow]) give multiplication in [abgroup_Z]. *)
 Definition abgroup_Z_ab_mul (z z' : Int)
-  : ab_mul (A:=abgroup_Z) z z' = int_mul z z'. (*TODO: fix int_mul*)
+  : ab_mul (A:=abgroup_Z) z z' = z * z'.
 Proof.
 Admitted.
   (* induction z.

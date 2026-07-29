@@ -2,7 +2,6 @@ From HoTT Require Import Basics Types.
 Require Import Pointed.Core Pointed.Loops Pointed.pEquiv.
 Require Import HSet.
 Require Import Spaces.Int.
-Require Import Equiv.BiInv.
 Require Import Colimits.Coeq.
 Require Import Truncations.Core Truncations.Connectedness.
 
@@ -88,8 +87,6 @@ Section EncodeDecode.
   (** We assume univalence throughout this section. *)
   Context `{Univalence}.
 
-  (** The successor function is an equivalence, so we can apply univalence to get a path in the universe. *)
-
   (** First we define the type of codes, this is a type family over the circle. This can be thought of as the covering space by the homotopical real numbers. It is defined by mapping loop to the path given by univalence applied to the automorphism of the integers. We will show that the section of this family at [base] is equivalent to the loop space of the circle. Giving us an equivalence [base = base <~> Int]. *)
   Definition Circle_code : Circle -> Type
     := Circle_rec Type Int (path_universe succ).
@@ -136,7 +133,6 @@ Section EncodeDecode.
     : Circle_encode base (loopexp loop z) = z.
   Proof.
     revert z.
-    (* exact (equiv_concat_r loop base). *)
     rapply (int_homotopic_two_fun_equiv succ _ _); cbn beta.
     1,3: reflexivity.
     simpl; intro z.

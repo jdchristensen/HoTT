@@ -1,5 +1,7 @@
 Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Equiv.BiInv Types.Paths Types.Universe.
 
+Require Export Equiv.BiInv.
+
 (** * The integers, defined as a HIT *)
 
 (** Following "The integers as a higher inductive type" by Scoccola and Altenkirch, we define the integers as a higher inductive type.  Morally it is the free pointed type with a biinvertible self-map. *)
