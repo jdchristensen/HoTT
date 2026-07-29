@@ -217,9 +217,12 @@ Section IntEquiv.
   #[export] Instance isbiinv_IntITtoInt : IsBiInv IntITtoInt
     := Build_IsBiInv _ _ _ _ _ IntITtoint_is_linv IntITtoint_is_rinv.
 
+  (** Since [SInt] has decidable equality, so does [Int]. *)
+  #[export] Instance decidablepaths_int@{} : DecidablePaths Int
+    := decidablepaths_equiv SInt _ _.
+
   (** Since [SInt] is a set, therefore also [Int] is a set. *)
-  #[export] Instance ishset_int
-    : IsHSet Int
+  #[export] Instance ishset_int : IsHSet Int
     := istrunc_isequiv_istrunc SInt _.
 
 End IntEquiv.
