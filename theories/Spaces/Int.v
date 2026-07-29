@@ -271,312 +271,296 @@ Coercion int_of_nat : nat >-> Int.
 
 (** ** Integer arithmetic using [Int] *)
 
-Section IntegerArithmetic.
-
-  Notation "z .+1" := (succ z) : int_scope.
-  Notation "z .-1" := (pred z) : int_scope.
-
-  (** *** Negation *)
-
-  Definition int_neg (z : Int) : Int
-    := int_rec_equiv zero_i pred z.
-
-  Notation "- z" := (int_neg z) : int_scope.
-
-  (** Negation is involutive. *)
-  Definition int_neg_neg (z : Int) : - - z = z.
-  Proof.
-    revert z.
-    by srapply (int_homotopic_two_fun_equiv succ).
-  Defined.
-
-  (** Negation is an equivalence. *)
-  #[export] Instance isequiv_int_neg : IsEquiv int_neg.
-  Proof.
-    snapply (isequiv_adjointify int_neg int_neg).
-    1,2: napply int_neg_neg.
-  Defined.
-
-  (** Negation is injective. *)
-  Definition isinj_int_neg (x y : Int) : - x = - y -> x = y
-    := equiv_inj int_neg.
-
-  (** The negation of a successor is the predecessor of the negation. *)
-  Definition int_neg_succ (z : Int) : - succ z = pred (-z)
-    := idpath.
-
-  (** The negation of a predecessor is the successor of the negation. *)
-  Definition int_neg_pred (z : Int) : - pred z = succ (- z)
-    := idpath.
-
-  (** *** Addition *)
-
-  (** We define addition by recursion on the first argument. *)
-  Definition int_add (x y : Int) : Int
-    := int_iter succ x y.
-
-  Infix "+" := int_add : int_scope.
-  Infix "-" := (fun x y => x + -y) : int_scope.
-
-  (** Integer addition with zero on the left is the identity by definition. *)
-  Definition int_add_0_l (z : Int) : 0 + z = z
-    := idpath.
-
-  (** Integer addition with zero on the right is the identity. *)
-  Definition int_add_0_r (z : Int) : z + 0 = z.
-  Proof.
-    revert z.
-    by srapply (int_homotopic_two_fun_equiv succ).
-  Defined.
-
-  (** Adding a successor on the left is the successor of the sum. *)
-  Definition int_add_succ_l (x y : Int) : (succ x) + y = succ (x + y)
-    := idpath.
-
-  (** Adding a predecessor on the left is the predecessor of the sum. *)
-  Definition int_add_pred_l (x y : Int) : (pred x) + y = pred (x + y)
-    := idpath.
-
-  (** Adding a successor on the right is the successor of the sum. *)
-  Definition int_add_succ_r (x y : Int) : x + (succ y) = succ (x + y).
-  Proof.
-    revert x.
-    by srapply (int_homotopic_two_fun_equiv succ).
-  Defined.
-
-  (** Adding a predecessor on the right is the predecessor of the sum. *)
-  Definition int_add_pred_r (x y : Int) : x + (pred y) = pred (x + y).
-  Proof.
-    revert x.
-    srapply (int_homotopic_two_fun_equiv succ); cbn beta.
-    1,2: reflexivity.
-    simpl; intro z.
-    rewrite succ_is_sect.
-    exact (retr_is_sect_isbiinv succ _)^.
-  Defined.
-
-  (** Integer addition with 1 on the left is the successor. *)
-  Definition int_add_1_l (z : Int) : 1 + z = succ z
-    := idpath.
-
-  (** Integer addition with 1 on the right is the successor. *)
-  Definition int_add_1_r (z : Int) : z + 1 = succ z.
-  Proof.
-    revert z.
-    by srapply (int_homotopic_two_fun_equiv succ).
-  Defined.
-
-  (** Integer addition is commutative. *)
-  Definition int_add_comm (x y : Int) : x + y = y + x.
-  Proof.
-    revert x.
-    srapply (int_homotopic_two_fun_equiv succ); cbn beta.
-    - by rewrite int_add_0_r.
-    - reflexivity.
-    - intro z.
-      by rewrite int_add_succ_r.
-  Defined.
-
-  (** Integer addition is associative. *)
-  Definition int_add_assoc (x y z : Int) : x + (y + z) = x + y + z.
-  Proof.
-    revert x.
-    by srapply (int_homotopic_two_fun_equiv succ).
-  Defined.
-
-  (** Negation is a left inverse with respect to integer addition. *)
-  Definition int_add_neg_l (z : Int) : - z + z = 0.
-  Proof.
-    revert z.
-    srapply (int_homotopic_two_fun_equiv idmap); cbn beta.
-    1,3: reflexivity.
-    simpl; intro s.
-    rewrite int_add_succ_r.
-    apply succ_is_sect.
-  Defined.
-
-  (** Negation is a right inverse with respect to integer addition. *)
-  Definition int_add_neg_r (z : Int) : z - z = 0.
-  Proof.
-    unfold "-"; by rewrite int_add_comm, int_add_neg_l.
-  Defined.
-
-  (** Negation distributes over addition. *)
-  Definition int_neg_add (x y : Int) : - (x + y) = - x - y.
-  Proof.
-    revert x.
-    by srapply (int_homotopic_two_fun_equiv pred).
-  Defined.
-
-  (** Addition is an equivalence with first argument fixed. *)
-  #[export] Instance isequiv_int_add_l (x : Int) : IsEquiv (int_add x).
-  Proof.
-    srapply (isequiv_adjointify _ (int_add (-x))).
-    all: simpl; intro y.
-    all: lhs napply int_add_assoc.
-    - by rewrite int_add_neg_r.
-    - by rewrite int_add_neg_l.
-  Defined.
-
-  (** Addition is an equivalence with second argument fixed.  This also follows from the previous result and [int_add_comm], but this proof computes better. *)
-  #[export] Instance isequiv_int_add_r (y : Int) : IsEquiv (fun x => int_add x y).
-  Proof.
-    snapply (isequiv_adjointify _ (fun x => int_add x (-y))).
-    all: simpl; intro x.
-    all: lhs_V napply int_add_assoc.
-    - rewrite int_add_neg_l.
-      apply int_add_0_r.
-    - rewrite int_add_neg_r.
-      apply int_add_0_r.
-  Defined.
-
-  (** *** Multiplication *)
-
-  (** We define multiplication by recursion on the first argument.  We can only define it at this stage as it depends on the proof that addition is an equivalence. *)
-  Definition int_mul (x y : Int) : Int
-    := int_iter (fun z => int_add z y) x 0.
-
-  Infix "*" := int_mul : int_scope.
-
-  (** Multiplication with a successor on the left is the sum of the multplication without the successor and the multiplicand which was not a successor. *)
-  Definition int_mul_succ_l (x y : Int) : (succ x) * y = x * y + y
-    := idpath.
-
-  (** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
-  Definition int_mul_pred_l (x y : Int) : (pred x) * y = x * y - y
-    := idpath.
-
-  (** Integer multiplication with zero on the left is zero by definition. *)
-  Definition int_mul_0_l (z : Int) : 0 * z = 0
-    := idpath.
-
-  (** Integer multiplication with zero on the right is zero. *)
-  Definition int_mul_0_r (z : Int) : z * 0 = 0.
-  Proof.
-    revert z.
-    rapply (int_homotopic_two_fun_equiv idmap); cbn beta.
-    1,3: reflexivity.
-    simpl; intro z.
-    by rewrite int_add_0_r.
-  Defined.
-
-  (** Integer multiplication with one on the left is the identity. *)
-  Definition int_mul_1_l (z : Int) : 1 * z = z
-    := idpath.
-
-  (** Integer multiplication with one on the right is the identity. *)
-  Definition int_mul_1_r (z : Int) : z * 1 = z.
-  Proof.
-    revert z.
-    rapply (int_homotopic_two_fun_equiv (fun z => int_add z 1)); cbn beta.
-    1,2: reflexivity.
-    intro z.
-    by rewrite int_add_1_r.
-  Defined.
-
-  (** Integer multiplication with -1 on the left is negation. *)
-  Definition int_mul_neg1_l (z : Int) : (-1) * z = - z
-    := idpath.
-
-  (** Multiplying with a negation on the left is the same as negating the product. *)
-  Definition int_mul_neg_l (x y : Int) : - x * y = - (x * y).
-  Proof.
-    revert x.
-    rapply (int_homotopic_two_fun_equiv (fun x => int_add x (-y))); cbn beta.
-    1,2: reflexivity.
-    simpl; intro x.
-    apply int_neg_add.
-  Defined.
-
-  (** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
-  Definition int_mul_succ_r (x y : Int) : x * (succ y) = x + x * y.
-  Proof.
-    revert x.
-    rapply (int_homotopic_two_fun_equiv (fun x => int_add x (succ y))); cbn beta.
-    1,2: reflexivity.
-    simpl; intro z.
-    rewrite int_add_succ_r.
-    by rewrite int_add_assoc.
-  Defined.
-
-  (** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
-  Definition int_mul_pred_r (x y : Int) : x * (pred y) = x * y - x.
-  Proof.
-    revert x.
-    rapply (int_homotopic_two_fun_equiv (fun x => int_add x (pred y))); cbn beta.
-    1,2: reflexivity.
-    intro z.
-    rewrite int_mul_succ_l.
-    rewrite <- int_add_assoc.
-    simpl.
-    rewrite (int_add_comm y _).
-    rewrite int_add_pred_l.
-    rewrite <- int_add_assoc.
-    by rewrite (int_add_pred_r _ y).
-  Defined.
-
-  (** Integer multiplication is commutative. *)
-  Definition int_mul_comm (x y : Int) : x * y = y * x.
-  Proof.
-    revert x.
-    srapply (int_homotopic_two_fun_equiv (fun x => int_add x y)); cbn beta.
-    - symmetry; apply int_mul_0_r.
-    - reflexivity.
-    - intro z.
-      rewrite int_add_comm.
-      apply int_mul_succ_r.
-  Defined.
-
-  (** Multiplying with a negation on the right is the same as negating the product. *)
-  Definition int_mul_neg_r (x y : Int) : x * - y = - (x * y).
-  Proof.
-    rewrite !(int_mul_comm x).
-    apply int_mul_neg_l.
-  Defined.
-
-  (** Multiplication distributes over addition on the left. *)
-  Definition int_dist_l (x y z : Int) : x * (y + z) = x * y + x * z.
-  Proof.
-    revert x.
-    srapply (int_homotopic_two_fun_equiv (fun x => int_add x (y + z))); cbn beta.
-    1,2: reflexivity.
-    simpl; intro x.
-    rewrite <- (int_add_assoc (x*y) y).
-    rewrite (int_add_comm y (x*z + z)).
-    rewrite <- (int_add_assoc _ z y).
-    rewrite (int_add_comm z y).
-    by rewrite (int_add_assoc (x*y) _ _).
-  Defined.
-
-  (** Multiplication distributes over addition on the right. *)
-  Definition int_dist_r (x y z : Int) : (x + y) * z = x * z + y * z.
-  Proof.
-    by rewrite int_mul_comm, int_dist_l, !(int_mul_comm z).
-  Defined.
-
-  (** Multiplication is associative. *)
-  Definition int_mul_assoc (x y z : Int) : x * (y * z) = x * y * z.
-  Proof.
-    revert x.
-    srapply (int_homotopic_two_fun_equiv (fun x => int_add x (y * z))); cbn beta.
-    1,2: reflexivity.
-    simpl; intro x.
-    by rewrite int_dist_r.
-  Defined.
-
-End IntegerArithmetic.
-
-(** TODO: Fix the notation and infix issues and remove the lines below. Currently, it seems that these are not accessible from other files without being place outside of the section here.*)
-
 Notation "z .+1" := (succ z) : int_scope.
 Notation "z .-1" := (pred z) : int_scope.
 
+(** *** Negation *)
+
+Definition int_neg (z : Int) : Int
+  := int_rec_equiv zero_i pred z.
+
 Notation "- z" := (int_neg z) : int_scope.
+
+(** Negation is involutive. *)
+Definition int_neg_neg (z : Int) : - - z = z.
+Proof.
+  revert z.
+  by srapply (int_homotopic_two_fun_equiv succ).
+Defined.
+
+(** Negation is an equivalence. *)
+#[export] Instance isequiv_int_neg : IsEquiv int_neg.
+Proof.
+  snapply (isequiv_adjointify int_neg int_neg).
+  1,2: napply int_neg_neg.
+Defined.
+
+(** Negation is injective. *)
+Definition isinj_int_neg (x y : Int) : - x = - y -> x = y
+  := equiv_inj int_neg.
+
+(** The negation of a successor is the predecessor of the negation. *)
+Definition int_neg_succ (z : Int) : - succ z = pred (-z)
+  := idpath.
+
+(** The negation of a predecessor is the successor of the negation. *)
+Definition int_neg_pred (z : Int) : - pred z = succ (- z)
+  := idpath.
+
+(** *** Addition *)
+
+(** We define addition by recursion on the first argument. *)
+Definition int_add (x y : Int) : Int
+  := int_iter succ x y.
 
 Infix "+" := int_add : int_scope.
 Infix "-" := (fun x y => x + -y) : int_scope.
 
+(** Integer addition with zero on the left is the identity by definition. *)
+Definition int_add_0_l (z : Int) : 0 + z = z
+  := idpath.
+
+(** Integer addition with zero on the right is the identity. *)
+Definition int_add_0_r (z : Int) : z + 0 = z.
+Proof.
+  revert z.
+  by srapply (int_homotopic_two_fun_equiv succ).
+Defined.
+
+(** Adding a successor on the left is the successor of the sum. *)
+Definition int_add_succ_l (x y : Int) : (succ x) + y = succ (x + y)
+  := idpath.
+
+(** Adding a predecessor on the left is the predecessor of the sum. *)
+Definition int_add_pred_l (x y : Int) : (pred x) + y = pred (x + y)
+  := idpath.
+
+(** Adding a successor on the right is the successor of the sum. *)
+Definition int_add_succ_r (x y : Int) : x + (succ y) = succ (x + y).
+Proof.
+  revert x.
+  by srapply (int_homotopic_two_fun_equiv succ).
+Defined.
+
+(** Adding a predecessor on the right is the predecessor of the sum. *)
+Definition int_add_pred_r (x y : Int) : x + (pred y) = pred (x + y).
+Proof.
+  revert x.
+  srapply (int_homotopic_two_fun_equiv succ); cbn beta.
+  1,2: reflexivity.
+  simpl; intro z.
+  rewrite succ_is_sect.
+  exact (retr_is_sect_isbiinv succ _)^.
+Defined.
+
+(** Integer addition with 1 on the left is the successor. *)
+Definition int_add_1_l (z : Int) : 1 + z = succ z
+  := idpath.
+
+(** Integer addition with 1 on the right is the successor. *)
+Definition int_add_1_r (z : Int) : z + 1 = succ z.
+Proof.
+  revert z.
+  by srapply (int_homotopic_two_fun_equiv succ).
+Defined.
+
+(** Integer addition is commutative. *)
+Definition int_add_comm (x y : Int) : x + y = y + x.
+Proof.
+  revert x.
+  srapply (int_homotopic_two_fun_equiv succ); cbn beta.
+  - by rewrite int_add_0_r.
+  - reflexivity.
+  - intro z.
+    by rewrite int_add_succ_r.
+Defined.
+
+(** Integer addition is associative. *)
+Definition int_add_assoc (x y z : Int) : x + (y + z) = x + y + z.
+Proof.
+  revert x.
+  by srapply (int_homotopic_two_fun_equiv succ).
+Defined.
+
+(** Negation is a left inverse with respect to integer addition. *)
+Definition int_add_neg_l (z : Int) : - z + z = 0.
+Proof.
+  revert z.
+  srapply (int_homotopic_two_fun_equiv idmap); cbn beta.
+  1,3: reflexivity.
+  simpl; intro s.
+  rewrite int_add_succ_r.
+  apply succ_is_sect.
+Defined.
+
+(** Negation is a right inverse with respect to integer addition. *)
+Definition int_add_neg_r (z : Int) : z - z = 0.
+Proof.
+  unfold "-"; by rewrite int_add_comm, int_add_neg_l.
+Defined.
+
+(** Negation distributes over addition. *)
+Definition int_neg_add (x y : Int) : - (x + y) = - x - y.
+Proof.
+  revert x.
+  by srapply (int_homotopic_two_fun_equiv pred).
+Defined.
+
+(** Addition is an equivalence with first argument fixed. *)
+#[export] Instance isequiv_int_add_l (x : Int) : IsEquiv (int_add x).
+Proof.
+  srapply (isequiv_adjointify _ (int_add (-x))).
+  all: simpl; intro y.
+  all: lhs napply int_add_assoc.
+  - by rewrite int_add_neg_r.
+  - by rewrite int_add_neg_l.
+Defined.
+
+(** Addition is an equivalence with second argument fixed.  This also follows from the previous result and [int_add_comm], but this proof computes better. *)
+#[export] Instance isequiv_int_add_r (y : Int) : IsEquiv (fun x => int_add x y).
+Proof.
+  snapply (isequiv_adjointify _ (fun x => int_add x (-y))).
+  all: simpl; intro x.
+  all: lhs_V napply int_add_assoc.
+  - rewrite int_add_neg_l.
+    apply int_add_0_r.
+  - rewrite int_add_neg_r.
+    apply int_add_0_r.
+Defined.
+
+(** *** Multiplication *)
+
+(** We define multiplication by recursion on the first argument.  We can only define it at this stage as it depends on the proof that addition is an equivalence. *)
+Definition int_mul (x y : Int) : Int
+  := int_iter (fun z => int_add z y) x 0.
+
 Infix "*" := int_mul : int_scope.
+
+(** Multiplication with a successor on the left is the sum of the multplication without the successor and the multiplicand which was not a successor. *)
+Definition int_mul_succ_l (x y : Int) : (succ x) * y = x * y + y
+  := idpath.
+
+(** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
+Definition int_mul_pred_l (x y : Int) : (pred x) * y = x * y - y
+  := idpath.
+
+(** Integer multiplication with zero on the left is zero by definition. *)
+Definition int_mul_0_l (z : Int) : 0 * z = 0
+  := idpath.
+
+(** Integer multiplication with zero on the right is zero. *)
+Definition int_mul_0_r (z : Int) : z * 0 = 0.
+Proof.
+  revert z.
+  rapply (int_homotopic_two_fun_equiv idmap); cbn beta.
+  1,3: reflexivity.
+  simpl; intro z.
+  by rewrite int_add_0_r.
+Defined.
+
+(** Integer multiplication with one on the left is the identity. *)
+Definition int_mul_1_l (z : Int) : 1 * z = z
+  := idpath.
+
+(** Integer multiplication with one on the right is the identity. *)
+Definition int_mul_1_r (z : Int) : z * 1 = z.
+Proof.
+  revert z.
+  rapply (int_homotopic_two_fun_equiv (fun z => int_add z 1)); cbn beta.
+  1,2: reflexivity.
+  intro z.
+  by rewrite int_add_1_r.
+Defined.
+
+(** Integer multiplication with -1 on the left is negation. *)
+Definition int_mul_neg1_l (z : Int) : (-1) * z = - z
+  := idpath.
+
+(** Multiplying with a negation on the left is the same as negating the product. *)
+Definition int_mul_neg_l (x y : Int) : - x * y = - (x * y).
+Proof.
+  revert x.
+  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (-y))); cbn beta.
+  1,2: reflexivity.
+  simpl; intro x.
+  apply int_neg_add.
+Defined.
+
+(** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
+Definition int_mul_succ_r (x y : Int) : x * (succ y) = x + x * y.
+Proof.
+  revert x.
+  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (succ y))); cbn beta.
+  1,2: reflexivity.
+  simpl; intro z.
+  rewrite int_add_succ_r.
+  by rewrite int_add_assoc.
+Defined.
+
+(** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
+Definition int_mul_pred_r (x y : Int) : x * (pred y) = x * y - x.
+Proof.
+  revert x.
+  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (pred y))); cbn beta.
+  1,2: reflexivity.
+  intro z.
+  rewrite int_mul_succ_l.
+  rewrite <- int_add_assoc.
+  simpl.
+  rewrite (int_add_comm y _).
+  rewrite int_add_pred_l.
+  rewrite <- int_add_assoc.
+  by rewrite (int_add_pred_r _ y).
+Defined.
+
+(** Integer multiplication is commutative. *)
+Definition int_mul_comm (x y : Int) : x * y = y * x.
+Proof.
+  revert x.
+  srapply (int_homotopic_two_fun_equiv (fun x => int_add x y)); cbn beta.
+  - symmetry; apply int_mul_0_r.
+  - reflexivity.
+  - intro z.
+    rewrite int_add_comm.
+    apply int_mul_succ_r.
+Defined.
+
+(** Multiplying with a negation on the right is the same as negating the product. *)
+Definition int_mul_neg_r (x y : Int) : x * - y = - (x * y).
+Proof.
+  rewrite !(int_mul_comm x).
+  apply int_mul_neg_l.
+Defined.
+
+(** Multiplication distributes over addition on the left. *)
+Definition int_dist_l (x y z : Int) : x * (y + z) = x * y + x * z.
+Proof.
+  revert x.
+  srapply (int_homotopic_two_fun_equiv (fun x => int_add x (y + z))); cbn beta.
+  1,2: reflexivity.
+  simpl; intro x.
+  rewrite <- (int_add_assoc (x*y) y).
+  rewrite (int_add_comm y (x*z + z)).
+  rewrite <- (int_add_assoc _ z y).
+  rewrite (int_add_comm z y).
+  by rewrite (int_add_assoc (x*y) _ _).
+Defined.
+
+(** Multiplication distributes over addition on the right. *)
+Definition int_dist_r (x y z : Int) : (x + y) * z = x * z + y * z.
+Proof.
+  by rewrite int_mul_comm, int_dist_l, !(int_mul_comm z).
+Defined.
+
+(** Multiplication is associative. *)
+Definition int_mul_assoc (x y z : Int) : x * (y * z) = x * y * z.
+Proof.
+  revert x.
+  srapply (int_homotopic_two_fun_equiv (fun x => int_add x (y * z))); cbn beta.
+  1,2: reflexivity.
+  simpl; intro x.
+  by rewrite int_dist_r.
+Defined.
 
 (** ** Results about iteration of equivalences *)
 
