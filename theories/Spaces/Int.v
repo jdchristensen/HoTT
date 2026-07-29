@@ -17,67 +17,67 @@ Local Open Scope int_scope.
 Module Export Int.
   Section Int.
 
-    (** Here we are modeling the HIT which has a point [zero_i] and a successor map [succ] which is a biinvertible equivalence.  [pred] and [succ_sect] are its left and right inverses. *)
+    (** Here we are modeling the HIT which has a point [zero] and a successor map [succ] which is a biinvertible equivalence.  [pred] and [succ_sect] are its left and right inverses. *)
 
     Private Inductive Int : Type0 :=
-    | zero_i : Int
-    | succ : Int -> Int
-    | pred : Int -> Int
-    | succ_sect : Int -> Int.
+    | zero : Int
+    | int_succ : Int -> Int
+    | int_pred : Int -> Int
+    | int_succ_sect : Int -> Int.
 
-    Axiom succ_is_sect : pred o succ == idmap.
+    Axiom int_succ_is_sect : int_pred o int_succ == idmap.
 
-    Axiom succ_is_retr : succ o succ_sect == idmap.
+    Axiom int_succ_is_retr : int_succ o int_succ_sect == idmap.
 
-    Context {P : Int -> Type} (t0 : P zero_i) (e : forall z : Int, P z -> P (succ z))
-      (r : forall z : Int, P z -> P (pred z)) (s : forall z : Int, P z -> P (succ_sect z))
-      (re : forall (z : Int) (t : P z), succ_is_sect z # (r (succ z) (e z t)) = t)
-      (es : forall (z : Int) (t : P z), succ_is_retr z # (e (succ_sect z) (s z t)) = t).
+    Context {P : Int -> Type} (t0 : P zero) (e : forall z : Int, P z -> P (int_succ z))
+      (r : forall z : Int, P z -> P (int_pred z)) (s : forall z : Int, P z -> P (int_succ_sect z))
+      (re : forall (z : Int) (t : P z), int_succ_is_sect z # (r (int_succ z) (e z t)) = t)
+      (es : forall (z : Int) (t : P z), int_succ_is_retr z # (e (int_succ_sect z) (s z t)) = t).
 
     Fixpoint int_ind (z : Int) : P z
       := match z with
-      | zero_i => fun _ _ => t0
-      | succ z => fun _ _ => e z (int_ind z)
-      | pred z => fun _ _ => r z (int_ind z)
-      | succ_sect z => fun _ _ => s z (int_ind z)
+      | zero => fun _ _ => t0
+      | int_succ z => fun _ _ => e z (int_ind z)
+      | int_pred z => fun _ _ => r z (int_ind z)
+      | int_succ_sect z => fun _ _ => s z (int_ind z)
       end re es.
       (** We make sure that this depends on [re] and [es] as well. *)
 
-    (** The beta principles for [int_ind] on [succ_is_sect] and [succ_is_retr]. *)
-    Axiom int_ind_beta_succ_is_sect
-      : forall (z : Int), apD int_ind (succ_is_sect z) = re z (int_ind z).
+    (** The beta principles for [int_ind] on [int_succ_is_sect] and [int_succ_is_retr]. *)
+    Axiom int_ind_beta_int_succ_is_sect
+      : forall (z : Int), apD int_ind (int_succ_is_sect z) = re z (int_ind z).
 
-    Axiom int_ind_beta_succ_is_retr
-      : forall (z : Int), apD int_ind (succ_is_retr z) = es z (int_ind z).
+    Axiom int_ind_beta_int_succ_is_retr
+      : forall (z : Int), apD int_ind (int_succ_is_retr z) = es z (int_ind z).
 
   End Int.
 End Int.
 
 (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
-#[export] Instance ispointed_int : IsPointed Int := zero_i.
+#[export] Instance ispointed_int : IsPointed Int := zero.
 
 (** Successor is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
-#[export] Instance isbiinv_int_succ : IsBiInv succ
-  := Build_IsBiInv _ _ _ succ_sect pred succ_is_retr succ_is_sect.
+#[export] Instance isbiinv_int_succ : IsBiInv int_succ
+  := Build_IsBiInv _ _ _ int_succ_sect int_pred int_succ_is_retr int_succ_is_sect.
 
 Definition biinv_int_succ : BiInv Int Int
-  := Build_BiInv _ _ succ _.
+  := Build_BiInv _ _ int_succ _.
 
 (** The predecessor is an equivalence on [Int]. *)
-#[export] Instance isequiv_int_pred : IsEquiv pred
-  := isequiv_isbiinv_retr succ.
+#[export] Instance isequiv_int_pred : IsEquiv int_pred
+  := isequiv_isbiinv_retr int_succ.
 
 (** ** Induction and recursion principles for Int *)
 
-Definition int_ind_equiv {P : Int -> Type} (t0 : P zero_i)
-  (e : forall z : Int, P z -> P (succ z)) {iseq : forall z, IsEquiv (e z)}
+Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
+  (e : forall z : Int, P z -> P (int_succ z)) {iseq : forall z, IsEquiv (e z)}
   : forall z, P z.
 Proof.
   snapply (int_ind t0 e).
   - intro z.
-    exact ((e (pred z))^-1 o transport P (retr_is_sect_isbiinv biinv_int_succ z)^).
+    exact ((e (int_pred z))^-1 o transport P (retr_is_sect_isbiinv biinv_int_succ z)^).
   - intro z.
-    exact ((e (succ_sect z))^-1 o transport P (succ_is_retr z)^).
+    exact ((e (int_succ_sect z))^-1 o transport P (int_succ_is_retr z)^).
   - intros z p; cbn beta.
     lhs_V napply (ap_transport _ (fun z => (e z)^-1)).
     lhs napply (ap (e z)^-1).
@@ -85,7 +85,7 @@ Proof.
       symmetry; napply transport_pp. }
     unfold retr_is_sect_isbiinv.
     (* In the next line we use that our chosen proof of [retr_is_sect_isbiinv] satisfies the adjoint law. *)
-    rewrite (eisadj succ); cbn.
+    rewrite (eisadj int_succ); cbn.
     rewrite concat_Vp; cbn.
     apply eissect.
   - intros z p; cbn beta.
@@ -108,22 +108,22 @@ Section RecursionPrinciple.
     - apply r.
   Defined.
 
-  Definition int_rec_beta_succ_is_sect
-    : forall z, ap int_rec (succ_is_sect z) = s (int_rec z).
+  Definition int_rec_beta_int_succ_is_sect
+    : forall z, ap int_rec (int_succ_is_sect z) = s (int_rec z).
   Proof.
     intro z.
-    napply (cancelL (transport_const (succ_is_sect z) _)).
+    napply (cancelL (transport_const (int_succ_is_sect z) _)).
     lhs_V napply apD_const.
-    napply int_ind_beta_succ_is_sect.
+    napply int_ind_beta_int_succ_is_sect.
   Defined.
 
-  Definition int_rec_beta_succ_is_retr
-    : forall z, ap int_rec (succ_is_retr z) = r (int_rec z).
+  Definition int_rec_beta_int_succ_is_retr
+    : forall z, ap int_rec (int_succ_is_retr z) = r (int_rec z).
   Proof.
     intro z.
-    napply (cancelL (transport_const (succ_is_retr z) _)).
+    napply (cancelL (transport_const (int_succ_is_retr z) _)).
     lhs_V napply apD_const.
-    napply int_ind_beta_succ_is_retr.
+    napply int_ind_beta_int_succ_is_retr.
   Defined.
 
 End RecursionPrinciple.
@@ -148,7 +148,7 @@ Section Uniqueness.
 
   (** The following uniqueness principle states that if two maps out of [Int] agree on 0 and commute with the successor, then they are homotopic. *)
   Definition int_homotopic_two_fun_biinv (k1 : Int -> P) (k2 : Int -> P)
-    (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == e o k1) (pf2 : k2 o succ == e o k2)
+    (p0 : k1 zero = k2 zero) (pf1 : k1 o int_succ == e o k1) (pf2 : k2 o int_succ == e o k2)
     : k1 == k2.
   Proof.
     snapply int_ind_equiv; cbn beta.
@@ -160,7 +160,7 @@ Section Uniqueness.
 
   (** As a special case, we can characterize the recursor. *)
   Definition int_homotopic (t0 : P) (k : Int -> P)
-    (p0 : k zero_i = t0) (pf : k o succ == e o k)
+    (p0 : k zero = t0) (pf : k o int_succ == e o k)
     (rec := int_rec_biinv t0 e)
     : k == rec
     := int_homotopic_two_fun_biinv k rec p0 pf (fun _ => idpath).
@@ -170,8 +170,8 @@ End Uniqueness.
 (** The same uniqueness principle but for half-adjoint equivalences. *)
 Definition int_homotopic_two_fun_equiv {P : Type} (f : P -> P)
   {e' : IsEquiv f} (k1 : Int -> P) (k2 : Int -> P)
-  (p0 : k1 zero_i = k2 zero_i) (pf1 : k1 o succ == f o k1)
-  (pf2 : k2 o succ == f o k2)
+  (p0 : k1 zero = k2 zero) (pf1 : k1 o int_succ == f o k1)
+  (pf2 : k2 o int_succ == f o k2)
   : forall (z : Int), k1 z = k2 z
   := int_homotopic_two_fun_biinv (Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
@@ -180,29 +180,29 @@ Definition int_homotopic_two_fun_equiv {P : Type} (f : P -> P)
 Section IntEquiv.
 
   Definition InttoIntIT : Int -> SInt
-    := int_rec zero int_succ int_pred int_pred int_succ_pred int_pred_succ.
+    := int_rec szero sint_succ sint_pred sint_pred sint_succ_pred sint_pred_succ.
 
   Definition IntITtoInt : SInt -> Int.
   Proof.
     intro s; induction s as [|n IHz|n IHz].
-    - exact zero_i.
-    - exact (succ IHz).
-    - exact (pred IHz).
+    - exact zero.
+    - exact (int_succ IHz).
+    - exact (int_pred IHz).
   Defined.
 
   Definition IntITtoint_is_rinv : InttoIntIT o IntITtoInt == idmap.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1, 2, 4: reflexivity.
-    - exact (ap int_succ IHz).
-    - exact (ap int_pred IHz).
+    - exact (ap sint_succ IHz).
+    - exact (ap sint_pred IHz).
   Defined.
 
-  Definition IntITtoint_comp_succ : IntITtoInt o int_succ == succ o IntITtoInt.
+  Definition IntITtoint_comp_succ : IntITtoInt o sint_succ == int_succ o IntITtoInt.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1-3: reflexivity.
-    all: symmetry; exact (retr_is_sect_isbiinv succ _).
+    all: symmetry; exact (retr_is_sect_isbiinv int_succ _).
   Defined.
 
   Definition IntITtoint_is_linv : IntITtoInt o InttoIntIT == idmap.
@@ -224,11 +224,11 @@ Section IntEquiv.
 
 End IntEquiv.
 
-(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [succ_is_sect 0], it is impossible for it to compute well on general [pred] and [succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
+(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_succ_is_sect 0], it is impossible for it to compute well on general [pred] and [succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
 Definition int_ind_sint (P : Int -> Type)
-  (H0 : P zero_i)
-  (HP : forall z, P z -> P (succ z))
-  (HN : forall z, P z -> P (pred z))
+  (H0 : P zero)
+  (HP : forall z, P z -> P (int_succ z))
+  (HN : forall z, P z -> P (int_pred z))
   : forall z, P z.
 Proof.
   equiv_intro IntITtoInt s.
@@ -241,14 +241,14 @@ Proof.
 Defined.
 
 Definition int_ind_iff (P : Int -> Type)
-  (t0 : P zero_i) (f : forall z : Int, P z <-> P (succ z))
+  (t0 : P zero) (f : forall z : Int, P z <-> P (int_succ z))
   : forall z, P z.
 Proof.
   srapply (int_ind_sint P t0).
   - intro z.  exact (fst (f z)).
-  - equiv_intro succ z.
+  - equiv_intro int_succ z.
     refine (_ o snd (f z)).
-    exact (transport P (succ_is_sect z)^).
+    exact (transport P (int_succ_is_sect z)^).
 Defined.
 
 (** ** Printing and parsing *)
@@ -263,21 +263,21 @@ Number Notation Int int_of_number_int int_to_number_int : int_scope.
 (** The following function reduces an integer expression by cancelling succesive successor and predecessor terms. *)
 Definition int_reduce := IntITtoInt o InttoIntIT.
 
-(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [succ n].  Various operations on [nat] are preserved by this function. *)
+(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function. *)
 Definition int_of_nat (n : nat) : Int
-  := nat_iter n succ zero_i.
+  := nat_iter n int_succ zero.
 
 Coercion int_of_nat : nat >-> Int.
 
 (** ** Integer arithmetic using [Int] *)
 
-Notation "z .+1" := (succ z) : int_scope.
-Notation "z .-1" := (pred z) : int_scope.
+Notation "z .+1" := (int_succ z) : int_scope.
+Notation "z .-1" := (int_pred z) : int_scope.
 
 (** *** Negation *)
 
 Definition int_neg (z : Int) : Int
-  := int_rec_equiv zero_i pred z.
+  := int_rec_equiv zero int_pred z.
 
 Notation "- z" := (int_neg z) : int_scope.
 
@@ -285,7 +285,7 @@ Notation "- z" := (int_neg z) : int_scope.
 Definition int_neg_neg (z : Int) : - - z = z.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv succ).
+  by srapply (int_homotopic_two_fun_equiv int_succ).
 Defined.
 
 (** Negation is an equivalence. *)
@@ -300,18 +300,18 @@ Definition isinj_int_neg (x y : Int) : - x = - y -> x = y
   := equiv_inj int_neg.
 
 (** The negation of a successor is the predecessor of the negation. *)
-Definition int_neg_succ (z : Int) : - succ z = pred (-z)
+Definition int_neg_succ (z : Int) : - int_succ z = int_pred (-z)
   := idpath.
 
 (** The negation of a predecessor is the successor of the negation. *)
-Definition int_neg_pred (z : Int) : - pred z = succ (- z)
+Definition int_neg_pred (z : Int) : - int_pred z = int_succ (- z)
   := idpath.
 
 (** *** Addition *)
 
 (** We define addition by recursion on the first argument. *)
 Definition int_add (x y : Int) : Int
-  := int_iter succ x y.
+  := int_iter int_succ x y.
 
 Infix "+" := int_add : int_scope.
 Infix "-" := (fun x y => x + -y) : int_scope.
@@ -324,51 +324,51 @@ Definition int_add_0_l (z : Int) : 0 + z = z
 Definition int_add_0_r (z : Int) : z + 0 = z.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv succ).
+  by srapply (int_homotopic_two_fun_equiv int_succ).
 Defined.
 
 (** Adding a successor on the left is the successor of the sum. *)
-Definition int_add_succ_l (x y : Int) : (succ x) + y = succ (x + y)
+Definition int_add_succ_l (x y : Int) : (int_succ x) + y = int_succ (x + y)
   := idpath.
 
 (** Adding a predecessor on the left is the predecessor of the sum. *)
-Definition int_add_pred_l (x y : Int) : (pred x) + y = pred (x + y)
+Definition int_add_pred_l (x y : Int) : (int_pred x) + y = int_pred (x + y)
   := idpath.
 
 (** Adding a successor on the right is the successor of the sum. *)
-Definition int_add_succ_r (x y : Int) : x + (succ y) = succ (x + y).
+Definition int_add_succ_r (x y : Int) : x + (int_succ y) = int_succ (x + y).
 Proof.
   revert x.
-  by srapply (int_homotopic_two_fun_equiv succ).
+  by srapply (int_homotopic_two_fun_equiv int_succ).
 Defined.
 
 (** Adding a predecessor on the right is the predecessor of the sum. *)
-Definition int_add_pred_r (x y : Int) : x + (pred y) = pred (x + y).
+Definition int_add_pred_r (x y : Int) : x + (int_pred y) = int_pred (x + y).
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv succ); cbn beta.
+  srapply (int_homotopic_two_fun_equiv int_succ); cbn beta.
   1,2: reflexivity.
   simpl; intro z.
-  rewrite succ_is_sect.
-  exact (retr_is_sect_isbiinv succ _)^.
+  rewrite int_succ_is_sect.
+  exact (retr_is_sect_isbiinv int_succ _)^.
 Defined.
 
 (** Integer addition with 1 on the left is the successor. *)
-Definition int_add_1_l (z : Int) : 1 + z = succ z
+Definition int_add_1_l (z : Int) : 1 + z = int_succ z
   := idpath.
 
 (** Integer addition with 1 on the right is the successor. *)
-Definition int_add_1_r (z : Int) : z + 1 = succ z.
+Definition int_add_1_r (z : Int) : z + 1 = int_succ z.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv succ).
+  by srapply (int_homotopic_two_fun_equiv int_succ).
 Defined.
 
 (** Integer addition is commutative. *)
 Definition int_add_comm (x y : Int) : x + y = y + x.
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv succ); cbn beta.
+  srapply (int_homotopic_two_fun_equiv int_succ); cbn beta.
   - by rewrite int_add_0_r.
   - reflexivity.
   - intro z.
@@ -379,7 +379,7 @@ Defined.
 Definition int_add_assoc (x y z : Int) : x + (y + z) = x + y + z.
 Proof.
   revert x.
-  by srapply (int_homotopic_two_fun_equiv succ).
+  by srapply (int_homotopic_two_fun_equiv int_succ).
 Defined.
 
 (** Negation is a left inverse with respect to integer addition. *)
@@ -390,7 +390,7 @@ Proof.
   1,3: reflexivity.
   simpl; intro s.
   rewrite int_add_succ_r.
-  apply succ_is_sect.
+  apply int_succ_is_sect.
 Defined.
 
 (** Negation is a right inverse with respect to integer addition. *)
@@ -403,7 +403,7 @@ Defined.
 Definition int_neg_add (x y : Int) : - (x + y) = - x - y.
 Proof.
   revert x.
-  by srapply (int_homotopic_two_fun_equiv pred).
+  by srapply (int_homotopic_two_fun_equiv int_pred).
 Defined.
 
 (** Addition is an equivalence with first argument fixed. *)
@@ -437,11 +437,11 @@ Definition int_mul (x y : Int) : Int
 Infix "*" := int_mul : int_scope.
 
 (** Multiplication with a successor on the left is the sum of the multplication without the successor and the multiplicand which was not a successor. *)
-Definition int_mul_succ_l (x y : Int) : (succ x) * y = x * y + y
+Definition int_mul_succ_l (x y : Int) : (int_succ x) * y = x * y + y
   := idpath.
 
 (** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
-Definition int_mul_pred_l (x y : Int) : (pred x) * y = x * y - y
+Definition int_mul_pred_l (x y : Int) : (int_pred x) * y = x * y - y
   := idpath.
 
 (** Integer multiplication with zero on the left is zero by definition. *)
@@ -487,10 +487,10 @@ Proof.
 Defined.
 
 (** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
-Definition int_mul_succ_r (x y : Int) : x * (succ y) = x + x * y.
+Definition int_mul_succ_r (x y : Int) : x * (int_succ y) = x + x * y.
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (succ y))); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (int_succ y))); cbn beta.
   1,2: reflexivity.
   simpl; intro z.
   rewrite int_add_succ_r.
@@ -498,10 +498,10 @@ Proof.
 Defined.
 
 (** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
-Definition int_mul_pred_r (x y : Int) : x * (pred y) = x * y - x.
+Definition int_mul_pred_r (x y : Int) : x * (int_pred y) = x * y - x.
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (pred y))); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (int_pred y))); cbn beta.
   1,2: reflexivity.
   intro z.
   rewrite int_mul_succ_l.
@@ -572,22 +572,22 @@ Proof.
 Defined.
 
 Definition int_iter_succ_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (succ z) a = f (int_iter f z a)
+  : int_iter f (int_succ z) a = f (int_iter f z a)
   := idpath.
 
 Definition int_iter_succ_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (succ z) a = int_iter f z (f a).
+  : int_iter f (int_succ z) a = int_iter f z (f a).
 Proof.
   revert z.
   by srapply (int_homotopic_two_fun_equiv f).
 Defined.
 
 Definition int_iter_pred_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (pred z) a = f^-1 (int_iter f z a)
+  : int_iter f (int_pred z) a = f^-1 (int_iter f z a)
   := idpath.
 
 Definition int_iter_pred_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (pred z) a = int_iter f z (f^-1 a).
+  : int_iter f (int_pred z) a = int_iter f z (f^-1 a).
 Proof.
   revert z.
   srapply (int_homotopic_two_fun_equiv f); cbn beta.
@@ -646,15 +646,15 @@ Definition loopexp {A : Type} {a : A} (p : a = a) (z : Int) : (a = a)
   := int_iter (equiv_concat_r p a) z idpath.
 
 Definition loopexp_succ_r {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (succ z) = loopexp p z @ p
+  : loopexp p (int_succ z) = loopexp p z @ p
   := int_iter_succ_l _ _ _.
 
 Definition loopexp_pred_r {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (pred z) = loopexp p z @ p^
+  : loopexp p (int_pred z) = loopexp p z @ p^
   := int_iter_pred_l _ _ _.
 
 Definition loopexp_succ_l {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (succ z) = p @ loopexp p z.
+  : loopexp p (int_succ z) = p @ loopexp p z.
 Proof.
   lhs napply loopexp_succ_r.
   revert z.
@@ -666,7 +666,7 @@ Proof.
 Defined.
 
 Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (pred z) = p^ @ loopexp p z.
+  : loopexp p (int_pred z) = p^ @ loopexp p z.
 Proof.
   rewrite loopexp_pred_r.
   revert z.
@@ -724,7 +724,7 @@ Defined.
 
 (** [int_of_nat] preserves successors. *)
 Definition int_nat_succ (n : nat)
-  : (succ n)%int = (n.+1)%nat :> Int.
+  : (int_succ n)%int = (n.+1)%nat :> Int.
 Proof.
   by induction n.
 Defined.

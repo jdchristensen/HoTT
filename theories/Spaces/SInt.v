@@ -13,76 +13,76 @@ Set Universe Minimization ToSet.
 
 (** We define the signed integers as two copies of [nat] stuck together around a [zero]. *)
 Inductive SInt : Type0 :=
-| negS : nat -> SInt
-| zero : SInt
-| posS : nat -> SInt.
+| sNegS : nat -> SInt
+| szero : SInt
+| sPosS : nat -> SInt.
 
-(** We can convert a [nat] to an [SInt] by mapping [0] to [zero] and [S n] to [posS n]. *)
-Definition int_of_nat (n : nat) : SInt :=
+(** We can convert a [nat] to an [SInt] by mapping [0] to [szero] and [S n] to [sPosS n]. *)
+Definition sint_of_nat (n : nat) : SInt :=
   match n with
-  | O => zero
-  | S n => posS n
+  | O => szero
+  | S n => sPosS n
   end.
 
 (** Symmetrically, we can send [n] to "-n" in this way: *)
-Definition negint_of_nat (n : nat) : SInt :=
+Definition negsint_of_nat (n : nat) : SInt :=
   match n with
-  | O => zero
-  | S n => negS n
+  | O => szero
+  | S n => sNegS n
   end.
 
 (** ** Number Notations *)
 
-(** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [posS 122] and [-123] for [negS 122]. *)
+(** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [sPosS 122] and [-123] for [sNegS 122]. *)
 
 (** Printing *)
 Definition int_to_number_int (n : SInt) : Numeral.int :=
   match n with
-  | posS m => IntDec (Pos (to_uint (S m)))
-  | zero => IntDec (Pos (to_uint 0))
-  | negS m => IntDec (Neg (to_uint (S m)))
+  | sPosS m => IntDec (Pos (to_uint (S m)))
+  | szero => IntDec (Pos (to_uint 0))
+  | sNegS m => IntDec (Neg (to_uint (S m)))
   end.
 
 (** Parsing *)
 Definition int_of_number_int (d : Numeral.int) : SInt :=
   match d with
-  | IntDec (Pos u) => int_of_nat (of_uint u)
-  | IntDec (Neg u) => negint_of_nat (of_uint u)
-  | IntHex (Hexadecimal.Pos u) => int_of_nat (of_hex_uint u)
-  | IntHex (Hexadecimal.Neg u) => negint_of_nat (of_hex_uint u)
+  | IntDec (Pos u) => sint_of_nat (of_uint u)
+  | IntDec (Neg u) => negsint_of_nat (of_uint u)
+  | IntHex (Hexadecimal.Pos u) => sint_of_nat (of_hex_uint u)
+  | IntHex (Hexadecimal.Neg u) => negsint_of_nat (of_hex_uint u)
   end.
 
 (** ** Successor, predecessor and negation *)
 
-Definition int_succ (n : SInt) : SInt :=
+Definition sint_succ (n : SInt) : SInt :=
   match n with
-  | posS n => posS (S n)
-  | zero => posS 0
-  | negS n => negint_of_nat n
+  | sPosS n => sPosS (S n)
+  | szero => sPosS 0
+  | sNegS n => negsint_of_nat n
   end.
 
-Definition int_pred (n : SInt) : SInt :=
+Definition sint_pred (n : SInt) : SInt :=
   match n with
-  | posS n => int_of_nat n
-  | zero => negS 0
-  | negS n => negS (S n)
+  | sPosS n => sint_of_nat n
+  | szero => sNegS 0
+  | sNegS n => sNegS (S n)
   end.
 
-Definition int_neg@{} (x : SInt) : SInt :=
+Definition sint_neg@{} (x : SInt) : SInt :=
   match x with
-  | posS x => negS x
-  | zero => zero
-  | negS x => posS x
+  | sPosS x => sNegS x
+  | szero => szero
+  | sNegS x => sPosS x
   end.
 
 (** The successor of a predecessor is the identity. *)
-Definition int_pred_succ@{} (x : SInt) : int_succ (int_pred x) = x.
+Definition sint_pred_succ@{} (x : SInt) : sint_succ (sint_pred x) = x.
 Proof.
   by destruct x as [ | | []].
 Defined.
 
 (** The predecessor of a successor is the identity. *)
-Definition int_succ_pred@{} (x : SInt) : int_pred (int_succ x) = x.
+Definition sint_succ_pred@{} (x : SInt) : sint_pred (sint_succ x) = x.
 Proof.
   by destruct x as [[] | | ].
 Defined.
@@ -109,9 +109,9 @@ Global Instance ishset_int@{} : IsHSet SInt := _.
 
 (** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0].  This is used only in HITInt.v. *)
 Definition SInt_ind@{i} (P : SInt -> Type@{i})
-  (H0 : P zero)
-  (HP : forall n : nat, P (int_of_nat n) -> P (posS n))
-  (HN : forall n : nat, P (int_neg (int_of_nat n)) -> P (negS n))
+  (H0 : P szero)
+  (HP : forall n : nat, P (sint_of_nat n) -> P (sPosS n))
+  (HN : forall n : nat, P (sint_neg (sint_of_nat n)) -> P (sNegS n))
   : forall x, P x.
 Proof.
   intros [x | | x].

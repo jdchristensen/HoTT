@@ -89,11 +89,11 @@ Section EncodeDecode.
 
   (** First we define the type of codes, this is a type family over the circle. This can be thought of as the covering space by the homotopical real numbers. It is defined by mapping loop to the path given by univalence applied to the automorphism of the integers. We will show that the section of this family at [base] is equivalent to the loop space of the circle. Giving us an equivalence [base = base <~> Int]. *)
   Definition Circle_code : Circle -> Type
-    := Circle_rec Type Int (path_universe succ).
+    := Circle_rec Type Int (path_universe int_succ).
 
   (** Transporting along [loop] gives us the successor automorphism on [Int]. *)
   Definition transport_Circle_code_loop (z : Int)
-    : transport Circle_code loop z = succ z.
+    : transport Circle_code loop z = int_succ z.
   Proof.
     refine (transport_compose idmap Circle_code loop z @ _).
     unfold Circle_code; rewrite Circle_rec_beta_loop.
@@ -102,18 +102,18 @@ Section EncodeDecode.
 
   (** Transporting along [loop^] gives us the predecessor on [Int]. *)
   Definition transport_Circle_code_loopV (z : Int)
-    : transport Circle_code loop^ z = pred z.
+    : transport Circle_code loop^ z = int_pred z.
   Proof.
     refine (transport_compose idmap Circle_code loop^ z @ _).
     rewrite ap_V.
     unfold Circle_code; rewrite Circle_rec_beta_loop.
-    rewrite <- (path_universe_V succ).
+    rewrite <- (path_universe_V int_succ).
     apply transport_path_universe.
   Defined.
 
   (** To turn a path in [Circle] based at [base] into a code we transport along it. We call this encoding. *)
   Definition Circle_encode (x:Circle) : (base = x) -> Circle_code x
-    := fun p => p # zero_i.
+    := fun p => p # zero.
 
   (** TODO: explain this proof in more detail. *)
   (** Turning a code into a path based at [base]. We call this decoding. *)
@@ -133,7 +133,7 @@ Section EncodeDecode.
     : Circle_encode base (loopexp loop z) = z.
   Proof.
     revert z.
-    rapply (int_homotopic_two_fun_equiv succ _ _); cbn beta.
+    rapply (int_homotopic_two_fun_equiv int_succ _ _); cbn beta.
     1,3: reflexivity.
     simpl; intro z.
     unfold Circle_encode.

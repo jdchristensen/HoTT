@@ -30,7 +30,7 @@ Notation "x .+1" := (ss_succ x) : succ_scope.
 Definition NatSucc : SuccStr := Build_SuccStr nat nat_succ.
 
 (** Successor structure of integers *)
-Definition BinIntSucc : SuccStr := Build_SuccStr Int succ.
+Definition BinIntSucc : SuccStr := Build_SuccStr Int int_succ.
 
 Notation "'+N'" := NatSucc : succ_scope.
 Notation "'+Z'" := BinIntSucc : succ_scope.

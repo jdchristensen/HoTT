@@ -653,7 +653,7 @@ Definition grp_pow_succ {G : Group} (n : Int) (g : G)
 
 (** The next two results tell us how [grp_pow] unfolds. *)
 Definition grp_pow_succ' {G : Group} (n : Int) (g : G)
-  : grp_pow g (succ n)%int = grp_pow g n * g.
+  : grp_pow g (n.+1)%int = grp_pow g n * g.
 Proof.
   simpl.
   revert n.
