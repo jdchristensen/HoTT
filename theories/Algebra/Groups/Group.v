@@ -740,7 +740,6 @@ Proof.
     symmetry; napply grp_unit_r.
   - reflexivity.
   - intro n; simpl.
-    (* rewrite <- simple_associativity. *)
     rewrite simple_associativity.
     rewrite <- (simple_associativity g (grp_pow g n) h).
     rewrite <- (grp_pow_commutes _ _ _ c^).
