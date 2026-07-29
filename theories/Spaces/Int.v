@@ -600,7 +600,7 @@ Definition int_iter_add {A} (f : A -> A) `{IsEquiv _ _ f} (x y : Int)
   : int_iter f (int_add x y) == int_iter f x o int_iter f y.
 Proof.
   intro a; revert x.
-  by srapply (int_homotopic_two_fun_equiv f _ _).
+  by srapply (int_homotopic_two_fun_equiv f).
 Defined.
 
 (** If [g : A -> A'] commutes with automorphisms of [A] and [A'], then it commutes with iteration. *)
@@ -610,7 +610,7 @@ Definition int_iter_commute_map {A A'} (f : A -> A) `{!IsEquiv f}
   : g (int_iter f z a) = int_iter f' z (g a).
 Proof.
   revert z.
-  srapply (int_homotopic_two_fun_equiv f' _ _); cbn beta.
+  srapply (int_homotopic_two_fun_equiv f'); cbn beta.
   1,3: reflexivity.
   intro x; apply p.
 Defined.
@@ -658,7 +658,7 @@ Definition loopexp_succ_l {A : Type} {a : A} (p : a = a) (z : Int)
 Proof.
   lhs napply loopexp_succ_r.
   revert z.
-  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - reflexivity.
   - intro z; simpl.
@@ -670,7 +670,7 @@ Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : Int)
 Proof.
   rewrite loopexp_pred_r.
   revert z.
-  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - intro z; simpl.
     rewrite 2 concat_pp_p.
@@ -691,7 +691,7 @@ Definition loopexp_add {A : Type} {a : A} (p : a = a) x y
   : loopexp p (int_add x y) = loopexp p x @ loopexp p y. (*TODO: fix int_add*)
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a)); cbn beta.
   - symmetry; apply concat_1p.
   - reflexivity.
   - intro z; simpl.

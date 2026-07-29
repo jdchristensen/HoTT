@@ -657,7 +657,7 @@ Definition grp_pow_succ' {G : Group} (n : Int) (g : G)
 Proof.
   simpl.
   revert n.
-  rapply (int_homotopic_two_fun_equiv (g *.) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (g *.)); cbn beta.
   - unfold grp_pow.
     lhs napply grp_unit_r.
     by rhs napply grp_unit_l.
@@ -728,7 +728,7 @@ Definition grp_pow_commutes {G : Group} (n : Int) (g h : G)
   : h * (grp_pow g n) = (grp_pow g n) * h.
 Proof.
   revert n.
-  rapply (int_homotopic_two_fun_equiv (.* g) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (.* g)); cbn beta.
   - by apply grp_g1_1g.
   - intro n.
     rewrite <- simple_associativity.
@@ -753,7 +753,7 @@ Definition grp_pow_mul {G : Group} (n : Int) (g h : G)
   : grp_pow (g * h) n = (grp_pow g n) * (grp_pow h n).
 Proof.
   revert n.
-  rapply (int_homotopic_two_fun_equiv ((g * h) *.) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv ((g * h) *.)); cbn beta.
   - simpl.
     symmetry; napply grp_unit_r.
   - reflexivity.

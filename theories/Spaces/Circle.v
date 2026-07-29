@@ -133,7 +133,7 @@ Section EncodeDecode.
     : Circle_encode base (loopexp loop z) = z.
   Proof.
     revert z.
-    rapply (int_homotopic_two_fun_equiv int_succ _ _); cbn beta.
+    rapply (int_homotopic_two_fun_equiv int_succ); cbn beta.
     1,3: reflexivity.
     simpl; intro z.
     unfold Circle_encode.
