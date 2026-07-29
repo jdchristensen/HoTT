@@ -67,6 +67,9 @@ Definition biinv_int_succ : BiInv Int Int
 #[export] Instance isequiv_int_pred : IsEquiv int_pred
   := isequiv_retr_biinv int_succ.
 
+Notation "z .+1" := (int_succ z) : int_scope.
+Notation "z .-1" := (int_pred z) : int_scope.
+
 (** ** Induction and recursion principles for Int *)
 
 Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
@@ -138,7 +141,7 @@ Definition int_rec_equiv {P : Type} (t0 : P) (f : P -> P) `{IsEquiv P P f}
   : Int -> P
   := @int_rec_biinv P t0 f (isbiinv_isequiv _ _).
 
-(** Equivalence iteration. *)
+(** Equivalence iteration.  The properties of this are proved later in the file. *)
 Definition int_iter {A} (f : A -> A) `{!IsEquiv f} (z : Int) (a0 : A) : A
   := int_rec_equiv a0 f z.
 
@@ -273,9 +276,6 @@ Definition int_of_nat (n : nat) : Int
 Coercion int_of_nat : nat >-> Int.
 
 (** ** Integer arithmetic using [Int] *)
-
-Notation "z .+1" := (int_succ z) : int_scope.
-Notation "z .-1" := (int_pred z) : int_scope.
 
 (** *** Negation *)
 
