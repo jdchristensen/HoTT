@@ -31,26 +31,18 @@ Definition grp_pow_homo {G : Group} (g : G)
 Proof.
   snapply Build_GroupHomomorphism.
   1: exact (grp_pow g).
-(* Admitted. *)
-  (* intros m n; apply grp_pow_add. *)
-  intros m n.
-Admitted.
-  (* exact (grp_pow_add m n g). *)
-(* Defined. *)
+  intros m n; apply grp_pow_add.
+Defined.
 
 (** [ab_mul] (and [grp_pow]) give multiplication in [abgroup_Z]. *)
 Definition abgroup_Z_ab_mul (z z' : Int)
   : ab_mul (A:=abgroup_Z) z z' = z * z'.
 Proof.
-Admitted.
-  (* induction z.
+  revert z.
+  rapply (int_homotopic_two_fun_equiv (int_add z')); cbn beta.
   - reflexivity.
-  - cbn.
-    lhs napply (grp_pow_succ (G:=abgroup_Z)).
-    rhs napply int_mul_succ_l.
-    f_ap.
-  - cbn.
-    lhs napply (grp_pow_pred (G:=abgroup_Z)).
-    rhs napply int_mul_pred_l.
-    f_ap.
-Defined. *)
+  - intro z.
+    by lhs napply (grp_pow_succ (G:=abgroup_Z)).
+  - intro z; simpl.
+    by rewrite int_add_comm.
+Defined.
