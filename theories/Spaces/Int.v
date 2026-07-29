@@ -180,7 +180,7 @@ Definition int_homotopic_two_fun_equiv {P : Type} (f : P -> P)
 Section IntEquiv.
 
   Definition InttoIntIT : Int -> SInt
-    := int_rec szero sint_succ sint_pred sint_pred sint_succ_pred sint_pred_succ.
+    := int_rec sint_zero sint_succ sint_pred sint_pred sint_succ_pred sint_pred_succ.
 
   Definition IntITtoInt : SInt -> Int.
   Proof.
@@ -254,9 +254,9 @@ Defined.
 (** ** Printing and parsing *)
 
 (** For now we pass through [SInt] for printing and parsing. *)
-Definition int_to_number_int : Int -> Numeral.int := int_to_number_int o InttoIntIT.
+Definition int_to_number_int : Int -> Numeral.int := sint_to_number_int o InttoIntIT.
 
-Definition int_of_number_int : Numeral.int -> Int := IntITtoInt o int_of_number_int.
+Definition int_of_number_int : Numeral.int -> Int := IntITtoInt o sint_of_number_int.
 
 Number Notation Int int_of_number_int int_to_number_int : int_scope.
 

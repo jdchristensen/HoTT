@@ -11,40 +11,40 @@ Set Universe Minimization ToSet.
 
 (** ** Definition *)
 
-(** We define the signed integers as two copies of [nat] stuck together around a [zero]. *)
+(** We define the signed integers as two copies of [nat] glued together around a [zero].  [sint_NegS n] represents [-(n + 1)] and [sint_PosS n] represents [n+1].  The trailing "S" indicates the successor. *)
 Inductive SInt : Type0 :=
-| sNegS : nat -> SInt
-| szero : SInt
-| sPosS : nat -> SInt.
+| sint_NegS : nat -> SInt
+| sint_zero : SInt
+| sint_PosS : nat -> SInt.
 
-(** We can convert a [nat] to an [SInt] by mapping [0] to [szero] and [S n] to [sPosS n]. *)
+(** We can convert a [nat] to an [SInt] by mapping [0] to [sint_zero] and [S n] to [sint_PosS n]. *)
 Definition sint_of_nat (n : nat) : SInt :=
   match n with
-  | O => szero
-  | S n => sPosS n
+  | O => sint_zero
+  | S n => sint_PosS n
   end.
 
 (** Symmetrically, we can send [n] to "-n" in this way: *)
 Definition negsint_of_nat (n : nat) : SInt :=
   match n with
-  | O => szero
-  | S n => sNegS n
+  | O => sint_zero
+  | S n => sint_NegS n
   end.
 
-(** ** Number Notations *)
+(** ** Parsing and printing *)
 
-(** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [sPosS 122] and [-123] for [sNegS 122]. *)
+(** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [sint_PosS 122] and [-123] for [sint_NegS 122]. *)
 
 (** Printing *)
-Definition int_to_number_int (n : SInt) : Numeral.int :=
+Definition sint_to_number_int (n : SInt) : Numeral.int :=
   match n with
-  | sPosS m => IntDec (Pos (to_uint (S m)))
-  | szero => IntDec (Pos (to_uint 0))
-  | sNegS m => IntDec (Neg (to_uint (S m)))
+  | sint_PosS m => IntDec (Pos (to_uint (S m)))
+  | sint_zero => IntDec (Pos (to_uint 0))
+  | sint_NegS m => IntDec (Neg (to_uint (S m)))
   end.
 
 (** Parsing *)
-Definition int_of_number_int (d : Numeral.int) : SInt :=
+Definition sint_of_number_int (d : Numeral.int) : SInt :=
   match d with
   | IntDec (Pos u) => sint_of_nat (of_uint u)
   | IntDec (Neg u) => negsint_of_nat (of_uint u)
@@ -56,23 +56,23 @@ Definition int_of_number_int (d : Numeral.int) : SInt :=
 
 Definition sint_succ (n : SInt) : SInt :=
   match n with
-  | sPosS n => sPosS (S n)
-  | szero => sPosS 0
-  | sNegS n => negsint_of_nat n
+  | sint_PosS n => sint_PosS (S n)
+  | sint_zero => sint_PosS 0
+  | sint_NegS n => negsint_of_nat n
   end.
 
 Definition sint_pred (n : SInt) : SInt :=
   match n with
-  | sPosS n => sint_of_nat n
-  | szero => sNegS 0
-  | sNegS n => sNegS (S n)
+  | sint_PosS n => sint_of_nat n
+  | sint_zero => sint_NegS 0
+  | sint_NegS n => sint_NegS (S n)
   end.
 
 Definition sint_neg@{} (x : SInt) : SInt :=
   match x with
-  | sPosS x => sNegS x
-  | szero => szero
-  | sNegS x => sPosS x
+  | sint_PosS x => sint_NegS x
+  | sint_zero => sint_zero
+  | sint_NegS x => sint_PosS x
   end.
 
 (** The successor of a predecessor is the identity. *)
@@ -89,8 +89,8 @@ Defined.
 
 (** ** Decidable Equality *)
 
-(** The integers have decidable equality. *)
-Global Instance decidable_paths_int@{} : DecidablePaths SInt.
+(** The signed integers have decidable equality. *)
+Global Instance decidable_paths_sint@{} : DecidablePaths SInt.
 Proof.
   intros [x | | x] [y | | y].
   2-4,6-8: right; intros; discriminate.
@@ -102,16 +102,16 @@ Proof.
   1,2: exact _. (* Uses decideable equality of [nat]. *)
 Defined.
 
-(** By Hedberg's theorem, we have that the integers are a set. *)
-Global Instance ishset_int@{} : IsHSet SInt := _.
+(** By Hedberg's theorem, we have that the signed integers are a set. *)
+Global Instance ishset_sint@{} : IsHSet SInt := _.
 
-(** ** Integer induction *)
+(** ** Signed integer induction *)
 
 (** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0].  This is used only in HITInt.v. *)
 Definition SInt_ind@{i} (P : SInt -> Type@{i})
-  (H0 : P szero)
-  (HP : forall n : nat, P (sint_of_nat n) -> P (sPosS n))
-  (HN : forall n : nat, P (sint_neg (sint_of_nat n)) -> P (sNegS n))
+  (H0 : P sint_zero)
+  (HP : forall n : nat, P (sint_of_nat n) -> P (sint_PosS n))
+  (HN : forall n : nat, P (sint_neg (sint_of_nat n)) -> P (sint_NegS n))
   : forall x, P x.
 Proof.
   intros [x | | x].
