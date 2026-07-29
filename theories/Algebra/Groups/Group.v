@@ -659,11 +659,12 @@ Definition grp_pow_pred {G : Group} (n : Int) (g : G)
 Definition grp_pow_add {G : Group} (m n : Int) (g : G)
   : grp_pow g (n + m)%int = grp_pow g n * grp_pow g m.
 Proof.
-  revert n; snapply int_ind_sint; simpl.
-  1: symmetry; exact (grp_unit_l _).
-  1,2: intros z IH.
-  1,2: rhs_V srapply associativity.
-  1,2: apply ap, IH.
+  revert n.
+  rapply (int_homotopic_two_fun_equiv (g *.)); cbn beta.
+  - symmetry; exact (grp_unit_l _).
+  - reflexivity.
+  - intro n; simpl.
+    symmetry; apply associativity.
 Defined.
 
 (** [grp_pow] commutes negative exponents to powers of the inverse *)
@@ -698,7 +699,7 @@ Definition grp_pow_int_mul {G : Group} (m n : Int) (g : G)
   : grp_pow g (m * n)%int = grp_pow (grp_pow g m) n.
 Proof.
   revert n.
-  rapply (int_homotopic_two_fun_equiv (grp_pow g m *.) _ _); cbn beta.
+  rapply (int_homotopic_two_fun_equiv (grp_pow g m *.)); cbn beta.
   - simpl.
     by rewrite int_mul_0_r.
   - intro n.
