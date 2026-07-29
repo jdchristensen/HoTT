@@ -1,5 +1,5 @@
-Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Equiv.BiInv Types.Paths Types.Universe.
-
+Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Types.Paths Types.Universe.
+(** Users of this file like want the instances in Equiv.BiInv, such as [isequiv_isbiinv], so we export this file. *)
 Require Export Equiv.BiInv.
 
 (** * The integers, defined as a HIT *)
@@ -17,7 +17,7 @@ Local Open Scope int_scope.
 Module Export Int.
   Section Int.
 
-    (** Here we are modeling the HIT which has a point [zero] and a successor map [succ] which is a biinvertible equivalence.  [pred] and [succ_sect] are its left and right inverses. *)
+    (** Here we are modeling the HIT which has a point [zero] and a successor map [int_succ] which is a biinvertible equivalence.  [int_pred] and [int_succ_sect] are its left and right inverses. *)
 
     Private Inductive Int : Type0 :=
     | zero : Int
@@ -224,7 +224,7 @@ Section IntEquiv.
 
 End IntEquiv.
 
-(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_succ_is_sect 0], it is impossible for it to compute well on general [pred] and [succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
+(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_succ_is_sect 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
 Definition int_ind_sint (P : Int -> Type)
   (H0 : P zero)
   (HP : forall z, P z -> P (int_succ z))
