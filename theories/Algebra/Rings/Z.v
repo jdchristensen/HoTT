@@ -70,19 +70,13 @@ Proof.
   exists (rng_homo_int R).
   intros g x.
   unfold rng_homo_int, rng_int_mult; cbn.
-Admitted.
-  (* induction x as [|x|x].
+  revert x.
+  rapply (int_homotopic_two_fun_equiv (sg_op 1)); cbn beta.
   - by rhs exact (grp_homo_unit g).
-  - rewrite grp_pow_succ.
+  - reflexivity.
+  - intro x.
     change (x.+1%int) with (1 + x)%int.
     rewrite (rng_homo_plus g 1 x).
     rewrite rng_homo_one.
     f_ap.
-  - rewrite grp_pow_pred.
-    rewrite IHx.
-    clear IHx.
-    change (-1 + g (-x)%int = g (-x).-1%int).
-    rewrite <- (rng_homo_minus_one g).
-    lhs_V napply (rng_homo_plus g).
-    f_ap.
-Defined. *)
+Defined.
