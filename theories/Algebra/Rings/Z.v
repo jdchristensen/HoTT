@@ -28,21 +28,19 @@ Definition rng_int_mult (R : Ring) := grp_pow_homo : R -> Int -> R.
 Definition rng_int_mult_dist_r {R : Ring} (r : R) (n : cring_Z)
   : rng_int_mult R r n = (rng_int_mult R 1 n) * r.
 Proof.
-Admitted.
-  (* cbn.
+  cbn.
   rhs napply (grp_pow_natural (grp_homo_rng_right_mult r)); cbn.
   by rewrite rng_mult_one_l.
-Defined. *)
+Defined.
 
 (** Similarly, there is a left-distributive law. *)
 Definition rng_int_mult_dist_l {R : Ring} (r : R) (n : cring_Z)
   : rng_int_mult R r n = r * (rng_int_mult R 1 n).
 Proof.
   cbn.
-Admitted.
-  (* rhs napply (grp_pow_natural (grp_homo_rng_left_mult r)); cbn.
+  rhs napply (grp_pow_natural (grp_homo_rng_left_mult r)); cbn.
   by rewrite rng_mult_one_r.
-Defined. *)
+Defined.
 
 (** [rng_int_mult R 1] preserves multiplication.  This requires that the specified ring element is the unit. *)
 Instance issemigrouppreserving_mult_rng_int_mult (R : Ring)
@@ -50,10 +48,9 @@ Instance issemigrouppreserving_mult_rng_int_mult (R : Ring)
 Proof.
   intros x y.
   cbn; unfold sg_op.
-Admitted.
-  (* lhs napply grp_pow_int_mul.
+  lhs napply grp_pow_int_mul.
   napply rng_int_mult_dist_l.
-Defined. *)
+Defined.
 
 (** [rng_int_mult R 1] is a ring homomorphism *)
 Definition rng_homo_int (R : Ring) : (cring_Z : Ring) $-> R.
@@ -62,9 +59,8 @@ Proof.
   1: exact (rng_int_mult R 1).
   repeat split.
   1,2: exact _.
-Admitted.
-  (* apply rng_plus_zero_r.
-Defined. *)
+  apply rng_plus_zero_r.
+Defined.
 
 (** The integers are the initial commutative ring *)
 Instance isinitial_cring_Z : IsInitial cring_Z.
@@ -73,9 +69,9 @@ Proof.
   intro R.
   exists (rng_homo_int R).
   intros g x.
+  unfold rng_homo_int, rng_int_mult; cbn.
 Admitted.
-  (* unfold rng_homo_int, rng_int_mult; cbn.
-  induction x as [|x|x].
+  (* induction x as [|x|x].
   - by rhs exact (grp_homo_unit g).
   - rewrite grp_pow_succ.
     change (x.+1%int) with (1 + x)%int.
