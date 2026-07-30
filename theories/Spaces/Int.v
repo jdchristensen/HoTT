@@ -420,9 +420,9 @@ Proof.
 Defined.
 
 (** Addition is an equivalence with second argument fixed.  This also follows from the previous result and [int_add_comm], but this proof computes better. *)
-Instance isequiv_int_add_r (y : Int) : IsEquiv (fun x => int_add x y).
+Instance isequiv_int_add_r (y : Int) : IsEquiv (fun x => x + y).
 Proof.
-  snapply (isequiv_adjointify _ (fun x => int_add x (-y))).
+  snapply (isequiv_adjointify _ (fun x => x - y)).
   all: simpl; intro x.
   all: lhs_V napply int_add_assoc.
   - rewrite int_add_neg_l.
@@ -435,7 +435,7 @@ Defined.
 
 (** We define multiplication by recursion on the first argument.  This depends on the proof that addition is an equivalence. *)
 Definition int_mul (x y : Int) : Int
-  := int_iter (fun z => int_add z y) x 0.
+  := int_iter (fun z => z + y) x 0.
 
 Infix "*" := int_mul : int_scope.
 
@@ -469,7 +469,7 @@ Definition int_mul_1_l (z : Int) : 1 * z = z
 Definition int_mul_1_r (z : Int) : z * 1 = z.
 Proof.
   revert z.
-  rapply (int_homotopic (fun z => int_add z 1)); cbn beta.
+  rapply (int_homotopic (fun z => z + 1)); cbn beta.
   1,2: reflexivity.
   intro z.
   by rewrite int_add_1_r.
@@ -483,7 +483,7 @@ Definition int_mul_neg1_l (z : Int) : (-1) * z = - z
 Definition int_mul_neg_l (x y : Int) : (- x) * y = - (x * y).
 Proof.
   revert x.
-  rapply (int_homotopic (fun x => int_add x (-y))); cbn beta.
+  rapply (int_homotopic (fun x => x + -y)); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   apply int_neg_add.
@@ -493,7 +493,7 @@ Defined.
 Definition int_mul_succ_r (x y : Int) : x * (int_succ y) = x + x * y.
 Proof.
   revert x.
-  rapply (int_homotopic (fun x => int_add x (int_succ y))); cbn beta.
+  rapply (int_homotopic (fun x => x + (int_succ y))); cbn beta.
   1,2: reflexivity.
   simpl; intro z.
   rewrite int_add_succ_r.
@@ -504,7 +504,7 @@ Defined.
 Definition int_mul_pred_r (x y : Int) : x * (int_pred y) = x * y - x.
 Proof.
   revert x.
-  rapply (int_homotopic (fun x => int_add x (int_pred y))); cbn beta.
+  rapply (int_homotopic (fun x => x + (int_pred y))); cbn beta.
   1,2: reflexivity.
   intro z.
   rewrite int_mul_succ_l.
@@ -520,7 +520,7 @@ Defined.
 Definition int_mul_comm (x y : Int) : x * y = y * x.
 Proof.
   revert x.
-  srapply (int_homotopic (fun x => int_add x y)); cbn beta.
+  srapply (int_homotopic (fun x => x + y)); cbn beta.
   - symmetry; apply int_mul_0_r.
   - reflexivity.
   - intro z.
@@ -539,7 +539,7 @@ Defined.
 Definition int_dist_l (x y z : Int) : x * (y + z) = x * y + x * z.
 Proof.
   revert x.
-  srapply (int_homotopic (fun x => int_add x (y + z))); cbn beta.
+  srapply (int_homotopic (fun x => x + (y + z))); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   rewrite <- (int_add_assoc (x*y) y).
@@ -559,7 +559,7 @@ Defined.
 Definition int_mul_assoc (x y z : Int) : x * (y * z) = x * y * z.
 Proof.
   revert x.
-  srapply (int_homotopic (fun x => int_add x (y * z))); cbn beta.
+  srapply (int_homotopic (fun x => x + (y * z))); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   by rewrite int_dist_r.
@@ -600,7 +600,7 @@ Proof.
 Defined.
 
 Definition int_iter_add {A} (f : A -> A) `{IsEquiv _ _ f} (x y : Int)
-  : int_iter f (int_add x y) == int_iter f x o int_iter f y.
+  : int_iter f (x + y) == int_iter f x o int_iter f y.
 Proof.
   intro a; revert x.
   by srapply (int_homotopic f).
@@ -691,7 +691,7 @@ Proof.
 Defined.
 
 Definition loopexp_add {A : Type} {a : A} (p : a = a) x y
-  : loopexp p (int_add x y) = loopexp p x @ loopexp p y.
+  : loopexp p (x + y) = loopexp p x @ loopexp p y.
 Proof.
   revert x.
   rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
