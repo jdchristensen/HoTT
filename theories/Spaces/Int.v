@@ -31,7 +31,7 @@ Module Export Int.
 
     Context {P : Int -> Type} (t0 : P zero) (e : forall z : Int, P z -> P (int_succ z))
       (r : forall z : Int, P z -> P (int_pred z)) (s : forall z : Int, P z -> P (int_succ_sect z))
-      (re : forall (z : Int) (t : P z), int_succ_is_sect z # (r (int_succ z) (e z t)) = t)
+      (re : forall (z : Int) (t : P z), int_succ_is_sect z # (r ( int_succ z) (e z t)) = t)
       (es : forall (z : Int) (t : P z), int_succ_is_retr z # (e (int_succ_sect z) (s z t)) = t).
 
     Fixpoint int_ind (z : Int) : P z
@@ -73,12 +73,12 @@ Notation "z .-1" := (int_pred z) : int_scope.
 (** ** Induction and recursion principles for Int *)
 
 Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
-  (e : forall z : Int, P z -> P (int_succ z)) {iseq : forall z, IsEquiv (e z)}
+  (e : forall z : Int, P z -> P z.+1) {iseq : forall z, IsEquiv (e z)}
   : forall z, P z.
 Proof.
   snapply (int_ind t0 e).
   - intro z.
-    exact ((e (int_pred z))^-1 o transport P (retr_is_sect_isbiinv biinv_int_succ z)^).
+    exact ((e z.-1)^-1 o transport P (retr_is_sect_isbiinv biinv_int_succ z)^).
   - intro z.
     exact ((e (int_succ_sect z))^-1 o transport P (int_succ_is_retr z)^).
   - intros z p; cbn beta.
@@ -233,8 +233,8 @@ End IntEquiv.
 (** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_succ_is_sect 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
 Definition int_ind_sint (P : Int -> Type)
   (H0 : P zero)
-  (HP : forall z, P z -> P (int_succ z))
-  (HN : forall z, P z -> P (int_pred z))
+  (HP : forall z, P z -> P z.+1)
+  (HN : forall z, P z -> P z.-1)
   : forall z, P z.
 Proof.
   equiv_intro sint_to_int s.
@@ -247,7 +247,7 @@ Proof.
 Defined.
 
 Definition int_ind_iff (P : Int -> Type)
-  (t0 : P zero) (f : forall z : Int, P z <-> P (int_succ z))
+  (t0 : P zero) (f : forall z : Int, P z <-> P z.+1)
   : forall z, P z.
 Proof.
   srapply (int_ind_sint P t0).
@@ -285,7 +285,7 @@ Definition int_neg (z : Int) : Int
 Notation "- z" := (int_neg z) : int_scope.
 
 (** Negation is involutive. *)
-Definition int_neg_neg (z : Int) : - - z = z.
+Definition int_neg_neg (z : Int) : --z = z.
 Proof.
   revert z.
   by srapply (int_homotopic int_succ).
@@ -299,15 +299,15 @@ Proof.
 Defined.
 
 (** Negation is injective. *)
-Definition isinj_int_neg (x y : Int) : - x = - y -> x = y
+Definition isinj_int_neg (x y : Int) : -x = -y -> x = y
   := equiv_inj int_neg.
 
 (** The negation of a successor is the predecessor of the negation. *)
-Definition int_neg_succ (z : Int) : - int_succ z = int_pred (-z)
+Definition int_neg_succ (z : Int) : -z.+1 = (-z).-1
   := idpath.
 
 (** The negation of a predecessor is the successor of the negation. *)
-Definition int_neg_pred (z : Int) : - int_pred z = int_succ (- z)
+Definition int_neg_pred (z : Int) : -z.-1 = (-z).+1
   := idpath.
 
 (** *** Addition *)
@@ -331,22 +331,22 @@ Proof.
 Defined.
 
 (** Adding a successor on the left is the successor of the sum. *)
-Definition int_add_succ_l (x y : Int) : (int_succ x) + y = int_succ (x + y)
+Definition int_add_succ_l (x y : Int) : x.+1 + y = (x + y).+1
   := idpath.
 
 (** Adding a predecessor on the left is the predecessor of the sum. *)
-Definition int_add_pred_l (x y : Int) : (int_pred x) + y = int_pred (x + y)
+Definition int_add_pred_l (x y : Int) : x.-1 + y = (x + y).-1
   := idpath.
 
 (** Adding a successor on the right is the successor of the sum. *)
-Definition int_add_succ_r (x y : Int) : x + (int_succ y) = int_succ (x + y).
+Definition int_add_succ_r (x y : Int) : x + y.+1 = (x + y).+1.
 Proof.
   revert x.
   by srapply (int_homotopic int_succ).
 Defined.
 
 (** Adding a predecessor on the right is the predecessor of the sum. *)
-Definition int_add_pred_r (x y : Int) : x + (int_pred y) = int_pred (x + y).
+Definition int_add_pred_r (x y : Int) : x + y.-1 = (x + y).-1.
 Proof.
   revert x.
   srapply (int_homotopic int_succ); cbn beta.
@@ -357,11 +357,11 @@ Proof.
 Defined.
 
 (** Integer addition with 1 on the left is the successor. *)
-Definition int_add_1_l (z : Int) : 1 + z = int_succ z
+Definition int_add_1_l (z : Int) : 1 + z = z.+1
   := idpath.
 
 (** Integer addition with 1 on the right is the successor. *)
-Definition int_add_1_r (z : Int) : z + 1 = int_succ z.
+Definition int_add_1_r (z : Int) : z + 1 = z.+1.
 Proof.
   revert z.
   by srapply (int_homotopic int_succ).
@@ -386,7 +386,7 @@ Proof.
 Defined.
 
 (** Negation is a left inverse with respect to integer addition. *)
-Definition int_add_neg_l (z : Int) : - z + z = 0.
+Definition int_add_neg_l (z : Int) : -z + z = 0.
 Proof.
   revert z.
   srapply (int_homotopic idmap); cbn beta.
@@ -403,7 +403,7 @@ Proof.
 Defined.
 
 (** Negation distributes over addition. *)
-Definition int_neg_add (x y : Int) : - (x + y) = - x - y.
+Definition int_neg_add (x y : Int) : -(x + y) = -x - y.
 Proof.
   revert x.
   by srapply (int_homotopic int_pred).
@@ -440,11 +440,11 @@ Definition int_mul (x y : Int) : Int
 Infix "*" := int_mul : int_scope.
 
 (** Multiplication with a successor on the left adds the other argument. *)
-Definition int_mul_succ_l (x y : Int) : (int_succ x) * y = x * y + y
+Definition int_mul_succ_l (x y : Int) : x.+1 * y = x * y + y
   := idpath.
 
 (** Multiplication with a predecessor on the left subtracts the other argument. *)
-Definition int_mul_pred_l (x y : Int) : (int_pred x) * y = x * y - y
+Definition int_mul_pred_l (x y : Int) : x.-1 * y = x * y - y
   := idpath.
 
 (** Integer multiplication with zero on the left is zero by definition. *)
@@ -476,11 +476,11 @@ Proof.
 Defined.
 
 (** Integer multiplication with [-1] on the left is negation. *)
-Definition int_mul_neg1_l (z : Int) : (-1) * z = - z
+Definition int_mul_neg1_l (z : Int) : -1 * z = -z
   := idpath.
 
 (** Multiplying with a negation on the left is the same as negating the product. *)
-Definition int_mul_neg_l (x y : Int) : (- x) * y = - (x * y).
+Definition int_mul_neg_l (x y : Int) : -x * y = -(x * y).
 Proof.
   revert x.
   rapply (int_homotopic (fun x => x + -y)); cbn beta.
@@ -490,10 +490,10 @@ Proof.
 Defined.
 
 (** Multiplying with a successor on the right adds the other argument. *)
-Definition int_mul_succ_r (x y : Int) : x * (int_succ y) = x + x * y.
+Definition int_mul_succ_r (x y : Int) : x * y.+1 = x + x * y.
 Proof.
   revert x.
-  rapply (int_homotopic (fun x => x + (int_succ y))); cbn beta.
+  rapply (int_homotopic (fun x => x + y.+1)); cbn beta.
   1,2: reflexivity.
   simpl; intro z.
   rewrite int_add_succ_r.
@@ -501,10 +501,10 @@ Proof.
 Defined.
 
 (** Multiplying with a predecessor on the right subtracts the other argument. *)
-Definition int_mul_pred_r (x y : Int) : x * (int_pred y) = x * y - x.
+Definition int_mul_pred_r (x y : Int) : x * y.-1 = x * y - x.
 Proof.
   revert x.
-  rapply (int_homotopic (fun x => x + (int_pred y))); cbn beta.
+  rapply (int_homotopic (fun x => x + y.-1)); cbn beta.
   1,2: reflexivity.
   intro z.
   rewrite int_mul_succ_l.
@@ -529,7 +529,7 @@ Proof.
 Defined.
 
 (** Multiplying with a negation on the right is the same as negating the product. *)
-Definition int_mul_neg_r (x y : Int) : x * - y = - (x * y).
+Definition int_mul_neg_r (x y : Int) : x * -y = -(x * y).
 Proof.
   rewrite !(int_mul_comm x).
   apply int_mul_neg_l.
@@ -575,22 +575,22 @@ Proof.
 Defined.
 
 Definition int_iter_succ_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (int_succ z) a = f (int_iter f z a)
+  : int_iter f z.+1 a = f (int_iter f z a)
   := idpath.
 
 Definition int_iter_succ_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (int_succ z) a = int_iter f z (f a).
+  : int_iter f z.+1 a = int_iter f z (f a).
 Proof.
   revert z.
   by srapply (int_homotopic f).
 Defined.
 
 Definition int_iter_pred_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (int_pred z) a = f^-1 (int_iter f z a)
+  : int_iter f z.-1 a = f^-1 (int_iter f z a)
   := idpath.
 
 Definition int_iter_pred_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
-  : int_iter f (int_pred z) a = int_iter f z (f^-1 a).
+  : int_iter f z.-1 a = int_iter f z (f^-1 a).
 Proof.
   revert z.
   srapply (int_homotopic f); cbn beta.
@@ -649,15 +649,15 @@ Definition loopexp {A : Type} {a : A} (p : a = a) (z : Int) : (a = a)
   := int_iter (equiv_concat_r p a) z idpath.
 
 Definition loopexp_succ_r {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (int_succ z) = loopexp p z @ p
+  : loopexp p z.+1 = loopexp p z @ p
   := int_iter_succ_l _ _ _.
 
 Definition loopexp_pred_r {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (int_pred z) = loopexp p z @ p^
+  : loopexp p z.-1 = loopexp p z @ p^
   := int_iter_pred_l _ _ _.
 
 Definition loopexp_succ_l {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (int_succ z) = p @ loopexp p z.
+  : loopexp p z.+1 = p @ loopexp p z.
 Proof.
   lhs napply loopexp_succ_r.
   revert z.
@@ -669,7 +669,7 @@ Proof.
 Defined.
 
 Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : Int)
-  : loopexp p (int_pred z) = p^ @ loopexp p z.
+  : loopexp p z.-1 = p^ @ loopexp p z.
 Proof.
   rewrite loopexp_pred_r.
   revert z.
@@ -727,7 +727,7 @@ Defined.
 
 (** [int_of_nat] preserves successors. *)
 Definition int_nat_succ (n : nat)
-  : (int_succ n)%int = (n.+1)%nat :> Int.
+  : (n.+1)%int = (n.+1)%nat :> Int.
 Proof.
   by induction n.
 Defined.
