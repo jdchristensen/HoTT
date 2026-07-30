@@ -53,7 +53,7 @@ Defined.
   : IsEquiv (retr_biinv f).
 Proof.
   srefine (isequiv_adjointify (retr_biinv f) f (eissect_biinv f) _); intro b.
-  (* This inlined proof will be replaced: *)
+  (* This inlined proof will be modified by [isequiv_adjointify]: *)
   exact (ap f (sect_retr_homotopic_isbiinv f b)^ @ eisretr_biinv f b).
 Defined.
 

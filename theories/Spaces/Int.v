@@ -1,5 +1,5 @@
-Require Import HoTT.Basics Types.Paths Spaces.Nat.Core Spaces.SInt Types.Paths Types.Universe.
-(** Users of this file like want the instances in Equiv.BiInv, such as [isequiv_isbiinv], so we export this file. *)
+Require Import HoTT.Basics Types.Paths Types.Universe Spaces.Nat.Core Spaces.SInt.
+(** Users of this file likely want the instances in Equiv.BiInv, such as [isequiv_isbiinv], so we export this file. *)
 Require Export Equiv.BiInv.
 
 (** * The integers, defined as a HIT *)
@@ -266,7 +266,7 @@ Definition int_of_number_int : Numeral.int -> Int := sint_to_int o sint_of_numbe
 
 Number Notation Int int_of_number_int int_to_number_int : int_scope.
 
-(** The following function reduces an integer expression by cancelling succesive successor and predecessor terms. *)
+(** The following function reduces an integer expression by cancelling successive successor and predecessor terms. *)
 Definition int_reduce := sint_to_int o int_to_sint.
 
 (** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function. *)
@@ -433,17 +433,17 @@ Defined.
 
 (** *** Multiplication *)
 
-(** We define multiplication by recursion on the first argument.  We can only define it at this stage as it depends on the proof that addition is an equivalence. *)
+(** We define multiplication by recursion on the first argument.  This depends on the proof that addition is an equivalence. *)
 Definition int_mul (x y : Int) : Int
   := int_iter (fun z => int_add z y) x 0.
 
 Infix "*" := int_mul : int_scope.
 
-(** Multiplication with a successor on the left is the sum of the multplication without the successor and the multiplicand which was not a successor. *)
+(** Multiplication with a successor on the left adds the other argument. *)
 Definition int_mul_succ_l (x y : Int) : (int_succ x) * y = x * y + y
   := idpath.
 
-(** Similarly, multiplication with a predecessor on the left is the sum of the multiplication without the predecessor and the negation of the multiplicand which was not a predecessor. *)
+(** Multiplication with a predecessor on the left subtracts the other argument. *)
 Definition int_mul_pred_l (x y : Int) : (int_pred x) * y = x * y - y
   := idpath.
 
@@ -475,12 +475,12 @@ Proof.
   by rewrite int_add_1_r.
 Defined.
 
-(** Integer multiplication with -1 on the left is negation. *)
+(** Integer multiplication with [-1] on the left is negation. *)
 Definition int_mul_neg1_l (z : Int) : (-1) * z = - z
   := idpath.
 
 (** Multiplying with a negation on the left is the same as negating the product. *)
-Definition int_mul_neg_l (x y : Int) : - x * y = - (x * y).
+Definition int_mul_neg_l (x y : Int) : (- x) * y = - (x * y).
 Proof.
   revert x.
   rapply (int_homotopic (fun x => int_add x (-y))); cbn beta.
@@ -489,7 +489,7 @@ Proof.
   apply int_neg_add.
 Defined.
 
-(** Multiplying with a successor on the right is the sum of the multiplication without the successor and the product of the multiplicand which was not a successor and the multiplicand. *)
+(** Multiplying with a successor on the right adds the other argument. *)
 Definition int_mul_succ_r (x y : Int) : x * (int_succ y) = x + x * y.
 Proof.
   revert x.
@@ -500,7 +500,7 @@ Proof.
   by rewrite int_add_assoc.
 Defined.
 
-(** Multiplying with a predecessor on the right is the sum of the multiplication without the predecessor and the product of the multiplicand which was not a predecessor and the negation of the multiplicand which was not a predecessor. *)
+(** Multiplying with a predecessor on the right subtracts the other argument. *)
 Definition int_mul_pred_r (x y : Int) : x * (int_pred y) = x * y - x.
 Proof.
   revert x.
@@ -516,7 +516,7 @@ Proof.
   by rewrite (int_add_pred_r _ y).
 Defined.
 
-(** Integer multiplication is commutative. *)
+(** Multiplication is commutative. *)
 Definition int_mul_comm (x y : Int) : x * y = y * x.
 Proof.
   revert x.
@@ -691,7 +691,7 @@ Proof.
 Defined.
 
 Definition loopexp_add {A : Type} {a : A} (p : a = a) x y
-  : loopexp p (int_add x y) = loopexp p x @ loopexp p y. (*TODO: fix int_add*)
+  : loopexp p (int_add x y) = loopexp p x @ loopexp p y.
 Proof.
   revert x.
   rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
@@ -732,7 +732,7 @@ Proof.
   by induction n.
 Defined.
 
-(** [int_of_nat] preserves addition. Hence is a monoid homomorphism. *)
+(** [int_of_nat] preserves addition. *)
 Definition int_nat_add (n m : nat)
   : (n + m)%int = (n + m)%nat :> Int.
 Proof.

@@ -33,7 +33,7 @@ Definition negsint_of_nat (n : nat) : SInt :=
 
 (** ** Parsing and printing *)
 
-(** Here we define some printing and parsing functions that convert the integers between numeral representations so that we can use notations such as [123] for [sint_PosS 122] and [-123] for [sint_NegS 122]. *)
+(** Here we define some printing and parsing functions that convert the integers between numeral representations.  We don't register these, but they are used for printing and parsing of the HIT integers in Int.v. *)
 
 (** Printing *)
 Definition sint_to_number_int (n : SInt) : Numeral.int :=
@@ -99,7 +99,7 @@ Proof.
   1,3: split.
   1,3: napply ap.
   1,2: intros H; by injection H.
-  1,2: exact _. (* Uses decideable equality of [nat]. *)
+  1,2: exact _. (* Uses decidable equality of [nat]. *)
 Defined.
 
 (** By Hedberg's theorem, we have that the signed integers are a set. *)
