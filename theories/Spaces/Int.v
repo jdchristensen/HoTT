@@ -303,11 +303,11 @@ Definition isinj_int_neg (x y : Int) : -x = -y -> x = y
   := equiv_inj int_neg.
 
 (** The negation of a successor is the predecessor of the negation. *)
-Definition int_neg_succ (z : Int) : -z.+1 = (-z).-1
+Definition int_neg_succ (z : Int) : -(z.+1) = (-z).-1
   := idpath.
 
 (** The negation of a predecessor is the successor of the negation. *)
-Definition int_neg_pred (z : Int) : -z.-1 = (-z).+1
+Definition int_neg_pred (z : Int) : -(z.-1) = (-z).+1
   := idpath.
 
 (** *** Addition *)
@@ -483,7 +483,7 @@ Definition int_mul_neg1_l (z : Int) : -1 * z = -z
 Definition int_mul_neg_l (x y : Int) : -x * y = -(x * y).
 Proof.
   revert x.
-  rapply (int_homotopic (fun x => x + -y)); cbn beta.
+  rapply (int_homotopic (fun x => x - y)); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   apply int_neg_add.
