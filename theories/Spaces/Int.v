@@ -150,7 +150,7 @@ Section Uniqueness.
   Context {P : Type} (e : BiInv P P).
 
   (** The following uniqueness principle states that if two maps out of [Int] agree on 0 and commute with the successor, then they are homotopic. *)
-  Definition int_homotopic_two_fun_biinv (k1 : Int -> P) (k2 : Int -> P)
+  Definition int_homotopic_biinv (k1 : Int -> P) (k2 : Int -> P)
     (p0 : k1 zero = k2 zero) (pf1 : k1 o int_succ == e o k1) (pf2 : k2 o int_succ == e o k2)
     : k1 == k2.
   Proof.
@@ -162,30 +162,30 @@ Section Uniqueness.
   Defined.
 
   (** As a special case, we can characterize the recursor. *)
-  Definition int_homotopic (t0 : P) (k : Int -> P)
+  Definition int_homotopic_rec (t0 : P) (k : Int -> P)
     (p0 : k zero = t0) (pf : k o int_succ == e o k)
     (rec := int_rec_biinv t0 e)
     : k == rec
-    := int_homotopic_two_fun_biinv k rec p0 pf (fun _ => idpath).
+    := int_homotopic_biinv k rec p0 pf (fun _ => idpath).
 
 End Uniqueness.
 
 (** The same uniqueness principle but for half-adjoint equivalences. *)
-Definition int_homotopic_two_fun_equiv {P : Type} (f : P -> P)
+Definition int_homotopic {P : Type} (f : P -> P)
   {e' : IsEquiv f} (k1 : Int -> P) (k2 : Int -> P)
   (p0 : k1 zero = k2 zero) (pf1 : k1 o int_succ == f o k1)
   (pf2 : k2 o int_succ == f o k2)
   : forall (z : Int), k1 z = k2 z
-  := int_homotopic_two_fun_biinv (Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
+  := int_homotopic_biinv (Build_BiInv P P _ (isbiinv_isequiv f e')) k1 k2 p0 pf1 pf2.
 
 (** ** [Int] is equivalent to [SInt] *)
 
 Section IntEquiv.
 
-  Definition InttoIntIT : Int -> SInt
+  Definition int_to_sint : Int -> SInt
     := int_rec sint_zero sint_succ sint_pred sint_pred sint_succ_pred sint_pred_succ.
 
-  Definition IntITtoInt : SInt -> Int.
+  Definition sint_to_int : SInt -> Int.
   Proof.
     intro s; induction s as [|n IHz|n IHz].
     - exact zero.
@@ -193,7 +193,7 @@ Section IntEquiv.
     - exact (int_pred IHz).
   Defined.
 
-  Definition IntITtoint_is_rinv : InttoIntIT o IntITtoInt == idmap.
+  Definition sint_to_int_is_rinv : int_to_sint o sint_to_int == idmap.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1, 2, 4: reflexivity.
@@ -201,24 +201,24 @@ Section IntEquiv.
     - exact (ap sint_pred IHz).
   Defined.
 
-  Definition IntITtoint_comp_succ : IntITtoInt o sint_succ == int_succ o IntITtoInt.
+  Definition sint_to_int_comp_succ : sint_to_int o sint_succ == int_succ o sint_to_int.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1-3: reflexivity.
     all: symmetry; exact (retr_is_sect_isbiinv int_succ _).
   Defined.
 
-  Definition IntITtoint_is_linv : IntITtoInt o InttoIntIT == idmap.
+  Definition sint_to_int_is_linv : sint_to_int o int_to_sint == idmap.
   Proof.
-    napply (int_homotopic_two_fun_biinv biinv_int_succ).
+    napply (int_homotopic_biinv biinv_int_succ).
     1,3: reflexivity.
     intro z; simpl.
-    apply IntITtoint_comp_succ.
+    apply sint_to_int_comp_succ.
   Defined.
 
-  (** [IntITtoInt] is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
-  #[export] Instance isbiinv_IntITtoInt : IsBiInv IntITtoInt
-    := Build_IsBiInv _ _ _ _ _ IntITtoint_is_linv IntITtoint_is_rinv.
+  (** [sint_to_int] is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
+  #[export] Instance isbiinv_sint_to_int : IsBiInv sint_to_int
+    := Build_IsBiInv _ _ _ _ _ sint_to_int_is_linv sint_to_int_is_rinv.
 
   (** Since [SInt] has decidable equality, so does [Int]. *)
   #[export] Instance decidablepaths_int@{} : DecidablePaths Int
@@ -237,7 +237,7 @@ Definition int_ind_sint (P : Int -> Type)
   (HN : forall z, P z -> P (int_pred z))
   : forall z, P z.
 Proof.
-  equiv_intro IntITtoInt s.
+  equiv_intro sint_to_int s.
   induction s as [|n IHz|n IHz].
   - exact H0.
   - destruct n as [|n].
@@ -260,14 +260,14 @@ Defined.
 (** ** Printing and parsing *)
 
 (** For now we pass through [SInt] for printing and parsing. *)
-Definition int_to_number_int : Int -> Numeral.int := sint_to_number_int o InttoIntIT.
+Definition int_to_number_int : Int -> Numeral.int := sint_to_number_int o int_to_sint.
 
-Definition int_of_number_int : Numeral.int -> Int := IntITtoInt o sint_of_number_int.
+Definition int_of_number_int : Numeral.int -> Int := sint_to_int o sint_of_number_int.
 
 Number Notation Int int_of_number_int int_to_number_int : int_scope.
 
 (** The following function reduces an integer expression by cancelling succesive successor and predecessor terms. *)
-Definition int_reduce := IntITtoInt o InttoIntIT.
+Definition int_reduce := sint_to_int o int_to_sint.
 
 (** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function. *)
 Definition int_of_nat (n : nat) : Int
@@ -288,7 +288,7 @@ Notation "- z" := (int_neg z) : int_scope.
 Definition int_neg_neg (z : Int) : - - z = z.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv int_succ).
+  by srapply (int_homotopic int_succ).
 Defined.
 
 (** Negation is an equivalence. *)
@@ -327,7 +327,7 @@ Definition int_add_0_l (z : Int) : 0 + z = z
 Definition int_add_0_r (z : Int) : z + 0 = z.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv int_succ).
+  by srapply (int_homotopic int_succ).
 Defined.
 
 (** Adding a successor on the left is the successor of the sum. *)
@@ -342,14 +342,14 @@ Definition int_add_pred_l (x y : Int) : (int_pred x) + y = int_pred (x + y)
 Definition int_add_succ_r (x y : Int) : x + (int_succ y) = int_succ (x + y).
 Proof.
   revert x.
-  by srapply (int_homotopic_two_fun_equiv int_succ).
+  by srapply (int_homotopic int_succ).
 Defined.
 
 (** Adding a predecessor on the right is the predecessor of the sum. *)
 Definition int_add_pred_r (x y : Int) : x + (int_pred y) = int_pred (x + y).
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv int_succ); cbn beta.
+  srapply (int_homotopic int_succ); cbn beta.
   1,2: reflexivity.
   simpl; intro z.
   rewrite int_succ_is_sect.
@@ -364,14 +364,14 @@ Definition int_add_1_l (z : Int) : 1 + z = int_succ z
 Definition int_add_1_r (z : Int) : z + 1 = int_succ z.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv int_succ).
+  by srapply (int_homotopic int_succ).
 Defined.
 
 (** Integer addition is commutative. *)
 Definition int_add_comm (x y : Int) : x + y = y + x.
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv int_succ); cbn beta.
+  srapply (int_homotopic int_succ); cbn beta.
   - by rewrite int_add_0_r.
   - reflexivity.
   - intro z.
@@ -382,14 +382,14 @@ Defined.
 Definition int_add_assoc (x y z : Int) : x + (y + z) = x + y + z.
 Proof.
   revert x.
-  by srapply (int_homotopic_two_fun_equiv int_succ).
+  by srapply (int_homotopic int_succ).
 Defined.
 
 (** Negation is a left inverse with respect to integer addition. *)
 Definition int_add_neg_l (z : Int) : - z + z = 0.
 Proof.
   revert z.
-  srapply (int_homotopic_two_fun_equiv idmap); cbn beta.
+  srapply (int_homotopic idmap); cbn beta.
   1,3: reflexivity.
   simpl; intro s.
   rewrite int_add_succ_r.
@@ -406,7 +406,7 @@ Defined.
 Definition int_neg_add (x y : Int) : - (x + y) = - x - y.
 Proof.
   revert x.
-  by srapply (int_homotopic_two_fun_equiv int_pred).
+  by srapply (int_homotopic int_pred).
 Defined.
 
 (** Addition is an equivalence with first argument fixed. *)
@@ -455,7 +455,7 @@ Definition int_mul_0_l (z : Int) : 0 * z = 0
 Definition int_mul_0_r (z : Int) : z * 0 = 0.
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv idmap); cbn beta.
+  rapply (int_homotopic idmap); cbn beta.
   1,3: reflexivity.
   simpl; intro z.
   by rewrite int_add_0_r.
@@ -469,7 +469,7 @@ Definition int_mul_1_l (z : Int) : 1 * z = z
 Definition int_mul_1_r (z : Int) : z * 1 = z.
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv (fun z => int_add z 1)); cbn beta.
+  rapply (int_homotopic (fun z => int_add z 1)); cbn beta.
   1,2: reflexivity.
   intro z.
   by rewrite int_add_1_r.
@@ -483,7 +483,7 @@ Definition int_mul_neg1_l (z : Int) : (-1) * z = - z
 Definition int_mul_neg_l (x y : Int) : - x * y = - (x * y).
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (-y))); cbn beta.
+  rapply (int_homotopic (fun x => int_add x (-y))); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   apply int_neg_add.
@@ -493,7 +493,7 @@ Defined.
 Definition int_mul_succ_r (x y : Int) : x * (int_succ y) = x + x * y.
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (int_succ y))); cbn beta.
+  rapply (int_homotopic (fun x => int_add x (int_succ y))); cbn beta.
   1,2: reflexivity.
   simpl; intro z.
   rewrite int_add_succ_r.
@@ -504,7 +504,7 @@ Defined.
 Definition int_mul_pred_r (x y : Int) : x * (int_pred y) = x * y - x.
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (fun x => int_add x (int_pred y))); cbn beta.
+  rapply (int_homotopic (fun x => int_add x (int_pred y))); cbn beta.
   1,2: reflexivity.
   intro z.
   rewrite int_mul_succ_l.
@@ -520,7 +520,7 @@ Defined.
 Definition int_mul_comm (x y : Int) : x * y = y * x.
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv (fun x => int_add x y)); cbn beta.
+  srapply (int_homotopic (fun x => int_add x y)); cbn beta.
   - symmetry; apply int_mul_0_r.
   - reflexivity.
   - intro z.
@@ -539,7 +539,7 @@ Defined.
 Definition int_dist_l (x y z : Int) : x * (y + z) = x * y + x * z.
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv (fun x => int_add x (y + z))); cbn beta.
+  srapply (int_homotopic (fun x => int_add x (y + z))); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   rewrite <- (int_add_assoc (x*y) y).
@@ -559,7 +559,7 @@ Defined.
 Definition int_mul_assoc (x y z : Int) : x * (y * z) = x * y * z.
 Proof.
   revert x.
-  srapply (int_homotopic_two_fun_equiv (fun x => int_add x (y * z))); cbn beta.
+  srapply (int_homotopic (fun x => int_add x (y * z))); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
   by rewrite int_dist_r.
@@ -571,7 +571,7 @@ Definition int_iter_neg {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
   : int_iter f (int_neg z) a = int_iter f^-1 z a.
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv f^-1).
+  by srapply (int_homotopic f^-1).
 Defined.
 
 Definition int_iter_succ_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
@@ -582,7 +582,7 @@ Definition int_iter_succ_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
   : int_iter f (int_succ z) a = int_iter f z (f a).
 Proof.
   revert z.
-  by srapply (int_homotopic_two_fun_equiv f).
+  by srapply (int_homotopic f).
 Defined.
 
 Definition int_iter_pred_l {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
@@ -593,7 +593,7 @@ Definition int_iter_pred_r {A} (f : A -> A) `{IsEquiv _ _ f} (z : Int) (a : A)
   : int_iter f (int_pred z) a = int_iter f z (f^-1 a).
 Proof.
   revert z.
-  srapply (int_homotopic_two_fun_equiv f); cbn beta.
+  srapply (int_homotopic f); cbn beta.
   1,3: reflexivity.
   intro z; simpl.
   exact (eissect f (int_iter f z a) @ (eisretr f (int_iter f z a))^).
@@ -603,7 +603,7 @@ Definition int_iter_add {A} (f : A -> A) `{IsEquiv _ _ f} (x y : Int)
   : int_iter f (int_add x y) == int_iter f x o int_iter f y.
 Proof.
   intro a; revert x.
-  by srapply (int_homotopic_two_fun_equiv f).
+  by srapply (int_homotopic f).
 Defined.
 
 (** If [g : A -> A'] commutes with automorphisms of [A] and [A'], then it commutes with iteration. *)
@@ -613,7 +613,7 @@ Definition int_iter_commute_map {A A'} (f : A -> A) `{!IsEquiv f}
   : g (int_iter f z a) = int_iter f' z (g a).
 Proof.
   revert z.
-  srapply (int_homotopic_two_fun_equiv f'); cbn beta.
+  srapply (int_homotopic f'); cbn beta.
   1,3: reflexivity.
   intro x; apply p.
 Defined.
@@ -661,7 +661,7 @@ Definition loopexp_succ_l {A : Type} {a : A} (p : a = a) (z : Int)
 Proof.
   lhs napply loopexp_succ_r.
   revert z.
-  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a)); cbn beta.
+  rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - reflexivity.
   - intro z; simpl.
@@ -673,7 +673,7 @@ Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : Int)
 Proof.
   rewrite loopexp_pred_r.
   revert z.
-  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a)); cbn beta.
+  rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - intro z; simpl.
     rewrite 2 concat_pp_p.
@@ -694,7 +694,7 @@ Definition loopexp_add {A : Type} {a : A} (p : a = a) x y
   : loopexp p (int_add x y) = loopexp p x @ loopexp p y. (*TODO: fix int_add*)
 Proof.
   revert x.
-  rapply (int_homotopic_two_fun_equiv (equiv_concat_r p a)); cbn beta.
+  rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
   - symmetry; apply concat_1p.
   - reflexivity.
   - intro z; simpl.

@@ -39,7 +39,7 @@ Definition abgroup_Z_ab_mul (z z' : Int)
   : ab_mul (A:=abgroup_Z) z z' = z * z'.
 Proof.
   revert z.
-  rapply (int_homotopic_two_fun_equiv (int_add z')); cbn beta.
+  rapply (int_homotopic (int_add z')); cbn beta.
   - reflexivity.
   - intro z.
     by lhs napply (grp_pow_succ (G:=abgroup_Z)).

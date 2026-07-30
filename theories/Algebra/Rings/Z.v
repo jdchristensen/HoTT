@@ -70,7 +70,7 @@ Proof.
   exists (rng_homo_int R).
   intros g.
   cbn.
-  rapply (int_homotopic_two_fun_equiv (ring_plus 1)); cbn beta.
+  rapply (int_homotopic (ring_plus 1)); cbn beta.
   - exact (grp_homo_unit g)^.
   - reflexivity.
   - intro x.
