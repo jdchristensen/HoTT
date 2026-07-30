@@ -31,7 +31,7 @@ Module Export Int.
 
     Context {P : Int -> Type} (t0 : P zero) (e : forall z : Int, P z -> P (int_succ z))
       (r : forall z : Int, P z -> P (int_pred z)) (s : forall z : Int, P z -> P (int_succ_sect z))
-      (re : forall (z : Int) (t : P z), int_succ_is_sect z # (r ( int_succ z) (e z t)) = t)
+      (re : forall (z : Int) (t : P z), int_succ_is_sect z # (r (int_succ z) (e z t)) = t)
       (es : forall (z : Int) (t : P z), int_succ_is_retr z # (e (int_succ_sect z) (s z t)) = t).
 
     Fixpoint int_ind (z : Int) : P z
