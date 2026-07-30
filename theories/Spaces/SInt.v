@@ -90,7 +90,7 @@ Defined.
 (** ** Decidable Equality *)
 
 (** The signed integers have decidable equality. *)
-Global Instance decidable_paths_sint@{} : DecidablePaths SInt.
+Instance decidable_paths_sint@{} : DecidablePaths SInt.
 Proof.
   intros [x | | x] [y | | y].
   2-4,6-8: right; intros; discriminate.
@@ -103,7 +103,7 @@ Proof.
 Defined.
 
 (** By Hedberg's theorem, we have that the signed integers are a set. *)
-Global Instance ishset_sint@{} : IsHSet SInt := _.
+Instance ishset_sint@{} : IsHSet SInt := _.
 
 (** ** Signed integer induction *)
 

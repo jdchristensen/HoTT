@@ -54,17 +54,17 @@ Module Export Int.
 End Int.
 
 (** We sometimes want to treat the integers as a pointed type with basepoint given by 0. *)
-#[export] Instance ispointed_int : IsPointed Int := zero.
+Instance ispointed_int : IsPointed Int := zero.
 
 (** Successor is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
-#[export] Instance isbiinv_int_succ : IsBiInv int_succ
+Instance isbiinv_int_succ : IsBiInv int_succ
   := Build_IsBiInv _ _ _ int_succ_sect int_pred int_succ_is_retr int_succ_is_sect.
 
 Definition biinv_int_succ : BiInv Int Int
   := Build_BiInv _ _ int_succ _.
 
 (** The predecessor is an equivalence on [Int]. *)
-#[export] Instance isequiv_int_pred : IsEquiv int_pred
+Instance isequiv_int_pred : IsEquiv int_pred
   := isequiv_retr_biinv int_succ.
 
 Notation "z .+1" := (int_succ z) : int_scope.
@@ -292,7 +292,7 @@ Proof.
 Defined.
 
 (** Negation is an equivalence. *)
-#[export] Instance isequiv_int_neg : IsEquiv int_neg.
+Instance isequiv_int_neg : IsEquiv int_neg.
 Proof.
   snapply (isequiv_adjointify int_neg int_neg).
   1,2: napply int_neg_neg.
@@ -410,7 +410,7 @@ Proof.
 Defined.
 
 (** Addition is an equivalence with first argument fixed. *)
-#[export] Instance isequiv_int_add_l (x : Int) : IsEquiv (int_add x).
+Instance isequiv_int_add_l (x : Int) : IsEquiv (int_add x).
 Proof.
   srapply (isequiv_adjointify _ (int_add (-x))).
   all: simpl; intro y.
@@ -420,7 +420,7 @@ Proof.
 Defined.
 
 (** Addition is an equivalence with second argument fixed.  This also follows from the previous result and [int_add_comm], but this proof computes better. *)
-#[export] Instance isequiv_int_add_r (y : Int) : IsEquiv (fun x => int_add x y).
+Instance isequiv_int_add_r (y : Int) : IsEquiv (fun x => int_add x y).
 Proof.
   snapply (isequiv_adjointify _ (fun x => int_add x (-y))).
   all: simpl; intro x.
