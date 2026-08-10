@@ -719,7 +719,7 @@ Defined.
 
 (** ** Converting between integers and naturals *)
 
-(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function. *)
+(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function.  We will make this into a coercion later;  we delay doing so to ensure that the lemmas about [int_of_nat] are interpreted as we want them to be. *)
 Definition int_of_nat (n : nat) : Int
   := nat_iter n int_succ zero.
 
@@ -729,24 +729,23 @@ Definition int_of_nat_zero : int_of_nat 0 = 0
 
 (** [int_of_nat] preserves successors. *)
 Definition int_of_nat_succ (n : nat)
-  : int_of_nat (n.+1) = (int_of_nat n).+1 :> Int.
+  : int_of_nat (n.+1) = (int_of_nat n).+1.
 Proof.
   by induction n.
 Defined.
 
-(** [int_of_nat] preserves predecessors. *)
-Definition int_of_nat_pred (n : nat)
-  : (0 < n)%nat -> int_of_nat (nat_pred n) = (int_of_nat n).-1 :> Int.
+(** [int_of_nat] preserves predecessors of positive naturals. *)
+Definition int_of_nat_pred (n : nat) (npos : (0 < n)%nat)
+  : int_of_nat (nat_pred n) = (int_of_nat n).-1.
 Proof.
-  intro H.
-  rewrite <- (nat_succ_pred n H).
+  rhs_V napply (ap (fun _ => _.-1) (nat_succ_pred n npos)).
   simpl; symmetry.
-  rapply int_succ_is_sect.
+  apply int_succ_is_sect.
 Defined.
 
 (** [int_of_nat] preserves addition. *)
 Definition int_of_nat_add (n m : nat)
-  : int_of_nat (n + m) = int_of_nat n + int_of_nat m :> Int.
+  : int_of_nat (n + m) = int_of_nat n + int_of_nat m.
 Proof.
   induction n as [|n IHn].
   - reflexivity.
@@ -757,7 +756,7 @@ Defined.
 
 (** [int_of_nat] preserves subtraction when not truncated. *)
 Definition int_of_nat_sub (n m : nat)
-  : (m <= n)%nat -> int_of_nat (n - m) = int_of_nat n - int_of_nat m :> Int.
+  : (m <= n)%nat -> int_of_nat (n - m) = int_of_nat n - int_of_nat m.
 Proof.
   intro H.
   induction H as [|n H IHn].
@@ -771,7 +770,7 @@ Defined.
 
 (** [int_of_nat] preserves multiplication. This makes [int_of_nat] a semiring homomorphism. *)
 Definition int_of_nat_mul (n m : nat)
-  :  int_of_nat (n * m) = int_of_nat n * int_of_nat m :> Int.
+  :  int_of_nat (n * m) = int_of_nat n * int_of_nat m.
 Proof.
   induction n as [|n IHn].
   - reflexivity.
