@@ -726,7 +726,7 @@ Definition int_of_nat (n : nat) : Int
 Coercion int_of_nat : nat >-> Int.
 
 (** [int_of_nat] preserves zero. *)
-Definition int_of_nat_zero : 0%int = 0%nat
+Definition int_of_nat_zero : 0%int = 0%nat :> Int
   := idpath.
 
 (** [int_of_nat] preserves successors. *)
