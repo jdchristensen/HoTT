@@ -26,7 +26,7 @@ Definition ab_sum_const {A : AbGroup} (n : nat) (a : A)
 Proof.
   induction n as [|n IHn] in f, p |- *.
   - reflexivity.
-  - rhs_V napply (ap@{Set _} _ (int_nat_succ n)).
+  - rhs_V napply (ap@{Set _} _ (int_of_nat_succ n)).
     rhs napply grp_pow_succ.
     simpl. f_ap.
     apply IHn.

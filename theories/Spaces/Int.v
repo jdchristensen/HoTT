@@ -726,25 +726,25 @@ Definition int_of_nat (n : nat) : Int
 Coercion int_of_nat : nat >-> Int.
 
 (** [int_of_nat] preserves successors. *)
-Definition int_nat_succ (n : nat)
+Definition int_of_nat_succ (n : nat)
   : (n.+1)%int = (n.+1)%nat :> Int.
 Proof.
   by induction n.
 Defined.
 
 (** [int_of_nat] preserves addition. *)
-Definition int_nat_add (n m : nat)
+Definition int_of_nat_add (n m : nat)
   : (n + m)%int = (n + m)%nat :> Int.
 Proof.
   induction n as [|n IHn].
   - reflexivity.
-  - rewrite <- 2 int_nat_succ.
+  - rewrite <- 2 int_of_nat_succ.
     rewrite int_add_succ_l.
     exact (ap _ IHn).
 Defined.
 
 (** [int_of_nat] preserves subtraction when not truncated. *)
-Definition int_nat_sub (n m : nat)
+Definition int_of_nat_sub (n m : nat)
   : (m <= n)%nat -> (n - m)%int = (n - m)%nat :> Int.
 Proof.
   intros H.
@@ -752,21 +752,21 @@ Proof.
   - lhs napply int_add_neg_r.
     by rewrite nat_sub_cancel.
   - rewrite nat_sub_succ_l; only 2: exact _.
-    rewrite <- 2 int_nat_succ.
+    rewrite <- 2 int_of_nat_succ.
     rewrite int_add_succ_l.
     exact (ap _ IHn).
 Defined.
 
 (** [int_of_nat] preserves multiplication. This makes [int_of_nat] a semiring homomorphism. *)
-Definition int_nat_mul (n m : nat)
+Definition int_of_nat_mul (n m : nat)
   :  (n * m)%int = (n * m)%nat :> Int.
 Proof.
   induction n as [|n IHn].
   - reflexivity.
-  - rewrite <- int_nat_succ.
+  - rewrite <- int_of_nat_succ.
     rewrite int_mul_succ_l.
     rewrite nat_mul_succ_l.
-    rhs_V napply int_nat_add.
+    rhs_V napply int_of_nat_add.
     rewrite IHn.
     by rewrite int_add_comm.
 Defined.
