@@ -729,10 +729,8 @@ Definition int_of_nat_zero : int_of_nat 0 = 0
 
 (** [int_of_nat] preserves successors. *)
 Definition int_of_nat_succ (n : nat)
-  : int_of_nat (n.+1) = (int_of_nat n).+1.
-Proof.
-  by induction n.
-Defined.
+  : int_of_nat (n.+1) = (int_of_nat n).+1
+  := idpath.
 
 (** [int_of_nat] preserves predecessors of positive naturals. *)
 Definition int_of_nat_pred (n : nat) (npos : (0 < n)%nat)
@@ -749,9 +747,7 @@ Definition int_of_nat_add (n m : nat)
 Proof.
   induction n as [|n IHn].
   - reflexivity.
-  - rewrite 2 int_of_nat_succ.
-    rewrite int_add_succ_l.
-    exact (ap _ IHn).
+  - exact (ap _ IHn).
 Defined.
 
 (** [int_of_nat] preserves subtraction when not truncated. *)
