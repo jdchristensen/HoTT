@@ -105,6 +105,9 @@ contrib/*.bak.*
 # ignore dune _build directory
 _build/
 
+# ignore deploy staging directory
+deploy-doc/
+
 # ignore _CoqProject since we autogenerate it
 _CoqProject
 

@@ -1,5 +1,6 @@
 From HoTT Require Import Basics Types.
 Require Import SuccessorStructure.
+Require Import Spaces.Finite.Tactics.
 From HoTT.WildCat Require Import Core PointedCat Square Equiv.
 From HoTT.Pointed Require Import Core pMap pEquiv pFiber pTrunc Loops.
 Require Import Modalities.Identity Modalities.Descent.
@@ -174,7 +175,7 @@ Proof.
   srapply isexact_preimage; exact x.2.
 Defined.
 
-(** If the base is contractible, then [i] is [O]-connected. *)
+(** If the base is contractible, then [i] is [O]-connected.  When [O] is [Tr (-1)], this says that [i] is a surjection. *)
 Definition isconnmap_O_isexact_base_contr (O : Modality@{u}) {F X Y : pType}
   `{Contr Y} (i : F ->* X) (f : X ->* Y)
   `{IsExact@{_ _ u u u} O _ _ _ i f}
@@ -635,6 +636,14 @@ Definition trunc_les `{Univalence} (k : trunc_index) {N : SuccStr}
        (Tr k) N (fun n => pTr k.+1 (S n))
        (fun n => fmap (pTr k.+1) (les_fn S n)) _.
 
+(** A long exact sequence can be replaced by an objectwise pointed equivalent one, provided we are given maps [g] making the squares commute. *)
+Definition les_pequiv {O : Modality} {N : SuccStr} (S : LongExactSequence O N)
+  (C : N -> pType) (e : forall n, C n <~>* S n)
+  (g : forall n, C n.+1 ->* C n)
+  (p : forall n, e n o* g n ==* les_fn S n o* e n.+1)
+  : LongExactSequence O N
+  := Build_LongExactSequence O N C g
+       (fun n => isexact_square_if O (e n.+1.+1) (e n.+1) (e n) (p n.+1) (p n)).
 
 (** ** LES of loop spaces and homotopy groups *)
 
@@ -649,10 +658,10 @@ Definition loops_carrier (F X Y : pType) (n : N3) : pType :=
 (** Starting from a fiber sequence, we can obtain a long purely-exact sequence of loop spaces. *)
 Definition loops_les {F X Y : pType}
   (i : F ->* X) (f : X ->* Y) `{IsExact purely F X Y i f}
-  : LongExactSequence purely (N3).
+  : LongExactSequence purely N3.
 Proof.
-  srefine (Build_LongExactSequence purely (N3) (loops_carrier F X Y) _ _).
-  all:intros [n [[[[]|[]]|[]]|[]]]; cbn.
+  srefine (Build_LongExactSequence purely N3 (loops_carrier F X Y) _ _).
+  all: intros [n x]; FinIndOn x; cbn.
   { exact (fmap (iterated_loops n) f). }
   { exact (fmap (iterated_loops n) i). }
   { exact (connecting_map (fmap (iterated_loops n) i)
@@ -660,10 +669,10 @@ Proof.
   all:exact _.
 Defined.
 
-(** And from that, a long exact sequence of homotopy groups (though for now it is just a sequence of pointed sets). *)
-Definition Pi_les `{Univalence} {F X Y : pType}
+(** And from that, a long exact sequence of homotopy groups, expressed as a sequence of pointed sets.  In [Homotopy.HomotopyGroup] this is converted into the equivalent sequence [Pi_les], whose maps are expressed using [fmap (pPi n)]. *)
+Definition Pi_les_pset `{Univalence} {F X Y : pType}
   (i : F ->* X) (f : X ->* Y) `{IsExact purely F X Y i f}
-  : LongExactSequence (Tr (-1)) (N3)
+  : LongExactSequence (Tr (-1)) N3
   := trunc_les (-1) (loops_les i f).
 
 (** * Classifying fiber sequences *)

@@ -1,8 +1,10 @@
 From HoTT Require Import Basics Types Pointed HSet.
-Require Import Modalities.Modality.
+Require Import Modalities.Modality Modalities.Identity.
 Require Import Truncations.Core Truncations.SeparatedTrunc
   Truncations.Connectedness.
 Require Import Algebra.AbGroups.AbelianGroup.
+Require Import Spaces.Finite.Tactics.
+Require Import Homotopy.SuccessorStructure Homotopy.ExactSequence.
 From HoTT.WildCat Require Import Core Universe Equiv.
 
 Local Open Scope nat_scope.
@@ -191,6 +193,13 @@ Proof.
   srapply phomotopy_homotopy_hset; reflexivity.
 Defined.
 
+(** For a successor, the equivalences above are the identity, so the previous result simplifies to a pointed homotopy between the two induced maps. *)
+Definition fmap_ppi_ptr_iterated_loops_succ (n : nat) {X Y : pType} (f : X ->* Y)
+  : fmap (pPi n.+1) f ==* fmap (pTr 0) (fmap (iterated_loops n.+1) f).
+Proof.
+  srapply phomotopy_homotopy_hset; reflexivity.
+Defined.
+
 (** [Pi n.+1] sends equivalences to group isomorphisms. *)
 Definition groupiso_pi_functor (n : nat) {X Y : pType} (e : X <~>* Y)
   : Pi n.+1 X $<~> Pi n.+1 Y
@@ -370,3 +379,87 @@ Proof.
   lhs exact (fmap2 (pPi n) k x).
   exact (fmap_id (pPi n) X x).
 Defined.
+
+(** ** The long exact sequence of homotopy groups *)
+
+(** A fiber sequence [F -> X -> Y] gives rise to a long exact sequence of homotopy groups.  [Pi_les_pset] already provides one, but its maps are expressed using the composite [pTr 0 o iterated_loops n] instead of [pPi n].  We build the equivalent sequence whose maps are [fmap (pPi n)] and the connecting maps, giving each ingredient a name so that the terms of the sequence are transparent.  When [n] is destructed, the objects of the two sequences are definitionally equal, and the only difference between the morphisms is in their pointedness proofs.  The new sequence also definitionally lands in groups for successor indices. *)
+
+Section PiLES.
+  Local Open Scope succ_scope.
+
+  Context `{Univalence} {F X Y : pType} (i : F ->* X) (f : X ->* Y)
+    `{IsExact purely F X Y i f}.
+
+  (** The types appearing in the sequence. *)
+  Definition pi_carrier (n : N3) : pType :=
+    match n with
+    | (n, inl (inl (inl x))) => Empty_ind _ x
+    | (n, inl (inl (inr tt))) => pPi n Y
+    | (n, inl (inr tt)) => pPi n X
+    | (n, inr tt) => pPi n F
+    end.
+
+  (** They are pointed equivalent to the types appearing in [Pi_les_pset], by the identity map in each case. *)
+  Definition pequiv_pi_carrier (n : N3)
+    : pi_carrier n <~>* pTr 0 (loops_carrier F X Y n).
+  Proof.
+    destruct n as [n x]; FinIndOn x; exact (pequiv_ppi_ptr_iterated_loops _ _).
+  Defined.
+
+  (** The connecting map [Pi n.+1 Y -> Pi n F] of the fiber sequence. *)
+  Definition pi_connecting_map (n : nat)
+    : pPi n.+1 Y ->* pPi n F
+    := (pequiv_ppi_ptr_iterated_loops n F)^-1*
+         o* fmap (pTr 0) (connecting_map (fmap (iterated_loops n) i)
+                                         (fmap (iterated_loops n) f)).
+
+  (** The maps appearing in the sequence. *)
+  Definition pi_les_fn (n : N3)
+    : pi_carrier (ss_succ n) ->* pi_carrier n.
+  Proof.
+    destruct n as [n x]; FinIndOn x.
+    - exact (fmap (pPi n) f).
+    - exact (fmap (pPi n) i).
+    - exact (pi_connecting_map n).
+  Defined.
+
+  (** They agree with the maps of [Pi_les_pset] under the equivalences above.  For the first two this is [fmap_ppi_ptr_iterated_loops]; for the connecting map it is the cancellation of an equivalence with its inverse. *)
+  Definition pi_les_square (n : N3)
+    : pequiv_pi_carrier n o* pi_les_fn n
+      ==* les_fn (Pi_les_pset i f) n o* pequiv_pi_carrier (ss_succ n).
+  Proof.
+    destruct n as [n x]; FinIndOn x.
+    - exact (fmap_ppi_ptr_iterated_loops n f).
+    - exact (fmap_ppi_ptr_iterated_loops n i).
+    - tapply phomotopy_homotopy_hset.
+      intro x; cbn.
+      apply eisretr.
+  Defined.
+
+  (** The long exact sequence of homotopy groups of a fiber sequence. *)
+  Definition Pi_les : LongExactSequence (Tr (-1)) N3
+    := les_pequiv (Pi_les_pset i f) pi_carrier
+         pequiv_pi_carrier pi_les_fn pi_les_square.
+
+  (** Each level of [Pi_les] contributes three exactness statements, which we record separately to save the reader from the indexing of [N3].  They are named after the space whose homotopy group sits in the middle of the sequence, and are listed in the order in which they occur. *)
+
+  (** [Pi_les] is exact at [Pi n F], the homotopy group of the fiber.  The map into it is the connecting map. *)
+  Definition isexact_pi_fiber (n : nat)
+    : IsExact (Tr (-1)) (pi_connecting_map n) (fmap (pPi n) i)
+    := les_isexact _ _ Pi_les (n, inl (inr tt)).
+
+  (** [Pi_les] is exact at [Pi n X], the homotopy group of the total space. *)
+  Definition isexact_pi_total (n : nat)
+    : IsExact (Tr (-1)) (fmap (pPi n) i) (fmap (pPi n) f)
+    := les_isexact _ _ Pi_les (n, inl (inl (inr tt))).
+
+  (** [Pi_les] is exact at [Pi n.+1 Y], the homotopy group of the base.  The map out of it is the connecting map. *)
+  Definition isexact_pi_base (n : nat)
+    : IsExact (Tr (-1)) (fmap (pPi n.+1) f) (pi_connecting_map n)
+    := les_isexact _ _ Pi_les (n, inr tt).
+
+End PiLES.
+
+(** [F], [X] and [Y] cannot be inferred from the index, so we make them explicit, as they are in [loops_carrier]. *)
+Arguments pi_carrier F X Y n : clear implicits.
+Arguments pequiv_pi_carrier F X Y n : clear implicits.
