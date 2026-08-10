@@ -269,12 +269,6 @@ Number Notation Int int_of_number_int int_to_number_int : int_scope.
 (** The following function reduces an integer expression by cancelling successive successor and predecessor terms. *)
 Definition int_reduce := sint_to_int o int_to_sint.
 
-(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function. *)
-Definition int_of_nat (n : nat) : Int
-  := nat_iter n int_succ zero.
-
-Coercion int_of_nat : nat >-> Int.
-
 (** ** Integer arithmetic using [Int] *)
 
 (** *** Negation *)
@@ -724,6 +718,12 @@ Proof.
 Defined.
 
 (** ** Converting between integers and naturals *)
+
+(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function. *)
+Definition int_of_nat (n : nat) : Int
+  := nat_iter n int_succ zero.
+
+Coercion int_of_nat : nat >-> Int.
 
 (** [int_of_nat] preserves successors. *)
 Definition int_nat_succ (n : nat)
