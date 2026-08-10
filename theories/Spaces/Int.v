@@ -723,61 +723,64 @@ Defined.
 Definition int_of_nat (n : nat) : Int
   := nat_iter n int_succ zero.
 
-Coercion int_of_nat : nat >-> Int.
-
 (** [int_of_nat] preserves zero. *)
-Definition int_of_nat_zero : 0%int = 0%nat :> Int
+Definition int_of_nat_zero : int_of_nat 0 = 0
   := idpath.
 
 (** [int_of_nat] preserves successors. *)
 Definition int_of_nat_succ (n : nat)
-  : (n.+1)%int = (n.+1)%nat :> Int.
+  : int_of_nat (n.+1) = (int_of_nat n).+1 :> Int.
 Proof.
   by induction n.
 Defined.
 
 (** [int_of_nat] preserves predecessors. *)
 Definition int_of_nat_pred (n : nat)
-  : (n.-1)%int = (n.-1)%nat :> Int.
+  : (0 < n)%nat -> int_of_nat (nat_pred n) = (int_of_nat n).-1 :> Int.
 Proof.
-  by induction n.
+  intro H.
+  rewrite <- (nat_succ_pred n H).
+  simpl; symmetry.
+  rapply int_succ_is_sect.
 Defined.
 
 (** [int_of_nat] preserves addition. *)
 Definition int_of_nat_add (n m : nat)
-  : (n + m)%int = (n + m)%nat :> Int.
+  : int_of_nat (n + m) = int_of_nat n + int_of_nat m :> Int.
 Proof.
   induction n as [|n IHn].
   - reflexivity.
-  - rewrite <- 2 int_of_nat_succ.
+  - rewrite 2 int_of_nat_succ.
     rewrite int_add_succ_l.
     exact (ap _ IHn).
 Defined.
 
 (** [int_of_nat] preserves subtraction when not truncated. *)
 Definition int_of_nat_sub (n m : nat)
-  : (m <= n)%nat -> (n - m)%int = (n - m)%nat :> Int.
+  : (m <= n)%nat -> int_of_nat (n - m) = int_of_nat n - int_of_nat m :> Int.
 Proof.
-  intros H.
+  intro H.
   induction H as [|n H IHn].
-  - lhs napply int_add_neg_r.
+  - rhs napply int_add_neg_r.
     by rewrite nat_sub_cancel.
   - rewrite nat_sub_succ_l; only 2: exact _.
-    rewrite <- 2 int_of_nat_succ.
+    rewrite 2 int_of_nat_succ.
     rewrite int_add_succ_l.
     exact (ap _ IHn).
 Defined.
 
 (** [int_of_nat] preserves multiplication. This makes [int_of_nat] a semiring homomorphism. *)
 Definition int_of_nat_mul (n m : nat)
-  :  (n * m)%int = (n * m)%nat :> Int.
+  :  int_of_nat (n * m) = int_of_nat n * int_of_nat m :> Int.
 Proof.
   induction n as [|n IHn].
   - reflexivity.
-  - rewrite <- int_of_nat_succ.
+  - rewrite int_of_nat_succ.
     rewrite int_mul_succ_l.
     rewrite nat_mul_succ_l.
+    rewrite <- IHn.
     rhs_V napply int_of_nat_add.
-    rewrite IHn.
-    by rewrite int_add_comm.
+    by rewrite nat_add_comm.
 Defined.
+
+Coercion int_of_nat : nat >-> Int.
