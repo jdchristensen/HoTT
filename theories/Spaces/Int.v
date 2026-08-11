@@ -500,12 +500,10 @@ Proof.
   revert x.
   rapply (int_homotopic (fun x => x + y.-1)); cbn beta.
   1,2: reflexivity.
-  intro z.
-  rewrite int_mul_succ_l.
+  intro z; simpl.
   rewrite <- int_add_assoc.
   simpl.
   rewrite (int_add_comm y _).
-  rewrite int_add_pred_l.
   rewrite <- int_add_assoc.
   by rewrite (int_add_pred_r _ y).
 Defined.
@@ -644,17 +642,16 @@ Definition loopexp {A : Type} {a : A} (p : a = a) (z : Int) : (a = a)
 
 Definition loopexp_succ_r {A : Type} {a : A} (p : a = a) (z : Int)
   : loopexp p z.+1 = loopexp p z @ p
-  := int_iter_succ_l _ _ _.
+  := idpath.
 
 Definition loopexp_pred_r {A : Type} {a : A} (p : a = a) (z : Int)
   : loopexp p z.-1 = loopexp p z @ p^
-  := int_iter_pred_l _ _ _.
+  := idpath.
 
 Definition loopexp_succ_l {A : Type} {a : A} (p : a = a) (z : Int)
   : loopexp p z.+1 = p @ loopexp p z.
 Proof.
-  lhs napply loopexp_succ_r.
-  revert z.
+  simpl; revert z.
   rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - reflexivity.
@@ -665,8 +662,7 @@ Defined.
 Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : Int)
   : loopexp p z.-1 = p^ @ loopexp p z.
 Proof.
-  rewrite loopexp_pred_r.
-  revert z.
+  simpl; revert z.
   rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - intro z; simpl.
@@ -693,8 +689,7 @@ Proof.
   - reflexivity.
   - intro z; simpl.
     rewrite 2 concat_pp_p.
-    rewrite <- loopexp_succ_l.
-    by rewrite <- loopexp_succ_r.
+    by rewrite <- loopexp_succ_l.
 Defined.
 
 (** Under univalence, exponentiation of loops corresponds to iteration of auto-equivalences. *)
@@ -758,9 +753,7 @@ Proof.
   induction H as [|n H IHn].
   - rhs napply int_add_neg_r.
     by rewrite nat_sub_cancel.
-  - rewrite nat_sub_succ_l; only 2: exact _.
-    rewrite 2 int_of_nat_succ.
-    rewrite int_add_succ_l.
+  - rewrite nat_sub_succ_l; only 2: exact _; simpl.
     exact (ap _ IHn).
 Defined.
 
@@ -770,10 +763,7 @@ Definition int_of_nat_mul (n m : nat)
 Proof.
   induction n as [|n IHn].
   - reflexivity.
-  - rewrite int_of_nat_succ.
-    rewrite int_mul_succ_l.
-    rewrite nat_mul_succ_l.
-    rewrite <- IHn.
+  - simpl; rewrite <- IHn.
     rhs_V napply int_of_nat_add.
     by rewrite nat_add_comm.
 Defined.
