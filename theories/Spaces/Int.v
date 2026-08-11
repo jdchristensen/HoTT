@@ -502,7 +502,6 @@ Proof.
   1,2: reflexivity.
   intro z; simpl.
   rewrite <- int_add_assoc.
-  simpl.
   rewrite (int_add_comm y _).
   rewrite <- int_add_assoc.
   by rewrite (int_add_pred_r _ y).
