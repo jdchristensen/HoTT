@@ -343,24 +343,6 @@ Proof.
   by srapply (int_homotopic int_succ).
 Defined.
 
-(** Adding a predecessor on the right is the predecessor of the sum. *)
-Definition int_add_pred_r (x y : Int) : x + y.-1 = (x + y).-1.
-Proof.
-  revert x.
-  srapply (int_homotopic int_succ); cbn beta.
-  1,2: reflexivity.
-  simpl; intro z.
-  rewrite int_succ_is_sect.
-  exact (retr_is_sect_isbiinv int_succ _)^.
-Defined.
-
-(** Integer addition with 1 on the right is the successor. *)
-Definition int_add_1_r (z : Int) : z + 1 = z.+1.
-Proof.
-  revert z.
-  by srapply (int_homotopic int_succ).
-Defined.
-
 (** Integer addition is commutative. *)
 Definition int_add_comm (x y : Int) : x + y = y + x.
 Proof.
@@ -370,6 +352,17 @@ Proof.
   - reflexivity.
   - intro z.
     by rewrite int_add_succ_r.
+Defined.
+
+(** Adding a predecessor on the right is the predecessor of the sum. *)
+Definition int_add_pred_r (x y : Int) : x + y.-1 = (x + y).-1
+  := int_add_comm x y.-1 @ ap int_pred (int_add_comm y x).
+
+(** Integer addition with 1 on the right is the successor. *)
+Definition int_add_1_r (z : Int) : z + 1 = z.+1.
+Proof.
+  revert z.
+  by srapply (int_homotopic int_succ).
 Defined.
 
 (** Integer addition is associative. *)
@@ -391,10 +384,8 @@ Proof.
 Defined.
 
 (** Negation is a right inverse with respect to integer addition. *)
-Definition int_add_neg_r (z : Int) : z - z = 0.
-Proof.
-  unfold "-"; by rewrite int_add_comm, int_add_neg_l.
-Defined.
+Definition int_add_neg_r (z : Int) : z - z = 0
+  := int_add_comm _ _ @ int_add_neg_l _.
 
 (** Negation distributes over addition. *)
 Definition int_neg_add (x y : Int) : -(x + y) = -x - y.
@@ -470,8 +461,8 @@ Proof.
   srapply (int_homotopic (fun x => x + (y + z))); cbn beta.
   1,2: reflexivity.
   simpl; intro x.
-  rewrite <- (int_add_assoc (x*y) y).
-  rewrite (int_add_comm y (x*z + z)).
+  lhs_V napply int_add_assoc.
+  rewrite (int_add_comm y (x * z + z)).
   rewrite (int_add_comm y z).
   by rewrite <- 2 int_add_assoc.
 Defined.
@@ -483,7 +474,7 @@ Proof.
   rapply (int_homotopic idmap); cbn beta.
   1,3: reflexivity.
   simpl; intro z.
-  by rewrite int_add_0_r.
+  apply int_add_0_r.
 Defined.
 
 (** Multiplying with a successor on the right adds the other argument. *)
@@ -495,29 +486,6 @@ Proof.
   simpl; intro z.
   rewrite int_add_succ_r.
   by rewrite int_add_assoc.
-Defined.
-
-(** Multiplying with a predecessor on the right subtracts the other argument. *)
-Definition int_mul_pred_r (x y : Int) : x * y.-1 = x * y - x.
-Proof.
-  revert x.
-  rapply (int_homotopic (fun x => x + y.-1)); cbn beta.
-  1,2: reflexivity.
-  intro z; simpl.
-  rewrite <- int_add_assoc.
-  rewrite (int_add_comm y _).
-  rewrite <- int_add_assoc.
-  by rewrite (int_add_pred_r _ y).
-Defined.
-
-(** Integer multiplication with one on the right is the identity. *)
-Definition int_mul_1_r (z : Int) : z * 1 = z.
-Proof.
-  revert z.
-  rapply (int_homotopic (fun z => z + 1)); cbn beta.
-  1,2: reflexivity.
-  intro z.
-  by rewrite int_add_1_r.
 Defined.
 
 (** Multiplication is commutative. *)
@@ -532,12 +500,17 @@ Proof.
     apply int_mul_succ_r.
 Defined.
 
+(** Multiplying with a predecessor on the right subtracts the other argument. *)
+Definition int_mul_pred_r (x y : Int) : x * y.-1 = x * y - x
+  := int_mul_comm x y.-1 @ ap _ (int_mul_comm y x).
+
+(** Integer multiplication with one on the right is the identity. *)
+Definition int_mul_1_r (z : Int) : z * 1 = z
+  := int_mul_comm _ _.
+
 (** Multiplying with a negation on the right is the same as negating the product. *)
-Definition int_mul_neg_r (x y : Int) : x * -y = -(x * y).
-Proof.
-  rewrite !(int_mul_comm x).
-  apply int_mul_neg_l.
-Defined.
+Definition int_mul_neg_r (x y : Int) : x * -y = -(x * y)
+  := int_mul_comm _ _ @ int_mul_neg_l _ _ @ ap _ (int_mul_comm _ _).
 
 (** Multiplication distributes over addition on the right. *)
 Definition int_dist_r (x y z : Int) : (x + y) * z = x * z + y * z.
