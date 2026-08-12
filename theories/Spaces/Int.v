@@ -745,11 +745,10 @@ Proof.
 Defined.
 
 (** [int_of_nat] preserves subtraction when not truncated. *)
-Definition int_of_nat_sub (n m : nat)
-  : (m <= n)%nat -> int_of_nat (n - m) = int_of_nat n - int_of_nat m.
+Definition int_of_nat_sub (n m : nat) (ngeq : (m <= n)%nat)
+  : int_of_nat (n - m) = int_of_nat n - int_of_nat m.
 Proof.
-  intro H.
-  induction H as [|n H IHn].
+  induction ngeq as [|n H IHn].
   - rhs napply int_add_neg_r.
     by rewrite nat_sub_cancel.
   - rewrite nat_sub_succ_l; only 2: exact _; simpl.
