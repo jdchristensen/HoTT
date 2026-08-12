@@ -627,7 +627,7 @@ Proof.
   - napply concat_1p_p1.
   - reflexivity.
   - intro z; simpl.
-    by rewrite concat_p_pp.
+    apply concat_p_pp.
 Defined.
 
 Definition loopexp_pred_l {A : Type} {a : A} (p : a = a) (z : Int)
@@ -637,11 +637,9 @@ Proof.
   rapply (int_homotopic (equiv_concat_r p a)); cbn beta.
   - napply concat_1p_p1.
   - intro z; simpl.
-    rewrite 2 concat_pp_p.
-    rewrite concat_Vp.
-    by rewrite concat_pV.
+    exact (concat_pp_V _ _ @ (concat_pV_p _ _)^).
   - intro z; simpl.
-    by rewrite concat_p_pp.
+    apply concat_p_pp.
 Defined.
 
 Definition ap_loopexp {A B} (f : A -> B) {a : A} (p : a = a) (z : Int)
