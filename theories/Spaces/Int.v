@@ -472,9 +472,8 @@ Proof.
   simpl; intro x.
   rewrite <- (int_add_assoc (x*y) y).
   rewrite (int_add_comm y (x*z + z)).
-  rewrite <- (int_add_assoc _ z y).
-  rewrite (int_add_comm z y).
-  by rewrite (int_add_assoc (x*y) _ _).
+  rewrite (int_add_comm y z).
+  by rewrite <- 2 int_add_assoc.
 Defined.
 
 (** Integer multiplication with zero on the right is zero. *)
