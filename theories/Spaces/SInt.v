@@ -76,13 +76,13 @@ Definition sint_neg@{} (x : SInt) : SInt :=
   end.
 
 (** The successor of a predecessor is the identity. *)
-Definition sint_pred_succ@{} (x : SInt) : sint_succ (sint_pred x) = x.
+Definition sint_succ_pred@{} (x : SInt) : sint_succ (sint_pred x) = x.
 Proof.
   by destruct x as [ | | []].
 Defined.
 
 (** The predecessor of a successor is the identity. *)
-Definition sint_succ_pred@{} (x : SInt) : sint_pred (sint_succ x) = x.
+Definition sint_pred_succ@{} (x : SInt) : sint_pred (sint_succ x) = x.
 Proof.
   by destruct x as [[] | | ].
 Defined.

@@ -183,7 +183,7 @@ Definition int_homotopic {P : Type} (f : P -> P)
 Section IntEquiv.
 
   Definition int_to_sint : Int -> SInt
-    := int_rec sint_zero sint_succ sint_pred sint_pred sint_succ_pred sint_pred_succ.
+    := int_rec sint_zero sint_succ sint_pred sint_pred sint_pred_succ sint_succ_pred.
 
   Definition sint_to_int : SInt -> Int.
   Proof.
