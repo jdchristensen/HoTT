@@ -78,7 +78,7 @@ Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
 Proof.
   snapply (int_ind t0 e).
   - intro z.
-    exact ((e z.-1)^-1 o transport P (retr_is_sect_isbiinv biinv_int_succ z)^).
+    exact ((e z.-1)^-1 o transport P (retr_is_sect_isbiinv int_succ z)^).
   - intro z.
     exact ((e (int_succ_sect z))^-1 o transport P (int_succ_is_retr z)^).
   - intros z p; cbn beta.
