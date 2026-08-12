@@ -317,13 +317,6 @@ Infix "-" := (fun x y => x + -y) : int_scope.
 Definition int_add_0_l (z : Int) : 0 + z = z
   := idpath.
 
-(** Integer addition with zero on the right is the identity. *)
-Definition int_add_0_r (z : Int) : z + 0 = z.
-Proof.
-  revert z.
-  by srapply (int_homotopic int_succ).
-Defined.
-
 (** Adding a successor on the left is the successor of the sum. *)
 Definition int_add_succ_l (x y : Int) : x.+1 + y = (x + y).+1
   := idpath.
@@ -331,6 +324,17 @@ Definition int_add_succ_l (x y : Int) : x.+1 + y = (x + y).+1
 (** Adding a predecessor on the left is the predecessor of the sum. *)
 Definition int_add_pred_l (x y : Int) : x.-1 + y = (x + y).-1
   := idpath.
+
+(** Integer addition with 1 on the left is the successor. *)
+Definition int_add_1_l (z : Int) : 1 + z = z.+1
+  := idpath.
+
+(** Integer addition with zero on the right is the identity. *)
+Definition int_add_0_r (z : Int) : z + 0 = z.
+Proof.
+  revert z.
+  by srapply (int_homotopic int_succ).
+Defined.
 
 (** Adding a successor on the right is the successor of the sum. *)
 Definition int_add_succ_r (x y : Int) : x + y.+1 = (x + y).+1.
@@ -349,10 +353,6 @@ Proof.
   rewrite int_succ_is_sect.
   exact (retr_is_sect_isbiinv int_succ _)^.
 Defined.
-
-(** Integer addition with 1 on the left is the successor. *)
-Definition int_add_1_l (z : Int) : 1 + z = z.+1
-  := idpath.
 
 (** Integer addition with 1 on the right is the successor. *)
 Definition int_add_1_r (z : Int) : z + 1 = z.+1.
@@ -433,6 +433,10 @@ Definition int_mul (x y : Int) : Int
 
 Infix "*" := int_mul : int_scope.
 
+(** Integer multiplication with zero on the left is zero by definition. *)
+Definition int_mul_0_l (z : Int) : 0 * z = 0
+  := idpath.
+
 (** Multiplication with a successor on the left adds the other argument. *)
 Definition int_mul_succ_l (x y : Int) : x.+1 * y = x * y + y
   := idpath.
@@ -441,33 +445,9 @@ Definition int_mul_succ_l (x y : Int) : x.+1 * y = x * y + y
 Definition int_mul_pred_l (x y : Int) : x.-1 * y = x * y - y
   := idpath.
 
-(** Integer multiplication with zero on the left is zero by definition. *)
-Definition int_mul_0_l (z : Int) : 0 * z = 0
-  := idpath.
-
-(** Integer multiplication with zero on the right is zero. *)
-Definition int_mul_0_r (z : Int) : z * 0 = 0.
-Proof.
-  revert z.
-  rapply (int_homotopic idmap); cbn beta.
-  1,3: reflexivity.
-  simpl; intro z.
-  by rewrite int_add_0_r.
-Defined.
-
 (** Integer multiplication with one on the left is the identity. *)
 Definition int_mul_1_l (z : Int) : 1 * z = z
   := idpath.
-
-(** Integer multiplication with one on the right is the identity. *)
-Definition int_mul_1_r (z : Int) : z * 1 = z.
-Proof.
-  revert z.
-  rapply (int_homotopic (fun z => z + 1)); cbn beta.
-  1,2: reflexivity.
-  intro z.
-  by rewrite int_add_1_r.
-Defined.
 
 (** Integer multiplication with [-1] on the left is negation. *)
 Definition int_mul_neg1_l (z : Int) : -1 * z = -z
@@ -481,6 +461,30 @@ Proof.
   1,2: reflexivity.
   simpl; intro x.
   apply int_neg_add.
+Defined.
+
+(** Multiplication distributes over addition on the left. *)
+Definition int_dist_l (x y z : Int) : x * (y + z) = x * y + x * z.
+Proof.
+  revert x.
+  srapply (int_homotopic (fun x => x + (y + z))); cbn beta.
+  1,2: reflexivity.
+  simpl; intro x.
+  rewrite <- (int_add_assoc (x*y) y).
+  rewrite (int_add_comm y (x*z + z)).
+  rewrite <- (int_add_assoc _ z y).
+  rewrite (int_add_comm z y).
+  by rewrite (int_add_assoc (x*y) _ _).
+Defined.
+
+(** Integer multiplication with zero on the right is zero. *)
+Definition int_mul_0_r (z : Int) : z * 0 = 0.
+Proof.
+  revert z.
+  rapply (int_homotopic idmap); cbn beta.
+  1,3: reflexivity.
+  simpl; intro z.
+  by rewrite int_add_0_r.
 Defined.
 
 (** Multiplying with a successor on the right adds the other argument. *)
@@ -507,6 +511,16 @@ Proof.
   by rewrite (int_add_pred_r _ y).
 Defined.
 
+(** Integer multiplication with one on the right is the identity. *)
+Definition int_mul_1_r (z : Int) : z * 1 = z.
+Proof.
+  revert z.
+  rapply (int_homotopic (fun z => z + 1)); cbn beta.
+  1,2: reflexivity.
+  intro z.
+  by rewrite int_add_1_r.
+Defined.
+
 (** Multiplication is commutative. *)
 Definition int_mul_comm (x y : Int) : x * y = y * x.
 Proof.
@@ -524,20 +538,6 @@ Definition int_mul_neg_r (x y : Int) : x * -y = -(x * y).
 Proof.
   rewrite !(int_mul_comm x).
   apply int_mul_neg_l.
-Defined.
-
-(** Multiplication distributes over addition on the left. *)
-Definition int_dist_l (x y z : Int) : x * (y + z) = x * y + x * z.
-Proof.
-  revert x.
-  srapply (int_homotopic (fun x => x + (y + z))); cbn beta.
-  1,2: reflexivity.
-  simpl; intro x.
-  rewrite <- (int_add_assoc (x*y) y).
-  rewrite (int_add_comm y (x*z + z)).
-  rewrite <- (int_add_assoc _ z y).
-  rewrite (int_add_comm z y).
-  by rewrite (int_add_assoc (x*y) _ _).
 Defined.
 
 (** Multiplication distributes over addition on the right. *)
