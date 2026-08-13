@@ -39,7 +39,7 @@ Definition ab_sum_zero {A : AbGroup} (n : nat)
   : ab_sum n f = 0.
 Proof.
   lhs exact (ab_sum_const _ 0 f p).
-  apply grp_pow_unit.
+  napply grp_pow_unit.
 Defined.
 
 (** Finite sums distribute over addition. *)

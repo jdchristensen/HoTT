@@ -55,6 +55,9 @@ Arguments group_assoc_opp {_}.
 (** We should never need to unfold the proof that something is a group. *)
 Global Opaque group_isgroup.
 
+(** While this can be found by typeclass search, it is sometimes slow, so we add it as an instance. *)
+Instance ishset_group (G : Group) : IsHSet G := _.
+
 Definition issig_group : _ <~> Group
   := ltac:(issig).
 

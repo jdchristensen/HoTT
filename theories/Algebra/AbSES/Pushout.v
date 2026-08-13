@@ -50,7 +50,7 @@ Proof.
       change (ab_pushout_inl (b + - f (- a)) = bc').  (* Just to guide the reader. *)
       refine (_ @ q).
       symmetry.
-      apply path_ab_pushout; cbn.
+      napply path_ab_pushout; cbn.
       refine (tr (-a; _)).
       apply path_prod; cbn.
       * apply grp_moveL_Mg.
