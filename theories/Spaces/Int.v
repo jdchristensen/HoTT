@@ -86,7 +86,7 @@ Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
 Proof.
   snapply (int_ind t0 e).
   - intro z.
-    exact ((e z.-1)^-1 o transport P (retr_is_sect_isbiinv int_succ z)^).
+    exact ((e z.-1)^-1 o transport P (int_succ_pred z)^).
   - intro z.
     exact ((e (int_pred2 z))^-1 o transport P (int_succ_pred2 z)^).
   - intros z p; cbn beta.
@@ -94,7 +94,7 @@ Proof.
     lhs napply (ap (e z)^-1).
     { lhs napply transport_compose.
       symmetry; napply transport_pp. }
-    unfold retr_is_sect_isbiinv.
+    unfold int_succ_pred, retr_is_sect_isbiinv.
     (* In the next line we use that our chosen proof of [retr_is_sect_isbiinv] satisfies the adjoint law. *)
     rewrite (eisadj int_succ); cbn.
     rewrite concat_Vp; cbn.
