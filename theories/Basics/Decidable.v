@@ -247,15 +247,11 @@ Proof.
   intros x y; apply collapsible_hprop; exact _.
 Defined.
 
-(** Hedberg's Theorem *)
-Corollary hset_decpaths (A : Type) `{DecidablePaths A}
-: IsHSet A.
-Proof.
-  exact _.
-Defined.
+(** Hedberg's Theorem.  Note that this is found by typeclass search, so it does not need to be added as an instance. *)
+Definition hset_decpaths (A : Type) `{DecidablePaths A} : IsHSet A := _.
 
-(** We can use Hedberg's Theorem to simplify a goal of the form [forall (d : Decidable (x = x :> A)), P d] when [A] has decidable paths. *)
-Definition decidable_paths_refl (A : Type) `{DecidablePaths A}
+(** When [A] is an [HSet], to prove [forall (d : Decidable (x = x :> A)), P d] it is enough to prove [P] on [idpath]. In particular, by Hedberg's Theorem, this applies when [A] has decidable paths. *)
+Definition decidablepaths_refl (A : Type) `{IsHSet A}
   (x : A)
   (P : forall (d : Decidable (x = x)), Type)
   (Px : P (inl idpath))
@@ -263,8 +259,8 @@ Definition decidable_paths_refl (A : Type) `{DecidablePaths A}
 Proof.
   rapply (decidable_true idpath).
   intro p.
-  (** We cannot eliminate [p : x = x] with path induction, but we can use Hedberg's theorem to replace this with [idpath]. *)
-  assert (r : (idpath = p)) by apply path_ishprop.
+  (* We cannot eliminate [p : x = x] with path induction, but we can use that [A] is an [HSet] to replace this with [idpath]. *)
+  assert (r : idpath = p) by apply path_ishprop.
   by destruct r.
 Defined.
 
