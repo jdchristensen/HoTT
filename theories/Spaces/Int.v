@@ -78,6 +78,11 @@ Definition int_succ_pred : int_succ o int_pred == idmap
 Definition int_pred2_succ : int_pred2 o int_succ == idmap
   := sect_is_retr_isbiinv int_succ.
 
+(** Our proof of [retr_is_sect_isbiinv] was carefully chosen so that the data showing that [int_succ] and [int_pred] form an equivalence satisfies the adjoint law. *)
+Definition int_succ_isadj (z : Int)
+  : int_succ_pred (int_succ z) = ap int_succ (int_pred_succ z)
+  := eisadj int_succ z.
+
 (** ** Induction and recursion principles for Int *)
 
 Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
@@ -94,9 +99,7 @@ Proof.
     lhs napply (ap (e z)^-1).
     { lhs napply transport_compose.
       symmetry; napply transport_pp. }
-    unfold int_succ_pred, retr_is_sect_isbiinv.
-    (* In the next line we use that our chosen proof of [retr_is_sect_isbiinv] satisfies the adjoint law. *)
-    rewrite (eisadj int_succ); cbn.
+    rewrite int_succ_isadj.
     rewrite concat_Vp; cbn.
     apply eissect.
   - intros z p; cbn beta.
