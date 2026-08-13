@@ -241,7 +241,7 @@ Section IntEquiv.
 
 End IntEquiv.
 
-(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_pred_succ 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
+(** From the equivalence to [SInt] we can deduce another induction principle for [Int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_pred_succ 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
 Definition int_ind_sint (P : Int -> Type)
   (H0 : P zero)
   (HP : forall z, P z -> P z.+1)
@@ -694,7 +694,7 @@ Defined.
 
 (** ** Converting between integers and naturals *)
 
-(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function.  We will make this into a coercion later;  we delay doing so to ensure that the lemmas about [int_of_nat] are interpreted as we want them to be. *)
+(** We can convert a [nat] to an [Int] by mapping [0] to [zero] and [S n] to [int_succ n].  Various operations on [nat] are preserved by this function.  We will make this into a coercion later; we delay doing so to ensure that the lemmas about [int_of_nat] are interpreted as we want them to be. *)
 Definition int_of_nat (n : nat) : Int
   := nat_iter n int_succ zero.
 
@@ -738,7 +738,7 @@ Defined.
 
 (** [int_of_nat] preserves multiplication. This makes [int_of_nat] a semiring homomorphism. *)
 Definition int_of_nat_mul (n m : nat)
-  :  int_of_nat (n * m) = int_of_nat n * int_of_nat m.
+  : int_of_nat (n * m) = int_of_nat n * int_of_nat m.
 Proof.
   induction n as [|n IHn].
   - reflexivity.

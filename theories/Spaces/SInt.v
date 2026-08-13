@@ -107,7 +107,7 @@ Instance ishset_sint@{} : IsHSet SInt := _.
 
 (** ** Signed integer induction *)
 
-(** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0].  This is used only in HITInt.v. *)
+(** The induction principle for signed integers is similar to the induction principle for natural numbers. However we have two induction hypotheses going in either direction starting from [0].  This is used only in Int.v. *)
 Definition SInt_ind@{i} (P : SInt -> Type@{i})
   (H0 : P sint_zero)
   (HP : forall n : nat, P (sint_of_nat n) -> P (sint_PosS n))
