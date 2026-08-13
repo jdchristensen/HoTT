@@ -616,8 +616,8 @@ Definition int_iter_invariant {A} (f : A -> A) `{!IsEquiv f}
 Proof.
   snapply int_ind_sint; cbn.
   - exact Pa0.
-  - intros n IH. apply Psucc, IH.
-  - intros n IH. apply Ppred, IH.
+  - intros z IH. apply Psucc, IH.
+  - intros z IH. apply Ppred, IH.
 Defined.
 
 (** ** Exponentiation of loops *)
