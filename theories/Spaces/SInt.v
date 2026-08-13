@@ -120,8 +120,8 @@ Proof.
     + apply (HN x.+1%nat), IHx.
   - exact H0.
   - induction x as [|x IHx].
-    * apply (HP 0%nat), H0.
-    * apply (HP x.+1%nat), IHx.
+    + apply (HP 0%nat), H0.
+    + apply (HP x.+1%nat), IHx.
 Defined.
 
 (** We record these so that they can be used with the [induction] tactic. *)
