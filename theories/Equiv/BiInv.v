@@ -132,7 +132,7 @@ Proof.
   by nrefine (Build_BiInv A A idmap (Build_IsBiInv A A idmap idmap idmap _ _)).
 Defined.
 
-(** Assume we have a commutative square [e' o f == g o e] in which [e] and [e'] are bi-invertible.  Then [f] and [g] also commute with the retractions and sections, and the homotopies in these new squares each satisfy a coherence condition. *)
+(** Assume we have a commutative square [g o e == e' o f] in which [e] and [e'] are bi-invertible.  Then [f] and [g] also commute with the retractions and sections, and the homotopies in these new squares each satisfy a coherence condition. *)
 
 Section EquivalenceCompatibility.
 
