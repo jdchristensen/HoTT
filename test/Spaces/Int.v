@@ -3,11 +3,11 @@ From HoTT Require Import Basics Spaces.Int Spaces.SInt.
 (** Test the conversion functions between [Int] and [SInt]. *)
 Definition test1 : int_to_sint zero = sint_zero := idpath.
 
-Definition test2 : int_to_sint (int_succ_sect zero) = sint_NegS 0 := idpath.
+Definition test2 : int_to_sint (int_pred2 zero) = sint_NegS 0 := idpath.
 
 Definition test2' : int_to_sint (int_pred zero) = sint_NegS 0 := idpath.
 
-Definition test3 : int_to_sint (int_succ (int_succ_sect zero)) = sint_zero := idpath.
+Definition test3 : int_to_sint (int_succ (int_pred2 zero)) = sint_zero := idpath.
 
 Definition test4 : int_to_sint (int_neg (int_succ (int_succ zero))) = sint_NegS 1 := idpath.
 
@@ -26,6 +26,6 @@ Definition test10 : sint_to_int (sint_NegS 0) = int_pred zero := idpath.
 (** Test the reduction function for [Int]. *)
 Definition test11 : int_reduce (int_succ (int_pred (int_succ zero))) = int_succ zero := idpath.
 
-Definition test12 : int_reduce (int_succ_sect zero) = int_pred zero := idpath.
+Definition test12 : int_reduce (int_pred2 zero) = int_pred zero := idpath.
 
-Definition test13 : int_reduce (int_pred (int_succ (int_succ_sect zero))) = int_pred zero := idpath.
+Definition test13 : int_reduce (int_pred (int_succ (int_pred2 zero))) = int_pred zero := idpath.

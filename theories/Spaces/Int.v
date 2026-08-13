@@ -17,38 +17,38 @@ Local Open Scope int_scope.
 Module Export Int.
   Section Int.
 
-    (** Here we are modeling the HIT which has a point [zero] and a successor map [int_succ] which is a biinvertible equivalence.  [int_pred] and [int_succ_sect] are its left and right inverses. *)
+    (** Here we are modeling the HIT which has a point [zero] and a successor map [int_succ] which is a biinvertible equivalence.  [int_pred] and [int_pred2] are its left and right inverses. *)
 
     Private Inductive Int : Type0 :=
     | zero : Int
     | int_succ : Int -> Int
     | int_pred : Int -> Int
-    | int_succ_sect : Int -> Int.
+    | int_pred2 : Int -> Int.
 
-    Axiom int_succ_is_sect : int_pred o int_succ == idmap.
+    Axiom int_pred_succ : int_pred o int_succ == idmap.
 
-    Axiom int_succ_is_retr : int_succ o int_succ_sect == idmap.
+    Axiom int_succ_pred2 : int_succ o int_pred2 == idmap.
 
     Context {P : Int -> Type} (t0 : P zero) (e : forall z : Int, P z -> P (int_succ z))
-      (r : forall z : Int, P z -> P (int_pred z)) (s : forall z : Int, P z -> P (int_succ_sect z))
-      (re : forall (z : Int) (t : P z), int_succ_is_sect z # (r (int_succ z) (e z t)) = t)
-      (es : forall (z : Int) (t : P z), int_succ_is_retr z # (e (int_succ_sect z) (s z t)) = t).
+      (r : forall z : Int, P z -> P (int_pred z)) (s : forall z : Int, P z -> P (int_pred2 z))
+      (re : forall (z : Int) (t : P z), int_pred_succ z # (r (int_succ z) (e z t)) = t)
+      (es : forall (z : Int) (t : P z), int_succ_pred2 z # (e (int_pred2 z) (s z t)) = t).
 
     Fixpoint int_ind (z : Int) : P z
       := match z with
       | zero => fun _ _ => t0
       | int_succ z => fun _ _ => e z (int_ind z)
       | int_pred z => fun _ _ => r z (int_ind z)
-      | int_succ_sect z => fun _ _ => s z (int_ind z)
+      | int_pred2 z => fun _ _ => s z (int_ind z)
       end re es.
       (** We make sure that this depends on [re] and [es] as well. *)
 
-    (** The beta principles for [int_ind] on [int_succ_is_sect] and [int_succ_is_retr]. *)
-    Axiom int_ind_beta_int_succ_is_sect
-      : forall (z : Int), apD int_ind (int_succ_is_sect z) = re z (int_ind z).
+    (** The beta principles for [int_ind] on [int_pred_succ] and [int_succ_pred2]. *)
+    Axiom int_ind_beta_int_pred_succ
+      : forall (z : Int), apD int_ind (int_pred_succ z) = re z (int_ind z).
 
-    Axiom int_ind_beta_int_succ_is_retr
-      : forall (z : Int), apD int_ind (int_succ_is_retr z) = es z (int_ind z).
+    Axiom int_ind_beta_int_succ_pred2
+      : forall (z : Int), apD int_ind (int_succ_pred2 z) = es z (int_ind z).
 
   End Int.
 End Int.
@@ -58,7 +58,7 @@ Instance ispointed_int : IsPointed Int := zero.
 
 (** Successor is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
 Instance isbiinv_int_succ : IsBiInv int_succ
-  := Build_IsBiInv _ _ _ int_succ_sect int_pred int_succ_is_retr int_succ_is_sect.
+  := Build_IsBiInv _ _ _ int_pred2 int_pred int_succ_pred2 int_pred_succ.
 
 Definition biinv_int_succ : BiInv Int Int
   := Build_BiInv _ _ int_succ _.
@@ -80,7 +80,7 @@ Proof.
   - intro z.
     exact ((e z.-1)^-1 o transport P (retr_is_sect_isbiinv int_succ z)^).
   - intro z.
-    exact ((e (int_succ_sect z))^-1 o transport P (int_succ_is_retr z)^).
+    exact ((e (int_pred2 z))^-1 o transport P (int_succ_pred2 z)^).
   - intros z p; cbn beta.
     lhs_V napply (ap_transport _ (fun z => (e z)^-1)).
     lhs napply (ap (e z)^-1).
@@ -111,22 +111,22 @@ Section RecursionPrinciple.
     - apply r.
   Defined.
 
-  Definition int_rec_beta_int_succ_is_sect
-    : forall z, ap int_rec (int_succ_is_sect z) = s (int_rec z).
+  Definition int_rec_beta_int_pred_succ
+    : forall z, ap int_rec (int_pred_succ z) = s (int_rec z).
   Proof.
     intro z.
-    napply (cancelL (transport_const (int_succ_is_sect z) _)).
+    napply (cancelL (transport_const (int_pred_succ z) _)).
     lhs_V napply apD_const.
-    napply int_ind_beta_int_succ_is_sect.
+    napply int_ind_beta_int_pred_succ.
   Defined.
 
-  Definition int_rec_beta_int_succ_is_retr
-    : forall z, ap int_rec (int_succ_is_retr z) = r (int_rec z).
+  Definition int_rec_beta_int_succ_pred2
+    : forall z, ap int_rec (int_succ_pred2 z) = r (int_rec z).
   Proof.
     intro z.
-    napply (cancelL (transport_const (int_succ_is_retr z) _)).
+    napply (cancelL (transport_const (int_succ_pred2 z) _)).
     lhs_V napply apD_const.
-    napply int_ind_beta_int_succ_is_retr.
+    napply int_ind_beta_int_succ_pred2.
   Defined.
 
 End RecursionPrinciple.
@@ -230,7 +230,7 @@ Section IntEquiv.
 
 End IntEquiv.
 
-(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_succ_is_sect 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
+(** From the equivalence to [SInt] we can deduce another induction principle for [int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_pred_succ 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
 Definition int_ind_sint (P : Int -> Type)
   (H0 : P zero)
   (HP : forall z, P z -> P z.+1)
@@ -254,7 +254,7 @@ Proof.
   - intro z.  exact (fst (f z)).
   - equiv_intro int_succ z.
     refine (_ o snd (f z)).
-    exact (transport P (int_succ_is_sect z)^).
+    exact (transport P (int_pred_succ z)^).
 Defined.
 
 (** ** Printing and parsing *)
@@ -380,7 +380,7 @@ Proof.
   1,3: reflexivity.
   simpl; intro s.
   rewrite int_add_succ_r.
-  apply int_succ_is_sect.
+  apply int_pred_succ.
 Defined.
 
 (** Negation is a right inverse with respect to integer addition. *)
@@ -702,7 +702,7 @@ Definition int_of_nat_pred (n : nat) (npos : (0 < n)%nat)
 Proof.
   rhs_V napply (ap (fun _ => _.-1) (nat_succ_pred n npos)).
   simpl; symmetry.
-  apply int_succ_is_sect.
+  apply int_pred_succ.
 Defined.
 
 (** [int_of_nat] preserves addition. *)
