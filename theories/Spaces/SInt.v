@@ -90,7 +90,7 @@ Defined.
 (** ** Decidable Equality *)
 
 (** The signed integers have decidable equality. *)
-Instance decidable_paths_sint@{} : DecidablePaths SInt.
+Instance decidablepaths_sint@{} : DecidablePaths SInt.
 Proof.
   intros [x | | x] [y | | y].
   2-4,6-8: right; intros; discriminate.
