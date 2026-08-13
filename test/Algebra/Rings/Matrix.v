@@ -1,6 +1,6 @@
 From HoTT Require Import Basics.
 From HoTT Require Import Algebra.Rings.Matrix.
-From HoTT Require Import Spaces.Nat.Core Spaces.List.Core Spaces.List.Paths.
+From HoTT Require Import Spaces.Nat.Core Spaces.List.Core.
 From HoTT Require Import Algebra.Rings.Z Spaces.Int Algebra.Rings.CRing.
 From HoTT Require Import Classes.interfaces.canonical_names.
 
@@ -65,9 +65,10 @@ Definition test3_AB := Build_Matrix' cring_Z 3 4
    ltac:(decide)
    ltac:(decide).
 
-(** The entries are propositionally equal, but with our use of HIT integers, they are not necessarily definitionally equal, since the same integer can have two different representations. However, equality is decidable, so this can be proved automatically. *)
-Definition test3 : entries (matrix_mult test3_A test3_B) = entries test3_AB
-  := ltac:(decide).
+(** The entries are propositionally equal, but with our use of HIT integers they are not definitionally equal, since the same integer has many representations.  Applying [int_reduce] to each entry puts it into normal form, after which the two sides agree definitionally. Using [ltac:(decide)] also works, but is slower. *)
+Definition test3
+  : entries (matrix_map int_reduce (matrix_mult test3_A test3_B)) = entries test3_AB
+  := idpath.
 
 (** Here we check the minors of a matrix are computed correctly. *)
 
