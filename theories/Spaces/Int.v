@@ -194,58 +194,54 @@ Definition int_homotopic {P : Type} (f : P -> P)
 
 (** ** [Int] is equivalent to [SInt] *)
 
-Section IntEquiv.
+Definition int_to_sint : Int -> SInt
+  := int_rec sint_zero sint_succ sint_pred sint_pred sint_pred_succ sint_succ_pred.
 
-  Definition int_to_sint : Int -> SInt
-    := int_rec sint_zero sint_succ sint_pred sint_pred sint_pred_succ sint_succ_pred.
+Definition sint_to_int : SInt -> Int.
+Proof.
+  intro s; induction s as [|n IHz|n IHz].
+  - exact zero.
+  - exact (int_succ IHz).
+  - exact (int_pred IHz).
+Defined.
 
-  Definition sint_to_int : SInt -> Int.
-  Proof.
-    intro s; induction s as [|n IHz|n IHz].
-    - exact zero.
-    - exact (int_succ IHz).
-    - exact (int_pred IHz).
-  Defined.
+Definition sint_to_int_issect : int_to_sint o sint_to_int == idmap.
+Proof.
+  intro s; induction s as [|[|n] IHz|[|n] IHz].
+  1, 2, 4: reflexivity.
+  - exact (ap sint_succ IHz).
+  - exact (ap sint_pred IHz).
+Defined.
 
-  Definition sint_to_int_issect : int_to_sint o sint_to_int == idmap.
-  Proof.
-    intro s; induction s as [|[|n] IHz|[|n] IHz].
-    1, 2, 4: reflexivity.
-    - exact (ap sint_succ IHz).
-    - exact (ap sint_pred IHz).
-  Defined.
+Definition sint_to_int_succ : sint_to_int o sint_succ == int_succ o sint_to_int.
+Proof.
+  intro s; induction s as [|[|n] IHz|[|n] IHz].
+  1-3: reflexivity.
+  all: symmetry; exact (int_succ_pred _).
+Defined.
 
-  Definition sint_to_int_succ : sint_to_int o sint_succ == int_succ o sint_to_int.
-  Proof.
-    intro s; induction s as [|[|n] IHz|[|n] IHz].
-    1-3: reflexivity.
-    all: symmetry; exact (int_succ_pred _).
-  Defined.
+Definition sint_to_int_isretr : sint_to_int o int_to_sint == idmap.
+Proof.
+  napply (int_homotopic_biinv biinv_int_succ).
+  1,3: reflexivity.
+  intro z; simpl.
+  apply sint_to_int_succ.
+Defined.
 
-  Definition sint_to_int_isretr : sint_to_int o int_to_sint == idmap.
-  Proof.
-    napply (int_homotopic_biinv biinv_int_succ).
-    1,3: reflexivity.
-    intro z; simpl.
-    apply sint_to_int_succ.
-  Defined.
+(** [sint_to_int] is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
+Instance isbiinv_sint_to_int : IsBiInv sint_to_int
+  := Build_IsBiInv _ _ _ _ _ sint_to_int_isretr sint_to_int_issect.
 
-  (** [sint_to_int] is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
-  #[export] Instance isbiinv_sint_to_int : IsBiInv sint_to_int
-    := Build_IsBiInv _ _ _ _ _ sint_to_int_isretr sint_to_int_issect.
+(** Since [SInt] has decidable equality, so does [Int]. *)
+Instance decidablepaths_int@{} : DecidablePaths Int
+  := decidablepaths_equiv SInt _ _.
 
-  (** Since [SInt] has decidable equality, so does [Int]. *)
-  #[export] Instance decidablepaths_int@{} : DecidablePaths Int
-    := decidablepaths_equiv SInt _ _.
+(** Since [SInt] is a set, therefore also [Int] is a set. *)
+Instance ishset_int : IsHSet Int
+  := istrunc_isequiv_istrunc SInt _.
 
-  (** Since [SInt] is a set, therefore also [Int] is a set. *)
-  #[export] Instance ishset_int : IsHSet Int
-    := istrunc_isequiv_istrunc SInt _.
-
-  (** The following function reduces an integer expression by cancelling successive successor and predecessor terms. It is homotopic to the identity by [sint_to_int_isretr]. *)
-  Definition int_reduce : Int -> Int := sint_to_int o int_to_sint.
-
-End IntEquiv.
+(** The following function reduces an integer expression by cancelling successive successor and predecessor terms. It is homotopic to the identity by [sint_to_int_isretr]. *)
+Definition int_reduce : Int -> Int := sint_to_int o int_to_sint.
 
 (** From the equivalence to [SInt] we can deduce another induction principle for [Int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_pred_succ 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
 Definition int_ind_sint (P : Int -> Type)
