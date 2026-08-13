@@ -139,7 +139,7 @@ Section EncodeDecode.
     unfold Circle_encode.
     rewrite <- transport_Circle_code_loop.
     by rewrite transport_pp.
-Defined.
+  Defined.
 
   (** Now we put it together. *)
   Definition Circle_encode_isequiv (x:Circle) : IsEquiv (Circle_encode x).
