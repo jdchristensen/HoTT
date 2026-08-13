@@ -102,6 +102,7 @@ Require Export HoTT.Modalities.Meet.
 Require Export HoTT.Modalities.CoreflectiveSubuniverse.
 
 Require Export HoTT.Spaces.Nat.
+Require Export HoTT.Spaces.SInt.
 Require Export HoTT.Spaces.Int.
 Require Export HoTT.Spaces.FreeInt.
 Require Export HoTT.Spaces.Pos.
