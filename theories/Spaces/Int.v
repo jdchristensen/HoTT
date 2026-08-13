@@ -1,4 +1,7 @@
-Require Import HoTT.Basics Types.Paths Types.Universe Spaces.Nat.Core Spaces.SInt.
+From HoTT.Basics Require Import Overture Numeral Tactics Decidable.
+From HoTT.Basics Require Import Equivalences PathGroupoids Trunc Iff.
+Require Import Types.Paths Types.Universe.
+Require Import Spaces.Nat.Core Spaces.SInt.
 (** Users of this file likely want the instances in Equiv.BiInv, such as [isequiv_isbiinv], so we export this file. *)
 Require Export Equiv.BiInv.
 
