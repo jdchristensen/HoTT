@@ -70,6 +70,14 @@ Instance isequiv_int_pred : IsEquiv int_pred
 Notation "z .+1" := (int_succ z) : int_scope.
 Notation "z .-1" := (int_pred z) : int_scope.
 
+(** [int_pred] is a section of [int_succ]. *)
+Definition int_succ_pred : int_succ o int_pred == idmap
+  := retr_is_sect_isbiinv int_succ.
+
+(** [int_pred2] is a retraction of [int_succ]. *)
+Definition int_pred2_succ : int_pred2 o int_succ == idmap
+  := sect_is_retr_isbiinv int_succ.
+
 (** ** Induction and recursion principles for Int *)
 
 Definition int_ind_equiv {P : Int -> Type} (t0 : P zero)
