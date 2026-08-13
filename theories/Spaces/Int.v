@@ -272,14 +272,14 @@ Defined.
 
 (** ** Printing and parsing *)
 
-(** For now we pass through [SInt] for printing and parsing. *)
+(** We pass through [SInt] for printing and parsing. *)
 Definition int_to_number_int : Int -> Numeral.int := sint_to_number_int o int_to_sint.
 
 Definition int_of_number_int : Numeral.int -> Int := sint_to_int o sint_of_number_int.
 
 Number Notation Int int_of_number_int int_to_number_int : int_scope.
 
-(** ** Integer arithmetic using [Int] *)
+(** ** Integer arithmetic *)
 
 (** *** Negation *)
 
