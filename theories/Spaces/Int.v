@@ -239,6 +239,9 @@ Section IntEquiv.
   #[export] Instance ishset_int : IsHSet Int
     := istrunc_isequiv_istrunc SInt _.
 
+  (** The following function reduces an integer expression by cancelling successive successor and predecessor terms. It is homotopic to the identity by [sint_to_int_isretr]. *)
+  Definition int_reduce : Int -> Int := sint_to_int o int_to_sint.
+
 End IntEquiv.
 
 (** From the equivalence to [SInt] we can deduce another induction principle for [Int].  This one has weak hypotheses, but since [HN 1 (HP 0 t)] doesn't necessarily transport to [t] along [int_pred_succ 0], it is impossible for it to compute well on general [int_pred] and [int_succ] operations.  Passing through [SInt] normalizes terms giving us a canonical choice. *)
@@ -276,9 +279,6 @@ Definition int_to_number_int : Int -> Numeral.int := sint_to_number_int o int_to
 Definition int_of_number_int : Numeral.int -> Int := sint_to_int o sint_of_number_int.
 
 Number Notation Int int_of_number_int int_to_number_int : int_scope.
-
-(** The following function reduces an integer expression by cancelling successive successor and predecessor terms. *)
-Definition int_reduce := sint_to_int o int_to_sint.
 
 (** ** Integer arithmetic using [Int] *)
 
