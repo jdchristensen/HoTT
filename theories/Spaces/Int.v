@@ -204,7 +204,7 @@ Section IntEquiv.
     - exact (int_pred IHz).
   Defined.
 
-  Definition sint_to_int_is_rinv : int_to_sint o sint_to_int == idmap.
+  Definition sint_to_int_issect : int_to_sint o sint_to_int == idmap.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1, 2, 4: reflexivity.
@@ -212,24 +212,24 @@ Section IntEquiv.
     - exact (ap sint_pred IHz).
   Defined.
 
-  Definition sint_to_int_comp_succ : sint_to_int o sint_succ == int_succ o sint_to_int.
+  Definition sint_to_int_succ : sint_to_int o sint_succ == int_succ o sint_to_int.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1-3: reflexivity.
     all: symmetry; exact (int_succ_pred _).
   Defined.
 
-  Definition sint_to_int_is_linv : sint_to_int o int_to_sint == idmap.
+  Definition sint_to_int_isretr : sint_to_int o int_to_sint == idmap.
   Proof.
     napply (int_homotopic_biinv biinv_int_succ).
     1,3: reflexivity.
     intro z; simpl.
-    apply sint_to_int_comp_succ.
+    apply sint_to_int_succ.
   Defined.
 
   (** [sint_to_int] is biinvertible.  It follows from typeclass inference that it is an equivalence. *)
   #[export] Instance isbiinv_sint_to_int : IsBiInv sint_to_int
-    := Build_IsBiInv _ _ _ _ _ sint_to_int_is_linv sint_to_int_is_rinv.
+    := Build_IsBiInv _ _ _ _ _ sint_to_int_isretr sint_to_int_issect.
 
   (** Since [SInt] has decidable equality, so does [Int]. *)
   #[export] Instance decidablepaths_int@{} : DecidablePaths Int
