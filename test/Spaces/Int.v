@@ -29,3 +29,9 @@ Definition test11 : int_reduce (int_succ (int_pred (int_succ zero))) = int_succ 
 Definition test12 : int_reduce (int_pred2 zero) = int_pred zero := idpath.
 
 Definition test13 : int_reduce (int_pred (int_succ (int_pred2 zero))) = int_pred zero := idpath.
+
+(** Arithmetic does not generally produce a term in normal form, so [3 - 2] is not definitionally [1].  Reducing first makes the two sides agree. *)
+Definition test14 : int_reduce (3 - 2)%int = 1%int := idpath.
+
+(** Since [Int] has decidable equality, such facts can also be proved automatically. *)
+Definition test15 : (3 - 2)%int = 1%int := ltac:(decide).
