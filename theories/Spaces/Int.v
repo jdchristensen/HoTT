@@ -213,7 +213,7 @@ Section IntEquiv.
   Proof.
     intro s; induction s as [|[|n] IHz|[|n] IHz].
     1-3: reflexivity.
-    all: symmetry; exact (retr_is_sect_isbiinv int_succ _).
+    all: symmetry; exact (int_succ_pred _).
   Defined.
 
   Definition sint_to_int_is_linv : sint_to_int o int_to_sint == idmap.
