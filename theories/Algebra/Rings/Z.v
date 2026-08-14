@@ -68,20 +68,14 @@ Proof.
   unfold IsInitial.
   intro R.
   exists (rng_homo_int R).
-  intros g x.
-  unfold rng_homo_int, rng_int_mult; cbn.
-  induction x as [|x|x].
-  - by rhs exact (grp_homo_unit g).
-  - rewrite grp_pow_succ.
+  intros g.
+  cbn.
+  rapply (int_homotopic (ring_plus 1)); cbn beta.
+  - exact (grp_homo_unit g)^.
+  - reflexivity.
+  - intro x.
     change (x.+1%int) with (1 + x)%int.
-    rewrite (rng_homo_plus g 1 x).
+    lhs exact (rng_homo_plus g 1 x).
     rewrite rng_homo_one.
-    f_ap.
-  - rewrite grp_pow_pred.
-    rewrite IHx.
-    clear IHx.
-    change (-1 + g (-x)%int = g (-x).-1%int).
-    rewrite <- (rng_homo_minus_one g).
-    lhs_V napply (rng_homo_plus g).
-    f_ap.
+    reflexivity.
 Defined.
