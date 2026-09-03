@@ -263,12 +263,18 @@ Coercion pmap_GroupHomomorphism : GroupHomomorphism >-> pForall.
 Definition issig_GroupHomomorphism (G H : Group) : _ <~> GroupHomomorphism G H
   := ltac:(issig).
 
+(** Equality of group homomorphisms is equivalent to equality of functions.  This uses [Funext] to know that [IsSemiGroupPreserving] is an hprop. *)
+Definition equiv_path_map_grouphomomorphism {F : Funext} {G H : Group}
+  {g h : GroupHomomorphism G H}
+  : (g = h :> (G -> H)) <~> g = h
+  := (equiv_ap (issig_GroupHomomorphism G H)^-1 _ _)^-1
+      oE equiv_path_sigma_hprop _ _.
+
 (** Function extensionality for group homomorphisms. *)
 Definition equiv_path_grouphomomorphism {F : Funext} {G H : Group}
   {g h : GroupHomomorphism G H} : g == h <~> g = h.
 Proof.
-  refine ((equiv_ap (issig_GroupHomomorphism G H)^-1 _ _)^-1 oE _).
-  refine (equiv_path_sigma_hprop _ _ oE _).
+  refine (equiv_path_map_grouphomomorphism oE _).
   apply equiv_path_forall.
 Defined.
 
@@ -277,7 +283,8 @@ Instance ishset_grouphomomorphism {F : Funext} {G H : Group}
   : IsHSet (GroupHomomorphism G H).
 Proof.
   apply istrunc_S.
-  intros f g; exact (istrunc_equiv_istrunc _ equiv_path_grouphomomorphism).
+  intros f g; exact (istrunc_equiv_istrunc _
+                       equiv_path_map_grouphomomorphism).
 Defined.
 
 (** Group homomorphisms preserve inverses. *)
@@ -342,22 +349,29 @@ Definition pequiv_groupisomorphism {A B : Group}
   := fun f => Build_pEquiv f _.
 Coercion pequiv_groupisomorphism : GroupIsomorphism >-> pEquiv.
 
-(** Funext for group isomorphisms. *)
-Definition equiv_path_groupisomorphism `{F : Funext} {G H : Group}
+(** Equality of group isomorphisms is equivalent to equality of functions.  This uses [Funext] to know that [IsEquiv] and [IsSemiGroupPreserving] are hprops. *)
+Definition equiv_path_map_groupisomorphism {F : Funext} {G H : Group}
   (f g : GroupIsomorphism G H)
-  : f == g <~> f = g.
+  : (f = g :> (G -> H)) <~> f = g.
 Proof.
   refine ((equiv_ap (issig_GroupIsomorphism G H)^-1 _ _)^-1 oE _).
   refine (equiv_path_sigma_hprop _ _ oE _).
-  exact equiv_path_grouphomomorphism.
+  exact equiv_path_map_grouphomomorphism.
 Defined.
+
+(** Funext for group isomorphisms. *)
+Definition equiv_path_groupisomorphism `{F : Funext} {G H : Group}
+  (f g : GroupIsomorphism G H)
+  : f == g <~> f = g
+  := equiv_path_map_groupisomorphism f g oE equiv_path_forall _ _.
 
 (** Group isomorphisms form a set. *)
 Definition ishset_groupisomorphism `{F : Funext} {G H : Group}
   : IsHSet (GroupIsomorphism G H).
 Proof.
   apply istrunc_S.
-  intros f g; exact (istrunc_equiv_istrunc _ (equiv_path_groupisomorphism _ _)).
+  intros f g; exact (istrunc_equiv_istrunc _
+                       (equiv_path_map_groupisomorphism _ _)).
 Defined.
 
 (** The identity map is an equivalence and therefore a group isomorphism. *)
@@ -804,7 +818,7 @@ Defined.
 Instance hasmorext_group `{Funext} : HasMorExt Group.
 Proof.
   intros A B f g; cbn in *.
-  snapply @isequiv_homotopic.
+  snapply isequiv_homotopic.
   1: exact (equiv_path_grouphomomorphism^-1%equiv).
   1: exact _.
   intros []; reflexivity. 
@@ -831,7 +845,7 @@ Defined.
 Instance is1cat_strong `{Funext} : Is1Cat_Strong Group.
 Proof.
   rapply Build_Is1Cat_Strong.
-  all: intros; apply equiv_path_grouphomomorphism; intro; reflexivity.
+  all: intros; apply equiv_path_map_grouphomomorphism; reflexivity.
 Defined.
 
 (** The [group_type] map is a 1-functor. *)
@@ -1101,7 +1115,7 @@ Proof.
   rapply equiv_path_grouphomomorphism.
   intros [].
   symmetry.
-  rapply grp_homo_unit.
+  napply grp_homo_unit.
 Defined.
 
 Instance isterminal_grp_trivial : IsTerminal grp_trivial.
@@ -1117,10 +1131,8 @@ Instance contr_grp_homo_trivial_target `{Funext} G
 Proof.
   snapply Build_Contr.
   1: exact (pr1 (isterminal_grp_trivial _)).
-  intros g.
-  rapply equiv_path_grouphomomorphism.
-  intros x.
-  apply path_contr.
+  intros f.
+  apply equiv_path_map_grouphomomorphism, path_contr.
 Defined.
 
 Instance ishprop_grp_iso_trivial `{Funext} (G : Group)

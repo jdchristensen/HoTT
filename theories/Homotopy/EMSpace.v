@@ -130,8 +130,8 @@ Section EilenbergMacLane.
   Proof.
     napply Build_Is1Functor.
     - intros G G' f g p.
-      exact (phomotopy_path (ap (fun h : G $-> G' => fmap (K' n) h)
-        (equiv_path_grouphomomorphism p))).
+      exact (phomotopy_path (ap (fmap (K' n))
+                               (equiv_path_grouphomomorphism p))).
     - intros G.
       induction n as [|[|m] IH].
       + rapply phomotopy_homotopy_hset.
