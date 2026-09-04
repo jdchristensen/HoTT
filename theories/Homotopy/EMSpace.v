@@ -40,7 +40,7 @@ Proof.
 Defined.
 
 (** For [X] [n]-connected and [Y] [n.+1]-truncated, [fmap (Pi n.+1)] is an equivalence from the pointed maps [X ->* Y] to the group homomorphisms [Pi n.+1 X $-> Pi n.+1 Y].  Neither connectivity of [Y] nor truncatedness of [X] is needed.  The induction is on [n]: the successor step is [isequiv_fmap_loops_pmap], which applies since [n.+2 <= n +2+ n], and the base case is [isequiv_fmap_pi1_pmap]. *)
-Definition isequiv_fmap_pi_pmap `{Univalence} (n : nat) (X Y : pType)
+Instance isequiv_fmap_pi_pmap `{Univalence} (n : nat) (X Y : pType)
   `{cX : IsConnected n X} `{tY : IsTrunc n.+1 Y}
   : IsEquiv (fmap (Pi n.+1) (a:=X) (b:=Y)).
 Proof.
@@ -266,6 +266,13 @@ Section EilenbergMacLane.
       exact (ap _ (IHn g)).
   Defined.
 
+  (** Equivalently, the composite is conjugation by the identifications [equiv_g_pi_n_em]. *)
+  Definition pi_em_fmap' {G G' : AbGroup}
+    (f : GroupHomomorphism G G') (n : nat)
+    : fmap (Pi n.+1) (fmap (K' n.+1) f)
+      == equiv_g_pi_n_em G' n o f o (equiv_g_pi_n_em G n)^-1
+    := cate_moveL_eV (A:=Group) _ _ (equiv_g_pi_n_em G' n $o f) (pi_em_fmap f n).
+
   (** Eilenberg-Mac Lane spaces of a contractible group are contractible. *)
   #[export] Instance contr_em_contr {G : Group} `{Contr G} (n : nat)
     : Contr K(G, n).
@@ -312,39 +319,18 @@ Section EilenbergMacLane.
                  (c _)).
   Defined.
 
-  (** [fmap (K' n.+1)] is an equivalence from group homomorphisms to pointed maps, extending [isequiv_fmap_pclassifyingspace] to all levels.  In particular, pointed maps between Eilenberg-Mac Lane spaces of the same level are determined by their effect on homotopy groups. *)
+  (** [fmap (K' n.+1)] is an equivalence from group homomorphisms to pointed maps.  Since [K(G, n.+1)] is [n]-connected and [K(G', n.+1)] is [n.+1]-truncated, [fmap (Pi n.+1)] is an equivalence from the pointed maps to the group homomorphisms [Pi n.+1 K(G, n.+1) $-> Pi n.+1 K(G', n.+1)], and by [pi_em_fmap'] the composite with [fmap (K' n.+1)] is conjugation by the identifications [equiv_g_pi_n_em], which is also an equivalence.  In particular, pointed maps between Eilenberg-Mac Lane spaces of the same level are determined by their effect on homotopy groups. *)
   #[export] Instance isequiv_em_fmap (G G' : AbGroup) (n : nat)
     : IsEquiv (fun f : GroupHomomorphism G G' => fmap (K' n.+1) f).
   Proof.
-    induction n as [|n IHn].
-    - exact (isequiv_fmap_pclassifyingspace G G').
-    - (* The ladder [pequiv_ptr_rec], [loop_susp_adjoint], postcomposition with [pequiv_loops_em_em], and the inductive hypothesis. *)
-      pose (L := ((Build_Equiv _ _ _ IHn)^-1%equiv)
-        oE (pequiv_pequiv_postcompose (pequiv_loops_em_em G' n.+1)^-1*
-            : (K(G, n.+1) ->** loops K(G', n.+2)) <~> _)
-        oE (loop_susp_adjoint K(G, n.+1) K(G', n.+2)
-            : (psusp K(G, n.+1) ->** _) <~> _)
-        oE (pequiv_ptr_rec
-            : (K(G, n.+2) ->** K(G', n.+2)) <~> _)).
-      napply (isequiv_homotopic' L^-1%equiv).
-      intro f.
-      apply moveR_equiv_V; symmetry.
-      unfold L; clear L.
-      apply moveR_equiv_V; unfold equiv_fun.
-      apply path_pforall.
-      lhs' refine (pmap_postwhisker _
-        (pmap_prewhisker _ (fmap2 loops (ptr_natural _ _)))).
-      lhs' refine (pmap_postwhisker _
-        (pmap_prewhisker _ (fmap_comp loops _ _))).
-      lhs' refine (pmap_postwhisker _ (pmap_compose_assoc _ _ _)).
-      lhs' refine (pmap_postwhisker _
-        (pmap_postwhisker _ (loop_susp_unit_natural _)^*)).
-      lhs' refine (pmap_postwhisker _ (pmap_compose_assoc _ _ _)^*).
-      lhs' refine (pmap_postwhisker _
-        (pmap_prewhisker _ (loops_em_em_ptr_unit G' n)^*)).
-      lhs_V' refine (pmap_compose_assoc _ _ _).
-      lhs' refine (pmap_prewhisker _ (peissect _)).
-      apply pmap_postcompose_idmap.
+    refine (isequiv_commsq' _
+              (equiv_precompose_cat_equiv (A:=Group)
+                 (grp_iso_inverse (equiv_g_pi_n_em G n)))
+              (equiv_postcompose_cat_equiv (A:=Group) (equiv_g_pi_n_em G' n))
+              (fmap (Pi n.+1)) _).
+    intro f.
+    apply equiv_path_grouphomomorphism; symmetry.
+    apply pi_em_fmap'.
   Defined.
 
   (** The equivalence between group homomorphisms and pointed maps of Eilenberg-Mac Lane spaces. *)
