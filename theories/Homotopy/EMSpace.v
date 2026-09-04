@@ -19,7 +19,7 @@ Local Open Scope mc_mult_scope.
 
 (** ** Maps from connected types to pointed types *)
 
-(** Before specializing to Eilenberg-Mac Lane spaces, we should that when [X] is [n]-connected and [Y] is [n.+1]-truncated, [fmap (Pi n.+1)] is an equivalence.  The case [n=1] is [isequiv_fmap_pi1_pmap], and the inductive step follows from [isequiv_fmap_loops_pmap]. *)
+(** Before specializing to Eilenberg-Mac Lane spaces, we show that when [X] is [n]-connected and [Y] is [n.+1]-truncated, [fmap (Pi n.+1)] is an equivalence.  The case [n=1] is [isequiv_fmap_pi1_pmap], and the inductive step follows from [isequiv_fmap_loops_pmap]. *)
 
 (** Part of the inductive step is factored out here. *)
 Local Definition isequiv_fmap_pi_pmap_succ `{Univalence} (n : nat) {X Y : pType}
