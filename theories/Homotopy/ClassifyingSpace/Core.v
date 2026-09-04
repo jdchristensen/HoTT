@@ -721,6 +721,42 @@ Proof.
   rapply natequiv_map_bg.
 Defined.
 
+(** ** [Pi1] induces an equivalence on certain mapping types *)
+
+(** Our next goal is to prove that for pointed types [X] and [Y] with [X] 0-connected and [Y] 1-truncated, the map [fmap Pi1 (a:=X) (b:=Y)] is an equivalence.  We first prove this when [X] is also 1-truncated, using that [X] is then the classifying space of [Pi1 X], and then reduce the general case to that one by replacing [X] with [pTr 1 X]. *)
+
+(** For [X] a 0-connected 1-type and [Y] a pointed 1-type, [fmap Pi1] is an equivalence from pointed maps [X ->* Y] to group homomorphisms.  Since [X] is the classifying space of [Pi1 X], this follows from the adjunction [equiv_pmap_bg_pi1].  Note that [Y] is not assumed to be connected. *)
+Definition isequiv_fmap_pi1_pmap_dom_trunc `{Univalence} (X Y : pType)
+  `{IsConnected 0 X} `{IsTrunc 1 X} `{IsTrunc 1 Y}
+  : IsEquiv (fmap Pi1 (a:=X) (b:=Y)).
+Proof.
+  pose (e := pequiv_pclassifyingspace_pi1 X).
+  tapply (isequiv_homotopic (equiv_pmap_bg_pi1 _ Y oE equiv_precompose_cat_equiv (z:=Y) e)).
+  intro f.
+  lhs napply equiv_pmap_bg_pi1_beta.
+  apply path_hom.
+  intro x.
+  lhs exact (fmap_comp Pi1 e f (grp_iso_g_pi1_bg x)).
+  (* [fmap Pi1 e $o grp_iso_g_pi1_bg] is the identity, since [e] is the adjunct of the identity map. *)
+  exact (ap (fmap Pi1 f) (equiv_path_grouphomomorphism^-1
+    ((equiv_pmap_bg_pi1_beta _ X e)^ @ eisretr (equiv_pmap_bg_pi1 _ X) grp_homo_id) x)).
+Defined.
+
+(** For [X] 0-connected and [Y] a pointed 1-type, [fmap Pi1] is an equivalence from pointed maps [X ->* Y] to group homomorphisms.  Note that [Y] is not assumed to be connected. *)
+Definition isequiv_fmap_pi1_pmap `{Univalence} (X Y : pType)
+  `{IsConnected 0 X} `{IsTrunc 1 Y}
+  : IsEquiv (fmap Pi1 (a:=X) (b:=Y)).
+Proof.
+  (* Since [Y] is a 1-type, we can replace [X] by [pTr 1 X], which has the same [Pi1] and is a 0-connected 1-type.  The square commutes by functoriality of [Pi1]. *)
+  refine (isequiv_commsq (fmap Pi1 (a:=pTr 1 X) (b:=Y)) _
+    (fun g : pTr 1 X $-> Y => g $o ptr)
+    (equiv_precompose_cat_equiv (z:=Pi1 Y) (grp_iso_pi_Tr 0 X)) _).
+  - intro phi; symmetry.
+    apply path_hom; exact (fmap_comp Pi1 ptr phi).
+  - rapply isequiv_fmap_pi1_pmap_dom_trunc.
+  - exact (equiv_isequiv pequiv_ptr_rec).
+Defined.
+
 (** ** H-space structure on [B G] when [G] is abelian *)
 
 (** This will be used to prove that [B G] is an H-space when [G] is abelian, and has other uses as well. *)
