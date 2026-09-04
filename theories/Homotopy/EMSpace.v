@@ -69,6 +69,20 @@ Proof.
   exact (equiv_path_grouphomomorphism h).
 Defined.
 
+(** Two [n]-connected [n.+1]-truncated pointed types with isomorphic [Pi n.+1] are pointed equivalent. *)
+Definition pequiv_pi_connected_truncated `{Univalence} (n : nat) {X Y : pType}
+  `{IsConnected n X} `{IsTrunc n.+1 X} `{IsConnected n Y} `{IsTrunc n.+1 Y}
+  (phi : GroupIsomorphism (Pi n.+1 X) (Pi n.+1 Y))
+  : X <~>* Y
+  := cate_reflect_fmap (Pi n.+1) (x:=X) (y:=Y) phi.
+
+(** The equivalence induces the given isomorphism on [Pi n.+1]. *)
+Definition fmap_pi_pequiv_pi_connected_truncated `{Univalence} (n : nat) {X Y : pType}
+  `{IsConnected n X} `{IsTrunc n.+1 X} `{IsConnected n Y} `{IsTrunc n.+1 Y}
+  (phi : GroupIsomorphism (Pi n.+1 X) (Pi n.+1 Y))
+  : fmap (Pi n.+1) (pequiv_pi_connected_truncated n phi) == phi
+  := fmap_cate_reflect_fmap (Pi n.+1) (x:=X) (y:=Y) phi.
+
 (** ** Definition and properties of Eilenberg-Mac Lane spaces *)
 
 (** The definition of the Eilenberg-Mac Lane spaces.  Note that while we allow [G] to be non-abelian for [n > 1], later results will need to assume that [G] is abelian. *)
@@ -349,31 +363,27 @@ Section EilenbergMacLane.
     : GroupHomomorphism G G' <~> (K(G, n.+1) ->* K(G', n.+1))
     := Build_Equiv _ _ _ (isequiv_em_fmap G G' n).
 
+  (** The canonical identification of [Pi n.+1 K(Pi n.+1 X, n.+1)] with [Pi n.+1 X].  For [n = 0] this is [grp_iso_g_pi1_bg], and for positive [n] it is [equiv_g_pi_n_em] applied to the abelian group [Pi n.+1 X]. *)
+  Definition grp_iso_pi_em_pi (X : pType) (n : nat)
+    : GroupIsomorphism (Pi n.+1 K(Pi n.+1 X, n.+1)) (Pi n.+1 X).
+  Proof.
+    symmetry.
+    destruct n as [|m].
+    - exact grp_iso_g_pi1_bg.
+    - exact (equiv_g_pi_n_em (Build_AbGroup (Pi m.+2 X) _) m.+1).
+  Defined.
+
   (** Every pointed (n-1)-connected n-type is an Eilenberg-Mac Lane space. *)
   Definition pequiv_em_connected_truncated (X : pType)
     (n : nat) `{IsConnected n X} `{IsTrunc n.+1 X}
-    : K(Pi n.+1 X, n.+1) <~>* X.
-  Proof.
-    generalize dependent X; induction n; intros X isC isT.
-    1: rapply pequiv_pclassifyingspace_pi1.
-    (* The equivalence will be the composite
-<<
-      K( (Pi n.+2 X) n.+2)
-   <~>* K( (Pi n.+1 (loops X)), n.+2)
-   = pTr n.+2 (psusp K( (Pi n.+1 (loops X)), n.+1))  [by definition]
-   <~>* pTr n.+2 (psusp (loops X))                   [by induction]
-   <~>* pTr n.+2 X
-   <~>* X
->>
-    and we'll work from right to left.
-*)
-    refine ((pequiv_ptr (n:=n.+2))^-1* o*E _).
-    refine (pequiv_ptr_psusp_loops X n o*E _).
-    change (K(?G, n.+2)) with (pTr n.+2 (psusp K( G, n.+1 ))).
-    refine (emap (pTr n.+2 o psusp) _).
-    refine ((IHn (loops X) _ _) o*E _).
-    exact (emap (K' n.+1) (groupiso_pi_loops _ _)).
-  Defined.
+    : K(Pi n.+1 X, n.+1) <~>* X
+    := pequiv_pi_connected_truncated n (grp_iso_pi_em_pi X n).
+
+  (** It induces [grp_iso_pi_em_pi] on [Pi n.+1]. *)
+  Definition fmap_pi_pequiv_em_connected_truncated (X : pType)
+    (n : nat) `{IsConnected n X} `{IsTrunc n.+1 X}
+    : fmap (Pi n.+1) (pequiv_em_connected_truncated X n) == grp_iso_pi_em_pi X n
+    := fmap_pi_pequiv_pi_connected_truncated n (grp_iso_pi_em_pi X n).
 
 End EilenbergMacLane.
 
