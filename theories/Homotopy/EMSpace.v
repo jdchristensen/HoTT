@@ -1,5 +1,5 @@
 From HoTT Require Import Basics Types.
-From HoTT.WildCat Require Import Core Universe Equiv PointedCat.
+From HoTT.WildCat Require Import Core Universe Equiv PointedCat Yoneda.
 Require Import Pointed.
 Require Import Cubical.DPath.
 Require Import Algebra.AbGroups.AbelianGroup.
@@ -17,6 +17,48 @@ Require Import Truncations.Core Truncations.Connectedness Truncations.SeparatedT
 Local Open Scope pointed_scope.
 Local Open Scope nat_scope.
 Local Open Scope mc_mult_scope.
+
+(** ** Maps from connected types to pointed types *)
+
+(** Before specializing to Eilenberg-Mac Lane spaces, we should that when [X] is [n]-connected and [Y] is [n.+1]-truncated, [fmap (Pi n.+1)] is an equivalence.  The case [n=1] is [isequiv_fmap_pi1_pmap], and the inductive step follows from [isequiv_fmap_loops_pmap]. *)
+
+(** Part of the inductive step is factored out here. *)
+Local Definition isequiv_fmap_pi_pmap_succ `{Univalence} (n : nat) {X Y : pType}
+  (el : IsEquiv (fmap loops (a:=X) (b:=Y)))
+  (e : IsEquiv (fmap (Pi n.+1) (a:=loops X) (b:=loops Y)))
+  : IsEquiv (fmap (Pi n.+2) (a:=X) (b:=Y)).
+Proof.
+  pose (a := groupiso_pi_loops n X).
+  pose (b := groupiso_pi_loops n Y).
+  pose (k := equiv_precompose_cat_equiv a
+              oE equiv_postcompose_cat_equiv (x:=Pi n.+1 (loops X)) b^-1$).
+  refine (isequiv_homotopic (k o fmap (Pi n.+1) o fmap loops (a:=X) (b:=Y)) _).
+  intro f.
+  rapply equiv_path_grouphomomorphism.
+  intro x.
+  exact (moveR_equiv_V (f:=b) _ _ (fmap_pi_loops n.+1 f x)^).
+Defined.
+
+(** For [X] [n]-connected and [Y] [n.+1]-truncated, [fmap (Pi n.+1)] is an equivalence from the pointed maps [X ->* Y] to the group homomorphisms [Pi n.+1 X $-> Pi n.+1 Y].  Neither connectivity of [Y] nor truncatedness of [X] is needed.  The induction is on [n]: the successor step is [isequiv_fmap_loops_pmap], which applies since [n.+2 <= n +2+ n], and the base case is [isequiv_fmap_pi1_pmap]. *)
+Definition isequiv_fmap_pi_pmap `{Univalence} (n : nat) (X Y : pType)
+  `{cX : IsConnected n X} `{tY : IsTrunc n.+1 Y}
+  : IsEquiv (fmap (Pi n.+1) (a:=X) (b:=Y)).
+Proof.
+  induction n in X, Y, cX, tY |- *.
+  1: exact (isequiv_fmap_pi1_pmap X Y).
+  napply isequiv_fmap_pi_pmap_succ.
+  - napply (isequiv_fmap_loops_pmap (n:=n)).
+    + exact _.
+    + apply (istrunc_leq (trunc_index_leq_add_nat n n)).
+  - rapply IHn.
+Defined.
+
+Definition equiv_fmap_pi_pmap `{Univalence} (n : nat) (X Y : pType)
+  `{IsConnected n X} `{IsTrunc n.+1 Y}
+  : (X ->* Y) <~> (Pi n.+1 X $-> Pi n.+1 Y)
+  := Build_Equiv _ _ _ (isequiv_fmap_pi_pmap n X Y).
+
+(** ** Definition and properties of Eilenberg-Mac Lane spaces *)
 
 (** The definition of the Eilenberg-Mac Lane spaces.  Note that while we allow [G] to be non-abelian for [n > 1], later results will need to assume that [G] is abelian. *)
 Fixpoint EilenbergMacLane@{u v | u <= v} (G : Group@{u}) (n : nat) : pType@{v}
