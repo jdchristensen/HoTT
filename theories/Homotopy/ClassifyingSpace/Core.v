@@ -613,38 +613,17 @@ Proof.
   reflexivity.
 Defined.
 
-(** Interestingly, [fmap B] is an equivalence *)
+(** Interestingly, [fmap B] is an equivalence.  This is a corollary of the adjunction: transposing [fmap B u] gives [bloop o u] by [bloop_natural], so [fmap B] is the inverse of the adjunction composed with an isomorphism. *)
 Instance isequiv_fmap_pclassifyingspace `{U : Univalence} (G H : Group)
   : IsEquiv (fmap B (a := G) (b := H)).
 Proof.
-  snapply isequiv_adjointify.
-  { intros f.
-    refine (grp_homo_compose (grp_iso_inverse _) (grp_homo_compose _ _)).
-    1,3: exact grp_iso_g_loopgroup_bg.
-    exact (grp_homo_loops f). }
-  { intros f.
-    rapply equiv_path_pforall.
-    snapply Build_pHomotopy.
-    { snapply ClassifyingSpace_ind_hset.
-      1: exact _.
-      { cbn; symmetry.
-        rapply (point_eq f). }
-      { intro g.
-        rapply equiv_sq_dp^-1.
-        rewrite ClassifyingSpace_rec_beta_bloop.
-        simpl.
-        rapply sq_ccGc.
-        1: symmetry; rapply decode_encode.
-        apply equiv_sq_path.
-        rewrite concat_pp_p.
-        rewrite concat_pp_V.
-        reflexivity. } }
-      symmetry; apply concat_1p. }
-  intros f.
+  pose (e := equiv_postcompose_cat_equiv (x:=G) (grp_iso_g_loopgroup_bg (G:=H))).
+  rapply (isequiv_homotopic ((equiv_pmap_bg_loopgroup G (B H))^-1 oE e)).
+  intro phi.
+  apply moveR_equiv_V.
   rapply equiv_path_grouphomomorphism.
-  intro x.
-  rapply (moveR_equiv_V' equiv_g_loops_bg).
-  napply pClassifyingSpace_rec_beta_bloop.
+  change (bloop o phi == fmap loops (fmap B phi) o bloop).  (* For the reader. *)
+  symmetry; apply bloop_natural.
 Defined.
 
 (** Hence we have that group homomorphisms are equivalent to pointed maps between their deloopings. *)
@@ -671,26 +650,19 @@ Proof.
   rapply Build_NatEquiv.
 Defined.
 
-(** [B(Pi 1 X) <~>* X] for a 0-connected 1-truncated [X]. *)
+(** [B (Pi1 X) <~>* X] for a 0-connected 1-truncated [X].  The equivalence is the adjunct of the identity map [Pi1 X $-> Pi1 X]. *)
 Theorem pequiv_pclassifyingspace_pi1 `{Univalence}
   (X : pType) `{IsConnected 0 X} `{IsTrunc 1 X}
   : B (Pi1 X) <~>* X.
 Proof.
-  (** The pointed map [f] is the adjunct to the inverse of the natural map [loops X -> Pi1 X]. We define it first, to make the later goals easier to read. *)
-  transparent assert (f : (B (Pi1 X) ->* X)).
-  { snapply pClassifyingSpace_rec.
-    1: exact _.
-    1: exact (equiv_tr 0 _)^-1%equiv.
-    intros x y.
-    strip_truncations.
-    reflexivity. }
-  snapply (Build_pEquiv f).
-  (** [f] is an equivalence since [loops_functor f o bloop == tr^-1], and the other two maps are equivalences. *)
+  snapply (Build_pEquiv ((equiv_pmap_bg_pi1 _ X)^-1 grp_homo_id)).
+  1, 2: exact _.
+  (* Calling the map f, it is an equivalence since [fmap loops f o bloop == tr^-1], and the other two maps are equivalences. *)
   apply isequiv_is0connected_isequiv_loops.
   snapply (cancelR_isequiv bloop).
   1: exact _.
-  rapply isequiv_homotopic'; symmetry.
-  napply pClassifyingSpace_rec_beta_bloop.
+  rapply (isequiv_homotopic' (equiv_tr 0 _)^-1%equiv); symmetry.
+  intro g; napply pClassifyingSpace_rec_beta_bloop.
 Defined.
 
 (** The classifying space functor and the fundamental group functor form an adjunction ([pType] needs to be restricted to the subcategory of 0-connected pointed types). Note that the full adjunction should also be natural in [X], but this was not needed yet. *)
