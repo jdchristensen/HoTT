@@ -404,6 +404,15 @@ Section EncodeDecode.
           (Build_IsSemiGroup _ _ _ concat_p_pp) concat_1p concat_p1)
         concat_Vp concat_pV).
 
+  (** For a pointed 1-type, the loop group and the fundamental group agree. *)
+  Definition grp_iso_loopgroup_pi1 (P : pType) `{IsTrunc 1 P}
+    : LoopGroup P $<~> Pi1 P.
+  Proof.
+    snapply Build_GroupIsomorphism'.
+    - rapply equiv_tr.
+    - intros x y; reflexivity.
+  Defined.
+
   Definition grp_iso_g_loopgroup_bg : GroupIsomorphism G (LoopGroup (B G)).
   Proof.
     snapply Build_GroupIsomorphism'.
@@ -412,13 +421,8 @@ Section EncodeDecode.
     apply bloop_pp.
   Defined.
 
-  Definition grp_iso_g_pi1_bg : GroupIsomorphism G (Pi1 (B G)).
-  Proof.
-    snapply (transitive_groupisomorphism _ _ _ grp_iso_g_loopgroup_bg).
-    snapply Build_GroupIsomorphism'.
-    - rapply equiv_tr.
-    - intros x y; reflexivity.
-  Defined.
+  Definition grp_iso_g_pi1_bg : GroupIsomorphism G (Pi1 (B G))
+    := grp_iso_loopgroup_pi1 (B G) $oE grp_iso_g_loopgroup_bg.
 
   (* We also record this fact. *)
   Definition grp_homo_loops {X Y : pType} `{IsTrunc 1 X} `{IsTrunc 1 Y}
