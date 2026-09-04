@@ -299,7 +299,7 @@ Proof.
   exact bloop_id.
 Defined.
 
-(** This says that [B] is left adjoint to the loop space functor from pointed 1-types to groups. *)
+(** The pointed version of the recursion principle.  We will see in [equiv_pmap_bg_loopgroup] that this is an equivalence between group homomorphisms [G $-> LoopGroup P] and pointed maps [BG ->* P], giving an adjunction. *)
 Definition pClassifyingSpace_rec {G : Group} (P : pType) `{IsTrunc 1 P}
            (bloop' : G -> loops P)
            (bloop_pp' : forall x y : G, bloop' (x * y) = bloop' x @ bloop' y)
@@ -453,7 +453,7 @@ Proof.
   rapply isequiv_is0connected_isequiv_loops.
 Defined.
 
-(** Functoriality of B(-) *)
+(** ** Functoriality of B(-) *)
 
 Instance is0functor_pclassifyingspace : Is0Functor B.
 Proof.
@@ -563,6 +563,56 @@ Proof.
     reflexivity.
 Defined.
 
+(** ** The adjunction between [B] and the loop group *)
+
+(** [B] and [Pi1] are inverse equivalences between groups and 0-connected 1-truncated pointed types ([pequiv_pclassifyingspace_pi1] below and [grp_iso_g_pi1_bg] above).  This file contains two extensions of that equivalence to larger domains, which is why [B] appears below both as a left adjoint and as a right adjoint:
+
+  - Dropping the connectivity of the target, but keeping the source a classifying space, gives [B] as a left adjoint to the loop group functor on pointed 1-types.  This is [equiv_pmap_bg_loopgroup] just below, and [equiv_pmap_bg_pi1] is the same statement with [Pi1] in place of [LoopGroup], the two agreeing by [grp_iso_loopgroup_pi1].
+
+  - Dropping the truncatedness of the source, but keeping the target a classifying space, gives [B] as a right adjoint to [Pi1] on 0-connected pointed types.  That is [equiv_bg_pi1_adjoint], further below. *)
+
+(** The recursion principle [pClassifyingSpace_rec] says that [B] is left adjoint to the loop group functor on pointed 1-types.  Here we record that adjunction as an equivalence, with [pClassifyingSpace_rec] as the inverse map.  Note that no connectivity assumption on [P] is needed. *)
+Definition equiv_pmap_bg_loopgroup `{Univalence} (G : Group) (P : pType) `{IsTrunc 1 P}
+  : (B G $-> P) <~> (G $-> LoopGroup P).
+Proof.
+  snapply equiv_adjointify.
+  - intro f.
+    exact (grp_homo_compose (grp_homo_loops f) grp_iso_g_loopgroup_bg).
+  - intro phi.
+    exact (pClassifyingSpace_rec P phi (grp_homo_op phi)).
+  - intro phi.
+    rapply equiv_path_grouphomomorphism.
+    napply pClassifyingSpace_rec_beta_bloop.
+  - intro f.
+    rapply path_pforall.
+    snapply Build_pHomotopy.
+    + srapply ClassifyingSpace_ind_hset.
+      * cbn; symmetry; apply (point_eq f).
+      * intro g.
+        unfold DPath.
+        transport_paths FlFr.
+        lhs napply (whiskerR (ClassifyingSpace_rec_beta_bloop _ _ _ _ _)); cbn.
+        apply moveR_pV, concat_p_pp.
+    + cbn.
+      symmetry; napply concat_1p.
+Defined.
+
+(** The same adjunction, phrased using the fundamental group. *)
+Definition equiv_pmap_bg_pi1 `{Univalence} (G : Group) (P : pType) `{IsTrunc 1 P}
+  : (B G $-> P) <~> (G $-> Pi1 P)
+  := equiv_postcompose_cat_equiv (grp_iso_loopgroup_pi1 P)
+       oE equiv_pmap_bg_loopgroup G P.
+
+(** Unfolding the previous equivalence: it is [fmap Pi1] followed by restriction along [grp_iso_g_pi1_bg]. *)
+Definition equiv_pmap_bg_pi1_beta `{Univalence} (G : Group) (P : pType)
+  `{IsTrunc 1 P} (f : B G $-> P)
+  : equiv_pmap_bg_pi1 G P f = fmap Pi1 f $o grp_iso_g_pi1_bg.
+Proof.
+  (* The underlying functions are definitionally equal. *)
+  rapply equiv_path_map_grouphomomorphism.
+  reflexivity.
+Defined.
+
 (** Interestingly, [fmap B] is an equivalence *)
 Instance isequiv_fmap_pclassifyingspace `{U : Univalence} (G H : Group)
   : IsEquiv (fmap B (a := G) (b := H)).
@@ -605,6 +655,7 @@ Proof.
   2: apply isequiv_fmap_pclassifyingspace.
 Defined.
 
+(** This equivalence is natural in [H]. *)
 Instance is1natural_grp_homo_pmap_bg_r {U : Univalence} (G : Group)
   : Is1Natural (opyon G) (opyon (B G) o B) (equiv_grp_homo_pmap_bg G).
 Proof.
