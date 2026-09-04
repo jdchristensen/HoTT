@@ -81,6 +81,24 @@ Proof.
     + exact (equiv_isequiv e).
 Defined.
 
+(** Precomposition with an [O]-connected pointed map is an equivalence on pointed mapping spaces into an [O]-local type.  This is a pointed version of [equiv_o_conn_map].  Note that it does not subsume [pequiv_o_pto_O], since [to O X] is only known to be [O]-connected when [O] is a modality. *)
+Definition pequiv_o_conn_map `{Funext} (O : ReflectiveSubuniverse)
+  {A B : pType} (f : A ->* B) `{IsConnMap O _ _ f} (Y : pType) `{In O Y}
+  : (B ->** Y) <~>* (A ->** Y).
+Proof.
+  snapply Build_pEquiv.
+  (* As in [pequiv_o_pto_O], we give the underlying map first so that Coq unfolds it to precomposition with [f]. *)
+  - exact (Build_pMap (fun g => g o* f) (path_pforall (postcompose_pconst f))).
+  - transparent assert (e : ((B ->* Y) <~> (A ->* Y))).
+    + refine (issig_pmap A Y oE _ oE (issig_pmap B Y)^-1%equiv).
+      snapply equiv_functor_sigma'.
+      * rapply (equiv_o_conn_map O f (fun _ => Y)).
+      * intro g; cbn.
+        (* This is the path that pointed composition inserts, so the underlying map agrees definitionally with precomposition by [f]. *)
+        exact (equiv_concat_l (ap g (point_eq f)) _).
+    + exact (equiv_isequiv e).
+Defined.
+
 (** ** Pointed functoriality *)
 
 Definition O_pfunctor `(O : ReflectiveSubuniverse) {X Y : pType}
